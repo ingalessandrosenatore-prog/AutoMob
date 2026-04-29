@@ -1,0 +1,237 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import '../../domain/entities/vehicle_draft.dart';
+import '../provider/add_vehicle_bloc.dart';
+import '../provider/add_vehicle_event.dart';
+import '../provider/add_vehicle_state.dart';
+import 'AddVehicleFormStep1.dart';
+import 'AddVehicleFormStep2.dart';
+import 'AddVehicleFormStep3.dart';
+import 'AddVehicleFormStep4.dart';
+import 'AddVehicleFormStep5.dart';
+
+class AddVehicleWizard extends StatelessWidget {
+  const AddVehicleWizard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => GetIt.I<AddVehicleBloc>()..add(AddVehicleStarted()),
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.75,
+          ),
+          child: const SingleChildScrollView(
+            child: WizardBody(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class WizardBody extends StatelessWidget {
+  const WizardBody({super.key});
+
+  static const _steps = [
+    AddVehicleFormStep1(key: ValueKey(0)),
+    AddVehicleFormStep2(key: ValueKey(1)),
+    AddVehicleFormStep3(key: ValueKey(2)),
+    AddVehicleFormStep4(key: ValueKey(3)),
+    AddVehicleFormStep5(key: ValueKey(4)),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<AddVehicleBloc, AddVehicleState>(
+      listenWhen: (prev, curr) => prev.status != curr.status,
+      listener: (context, state) {},
+      buildWhen: (prev, curr) =>
+          prev.currentStep != curr.currentStep || prev.status != curr.status,
+      builder: (context, state) {
+        if (state.status == AddVehicleStatus.loading) {
+          return const _WizardLoadingPage();
+        }
+        if (state.status == AddVehicleStatus.completed) {
+          return _WizardCompletedPage(draft: state.draft);
+        }
+        if (state.status == AddVehicleStatus.error) {
+          return _WizardErrorPage(message: state.errorMessage ?? 'Errore sconosciuto');
+        }
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) {
+            final slide = Tween<Offset>(
+              begin: const Offset(0.15, 0),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOut),
+            );
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(position: slide, child: child),
+            );
+          },
+          child: _steps[state.currentStep],
+        );
+      },
+    );
+  }
+}
+
+class _WizardLoadingPage extends StatelessWidget {
+  const _WizardLoadingPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 300,
+      child: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+}
+
+class _WizardCompletedPage extends StatelessWidget {
+  final VehicleDraft draft;
+  const _WizardCompletedPage({required this.draft});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.check_circle, color: Color(0xFF34C759), size: 28),
+              SizedBox(width: 12),
+              Text(
+                'Veicolo salvato',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Dati salvati in locale (SharedPreferences):',
+            style: TextStyle(color: Color(0xFF8E8E93), fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+          _DraftRow(label: 'Marca', value: draft.marca),
+          _DraftRow(label: 'Modello', value: draft.modello),
+          _DraftRow(label: 'Anno', value: draft.anno?.toString()),
+          _DraftRow(label: 'Carburante', value: draft.carburante),
+          _DraftRow(label: 'Targa', value: draft.targa),
+          const Divider(color: Color(0xFF1C1C1E), height: 24),
+          _DraftRow(label: 'Data ult. tagliando', value: _fmtDate(draft.dataUltimoTagliando)),
+          _DraftRow(label: 'Km ult. tagliando', value: draft.kmUltimoTagliando?.toString()),
+          _DraftRow(label: 'Data ult. distribuzione', value: _fmtDate(draft.dataUltimaDistribuzione)),
+          _DraftRow(label: 'Km ult. distribuzione', value: draft.kmUltimaDistribuzione?.toString()),
+          const Divider(color: Color(0xFF1C1C1E), height: 24),
+          _DraftRow(label: 'Potenza (CV)', value: draft.potenzaCv?.toString()),
+          _DraftRow(label: 'Cilindrata', value: draft.cilindrata?.toString()),
+          _DraftRow(label: 'Km attuali', value: draft.kmAttuali?.toString()),
+          const Divider(color: Color(0xFF1C1C1E), height: 24),
+          _DraftRow(label: 'Prossima revisione', value: _fmtDate(draft.prossimarevisione)),
+          _DraftRow(label: 'Km ult. cambio gomme', value: draft.kmUltimoCambioGomme?.toString()),
+          _DraftRow(label: 'Km pross. cambio gomme', value: draft.kmProssimoCambioGomme?.toString()),
+          _DraftRow(label: 'Km ult. inversione', value: draft.kmUltimaInversioneGomme?.toString()),
+          _DraftRow(label: 'Km pross. inversione', value: draft.kmProssimaInversioneGomme?.toString()),
+          const Divider(color: Color(0xFF1C1C1E), height: 24),
+          _DraftRow(label: 'Foto path', value: draft.fotoPath),
+          _DraftRow(label: 'Codice meccanico', value: draft.codiceMeccanico),
+          const SizedBox(height: 24),
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Chiudi', style: TextStyle(color: Color(0xFF4A90E2))),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _fmtDate(DateTime? d) {
+    if (d == null) return '—';
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
+}
+
+class _DraftRow extends StatelessWidget {
+  final String label;
+  final String? value;
+  const _DraftRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 160,
+            child: Text(
+              label,
+              style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 13),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value == null || (value?.isEmpty ?? true) ? '—' : value!,
+              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WizardErrorPage extends StatelessWidget {
+  final String message;
+  const _WizardErrorPage({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline, color: Color(0xFFFF453A), size: 48),
+          const SizedBox(height: 16),
+          const Text(
+            'Errore di salvataggio',
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 14),
+          ),
+          const SizedBox(height: 24),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Chiudi', style: TextStyle(color: Color(0xFF4A90E2))),
+          ),
+        ],
+      ),
+    );
+  }
+}

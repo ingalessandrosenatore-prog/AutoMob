@@ -1,0 +1,139 @@
+import 'package:fpdart/fpdart.dart';
+import '../../domain/entities/app_user.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../datasources/auth_remote_datasource.dart' hide AuthDataSourceException, NetworkException;
+import '../../../../core/error/Exception/Exception.dart';
+import '../../../../core/error/Exception/Exceptions.dart';
+
+class AuthRepositoryImpl implements AuthRepository {
+  final AuthRemoteDataSource remoteDataSource;
+
+  AuthRepositoryImpl({required this.remoteDataSource});
+
+  @override
+  Future<Either<Failure, AppAuthUser>> loginWithEmail(String email, String password) async {
+    try {
+      final authUser = await remoteDataSource.loginWithEmail(email, password);
+      return Right(authUser);
+    } on AuthDataSourceException catch (e) {
+      return Left(_mapAuthException(e));
+    } on NetworkException {
+      return Left(const NetworkFailure());
+    } catch (e) {
+      return Left(const ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, AppAuthUser>> loginWithGoogle() async {
+    try {
+      final authUser = await remoteDataSource.loginWithGoogle();
+      return Right(authUser);
+    } on AuthDataSourceException catch (e) {
+      if (e.message.contains('annullato')) {
+        return Left(const AuthCancelledFailure());
+      }
+      return Left(_mapAuthException(e));
+    } on NetworkException {
+      return Left(const NetworkFailure());
+    } catch (e) {
+      return Left(const ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, AppAuthUser>> loginWithApple() async {
+    try {
+      final authUser = await remoteDataSource.loginWithApple();
+      return Right(authUser);
+    } on AuthDataSourceException catch (e) {
+      if (e.message.contains('annullato')) {
+        return Left(const AuthCancelledFailure());
+      }
+      return Left(_mapAuthException(e));
+    } on NetworkException {
+      return Left(const NetworkFailure());
+    } catch (e) {
+      return Left(const ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, AppAuthUser>> signupWithEmail(
+    String name,
+    String email,
+    String password,
+  ) async {
+    try {
+      final authUser = await remoteDataSource.signupWithEmail(
+        name,
+        email,
+        password,
+
+      );
+      return Right(authUser);
+    } on AuthDataSourceException catch (e) {
+      return Left(_mapAuthException(e));
+    } on NetworkException {
+      return Left(const NetworkFailure());
+    } catch (e) {
+      return Left(const ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> logout() async {
+    try {
+      await remoteDataSource.logout();
+      return const Right(null);
+    } on NetworkException {
+      return Left(const NetworkFailure());
+    } catch (e) {
+      return Left(const ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, AppAuthUser?>> checkSession() async {
+    try {
+      final authUser = await remoteDataSource.checkSession();
+      return Right(authUser);
+    } on NetworkException {
+      return Left(const NetworkFailure());
+    } catch (e) {
+      return Left(const ServerFailure());
+    }
+  }
+
+  // Helper method per mappare le eccezioni auth in failure specifiche
+  Failure _mapAuthException(AuthDataSourceException e) {
+    switch (e.code) {
+      case '400':
+        if (e.message.contains('password')) {
+          return const WeakPasswordFailure();
+        }
+        break;
+      case '422':
+        if (e.message.contains('email')) {
+          return const EmailAlreadyInUseFailure();
+        }
+        break;
+      case '401':
+        return const AuthFailure('Email o password errati');
+      default:
+        break;
+    }
+
+    // Se contiene messaggi specifici
+    if (e.message.contains('già registrata')) {
+      return const EmailAlreadyInUseFailure();
+    }
+    
+    if (e.message.contains('password')) {
+      return const WeakPasswordFailure();
+    }
+
+    // Default auth failure con messaggio
+    return AuthFailure(e.message);
+  }
+}
