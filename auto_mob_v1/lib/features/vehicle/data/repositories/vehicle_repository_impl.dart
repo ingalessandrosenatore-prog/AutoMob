@@ -40,7 +40,8 @@ class VehicleRepositoryImpl implements VehicleRepository {
       }
 
       return const Right(null);
-    } on CacheException {
+    } on CacheException catch (e) {
+      print("ERRORE STORAGE LOCALE: ${e.message}");
       return const Left(StorageFailure());
     } on VehicleDataSourceException catch (e) {
       // QUESTO È IL TUO SALVAVITA: ti dirà ESATTAMENTE quale constraint fallisce
@@ -56,7 +57,11 @@ class VehicleRepositoryImpl implements VehicleRepository {
   Future<Either<Failure, List<Vehicle>>> getVehicles() async {
     try {
       final vehicles = await remoteDataSource.getVehicles();
-      return Right(vehicles);
+      final vehiclesWithFoto = vehicles.map((v) {
+        final path = localDataSource.getFotoPath(v.plate);
+        return v.copyWith(fotoPath: path);
+      }).toList();
+      return Right(vehiclesWithFoto);
     } on VehicleDataSourceException {
       return Left(const ServerFailure());
     } on NetworkException {

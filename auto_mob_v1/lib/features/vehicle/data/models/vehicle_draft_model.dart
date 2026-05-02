@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../../domain/entities/vehicle_draft.dart';
 
 class VehicleDraftModel extends VehicleDraft {
@@ -68,7 +70,7 @@ class VehicleDraftModel extends VehicleDraft {
       kmUltimaInversioneGomme: json['km_ultima_inversione_gomme'],
       kmProssimaInversioneGomme: json['km_prossima_inversione_gomme'],
       codiceMeccanico: json['codice_meccanico'],
-      fotoFile: json['foto_path'],
+      fotoFile: json['foto_path'] != null ? File(json['foto_path'] as String) : null,
     );
   }
 
@@ -92,7 +94,7 @@ class VehicleDraftModel extends VehicleDraft {
       'km_ultima_inversione_gomme': kmUltimaInversioneGomme,
       'km_prossima_inversione_gomme': kmProssimaInversioneGomme,
       'codice_meccanico': codiceMeccanico,
-      'foto_path': fotoFile,
+      'foto_path': fotoFile?.path,
     };
   }
 

@@ -135,7 +135,7 @@ class _HomeViewBody extends StatelessWidget {
                                     marca: v.brand,
                                     modello: v.model,
                                     kmTotali: v.isPlaceholder ? '—' : '${v.kmCurrent} km',
-                                    immaginePath: 'lib/assets/images/ferrari_roma.jpg',
+                                    immaginePath: v.fotoPath,
                                   );
                                 },
                               ),

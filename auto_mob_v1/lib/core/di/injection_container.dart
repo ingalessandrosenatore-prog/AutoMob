@@ -38,7 +38,6 @@ Future<void> init() async {
   await _initAuth();
   await _initVehicle();
   await _initDashboard();
-  await _initFotoStorage();
 }
 
 Future<void> _initSupabase() async {
@@ -54,20 +53,6 @@ Future<void> _initSharedPreferences() async {
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
 }
 
-  Future<void> _initFotoStorage() async {
-final appDir = await getApplicationDocumentsDirectory();
-  final cartellaFoto = Directory('${appDir.path}/foto_veicoli');
-
-  if (!await cartellaFoto.exists()) {
-    await cartellaFoto.create(recursive: true);
-  }
-
-  // Inietto il PATH (stringa) nel Data Source, non tutta la classe Directory.
-  // È più pulito per i test!
-  sl.registerLazySingleton<FotoLocalDataSource>(
-    () => FotoLocalDataSourceImpl(basePath: cartellaFoto.path),
-  );
-}
 Future<void> _initAuth() async {
   sl.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
@@ -96,6 +81,12 @@ Future<void> _initAuth() async {
 }
 
 Future<void> _initVehicle() async {
+  final appDir = await getApplicationDocumentsDirectory();
+  final cartellaFoto = Directory('${appDir.path}/foto_veicoli');
+  if (!await cartellaFoto.exists()) {
+    await cartellaFoto.create(recursive: true);
+  }
+
   // BLoC — factory: nuova istanza ad ogni apertura del wizard
   sl.registerFactory<AddVehicleBloc>(
     () => AddVehicleBloc(
@@ -119,7 +110,7 @@ Future<void> _initVehicle() async {
 
   // Data Sources
   sl.registerLazySingleton<VehicleDraftLocalDataSource>(
-    () => VehicleDraftLocalDataSourceImpl(sl(), dis: sl()),
+    () => VehicleDraftLocalDataSourceImpl(sl(), dirPAth: cartellaFoto.path),
   );
   sl.registerLazySingleton<VehicleRemoteDataSource>(
     () => VehicleRemoteDataSourceImpl(supabaseClient: sl()),

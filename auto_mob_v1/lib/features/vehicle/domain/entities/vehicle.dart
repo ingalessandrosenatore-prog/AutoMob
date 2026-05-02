@@ -29,6 +29,10 @@ class Vehicle extends Equatable {
   final DateTime createdAt;
   final DateTime? updatedAt;
 
+  /// Path locale della foto del veicolo (es. /data/.../foto_veicoli/veicolo_AB123CD.jpg).
+  /// Null se la foto non è stata salvata. Non viene persistito su DB.
+  final String? fotoPath;
+
   const Vehicle({
     required this.id,
     required this.ownerId,
@@ -50,7 +54,34 @@ class Vehicle extends Equatable {
     this.lastTireChangeKm,
     this.lastTireRotationKm,
     this.updatedAt,
+    this.fotoPath,
   });
+
+  Vehicle copyWith({String? fotoPath}) {
+    return Vehicle(
+      id: id,
+      ownerId: ownerId,
+      plate: plate,
+      brand: brand,
+      model: model,
+      year: year,
+      fuel: fuel,
+      kmCurrent: kmCurrent,
+      tagliandoIntervalKm: tagliandoIntervalKm,
+      tireChangeIntervalKm: tireChangeIntervalKm,
+      tireRotationIntervalKm: tireRotationIntervalKm,
+      createdAt: createdAt,
+      powerCv: powerCv,
+      displacementCc: displacementCc,
+      nextRevisionDate: nextRevisionDate,
+      lastTagliandoKm: lastTagliandoKm,
+      lastDistribuzioneKm: lastDistribuzioneKm,
+      lastTireChangeKm: lastTireChangeKm,
+      lastTireRotationKm: lastTireRotationKm,
+      updatedAt: updatedAt,
+      fotoPath: fotoPath ?? this.fotoPath,
+    );
+  }
 
   /// Placeholder usato dalla dashboard quando l'utente non ha ancora veicoli.
   /// Solo `model` valorizzato col messaggio, tutti gli altri campi a sentinel vuoti/zero.
@@ -98,5 +129,6 @@ class Vehicle extends Equatable {
         lastTireRotationKm,
         createdAt,
         updatedAt,
+        fotoPath,
       ];
 }

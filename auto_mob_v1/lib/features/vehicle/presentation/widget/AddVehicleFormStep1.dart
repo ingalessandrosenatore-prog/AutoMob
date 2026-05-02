@@ -175,23 +175,26 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: AmMainFab(
-                label: "Continua",
-                height: 60,
-                width: 180,
-                color: const Color(0xFFE85A1A),
-                icon: Icons.chevron_right,
-                onPressed: () {
-                  context.read<AddVehicleBloc>().add(
-                    Step1Submitted(
-                      marca: marca!,
-                      modello: modelloController.text,
-                      year: int.parse(anno!),
-                      carburante: carburante!,
-                      targa: targaController.text,
-                    ),
-                  );
-                },
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: AmMainFab(
+                  label: "Continua",
+                  height: 60,
+                  width: 180,
+                  color: const Color(0xFFE85A1A),
+                  icon: Icons.chevron_right,
+                  onPressed: () {
+                    context.read<AddVehicleBloc>().add(
+                      Step1Submitted(
+                        marca: marca!,
+                        modello: modelloController.text,
+                        year: int.parse(anno!),
+                        carburante: carburante!,
+                        targa: targaController.text,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(height: 30),

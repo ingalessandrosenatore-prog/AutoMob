@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
@@ -152,10 +154,13 @@ class CardAuto extends StatelessWidget {
   Widget _buildImage() {
     final path = immaginePath;
     if (path == null || path.isEmpty) return _buildPlaceholder();
-    final isUrl = path.startsWith('http');
-    return isUrl
-        ? Image.network(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder())
-        : Image.asset(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder());
+    if (path.startsWith('http')) {
+      return Image.network(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder());
+    }
+    if (path.startsWith('lib/') || path.startsWith('assets/')) {
+      return Image.asset(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder());
+    }
+    return Image.file(File(path), fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder());
   }
 
   Widget _buildPlaceholder() {

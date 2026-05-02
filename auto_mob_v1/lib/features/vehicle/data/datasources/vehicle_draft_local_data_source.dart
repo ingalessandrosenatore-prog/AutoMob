@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/error/Exception/Exceptions.dart';
@@ -11,7 +10,8 @@ abstract class VehicleDraftLocalDataSource {
   /// Salva il draft in SharedPreferences. Lancia [CacheException] in caso di errore.
   Future<void> saveDraft(VehicleDraftModel draft);
   Future<void> saveFoto(File foto, String targa);
-  Future<File> readFoto( String targa);
+  Future<File?> readFoto(String targa);
+  String getFotoPath(String targa);
 }
 
 class VehicleDraftLocalDataSourceImpl implements VehicleDraftLocalDataSource {
@@ -20,7 +20,7 @@ class VehicleDraftLocalDataSourceImpl implements VehicleDraftLocalDataSource {
   final SharedPreferences prefs;
   final String dirPAth;
 
-  VehicleDraftLocalDataSourceImpl(this.prefs, {required this.dirPAth} );
+  VehicleDraftLocalDataSourceImpl(this.prefs, {required this.dirPAth});
 
   @override
   Future<void> saveDraft(VehicleDraftModel draft) async {
@@ -40,27 +40,24 @@ class VehicleDraftLocalDataSourceImpl implements VehicleDraftLocalDataSource {
   @override
   Future<void> saveFoto(File foto, String targa) async {
     try {
-
-
-      // 2. Genera il nome univoco del file
-
-      final String nomeFile = 'veicolo_${targa}.jpg';
-
-      // 3. Unisci la cartella al nome del file
-      final String percorsoFinale = '${dir.path}/$nomeFile';
-
-      // 4. Copia il file temporaneo nel percorso definitivo
-      final File fileSalvato = await foto.copy(percorsoFinale);
+      final String percorsoFinale = '$dirPAth/veicolo_$targa.jpg';
+      await foto.copy(percorsoFinale);
     } catch (e) {
       throw CacheException('Errore salvataggio foto: $e');
     }
   }
 
   @override
-  Future<File> readFoto(String targa) {
-    // TODO: implement readFoto
-    throw UnimplementedError();
+  Future<File?> readFoto(String targa) async {
+    try {
+      final file = File('$dirPAth/veicolo_$targa.jpg');
+      if (await file.exists()) return file;
+      return null;
+    } catch (e) {
+      throw CacheException('Errore lettura foto: $e');
+    }
   }
-  
 
+  @override
+  String getFotoPath(String targa) => '$dirPAth/veicolo_$targa.jpg';
 }
