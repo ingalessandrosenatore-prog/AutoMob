@@ -18,11 +18,21 @@ class DashboardLoading extends DashboardState {}
 ///   - alerts
 class DashboardLoaded extends DashboardState {
   final List<Vehicle> vehicles;
+  final int index;
 
-  DashboardLoaded({required this.vehicles});
+  DashboardLoaded({required this.vehicles, required this.index});
+
+  DashboardLoaded copyWith({
+    List<Vehicle>? vehicles,
+    int? index,}) {
+    return DashboardLoaded(
+      vehicles: vehicles ?? this.vehicles,
+      index: index ?? this.index,
+    );
+  }
 
   @override
-  List<Object?> get props => [vehicles];
+  List<Object?> get props => [vehicles, index];
 }
 
 class DashboardError extends DashboardState {

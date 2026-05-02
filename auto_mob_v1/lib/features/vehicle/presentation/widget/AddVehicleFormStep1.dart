@@ -53,130 +53,149 @@ const List<String> kTipiCarburante = [
   'Metano + Benzina',
 ];
 
-class AddVehicleFormStep1 extends StatelessWidget {
+class AddVehicleFormStep1 extends StatefulWidget {
   const AddVehicleFormStep1({super.key});
+
+
+  @override
+  State<AddVehicleFormStep1> createState() => _AddVehicleFormStep1State();
+}
+
+class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
+  String? carburante;
+  String? marca;
+  String? anno;
+  final modelloController = TextEditingController();
+  final targaController = TextEditingController();
+
 
   @override
   Widget build(BuildContext context) {
-    String? carburante;
-    String? marca;
-    String? anno;
-    final modelloController = TextEditingController();
-    final targaController = TextEditingController();
 
-    return Column(
-      children: [
-        WizardHeader(
-          stepIcon: Icons.directions_car,
-          stepNumber: 1,
-          totalSteps: 5,
-          title: "Il tuo veicolo",
-          onClose: () => Navigator.pop(context),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  AmDropdown<String>(
-                    label: "Marca",
-                    items: kMarcheAuto,
-                    itemLabelBuilder: (item) => item,
-                    value: marca,
-                    onChanged: (val) { marca = val; },
-                    placeholder: "Seleziona...",
-                    isRequired: true,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  AmTextField(
-                    label: "Modello",
-                    placeholder: "es. Golf VIII",
-                    controller: modelloController,
-                    isRequired: true,
-                    obscureText: false,
-                    keyboardType: TextInputType.text,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  AmDropdown<String>(
-                    label: "Anno",
-                    items: kAnniAuto,
-                    itemLabelBuilder: (item) => item,
-                    value: anno,
-                    onChanged: (val) { anno = val; },
-                    placeholder: "Seleziona...",
-                    isRequired: true,
-                  ),
-                  const SizedBox(width: 16),
-                  AmDropdown<String>(
-                    label: "Carburante",
-                    items: kTipiCarburante,
-                    value: carburante,
-                    itemLabelBuilder: (item) => item,
-                    onChanged: (val) { carburante = val; },
-                    placeholder: "Seleziona...",
-                    isRequired: true,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  AmTextField(
-                    label: "Targa",
-                    placeholder: "AB 123 CD",
-                    controller: targaController,
-                    isRequired: true,
-                    obscureText: false,
-                    keyboardType: TextInputType.text,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Inserisci la targa del veicolo",
-                  style: TextStyle(
-                    color: Color(0xFF636366),
-                    fontSize: 12,
-                  ),
+
+    return
+        Stack(
+          children : [
+            Positioned(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
+                child: Column(
+                  children: [
+                    SizedBox(height: 150),
+                    Row(
+                      children: [
+                        const SizedBox(height: 20),
+                        AmDropdown<String>(
+                          label: "Brand",
+                          items: kMarcheAuto,
+                          itemLabelBuilder: (item) => item,
+                          value: marca,
+                          onChanged: (val) { setState(() {;marca = val;}); },
+                          placeholder: "Seleziona...",
+                          isRequired: true,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10,),
+                    Row(
+                      children: [
+                        const SizedBox(height: 20),
+                        AmTextField(
+                          label: "Modello",
+                          placeholder: "es. Golf VIII",
+                          controller: modelloController,
+                          isRequired: true,
+                          obscureText: false,
+                          keyboardType: TextInputType.text,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10,),
+                    Row(
+                      children: [
+                        const SizedBox(height: 20),
+                        AmDropdown<String>(
+                          label: "Anno",
+                          items: kAnniAuto,
+                          itemLabelBuilder: (item) => item,
+                          value: anno,
+                          onChanged: (val) { anno = val; },
+                          placeholder: "Seleziona...",
+                          isRequired: true,
+                        ),
+                        const SizedBox(width: 16),
+                        AmDropdown<String>(
+                          label: "Carburante",
+                          items: kTipiCarburante,
+                          value: carburante,
+                          itemLabelBuilder: (item) => item,
+                          onChanged: (val) { setState(() {
+                            carburante = val;
+                          }); },
+                          placeholder: "Seleziona...",
+                          isRequired: true,
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 10,),
+                    Row(
+                      children: [
+
+                        AmTextField(
+                          label: "Targa",
+                          placeholder: "AB 123 CD",
+                          controller: targaController,
+                          isRequired: true,
+                          obscureText: false,
+                          keyboardType: TextInputType.text,
+                        ),
+                      ],
+                    ),
+
+
+
+                  ],
                 ),
               ),
-              const SizedBox(height: 40),
-              SizedBox(
-                width: double.infinity,
-                child: AmMainFab(
-                  label: "Continua",
-                  color: const Color(0xFFE85A1A),
-                  icon: Icons.chevron_right,
-                  onPressed: () {
-                    if (marca == null || anno == null || carburante == null) return;
-                    context.read<AddVehicleBloc>().add(
-                      Step1Submitted(
-                        marca: marca!,
-                        modello: modelloController.text,
-                        year: int.parse(anno!),
-                        carburante: carburante!,
-                        targa: targaController.text,
-                      ),
-                    );
-                  },
-                ),
+            ), Positioned(
+              top: 0,
+              right: 0,
+              left: 0,
+              child: WizardHeader(
+                stepIcon: Icons.directions_car,
+                stepNumber: 1,
+                totalSteps: 5,
+                title: "Il tuo veicolo",
+                onClose: () => Navigator.pop(context),
               ),
-              const SizedBox(height: 30),
-            ],
-          ),
-        ),
-      ],
-    );
+            ),
+
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: AmMainFab(
+                label: "Continua",
+                height: 60,
+                width: 180,
+                color: const Color(0xFFE85A1A),
+                icon: Icons.chevron_right,
+                onPressed: () {
+                  if (marca == null || anno == null || carburante == null) return;
+                  context.read<AddVehicleBloc>().add(
+                    Step1Submitted(
+                      marca: marca!,
+                      modello: modelloController.text,
+                      year: int.parse(anno!),
+                      carburante: carburante!,
+                      targa: targaController.text,
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 30),
+         ]
+                );
   }
 }

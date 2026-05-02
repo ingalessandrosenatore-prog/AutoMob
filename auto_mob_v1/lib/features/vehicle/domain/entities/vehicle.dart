@@ -19,6 +19,13 @@ class Vehicle extends Equatable {
   final int tireChangeIntervalKm;
   final int tireRotationIntervalKm;
 
+  // km dell'ultima manutenzione per tipo (null se mai eseguita).
+  // Letti dalla tabella maintenance_items, valore piu' recente per type.
+  final int? lastTagliandoKm;
+  final int? lastDistribuzioneKm;
+  final int? lastTireChangeKm;
+  final int? lastTireRotationKm;
+
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -38,6 +45,10 @@ class Vehicle extends Equatable {
     this.powerCv,
     this.displacementCc,
     this.nextRevisionDate,
+    this.lastTagliandoKm,
+    this.lastDistribuzioneKm,
+    this.lastTireChangeKm,
+    this.lastTireRotationKm,
     this.updatedAt,
   });
 
@@ -81,6 +92,10 @@ class Vehicle extends Equatable {
         tagliandoIntervalKm,
         tireChangeIntervalKm,
         tireRotationIntervalKm,
+        lastTagliandoKm,
+        lastDistribuzioneKm,
+        lastTireChangeKm,
+        lastTireRotationKm,
         createdAt,
         updatedAt,
       ];

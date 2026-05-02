@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../vehicle/domain/entities/vehicle.dart';
@@ -10,6 +12,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
 
   DashboardBloc({required this.getVehicles}) : super(DashboardInitial()) {
     on<LoadDashboardData>(_onLoadDashboardData);
+    on<DashboardPageChanged>(_onVehicleChange);
   }
 
   Future<void> _onLoadDashboardData(
@@ -18,19 +21,29 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) async {
     emit(DashboardLoading());
 
-    // Per ora carichiamo solo i veicoli. In futuro qui aggiungeremo
-    // gli altri use case (KPI, scadenze, alert) e popoleremo DashboardLoaded.
     final result = await getVehicles();
     result.fold(
       (failure) => emit(DashboardError(message: failure.message)),
       (vehicles) {
-        // Lista vuota: mostriamo comunque qualcosa con un veicolo placeholder.
         if (vehicles.isEmpty) {
-          emit(DashboardLoaded(vehicles: [Vehicle.placeholder()]));
+          // Lista vuota: mostriamo il placeholder
+          emit(DashboardLoaded(vehicles: [Vehicle.placeholder()], index: 0));
         } else {
-          emit(DashboardLoaded(vehicles: vehicles));
+          // Lista non vuota
+          emit(DashboardLoaded(vehicles: vehicles, index: 0));
         }
       },
     );
+  }
+
+
+
+
+
+  FutureOr<void> _onVehicleChange(DashboardPageChanged event, Emitter<DashboardState> emit) {
+    final currentState = state;
+    if (currentState is DashboardLoaded) {
+      emit(currentState.copyWith(index: event.newIndex));
+    }
   }
 }

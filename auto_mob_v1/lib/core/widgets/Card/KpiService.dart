@@ -37,113 +37,103 @@ class AmMaintenanceKpiCard extends StatelessWidget {
         color: const Color(0xFF121214), // Sfondo scuro profondo
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withOpacity(0.15),
           width: 1,
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Row Superiore: Icona, Titolo e Percentuale
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label.toUpperCase(),
-                  style: const TextStyle(
-                    color: Color(0xFF8E8E93),
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${percentage.toInt()}%',
-                    style: TextStyle(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1), // Lievissima ombra colorata
+            blurRadius: 30,
+            spreadRadius: 2,
+            offset: const Offset(2, 2),
           ),
-          const SizedBox(height: 16),
-          // Chilometri Rimasti
-          RichText(
-            text: TextSpan(
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-              ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Contenuto Testuale (Spostato a Sinistra)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const TextSpan(text: 'Rimasti : '),
-                TextSpan(text: '${formatKm(remainingKm)} km'),
+                Row(
+                  children: [
+                    Icon(icon, color: color, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        label.toUpperCase(),
+                        style: const TextStyle(
+                          color: Color(0xFF8E8E93),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    children: [
+                      const TextSpan(text: 'Rimasti: '),
+                      TextSpan(text: '${formatKm(remainingKm)} KM'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Prossimo: ${formatKm(nextServiceKm)} km ${lastServiceDate != null ? "· $lastServiceDate" : ""}',
+                  style: const TextStyle(
+                    color: Color(0xFF636366),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 6),
-          // Info Secondarie (Prossimo e Ultimo)
-          Text(
-            'Richiamo a ${formatKm(nextServiceKm)} km ${lastServiceDate != null
-                ? "· Ultima: $lastServiceDate"
-                : ""}',
-            style: const TextStyle(
-              color: Color(0xFF636366),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Barra della Percentuale
+          const SizedBox(width: 16),
+          // Cerchio Percentuale con Glow (Spostato a Destra)
           Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none, // Evita che il glow venga tagliato
             children: [
-              Container(
-                height: 6,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF2C2C2E),
-                  borderRadius: BorderRadius.circular(3),
+              // Sfondo del cerchio (grigio scuro)
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: CircularProgressIndicator(
+                  value: 1,
+                  strokeWidth: 7, // Leggermente più spesso
+                  color: Colors.white.withOpacity(0.05),
                 ),
               ),
-              FractionallySizedBox(
-                widthFactor: percentage / 100,
-                child: Container(
-                  height: 6,
-                  decoration: BoxDecoration(
+              // Glow esterno e indicatore di progresso
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: CustomPaint(
+                  painter: _ExternalGlowPainter(
+                    percentage: percentage,
                     color: color,
-                    borderRadius: BorderRadius.circular(3),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 0),
-                      ),
-                    ],
+                    strokeWidth: 7, // Leggermente più spesso
                   ),
+                ),
+              ),
+              Text(
+                '${percentage.toInt()}%',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
                 ),
               ),
             ],
@@ -152,4 +142,61 @@ class AmMaintenanceKpiCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Painter personalizzato per gestire il glow solo verso l'esterno.
+class _ExternalGlowPainter extends CustomPainter {
+  final double percentage;
+  final Color color;
+  final double strokeWidth;
+
+  _ExternalGlowPainter({
+    required this.percentage,
+    required this.color,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width / 2);
+    final sweepAngle = (percentage / 100) * 2 * 3.141592653589793;
+    const startAngle = -3.141592653589793 / 2;
+
+    // 1. Disegna il Glow Esterno
+    final glowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..color = color.withOpacity(1)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+
+    // Disegniamo il glow prima del progresso principale
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle,
+      sweepAngle,
+      false,
+      glowPaint,
+    );
+
+    // 2. Disegna l'arco di progresso principale
+    final progressPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..color = color;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle,
+      sweepAngle,
+      false,
+      progressPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ExternalGlowPainter oldDelegate) =>
+      oldDelegate.percentage != percentage || oldDelegate.color != color;
 }

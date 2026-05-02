@@ -119,6 +119,8 @@ class _LoginViewState extends State<LoginView> {
                   const SizedBox(height: 48),
                   AmMainFab(
                     label: 'Login',
+                    height: 60,
+                    width: 180,
                     color: const Color(0xFFE85A1A),
                     icon: Icons.login,
                     isLoading: isLoading,
@@ -136,6 +138,8 @@ class _LoginViewState extends State<LoginView> {
                     label: 'Registrati',
                     color: const Color(0xFF4A90E2),
                     icon: Icons.person_add,
+                    height: 60,
+                    width: 180,
                     onPressed: () => context.goNamed('registration'),
                   ),
                   const SizedBox(height: 32),

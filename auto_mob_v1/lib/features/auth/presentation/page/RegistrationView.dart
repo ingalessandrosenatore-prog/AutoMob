@@ -141,6 +141,8 @@ class _RegistrationViewState extends State<RegistrationView> {
                         color: const Color(0xFFE85A1A),
                         icon: Icons.person_add,
                         isLoading: isLoading,
+                        height: 60,
+                        width: 180,
                         onPressed: () {
                           context.read<AuthBloc>().add(
                                 SignupWithEmailEvent(

@@ -25,10 +25,9 @@ class AddVehicleWizard extends StatelessWidget {
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.75,
+            minHeight: MediaQuery.of(context).size.height * 0.75,
           ),
-          child: const SingleChildScrollView(
-            child: WizardBody(),
-          ),
+          child: WizardBody(),
         ),
       ),
     );

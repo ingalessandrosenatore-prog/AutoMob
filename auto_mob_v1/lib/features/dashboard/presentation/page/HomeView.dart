@@ -1,13 +1,20 @@
+import 'package:auto_mob_v1/core/widgets/Buttons/AmFabActionRounded.dart';
+import 'package:auto_mob_v1/core/widgets/Buttons/SoftButton.dart';
+import 'package:auto_mob_v1/core/widgets/Card/KpiService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'dart:ui';
 
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../Bloc/dashboardBloc.dart';
 import '../Bloc/dashboardEvent.dart';
-import '../Bloc/dashboardState.dart';
+import '../Bloc/dashboardState.dart' hide DashboardPageChanged;
 import '../widget/CardAuto.dart';
+import '../widget/CardOfficina.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
@@ -26,27 +33,44 @@ class _HomeViewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = PageController();
     return Scaffold(
+      backgroundColor: const Color(0xFF1A1C23),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  AmMainFab(
-                    label: 'aggiungi',
-                    color: Colors.orange,
-                    icon: Icons.add,
-                    onPressed: () => context.pushNamed('aggiungi_veicolo'),
-                  ),
-                ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(9.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "I MIEI VEICOLI",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(color: Colors.black12, offset: Offset(1, 1), blurRadius: 2)
+                        ],
+                      ),
+                    ),
+                    AmSoftButton(
+                      label: 'AGGIUNGI',
+                      width: 140,
+                      height: 45,
+                      color: Color.fromRGBO(232, 90, 26, 1),
+                      icon: Icons.add,
+                      onPressed: () => context.pushNamed('aggiungi_veicolo'),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: BlocBuilder<DashboardBloc, DashboardState>(
+              // lista auto
+              BlocBuilder<DashboardBloc, DashboardState>(
                 builder: (context, state) {
                   if (state is DashboardLoading || state is DashboardInitial) {
                     return const Center(child: CircularProgressIndicator());
@@ -65,35 +89,198 @@ class _HomeViewBody extends StatelessWidget {
                   }
                   if (state is DashboardLoaded) {
                     final vehicles = state.vehicles;
-                    return ListView.builder(
-                      itemCount: vehicles.length,
-                      itemBuilder: (context, index) {
-                        final v = vehicles[index];
-                        // TODO: in futuro gestire il tap → pagina dettaglio veicolo
-                        // (per il placeholder il tap puo' invocare il wizard "aggiungi")
-                        return CardAuto(
-                          marca: v.brand,
-                          modello: v.model,
-                          kmTotali: v.isPlaceholder ? '—' : v.kmCurrent.toString(),
-                          immaginePath: null, // TODO: collegare immagine veicolo
-                        );
-                      },
+                    return SizedBox(
+                      height: 250,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: PageView.builder(
+                                scrollDirection: Axis.horizontal,
+                                controller: controller,
+                                onPageChanged: (index) {
+                                  context.read<DashboardBloc>().add(DashboardPageChanged(index));
+                                },
+                                itemCount: vehicles.length,
+                                itemBuilder: (context, index) {
+                                  final v = vehicles[index];
+                                  return CardAuto(
+                                    marca: v.brand,
+                                    modello: v.model,
+                                    kmTotali: v.isPlaceholder ? '—' : v.kmCurrent.toString(),
+                                    immaginePath: 'lib/assets/images/stelvio.jpg',
+                                  );
+                                },
+                              ),
+                            ),
+                         AnimatedSmoothIndicator(
+                          activeIndex: state.index,
+                          count: vehicles.length,
+                          effect: ExpandingDotsEffect(
+                            dotHeight: 8,
+                            dotWidth: 8,
+                            expansionFactor: 2,
+                            activeDotColor: const Color(0xFFFF6B00),
+                            dotColor: const Color(0xFF2C2C35),
+                            radius: 20,
+                          ),
+                        ),
+                        ]
+                      ),
+                      )
                     );
                   }
                   return const SizedBox.shrink();
                 },
               ),
-            ),
-          ],
+              // lista kpi per il veicolo corrente
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: AmWorkshopCard(nomeOfficina: 'Nessuna officina ', codiceMeccanico: '—', stato: '—', colore:Color(0xFFFFB4AB),),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(9.0) ,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "STATO VEICOLO",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(color: Colors.black12, offset: Offset(1, 1), blurRadius: 2)
+                        ],
+                      ),
+                    ),
+                   Icon(Icons.car_crash_outlined,color:Color(0xFFFF6B00) ,),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: BlocBuilder<DashboardBloc, DashboardState>(
+                  builder: (BuildContext context, state) {
+                    if (state is DashboardLoaded) {
+
+                      final currentVehicle = state.vehicles[state.index];
+                      final km = currentVehicle.kmCurrent;
+
+                      // Tagliando
+                      final currentKmAtServiceTag = currentVehicle.lastTagliandoKm ?? km;
+                      final nextServTag = currentKmAtServiceTag + currentVehicle.tagliandoIntervalKm;
+                      final remainKmTag = nextServTag - km;
+                      final percTag = ((remainKmTag * 100) / currentVehicle.tagliandoIntervalKm).clamp(0.0, 100.0);
+
+                      // Distribuzione — TODO: aggiungere distribuzioneIntervalKm all'entità Vehicle
+                      const distribuzioneIntervalKm = 60000;
+                      final currentKmAtServiceDist = currentVehicle.lastDistribuzioneKm ?? km;
+                      final nextServDist = currentKmAtServiceDist + distribuzioneIntervalKm;
+                      final remainKmDist = nextServDist - km;
+                      final percDist = ((remainKmDist * 100) / distribuzioneIntervalKm).clamp(0.0, 100.0);
+
+                      // Cambio gomme
+                      final currentKmAtServiceChangGom = currentVehicle.lastTireChangeKm ?? km;
+                      final nextServGomme = currentKmAtServiceChangGom + currentVehicle.tireChangeIntervalKm;
+                      final remainKmGomme = nextServGomme - km;
+                      final percGomme = ((remainKmGomme * 100) / currentVehicle.tireChangeIntervalKm).clamp(0.0, 100.0);
+
+                      // Inversione gomme
+                      final currentKmAtServiceRotGom = currentVehicle.lastTireRotationKm ?? km;
+                      final nextServInv = currentKmAtServiceRotGom + currentVehicle.tireRotationIntervalKm;
+                      final remainKmInv = nextServInv - km;
+                      final percInv = ((remainKmInv * 100) / currentVehicle.tireRotationIntervalKm).clamp(0.0, 100.0);
+
+                      return Column(
+                        children: [
+                          AmMaintenanceKpiCard(icon: Icons.handyman_outlined, color: choseColor(percTag), label: "tagliando", remainingKm: remainKmTag, nextServiceKm: nextServTag, percentage: percTag),
+                          AmMaintenanceKpiCard(icon: Icons.settings_outlined, color: choseColor(percDist), label: "distribuzione", remainingKm: remainKmDist, nextServiceKm: nextServDist, percentage: percDist),
+                          AmMaintenanceKpiCard(icon: Icons.tire_repair_outlined, color: choseColor(percGomme), label: "cambio gomme", remainingKm: remainKmGomme, nextServiceKm: nextServGomme, percentage: percGomme),
+                          AmMaintenanceKpiCard(icon: Icons.sync_outlined, color: choseColor(percInv), label: "inversione gomme", remainingKm: remainKmInv, nextServiceKm: nextServInv, percentage: percInv),
+                        ],
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-      floatingActionButton: AmMainFab(
-        label: 'aggiorna',
-        color: Colors.orange,
-        icon: Icons.update,
-        onPressed: () =>
-            context.read<DashboardBloc>().add(LoadDashboardData()),
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: ExpandableFab(
+          type:ExpandableFabType.up,
+          distance: 70,
+          duration: const Duration(milliseconds: 350),
+        overlayStyle: ExpandableFabOverlayStyle(
+          color: Colors.transparent,
+          blur: 60,
+        ),
+        openButtonBuilder: RotateFloatingActionButtonBuilder(
+            backgroundColor: const Color(0xFF1A1C23), // Sfondo scuro come in foto
+            foregroundColor: const Color(0xFF8BA2D4), // Colore icona bluastro
+            shape: const CircleBorder(),
+            child: Icon(
+              Icons.add,
+              size: 28,
+              shadows: [
+                Shadow(
+                  color: const Color(0xFF8BA2D4).withOpacity(0.8),
+                  blurRadius: 12,
+                ),
+              ],
+            ),
+          ),
+        closeButtonBuilder: FloatingActionButtonBuilder(
+            size: 56,
+            builder: (context, onPressed, progress) => FloatingActionButton(
+              onPressed: onPressed,
+              backgroundColor: const Color(0xFF1A1C23),
+              foregroundColor: const Color(0xFFFF6B00),
+              shape: const CircleBorder(),
+              child: Icon(
+                Icons.close,
+                size: 25,
+                shadows: [
+                  Shadow(
+                    color: const Color(0xFFFF6B00).withOpacity(0.6),
+                    blurRadius: 12,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          children: [
+            AmFabAction(color:Color(0xFFFF6B00) , label:"AGGIORNA KM", icon: Icons.speed_outlined , onPressed:  (){}),
+            AmFabAction(color: Color(0xFF3192F3), icon: Icons.trip_origin_outlined, label: "GOMME", onPressed:  (){}),
+            AmFabAction(color:Color(0xFF7361AC), icon: Icons.build, label: "TAGLIANDO", onPressed: (){}),
+            AmFabAction(color: Color(0xFF7361AC), label:"DISTRIBUZIONE", icon: Icons.settings_input_component, onPressed:  (){}),
+            AmFabAction(color: Color(0xFFFFB4AB) , icon: Icons.calendar_today_outlined, label:"REVSIONE", onPressed:  (){}),
+      ],
       ),
     );
+
+  }
+
+  Color choseColor(double perc) {
+    if (perc >= 75) {
+      return const Color(0xFF3192F3);
+    } else if (perc >= 50) {
+      return const Color(0xFF7361AC) ;
+    } else if (perc >= 25) {
+      return const Color(0xFFFFB4AB);
+    } else if (perc >= 5) {
+      return const Color(0xFFFF6B00);
+    } else if (perc >= 0) {
+      return const Color(0xFFFF0000);
+    } else {
+      return const Color(0xFF721C24);
+    }
   }
 }

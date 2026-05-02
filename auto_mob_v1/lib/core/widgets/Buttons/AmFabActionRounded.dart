@@ -27,19 +27,26 @@ class AmFabAction extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A).withOpacity(0.8),
+              color: Colors.transparent.withOpacity(0.2),
               borderRadius: BorderRadius.circular(25),
               border: Border.all(
-                color: Colors.white.withOpacity(0.1),
-                width: 1,
+                color: color.withOpacity(0.5),
+                width: 0.8,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.2),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: Text(
               label,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: color,
                 fontWeight: FontWeight.w600,
-                fontSize: 16,
+                fontSize: 14,
               ),
             ),
           ),
@@ -51,7 +58,7 @@ class AmFabAction extends StatelessWidget {
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1A).withOpacity(0.6),
+                color:  Colors.transparent,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: color.withOpacity(0.5),
@@ -59,16 +66,16 @@ class AmFabAction extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.3),
-                    blurRadius: 15,
-                    spreadRadius: 2,
+                    color: color.withOpacity(0.2),
+                    blurRadius: 30,
+                    spreadRadius: 10,
                   ),
                 ],
               ),
               child: Icon(
                 icon,
                 color: color,
-                size: 28,
+                size: 25,
               ),
             ),
           ),
