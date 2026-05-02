@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 
 class VehicleDraft extends Equatable {
@@ -9,9 +11,9 @@ class VehicleDraft extends Equatable {
   final String? carburante;
 
   // Step 2 — Tagliando e distribuzione
-  final DateTime? dataUltimoTagliando;
+  final int? intervalloUltimoTagliando;
   final int? kmUltimoTagliando; // required
-  final DateTime? dataUltimaDistribuzione;
+  final int? intervalloUltimaDistribuzione;
   final int? kmUltimaDistribuzione; // required
 
   // Step 3 — Dati tecnici
@@ -27,7 +29,7 @@ class VehicleDraft extends Equatable {
   final int? kmProssimaInversioneGomme;
 
   // Step 5 — Foto e meccanico
-  final String? fotoPath; // path locale, non va sul DB
+  final File? fotoFile; // path locale, non va sul DB
   final String? codiceMeccanico;
 
   const VehicleDraft({
@@ -36,9 +38,9 @@ class VehicleDraft extends Equatable {
     this.modello,
     this.anno,
     this.carburante,
-    this.dataUltimoTagliando,
+    this.intervalloUltimoTagliando,
     this.kmUltimoTagliando,
-    this.dataUltimaDistribuzione,
+    this.intervalloUltimaDistribuzione,
     this.kmUltimaDistribuzione,
     this.potenzaCv,
     this.cilindrata,
@@ -48,7 +50,7 @@ class VehicleDraft extends Equatable {
     this.kmProssimoCambioGomme,
     this.kmUltimaInversioneGomme,
     this.kmProssimaInversioneGomme,
-    this.fotoPath,
+    this.fotoFile,
     this.codiceMeccanico,
   });
 
@@ -72,6 +74,9 @@ class VehicleDraft extends Equatable {
     int? kmProssimaInversioneGomme,
     String? fotoPath,
     String? codiceMeccanico,
+    int? intervalloUltimaDistribuzione,
+    int? intervalloUltimoTagliando,
+    File ? fotoFile,
   }) {
     return VehicleDraft(
       targa: targa ?? this.targa,
@@ -79,9 +84,9 @@ class VehicleDraft extends Equatable {
       modello: modello ?? this.modello,
       anno: anno ?? this.anno,
       carburante: carburante ?? this.carburante,
-      dataUltimoTagliando: dataUltimoTagliando ?? this.dataUltimoTagliando,
+      intervalloUltimoTagliando: intervalloUltimoTagliando ?? this.intervalloUltimoTagliando,
       kmUltimoTagliando: kmUltimoTagliando ?? this.kmUltimoTagliando,
-      dataUltimaDistribuzione: dataUltimaDistribuzione ?? this.dataUltimaDistribuzione,
+      intervalloUltimaDistribuzione: intervalloUltimaDistribuzione ?? this.intervalloUltimaDistribuzione,
       kmUltimaDistribuzione: kmUltimaDistribuzione ?? this.kmUltimaDistribuzione,
       potenzaCv: potenzaCv ?? this.potenzaCv,
       cilindrata: cilindrata ?? this.cilindrata,
@@ -91,7 +96,7 @@ class VehicleDraft extends Equatable {
       kmProssimoCambioGomme: kmProssimoCambioGomme ?? this.kmProssimoCambioGomme,
       kmUltimaInversioneGomme: kmUltimaInversioneGomme ?? this.kmUltimaInversioneGomme,
       kmProssimaInversioneGomme: kmProssimaInversioneGomme ?? this.kmProssimaInversioneGomme,
-      fotoPath: fotoPath ?? this.fotoPath,
+      fotoFile: fotoFile ?? this.fotoFile,
       codiceMeccanico: codiceMeccanico ?? this.codiceMeccanico,
     );
   }
@@ -99,12 +104,12 @@ class VehicleDraft extends Equatable {
   @override
   List<Object?> get props => [
         targa, marca, modello, anno, carburante,
-        dataUltimoTagliando, kmUltimoTagliando,
-        dataUltimaDistribuzione, kmUltimaDistribuzione,
+        intervalloUltimoTagliando, kmUltimoTagliando,
+        intervalloUltimaDistribuzione, kmUltimaDistribuzione,
         potenzaCv, cilindrata, kmAttuali,
         prossimarevisione,
         kmUltimoCambioGomme, kmProssimoCambioGomme,
         kmUltimaInversioneGomme, kmProssimaInversioneGomme,
-        fotoPath, codiceMeccanico,
+        fotoFile, codiceMeccanico,
       ];
 }

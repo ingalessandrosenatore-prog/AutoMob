@@ -34,7 +34,14 @@ class VehicleRepositoryImpl implements VehicleRepository {
     try {
       // Ora aspettiamo un booleano (o un'eccezione se fallisce)
       await remoteDataSource.saveVehicle(draft);
+
+      if (draft.fotoFile != null && draft.targa!.isNotEmpty) {
+        await localDataSource.saveFoto(draft.fotoFile!, draft.targa!);
+      }
+
       return const Right(null);
+    } on CacheException {
+      return const Left(StorageFailure());
     } on VehicleDataSourceException catch (e) {
       // QUESTO È IL TUO SALVAVITA: ti dirà ESATTAMENTE quale constraint fallisce
       print("ERRORE SUPABASE: ${e.message} - Dettagli: ");

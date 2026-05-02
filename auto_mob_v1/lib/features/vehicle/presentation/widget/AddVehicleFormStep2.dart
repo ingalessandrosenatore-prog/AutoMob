@@ -4,7 +4,7 @@ import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_b
 import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Buttons/backButton.dart';
 import '../../../../core/widgets/Card/PupUpHeadCard.dart';
@@ -22,18 +22,27 @@ DateTime? _parseDate(String text) {
   return DateTime(year, month, day);
 }
 
-class AddVehicleFormStep2 extends StatelessWidget {
+class AddVehicleFormStep2 extends StatefulWidget {
   const AddVehicleFormStep2({super.key});
 
+  @override
+  State<AddVehicleFormStep2> createState() => _AddVehicleFormStep2State();
+}
 
+class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
+  final IntervalloTagliandoController = TextEditingController();
+  final kmTagliandoController = TextEditingController();
+  final IntervalloDistribuzioneController = TextEditingController();
+  final kmDistribuzioneController = TextEditingController();
+  final   kmRichiamoTagliandoController = TextEditingController();
+  String kmIntervalloTagInseriti = "0";
+  String kmLAstTaglIns = "0";
+  String kmLastDist = "0";
+  String kmIntervallDistInseriti = "0";
 
   @override
   Widget build(BuildContext context) {
-    final dataTagliandoController = TextEditingController();
-    final kmTagliandoController = TextEditingController();
-    final dataDistribuzioneController = TextEditingController();
-    final kmDistribuzioneController = TextEditingController();
-    final   kmRichiamoTagliandoController = TextEditingController();
+
 
     return Stack(
       children: [
@@ -53,19 +62,12 @@ class AddVehicleFormStep2 extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          AmTextField(
-                            label: "Data",
-                            placeholder: "gg/mm/aaaa",
-                            controller: dataTagliandoController,
-                            isRequired: false,
-                            obscureText: false,
-                            keyboardType: TextInputType.datetime,
-                            suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF48484A), size: 20),
-                          ),
+
                           const SizedBox(width: 16),
                           AmTextField(
                             label: "Km effettuato",
                             placeholder: "45000",
+                            onChanged: (val) => setState(() {kmLAstTaglIns = val;}),
                             controller: kmTagliandoController,
                             isRequired: false,
                             obscureText: false,
@@ -75,22 +77,24 @@ class AddVehicleFormStep2 extends StatelessWidget {
                               child: Text("km", style: TextStyle(color: Color(0xFF48484A), fontWeight: FontWeight.bold)),
                             ),
                           ),
+                          AmTextField(
+                            label: "Intervallo di km ",
+                            placeholder: "15000",
+                            onChanged: (val) => setState(() {kmIntervalloTagInseriti=val;}),
+                            controller: IntervalloTagliandoController,
+                            isRequired: false,
+                            obscureText: false,
+                            keyboardType: TextInputType.datetime,
+                            suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF48484A), size: 20),
+                          ),
                         ],
                       ),
 
                       SizedBox(height: 10,),
                       Row(children: [
-                        AmTextField(
-                          label: "Tagliando previsto ogni:",
-                          placeholder: "15000",
-                          controller: kmRichiamoTagliandoController,
-                          isRequired: false,
-                          obscureText: false,
-                          keyboardType: TextInputType.number,
-                          suffixIcon: const Padding(
-                            padding: EdgeInsets.only(top: 14),
-                            child: Text("km", style: TextStyle(color: Color(0xFF48484A), fontWeight: FontWeight.bold)),
-                          ),
+                        Text(
+                          "Prossima sostituzione prevista a : ${(int.tryParse(kmLAstTaglIns) ?? 0) + (int.tryParse(kmIntervalloTagInseriti) ?? 0)} km",
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                       ],)
 
@@ -104,15 +108,7 @@ class AddVehicleFormStep2 extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          AmTextField(
-                            label: "Data ultima sostituzione",
-                            placeholder: "gg/mm/aaaa",
-                            controller: dataDistribuzioneController,
-                            isRequired: false,
-                            obscureText: false,
-                            keyboardType: TextInputType.datetime,
-                            suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF48484A), size: 20),
-                          ),
+
                         ],
                       ),
                       SizedBox(height: 10,),
@@ -121,6 +117,8 @@ class AddVehicleFormStep2 extends StatelessWidget {
                           AmTextField(
                             label: "effettuato a km ",
                             placeholder: "130000",
+                            onChanged: (val){setState(() {
+                               kmLastDist=val;}); },
                             controller: kmDistribuzioneController,
                             isRequired: true,
                             obscureText: false,
@@ -130,20 +128,27 @@ class AddVehicleFormStep2 extends StatelessWidget {
                               child: Text("km", style: TextStyle(color: Color(0xFF48484A), fontWeight: FontWeight.bold)),
                             ),
                           ),
+                          AmTextField(
+                            label: "Sostituzione Prevista ogni ",
+                            placeholder: "60000",
+                            onChanged: (val) => setState(() {kmIntervallDistInseriti =  val;}),
+                              controller:  IntervalloDistribuzioneController,
+                            isRequired: false,
+                            obscureText: false,
+                            keyboardType: TextInputType.datetime,
+                            suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF48484A), size: 20),
+                          ),
                         ],
                       ),
 
                       SizedBox(height: 10,),
                       Row(
                         children: [
-                          AmTextField(
-                            label: "Sostituzione Prevista ogni ",
-                            placeholder: "60000km",
-                            controller: dataDistribuzioneController,
-                            isRequired: false,
-                            obscureText: false,
-                            keyboardType: TextInputType.number,
-                            suffixIcon: const Icon(Icons.speed_outlined, color: Color(0xFF48484A), size: 20),
+                          Text(
+                            "Prossima sostituzione prevista a : ${(int.tryParse(kmLastDist) ?? 0) + (int.tryParse (kmIntervallDistInseriti) ?? 0)} km",
+                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+
+
                           ),
                         ],
                       ),
@@ -169,7 +174,7 @@ class AddVehicleFormStep2 extends StatelessWidget {
             stepNumber: 2,
             totalSteps: 5,
             title: "Storico manutenzioni",
-            onClose: () => context.read<AddVehicleBloc>().add(StepBackPressed()),
+            onClose: (){context.pop('/home');},
           ),
         ),
     )
@@ -205,9 +210,9 @@ class AddVehicleFormStep2 extends StatelessWidget {
                     onPressed: () {
                       context.read<AddVehicleBloc>().add(
                         Step2Submitted(
-                          dataUltimoTagliando: _parseDate(dataTagliandoController.text),
+                          intervalloTagliando: int.tryParse(IntervalloTagliandoController.text),
                           kmUltimoTagliando: int.tryParse(kmTagliandoController.text),
-                          dataUltimaDistribuzione: _parseDate(dataDistribuzioneController.text),
+                          intervalloUltimaDistribuzione: int.tryParse(IntervalloDistribuzioneController.text),
                           kmUltimaDistribuzione: int.tryParse(kmDistribuzioneController.text),
                         ),
                       );

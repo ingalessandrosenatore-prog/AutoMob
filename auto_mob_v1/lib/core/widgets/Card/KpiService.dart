@@ -42,10 +42,10 @@ class AmMaintenanceKpiCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1), // Lievissima ombra colorata
-            blurRadius: 30,
-            spreadRadius: 2,
-            offset: const Offset(2, 2),
+            color: color.withOpacity(0.08), // Lievissima ombra colorata
+            blurRadius: 2,
+            spreadRadius: 0.1,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -64,9 +64,9 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         label.toUpperCase(),
-                        style: const TextStyle(
-                          color: Color(0xFF8E8E93),
-                          fontSize: 12,
+                        style: TextStyle(
+                          color: color,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.1,
                         ),
@@ -92,9 +92,9 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                 Text(
                   'Prossimo: ${formatKm(nextServiceKm)} km ${lastServiceDate != null ? "· $lastServiceDate" : ""}',
                   style: const TextStyle(
-                    color: Color(0xFF636366),
+                    color: Color(0xFF747479),
                     fontSize: 13,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
               ],
@@ -112,8 +112,8 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                 height: 60,
                 child: CircularProgressIndicator(
                   value: 1,
-                  strokeWidth: 7, // Leggermente più spesso
-                  color: Colors.white.withOpacity(0.05),
+                  strokeWidth: 8, // Leggermente più spesso
+                  color: Colors.white.withOpacity(0.09),
                 ),
               ),
               // Glow esterno e indicatore di progresso
@@ -124,7 +124,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                   painter: _ExternalGlowPainter(
                     percentage: percentage,
                     color: color,
-                    strokeWidth: 7, // Leggermente più spesso
+                    strokeWidth: 10, // Leggermente più spesso
                   ),
                 ),
               ),

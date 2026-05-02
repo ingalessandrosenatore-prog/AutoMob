@@ -135,9 +135,9 @@ class _WizardCompletedPage extends StatelessWidget {
           _DraftRow(label: 'Carburante', value: draft.carburante),
           _DraftRow(label: 'Targa', value: draft.targa),
           const Divider(color: Color(0xFF1C1C1E), height: 24),
-          _DraftRow(label: 'Data ult. tagliando', value: _fmtDate(draft.dataUltimoTagliando)),
+
           _DraftRow(label: 'Km ult. tagliando', value: draft.kmUltimoTagliando?.toString()),
-          _DraftRow(label: 'Data ult. distribuzione', value: _fmtDate(draft.dataUltimaDistribuzione)),
+
           _DraftRow(label: 'Km ult. distribuzione', value: draft.kmUltimaDistribuzione?.toString()),
           const Divider(color: Color(0xFF1C1C1E), height: 24),
           _DraftRow(label: 'Potenza (CV)', value: draft.potenzaCv?.toString()),
@@ -150,7 +150,7 @@ class _WizardCompletedPage extends StatelessWidget {
           _DraftRow(label: 'Km ult. inversione', value: draft.kmUltimaInversioneGomme?.toString()),
           _DraftRow(label: 'Km pross. inversione', value: draft.kmProssimaInversioneGomme?.toString()),
           const Divider(color: Color(0xFF1C1C1E), height: 24),
-          _DraftRow(label: 'Foto path', value: draft.fotoPath),
+          _DraftRow(label: 'Foto path', value: draft.fotoFile?.path),
           _DraftRow(label: 'Codice meccanico', value: draft.codiceMeccanico),
           const SizedBox(height: 24),
           Center(

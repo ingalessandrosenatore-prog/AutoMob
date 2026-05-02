@@ -52,9 +52,9 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
 
   Future<void> _onStep2(Step2Submitted event, Emitter<AddVehicleState> emit) async {
     final draft = state.draft.copyWith(
-      dataUltimoTagliando: event.dataUltimoTagliando,
+      intervalloUltimoTagliando: event.intervalloTagliando,
       kmUltimoTagliando: event.kmUltimoTagliando,
-      dataUltimaDistribuzione: event.dataUltimaDistribuzione,
+      intervalloUltimaDistribuzione: event.intervalloUltimaDistribuzione,
       kmUltimaDistribuzione: event.kmUltimaDistribuzione,
     );
     emit(state.copyWith(draft: draft, status: AddVehicleStatus.loading));
@@ -100,7 +100,7 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
 
   Future<void> _onSaveWizard(SaveWizard event, Emitter<AddVehicleState> emit) async {
     final draft = state.draft.copyWith(
-      fotoPath: event.fotoPath,
+      fotoFile: event.fotoFile ,
       codiceMeccanico: event.codiceMeccanico,
     );
     emit(state.copyWith(draft: draft, status: AddVehicleStatus.loading));

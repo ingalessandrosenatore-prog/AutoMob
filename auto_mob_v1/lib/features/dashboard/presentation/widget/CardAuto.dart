@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:soft_edge_blur/soft_edge_blur.dart';
 
-/// Card del veicolo per la Dashboard.
-/// Visualizza l'immagine del veicolo con un overlay scuro, 
-/// marca, modello e i chilometri totali in un box dedicato.
 class CardAuto extends StatelessWidget {
   final String marca;
   final String modello;
   final String kmTotali;
-  final String? immaginePath; // Path locale o URL
+  final String? immaginePath;
 
   const CardAuto({
     super.key,
@@ -20,121 +18,119 @@ class CardAuto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Container(
-        height: 250,// Ridotta leggermente per renderla più rettangolare
-        width: MediaQuery.of(context).size.width * 0.85,
+        width: MediaQuery.of(context).size.width * 0.9,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
+          // Sfondo scuro che si vedrà in trasparenza sotto la sfocatura
           color: const Color(0xFF1C1C1E),
           border: Border.all(
-            color: Colors.white.withOpacity(0.1),
-            width: 1.3,
+            color: Colors.white.withOpacity(0.08),
+            width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 25,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(28),
+          // Lo Stack come radice permette di sovrapporre elementi fuori dal blur
           child: Stack(
+            fit: StackFit.expand,
             children: [
-              // 1. Immagine di sfondo
-              Positioned.fill(
-                child: _buildImage(),
-              ),
-
-              // 2. Overlay Gradiente Scuro (Patina)
-              // Va dal trasparente in alto allo scuro in basso per la leggibilità
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.1),
-                        Colors.black.withOpacity(0.6),
-                        Colors.black.withOpacity(0.9),
-                      ],
-                      stops: const [0.0, 0.4, 0.7, 1.0],
-                    ),
+              // --- LIVELLO 1: SFONDO (FOTO CON BLUR IN BASSO) ---
+              SoftEdgeBlur(
+                edges: [
+                  EdgeBlur(
+                    type: EdgeType.bottomEdge,
+                    size: 140, // Area di sfocatura
+                    sigma: 50,
+                    tintColor: Colors.black,// Intensità
+                    controlPoints: [
+                      ControlPoint(position: 0.2, type: ControlPointType.visible),
+                      ControlPoint(position: 1.0, type: ControlPointType.transparent),
+                    ],
                   ),
+                ],
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _buildImage(),
+                    // Overlay per scurire leggermente l'immagine e far risaltare il testo
+                    Container(color: Colors.black.withOpacity(0.2)),
+                  ],
                 ),
               ),
 
-              // 3. Contenuto Testuale
-              Padding(
-                padding: const EdgeInsets.all(24.0),
+              // --- LIVELLO 2: PRIMO PIANO (TESTI NITIDI, FUORI DAL BLUR) ---
+              Positioned(
+                bottom: 10, // Distanza dal fondo della card
+                left: 15,
+                right: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Marca (Scritta Blu)
                     Text(
                       marca.toUpperCase(),
                       style: const TextStyle(
                         color: Color(0xFF4A90E2),
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 2.0,
+                        letterSpacing: 2.2,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    // Modello (Scritta Bianca Bold Italic)
                     Text(
                       modello.toUpperCase(),
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 26,
+                        fontSize: 24, // Leggermente ingrandito per impatto
                         fontWeight: FontWeight.w900,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
-                    const SizedBox(height: 16),
-
-                    // 4. Box KM Totali
+                    // Box KM Totali
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(4),
+                        // Sfondo semi-trasparente elegante sopra il blur
+                        color: Colors.black.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(0.1)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // Linea Blu di accento
                           Container(
                             width: 3,
-                            height: 40,
+                            height: 38,
                             decoration: BoxDecoration(
                               color: const Color(0xFF4A90E2),
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 12),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
                                 "KM TOTALI",
                                 style: TextStyle(
-                                  color: Color(0xFF636366),
+                                  color: Color(0xFF8E8E93),
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
                                 ),
                               ),
                               Text(
                                 kmTotali,
                                 style: const TextStyle(
                                   color: Colors.white,
-                                  fontSize: 24,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -145,7 +141,7 @@ class CardAuto extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
+              )
             ],
           ),
         ),
@@ -153,32 +149,19 @@ class CardAuto extends StatelessWidget {
     );
   }
 
-  /// Decide tra Image.asset, Image.network o placeholder
-  /// in base al formato del path passato.
   Widget _buildImage() {
     final path = immaginePath;
     if (path == null || path.isEmpty) return _buildPlaceholder();
-
-    final isUrl = path.startsWith('http://') || path.startsWith('https://');
-    final image = isUrl
-        ? Image.network(path, fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildPlaceholder())
-        : Image.asset(path, fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildPlaceholder());
-    return image;
+    final isUrl = path.startsWith('http');
+    return isUrl
+        ? Image.network(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder())
+        : Image.asset(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder());
   }
 
-  /// Placeholder se l'immagine non è presente
   Widget _buildPlaceholder() {
     return Container(
       color: const Color(0xFF2C2C2E),
-      child: const Center(
-        child: Icon(
-          Icons.directions_car,
-          color: Color(0xFF48484A),
-          size: 60,
-        ),
-      ),
+      child: const Center(child: Icon(Icons.directions_car, color: Color(0xFF48484A), size: 50)),
     );
   }
 }

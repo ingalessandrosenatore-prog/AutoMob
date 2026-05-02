@@ -7,6 +7,7 @@ import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:soft_edge_blur/soft_edge_blur.dart';
 import 'dart:ui';
 
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
@@ -36,11 +37,45 @@ class _HomeViewBody extends StatelessWidget {
     final controller = PageController();
     return Scaffold(
       backgroundColor: const Color(0xFF1A1C23),
-      body: SafeArea(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent.withOpacity(0),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        actions: [
+          AmSoftButton(
+            label: 'AGGIUNGI',
+            width: 140,
+            height: 45,
+            color: const Color.fromRGBO(232, 90, 26, 1),
+            icon: Icons.add,
+            onPressed: () => context.pushNamed('aggiungi_veicolo'),
+          ),
+        ],
+      ),
+      body: SoftEdgeBlur(
+        edges: [
+          EdgeBlur(type: EdgeType.topEdge,
+              size: 140,
+              sigma: 20, controlPoints:[
+                ControlPoint(position: 0.1, type: ControlPointType.visible),
+                ControlPoint(position: 0.6, type: ControlPointType.visible),
+                ControlPoint(position: 1.0, type: ControlPointType.transparent),
+              ]
+          ),
+          EdgeBlur(type: EdgeType.bottomEdge,
+              size: 50,
+              sigma: 20, controlPoints:[
+                ControlPoint(position: 0.1, type: ControlPointType.visible),
+                ControlPoint(position: 1.0, type: ControlPointType.transparent),
+              ]
+          )
+        ],
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              SizedBox(height: 100),
               Padding(
                 padding: const EdgeInsets.all(9.0),
                 child: Row(
@@ -53,19 +88,10 @@ class _HomeViewBody extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
                         color: Colors.white,
-                        shadows: [
-                          Shadow(color: Colors.black12, offset: Offset(1, 1), blurRadius: 2)
-                        ],
+
                       ),
                     ),
-                    AmSoftButton(
-                      label: 'AGGIUNGI',
-                      width: 140,
-                      height: 45,
-                      color: Color.fromRGBO(232, 90, 26, 1),
-                      icon: Icons.add,
-                      onPressed: () => context.pushNamed('aggiungi_veicolo'),
-                    ),
+
                   ],
                 ),
               ),
@@ -90,7 +116,7 @@ class _HomeViewBody extends StatelessWidget {
                   if (state is DashboardLoaded) {
                     final vehicles = state.vehicles;
                     return SizedBox(
-                      height: 250,
+                      height: 280,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -108,27 +134,28 @@ class _HomeViewBody extends StatelessWidget {
                                   return CardAuto(
                                     marca: v.brand,
                                     modello: v.model,
-                                    kmTotali: v.isPlaceholder ? '—' : v.kmCurrent.toString(),
-                                    immaginePath: 'lib/assets/images/stelvio.jpg',
+                                    kmTotali: v.isPlaceholder ? '—' : '${v.kmCurrent} km',
+                                    immaginePath: 'lib/assets/images/ferrari_roma.jpg',
                                   );
                                 },
                               ),
                             ),
-                         AnimatedSmoothIndicator(
-                          activeIndex: state.index,
-                          count: vehicles.length,
-                          effect: ExpandingDotsEffect(
-                            dotHeight: 8,
-                            dotWidth: 8,
-                            expansionFactor: 2,
-                            activeDotColor: const Color(0xFFFF6B00),
-                            dotColor: const Color(0xFF2C2C35),
-                            radius: 20,
-                          ),
+                            const SizedBox(height: 16),
+                            AnimatedSmoothIndicator(
+                              activeIndex: state.index,
+                              count: vehicles.length,
+                              effect: const   ExpandingDotsEffect(
+                                dotHeight: 8,
+                                dotWidth: 8,
+                                expansionFactor: 2,
+                                activeDotColor: const Color(0xFFFF6B00),
+                                dotColor: const Color(0xFF2C2C35),
+                                radius: 20,
+                              ),
+                            ),
+                          ],
                         ),
-                        ]
                       ),
-                      )
                     );
                   }
                   return const SizedBox.shrink();

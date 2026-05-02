@@ -36,10 +36,6 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       throw ServerException('Utente non autenticato');
     }
 
-
-
-
-
       // 1. Prendi i dati dal tuo form model
       final payload = toSupabasePayload(draft);
 
@@ -153,27 +149,34 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       'year': draft.anno,
       'fuel': draft.carburante?.toLowerCase(),
       'km_current': draft.kmAttuali ?? 0,
+       'power_cv': draft.potenzaCv ,
+      'displacement_cc': draft.cilindrata ,
+      'tagliando_interval_km': draft.intervalloUltimoTagliando ,
+      'tire_rotation_interval_km': draft.kmProssimaInversioneGomme ,
+      'tire_change_interval_km': draft.kmProssimoCambioGomme,
+      'distribution_intervall_km': draft.intervalloUltimaDistribuzione,
+      'scadenza_revision_date': draft.prossimarevisione?.toIso8601String(),
+     // 'scadenza_bollo_date': draft.prossimoBollo?.toIso8601String(),
     };
 
     // 2. Prepariamo la lista dei lavori (items)
     List<Map<String, dynamic>> itemsData = [];
 
     // Se c'è un tagliando, creiamo il suo "item"
-    if (draft.dataUltimoTagliando != null && draft.kmUltimoTagliando != null) {
+    if ( draft.kmUltimoTagliando != null) {
       itemsData.add({
         'type': 'tagliando',
-        'service_date': draft.dataUltimoTagliando!.toIso8601String().split('T')[0], // Es: "2024-05-20"
         'service_km': draft.kmUltimoTagliando,
+
         // Se hai anche i dati del prossimo tagliando, aggiungili qui:
         // 'next_service_km': ...
       });
     }
 
     // Se c'è una distribuzione, creiamo un altro "item"
-    if (draft.dataUltimaDistribuzione != null && draft.kmUltimaDistribuzione != null) {
+    if (draft.kmUltimaDistribuzione != null) {
       itemsData.add({
         'type': 'distribuzione',
-        'service_date': draft.dataUltimaDistribuzione!.toIso8601String().split('T')[0],
         'service_km': draft.kmUltimaDistribuzione,
       });
     }

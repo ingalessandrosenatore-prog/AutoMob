@@ -1,6 +1,7 @@
 import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Card/PupUpHeadCard.dart';
 import '../../../../core/widgets/input/DropDownReact.dart';
@@ -119,7 +120,7 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
                           items: kAnniAuto,
                           itemLabelBuilder: (item) => item,
                           value: anno,
-                          onChanged: (val) { anno = val; },
+                          onChanged: (val) { setState(() { anno = val; }); },
                           placeholder: "Seleziona...",
                           isRequired: true,
                         ),
@@ -166,7 +167,7 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
                 stepNumber: 1,
                 totalSteps: 5,
                 title: "Il tuo veicolo",
-                onClose: () => Navigator.pop(context),
+                onClose: () =>context.pop('/home'),
               ),
             ),
 
@@ -181,7 +182,6 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
                 color: const Color(0xFFE85A1A),
                 icon: Icons.chevron_right,
                 onPressed: () {
-                  if (marca == null || anno == null || carburante == null) return;
                   context.read<AddVehicleBloc>().add(
                     Step1Submitted(
                       marca: marca!,

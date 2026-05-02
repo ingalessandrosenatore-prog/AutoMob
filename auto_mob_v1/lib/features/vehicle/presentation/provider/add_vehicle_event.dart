@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:equatable/equatable.dart';
 
 sealed class AddVehicleEvent extends Equatable {
@@ -29,24 +31,26 @@ class Step1Submitted extends AddVehicleEvent {
 
 /// Step 2 → 3
 class Step2Submitted extends AddVehicleEvent {
-  final DateTime? dataUltimoTagliando;
+
   final int? kmUltimoTagliando;
-  final DateTime? dataUltimaDistribuzione;
   final int? kmUltimaDistribuzione;
+  final int? intervalloTagliando;
+  final int? intervalloUltimaDistribuzione;
 
   Step2Submitted({
-    this.dataUltimoTagliando,
     this.kmUltimoTagliando,
-    this.dataUltimaDistribuzione,
     this.kmUltimaDistribuzione,
+    this.intervalloTagliando,
+    this.intervalloUltimaDistribuzione,
   });
 
   @override
   List<Object?> get props => [
-        dataUltimoTagliando,
+
         kmUltimoTagliando,
-        dataUltimaDistribuzione,
         kmUltimaDistribuzione,
+        intervalloTagliando,
+        intervalloUltimaDistribuzione,
       ];
 }
 
@@ -95,13 +99,13 @@ class Step4Submitted extends AddVehicleEvent {
 /// Step 5 — salva wizard completo. L'ownerId viene letto dalla sessione
 /// Supabase nel datasource remoto (layer data), non passa dalla presentation.
 class SaveWizard extends AddVehicleEvent {
-  final String? fotoPath;
+  final File? fotoFile;
   final String? codiceMeccanico;
 
-  SaveWizard({this.fotoPath, this.codiceMeccanico});
+  SaveWizard({this.fotoFile, this.codiceMeccanico});
 
   @override
-  List<Object?> get props => [fotoPath, codiceMeccanico];
+  List<Object?> get props => [fotoFile, codiceMeccanico];
 }
 
 /// Indietro (currentStep - 1)

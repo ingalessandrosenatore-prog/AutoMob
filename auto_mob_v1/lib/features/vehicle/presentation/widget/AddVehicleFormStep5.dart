@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Buttons/backButton.dart';
@@ -9,22 +13,43 @@ import '../../../../core/widgets/Card/PupUpHeadCard.dart';
 import '../../../../core/widgets/input/Textfield.dart';
 import 'MaintenanceSectionCard.dart';
 
-class AddVehicleFormStep5 extends StatelessWidget {
+class AddVehicleFormStep5 extends StatefulWidget {
   const AddVehicleFormStep5({super.key});
 
   @override
+  State<AddVehicleFormStep5> createState() => _AddVehicleFormStep5State();
+}
+
+class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
+  final codiceMeccanicoController = TextEditingController();
+  XFile? _image;
+  final picker =  ImagePicker();
+
+  pickImage() async {
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null){
+      setState(() {
+        _image = pickedFile;
+      });
+    }
+  }
+
+
+
+  @override
   Widget build(BuildContext context) {
-    final codiceMeccanicoController = TextEditingController();
+
 
     return Column(
-     
+
       children: [
         WizardHeader(
           stepIcon: Icons.camera_alt_outlined,
           stepNumber: 5,
           totalSteps: 5,
           title: "Foto e Officina",
-          onClose: () => context.read<AddVehicleBloc>().add(StepBackPressed()),
+          onClose: () => context.pop('/home'),
         ),
 
         Expanded(
@@ -36,21 +61,26 @@ class AddVehicleFormStep5 extends StatelessWidget {
                 Center(
                   child: Column(
                     children: [
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF1C1C1E),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.05),
-                            width: 2,
+                      InkWell(
+                        onTap: () {
+                            pickImage();
+                        },
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1C1C1E),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.05),
+                              width: 2,
+                            ),
                           ),
-                        ),
-                        child: Icon(
-                          Icons.camera_alt,
-                          color: Colors.white.withOpacity(0.5),
-                          size: 40,
+                          child: Icon(
+                            Icons.camera_alt,
+                            color: Colors.white.withOpacity(0.5),
+                            size: 40,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -65,9 +95,9 @@ class AddVehicleFormStep5 extends StatelessWidget {
                     ],
                   ),
                 ),
-            
+
                 const SizedBox(height: 40),
-            
+
                 MaintenanceSectionCard(
                   icon: Icons.link,
                   title: "Connetti meccanico",
@@ -95,9 +125,9 @@ class AddVehicleFormStep5 extends StatelessWidget {
                     ),
                   ],
                 ),
-            
+
                 const SizedBox(height: 20),
-            
+
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -145,9 +175,9 @@ class AddVehicleFormStep5 extends StatelessWidget {
                     ],
                   ),
                 ),
-            
+
                 const SizedBox(height: 40),
-            
+
                 Row(
                   children: [
                     Expanded(
@@ -171,7 +201,7 @@ class AddVehicleFormStep5 extends StatelessWidget {
                               codiceMeccanico: codiceMeccanicoController.text.isEmpty
                                   ? null
                                   : codiceMeccanicoController.text,
-                              fotoPath: null, // TODO: collegare picker foto
+                              fotoFile: _image != null ? File(_image!.path) : null,
                             ),
                           );
                         },

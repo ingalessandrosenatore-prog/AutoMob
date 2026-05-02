@@ -4,6 +4,7 @@ import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_b
 import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Buttons/backButton.dart';
@@ -127,7 +128,7 @@ class AddVehicleFormStep3 extends StatelessWidget {
                 totalSteps: 5,
                 title: "Dettagli tecnici",
                 onClose: () =>
-                    context.read<AddVehicleBloc>().add(StepBackPressed()),
+                    context.pop('/home'),
               ),
             ),
           ),

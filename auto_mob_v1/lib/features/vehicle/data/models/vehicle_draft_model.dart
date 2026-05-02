@@ -7,9 +7,8 @@ class VehicleDraftModel extends VehicleDraft {
     super.modello,
     super.anno,
     super.carburante,
-    super.dataUltimoTagliando,
+
     super.kmUltimoTagliando,
-    super.dataUltimaDistribuzione,
     super.kmUltimaDistribuzione,
     super.potenzaCv,
     super.cilindrata,
@@ -19,7 +18,7 @@ class VehicleDraftModel extends VehicleDraft {
     super.kmProssimoCambioGomme,
     super.kmUltimaInversioneGomme,
     super.kmProssimaInversioneGomme,
-    super.fotoPath,
+    super.fotoFile,
     super.codiceMeccanico,
   });
 
@@ -30,9 +29,9 @@ class VehicleDraftModel extends VehicleDraft {
       modello: draft.modello,
       anno: draft.anno,
       carburante: draft.carburante,
-      dataUltimoTagliando: draft.dataUltimoTagliando,
+
       kmUltimoTagliando: draft.kmUltimoTagliando,
-      dataUltimaDistribuzione: draft.dataUltimaDistribuzione,
+
       kmUltimaDistribuzione: draft.kmUltimaDistribuzione,
       potenzaCv: draft.potenzaCv,
       cilindrata: draft.cilindrata,
@@ -42,7 +41,7 @@ class VehicleDraftModel extends VehicleDraft {
       kmProssimoCambioGomme: draft.kmProssimoCambioGomme,
       kmUltimaInversioneGomme: draft.kmUltimaInversioneGomme,
       kmProssimaInversioneGomme: draft.kmProssimaInversioneGomme,
-      fotoPath: draft.fotoPath,
+      fotoFile: draft.fotoFile,
       codiceMeccanico: draft.codiceMeccanico,
     );
   }
@@ -54,13 +53,9 @@ class VehicleDraftModel extends VehicleDraft {
       modello: json['modello'],
       anno: json['anno'],
       carburante: json['carburante'],
-      dataUltimoTagliando: json['data_ultimo_tagliando'] != null
-          ? DateTime.parse(json['data_ultimo_tagliando'])
-          : null,
+
       kmUltimoTagliando: json['km_ultimo_tagliando'],
-      dataUltimaDistribuzione: json['data_ultima_distribuzione'] != null
-          ? DateTime.parse(json['data_ultima_distribuzione'])
-          : null,
+
       kmUltimaDistribuzione: json['km_ultima_distribuzione'],
       potenzaCv: json['potenza_cv'],
       cilindrata: json['cilindrata'],
@@ -73,7 +68,7 @@ class VehicleDraftModel extends VehicleDraft {
       kmUltimaInversioneGomme: json['km_ultima_inversione_gomme'],
       kmProssimaInversioneGomme: json['km_prossima_inversione_gomme'],
       codiceMeccanico: json['codice_meccanico'],
-      fotoPath: json['foto_path'],
+      fotoFile: json['foto_path'],
     );
   }
 
@@ -85,9 +80,8 @@ class VehicleDraftModel extends VehicleDraft {
       'modello': modello,
       'anno': anno,
       'carburante': carburante,
-      'data_ultimo_tagliando': dataUltimoTagliando?.toIso8601String(),
+
       'km_ultimo_tagliando': kmUltimoTagliando,
-      'data_ultima_distribuzione': dataUltimaDistribuzione?.toIso8601String(),
       'km_ultima_distribuzione': kmUltimaDistribuzione,
       'potenza_cv': potenzaCv,
       'cilindrata': cilindrata,
@@ -98,7 +92,7 @@ class VehicleDraftModel extends VehicleDraft {
       'km_ultima_inversione_gomme': kmUltimaInversioneGomme,
       'km_prossima_inversione_gomme': kmProssimaInversioneGomme,
       'codice_meccanico': codiceMeccanico,
-      'foto_path': fotoPath,
+      'foto_path': fotoFile,
     };
   }
 
