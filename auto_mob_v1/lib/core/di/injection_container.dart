@@ -30,6 +30,9 @@ import '../../features/vehicle/presentation/provider/add_vehicle_bloc.dart';
 // Dashboard
 import '../../features/dashboard/presentation/Bloc/dashboardBloc.dart';
 
+// WorkLog
+import '../../features/work_log/presentation/Bloc/work_log_bloc.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -38,6 +41,7 @@ Future<void> init() async {
   await _initAuth();
   await _initVehicle();
   await _initDashboard();
+  _initWorkLog();
 }
 
 Future<void> _initSupabase() async {
@@ -123,4 +127,8 @@ Future<void> _initDashboard() async {
   sl.registerFactory<DashboardBloc>(
     () => DashboardBloc(getVehicles: sl()),
   );
+}
+
+void _initWorkLog() {
+  sl.registerFactory<WorkLogBloc>(() => WorkLogBloc());
 }

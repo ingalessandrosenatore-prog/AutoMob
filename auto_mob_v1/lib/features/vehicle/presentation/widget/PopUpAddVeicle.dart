@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soft_edge_blur/soft_edge_blur.dart';
 import 'dart:ui';
 import 'AddVehicleWizard.dart';
 
@@ -20,6 +21,7 @@ class BottomSheetPage<T> extends Page<T> {
           filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
           child: Container(
             color: const Color(0xFF0F0F11).withOpacity(0.6),
+
             child: const AddVehicleWizard(),
           ),
         ),

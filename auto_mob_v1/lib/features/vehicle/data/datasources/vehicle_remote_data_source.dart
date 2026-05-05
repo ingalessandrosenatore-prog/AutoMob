@@ -1,9 +1,7 @@
 import 'dart:io';
 
-import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/error/Exception/Exception.dart';
 import '../../../../core/error/Exception/Exceptions.dart';
 
 import '../../domain/entities/vehicle_draft.dart';
@@ -48,8 +46,12 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
 
         print('Veicolo e storico salvati con un colpo solo!');
 
+      } on PostgrestException catch (e) {
+        print('Errore Supabase salvataggio veicolo: ${e.message}');
+        throw VehicleDataSourceException(e.message, code: e.code);
       } catch (e) {
         print('Errore: $e');
+        throw VehicleDataSourceException('Errore durante il salvataggio del veicolo: $e');
       }
 
 

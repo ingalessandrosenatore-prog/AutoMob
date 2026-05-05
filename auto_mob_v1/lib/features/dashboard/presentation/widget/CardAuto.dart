@@ -122,7 +122,7 @@ class CardAuto extends StatelessWidget {
                             children: [
                               const Text(
                                 "KM TOTALI",
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Color(0xFF8E8E93),
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
@@ -155,12 +155,12 @@ class CardAuto extends StatelessWidget {
     final path = immaginePath;
     if (path == null || path.isEmpty) return _buildPlaceholder();
     if (path.startsWith('http')) {
-      return Image.network(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder());
+      return Image.network(path, fit: BoxFit.cover, errorBuilder: (_, _, _) => _buildPlaceholder());
     }
     if (path.startsWith('lib/') || path.startsWith('assets/')) {
-      return Image.asset(path, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder());
+      return Image.asset(path, fit: BoxFit.cover, errorBuilder: (_, _, _) => _buildPlaceholder());
     }
-    return Image.file(File(path), fit: BoxFit.cover, errorBuilder: (_, __, ___) => _buildPlaceholder());
+    return Image.file(File(path), fit: BoxFit.cover, errorBuilder: (_, _, _) => _buildPlaceholder());
   }
 
   Widget _buildPlaceholder() {

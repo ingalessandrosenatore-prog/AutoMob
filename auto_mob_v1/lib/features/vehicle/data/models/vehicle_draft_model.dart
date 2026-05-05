@@ -10,7 +10,9 @@ class VehicleDraftModel extends VehicleDraft {
     super.anno,
     super.carburante,
 
+    super.intervalloUltimoTagliando,
     super.kmUltimoTagliando,
+    super.intervalloUltimaDistribuzione,
     super.kmUltimaDistribuzione,
     super.potenzaCv,
     super.cilindrata,
@@ -32,8 +34,10 @@ class VehicleDraftModel extends VehicleDraft {
       anno: draft.anno,
       carburante: draft.carburante,
 
+      intervalloUltimoTagliando: draft.intervalloUltimoTagliando,
       kmUltimoTagliando: draft.kmUltimoTagliando,
 
+      intervalloUltimaDistribuzione: draft.intervalloUltimaDistribuzione,
       kmUltimaDistribuzione: draft.kmUltimaDistribuzione,
       potenzaCv: draft.potenzaCv,
       cilindrata: draft.cilindrata,
@@ -56,8 +60,10 @@ class VehicleDraftModel extends VehicleDraft {
       anno: json['anno'],
       carburante: json['carburante'],
 
+      intervalloUltimoTagliando: json['intervallo_ultimo_tagliando'],
       kmUltimoTagliando: json['km_ultimo_tagliando'],
 
+      intervalloUltimaDistribuzione: json['intervallo_ultima_distribuzione'],
       kmUltimaDistribuzione: json['km_ultima_distribuzione'],
       potenzaCv: json['potenza_cv'],
       cilindrata: json['cilindrata'],
@@ -83,7 +89,9 @@ class VehicleDraftModel extends VehicleDraft {
       'anno': anno,
       'carburante': carburante,
 
+      'intervallo_ultimo_tagliando': intervalloUltimoTagliando,
       'km_ultimo_tagliando': kmUltimoTagliando,
+      'intervallo_ultima_distribuzione': intervalloUltimaDistribuzione,
       'km_ultima_distribuzione': kmUltimaDistribuzione,
       'potenza_cv': potenzaCv,
       'cilindrata': cilindrata,

@@ -59,5 +59,8 @@ class VehicleDraftLocalDataSourceImpl implements VehicleDraftLocalDataSource {
   }
 
   @override
-  String getFotoPath(String targa) => '$dirPAth/veicolo_$targa.jpg';
+  String getFotoPath(String targa) {
+    final path = '$dirPAth/veicolo_$targa.jpg';
+    return File(path).existsSync() ? path : '';
+  }
 }

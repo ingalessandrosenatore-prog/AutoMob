@@ -1,7 +1,6 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/Exception/Exception.dart';
-import '../entities/vehicle.dart';
 import '../entities/vehicle_draft.dart';
 import '../repositories/VehicleRepository.dart';
 

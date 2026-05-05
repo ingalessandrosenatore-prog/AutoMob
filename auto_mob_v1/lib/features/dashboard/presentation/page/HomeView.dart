@@ -1,3 +1,4 @@
+import 'package:auto_mob_v1/core/types/EnumPopUp.dart';
 import 'package:auto_mob_v1/core/widgets/Buttons/AmFabActionRounded.dart';
 import 'package:auto_mob_v1/core/widgets/Buttons/SoftButton.dart';
 import 'package:auto_mob_v1/core/widgets/Card/KpiService.dart';
@@ -8,12 +9,10 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
-import 'dart:ui';
 
-import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../Bloc/dashboardBloc.dart';
 import '../Bloc/dashboardEvent.dart';
-import '../Bloc/dashboardState.dart' hide DashboardPageChanged;
+import '../Bloc/dashboardState.dart' ;
 import '../widget/CardAuto.dart';
 import '../widget/CardOfficina.dart';
 
@@ -57,7 +56,8 @@ class _HomeViewBody extends StatelessWidget {
         edges: [
           EdgeBlur(type: EdgeType.topEdge,
               size: 140,
-              sigma: 20, controlPoints:[
+              tintColor: Colors.black54,
+              sigma: 10, controlPoints:[
                 ControlPoint(position: 0.1, type: ControlPointType.visible),
                 ControlPoint(position: 0.6, type: ControlPointType.visible),
                 ControlPoint(position: 1.0, type: ControlPointType.transparent),
@@ -65,8 +65,9 @@ class _HomeViewBody extends StatelessWidget {
           ),
           EdgeBlur(type: EdgeType.bottomEdge,
               size: 50,
-              sigma: 20, controlPoints:[
-                ControlPoint(position: 0.1, type: ControlPointType.visible),
+              tintColor: Colors.black54,
+              sigma: 10, controlPoints:[
+                ControlPoint(position: 0.3, type: ControlPointType.visible),
                 ControlPoint(position: 1.0, type: ControlPointType.transparent),
               ]
           )
@@ -81,17 +82,22 @@ class _HomeViewBody extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      "I MIEI VEICOLI",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
-                        color: Colors.white,
 
+                    Container(
+                      color: Color(0xFF1A1C23), // Rosso solido, no opacità
+                      child: Text(
+                        "I MIEI VEICOLI",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(color: Colors.black12, offset: Offset(1, 1), blurRadius: 2)
+                          ],
+                        ),
                       ),
-                    ),
-
+                    )
                   ],
                 ),
               ),
@@ -148,8 +154,8 @@ class _HomeViewBody extends StatelessWidget {
                                 dotHeight: 8,
                                 dotWidth: 8,
                                 expansionFactor: 2,
-                                activeDotColor: const Color(0xFFFF6B00),
-                                dotColor: const Color(0xFF2C2C35),
+                                activeDotColor: Color(0xFFFF6B00),
+                                dotColor: Color(0xFF2C2C35),
                                 radius: 20,
                               ),
                             ),
@@ -196,6 +202,10 @@ class _HomeViewBody extends StatelessWidget {
                     if (state is DashboardLoaded) {
 
                       final currentVehicle = state.vehicles[state.index];
+                      if (currentVehicle.isPlaceholder) {
+                        return const SizedBox.shrink();
+                      }
+
                       final km = currentVehicle.kmCurrent;
 
                       // Tagliando
@@ -286,7 +296,7 @@ class _HomeViewBody extends StatelessWidget {
           children: [
             AmFabAction(color:Color(0xFFFF6B00) , label:"AGGIORNA KM", icon: Icons.speed_outlined , onPressed:  (){}),
             AmFabAction(color: Color(0xFF3192F3), icon: Icons.trip_origin_outlined, label: "GOMME", onPressed:  (){}),
-            AmFabAction(color:Color(0xFF7361AC), icon: Icons.build, label: "TAGLIANDO", onPressed: (){}),
+            AmFabAction(color:Color(0xFF7361AC), icon: Icons.build, label: "TAGLIANDO", onPressed: (){context.push("/addFunctional",extra: EnumPopUp.aggiornaTagliando);}),
             AmFabAction(color: Color(0xFF7361AC), label:"DISTRIBUZIONE", icon: Icons.settings_input_component, onPressed:  (){}),
             AmFabAction(color: Color(0xFFFFB4AB) , icon: Icons.calendar_today_outlined, label:"REVSIONE", onPressed:  (){}),
       ],

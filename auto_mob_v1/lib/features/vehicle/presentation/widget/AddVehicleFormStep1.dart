@@ -2,6 +2,7 @@ import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_b
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:soft_edge_blur/soft_edge_blur.dart';
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Card/PupUpHeadCard.dart';
 import '../../../../core/widgets/input/DropDownReact.dart';
@@ -78,84 +79,106 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
         Stack(
           children : [
             Positioned(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
-                child: Column(
-                  children: [
-                    SizedBox(height: 150),
-                    Row(
-                      children: [
-                        const SizedBox(height: 20),
-                        AmDropdown<String>(
-                          label: "Brand",
-                          items: kMarcheAuto,
-                          itemLabelBuilder: (item) => item,
-                          value: marca,
-                          onChanged: (val) { setState(() {;marca = val;}); },
-                          placeholder: "Seleziona...",
-                          isRequired: true,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10,),
-                    Row(
-                      children: [
-                        const SizedBox(height: 20),
-                        AmTextField(
-                          label: "Modello",
-                          placeholder: "es. Golf VIII",
-                          controller: modelloController,
-                          isRequired: true,
-                          obscureText: false,
-                          keyboardType: TextInputType.text,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10,),
-                    Row(
-                      children: [
-                        const SizedBox(height: 20),
-                        AmDropdown<String>(
-                          label: "Anno",
-                          items: kAnniAuto,
-                          itemLabelBuilder: (item) => item,
-                          value: anno,
-                          onChanged: (val) { setState(() { anno = val; }); },
-                          placeholder: "Seleziona...",
-                          isRequired: true,
-                        ),
-                        const SizedBox(width: 16),
-                        AmDropdown<String>(
-                          label: "Carburante",
-                          items: kTipiCarburante,
-                          value: carburante,
-                          itemLabelBuilder: (item) => item,
-                          onChanged: (val) { setState(() {
-                            carburante = val;
-                          }); },
-                          placeholder: "Seleziona...",
-                          isRequired: true,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 10,),
-                    Row(
-                      children: [
+              child: SoftEdgeBlur(
+                edges: [
+                  EdgeBlur(
+                    type: EdgeType.topEdge,
+                    size: 180,
+                    controlPoints: [
+                      ControlPoint(position: 0.7, type: ControlPointType.visible),
+                      ControlPoint(position: 1.0, type: ControlPointType.transparent),
+                    ],
+                    sigma: 30,
+                  ),
+                  EdgeBlur(
+                    type: EdgeType.bottomEdge,
+                    size: 150,
+                    controlPoints: [
+                      ControlPoint(position: 0.7, type: ControlPointType.visible),
+                      ControlPoint(position: 1.0, type: ControlPointType.transparent),
+                    ],
+                    sigma: 30,
+                  ),
+                ],
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
+                  child: Column(
+                    children: [
+                      SizedBox(height: 150),
+                      Row(
+                        children: [
+                          const SizedBox(height: 20),
+                          AmDropdown<String>(
+                            label: "Brand",
+                            items: kMarcheAuto,
+                            itemLabelBuilder: (item) => item,
+                            value: marca,
+                            onChanged: (val) { setState(() {marca = val;}); },
+                            placeholder: "Seleziona...",
+                            isRequired: true,
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10,),
+                      Row(
+                        children: [
+                          const SizedBox(height: 20),
+                          AmTextField(
+                            label: "Modello",
+                            placeholder: "es. Golf VIII",
+                            controller: modelloController,
+                            isRequired: true,
+                            obscureText: false,
+                            keyboardType: TextInputType.text,
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10,),
+                      Row(
+                        children: [
+                          const SizedBox(height: 20),
+                          AmDropdown<String>(
+                            label: "Anno",
+                            items: kAnniAuto,
+                            itemLabelBuilder: (item) => item,
+                            value: anno,
+                            onChanged: (val) { setState(() { anno = val; }); },
+                            placeholder: "Seleziona...",
+                            isRequired: true,
+                          ),
+                          const SizedBox(width: 16),
+                          AmDropdown<String>(
+                            label: "Carburante",
+                            items: kTipiCarburante,
+                            value: carburante,
+                            itemLabelBuilder: (item) => item,
+                            onChanged: (val) { setState(() {
+                              carburante = val;
+                            }); },
+                            placeholder: "Seleziona...",
+                            isRequired: true,
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10,),
+                      Row(
+                        children: [
 
-                        AmTextField(
-                          label: "Targa",
-                          placeholder: "AB 123 CD",
-                          controller: targaController,
-                          isRequired: true,
-                          obscureText: false,
-                          keyboardType: TextInputType.text,
-                        ),
-                      ],
-                    ),
+                          AmTextField(
+                            label: "Targa",
+                            placeholder: "AB 123 CD",
+                            controller: targaController,
+                            isRequired: true,
+                            obscureText: false,
+                            keyboardType: TextInputType.text,
+                          ),
+                        ],
+                      ),
 
 
 
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ), Positioned(

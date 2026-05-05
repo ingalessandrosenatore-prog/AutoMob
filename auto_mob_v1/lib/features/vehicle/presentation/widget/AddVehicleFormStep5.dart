@@ -25,7 +25,7 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
   XFile? _image;
   final picker =  ImagePicker();
 
-  pickImage() async {
+  Future<void> pickImage() async {
     final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null){

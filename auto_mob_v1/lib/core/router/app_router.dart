@@ -6,6 +6,8 @@ import '../../features/auth/presentation/page/SplashScreen.dart';
 import '../../features/auth/presentation/page/LoginView.dart';
 import '../../features/auth/presentation/page/RegistrationView.dart';
 import '../../features/vehicle/presentation/widget/PopUpAddVeicle.dart';
+import '../../features/work_log/presentation/widget/FunctionalPopUp.dart';
+import '../types/EnumPopUp.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -40,6 +42,13 @@ class AppRouter {
       ),
 
 
+      GoRoute(path: '/addFunctional',
+        name: 'aggiungi_Funzione',
+        pageBuilder: (context, state) {
+          final typeEnum = state.extra as EnumPopUp;
+          return BottomSheetPageFunc(type:typeEnum);
+        },
+      ),
 
     ],
   );
