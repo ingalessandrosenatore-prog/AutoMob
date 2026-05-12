@@ -1,4 +1,5 @@
 import 'package:auto_mob_v1/features/dashboard/presentation/page/HomeView.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/page/MidifyItem.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -45,17 +46,19 @@ class AppRouter {
       GoRoute(path: '/addFunctional',
         name: 'aggiungi_Funzione',
         pageBuilder: (context, state) {
-          final typeEnum = state.extra as EnumPopUp;
-          return BottomSheetPageFunc(type:typeEnum);
+          final extra = state.extra as Map<String, dynamic>;
+          final typeEnum = extra['type'] as EnumPopUp;
+          final id = extra['id'] as String;
+          return BottomSheetPageFunc(type: typeEnum, idVeicolo: id);
         },
+      ),
+      GoRoute(
+        path: '/parts',
+        name: 'parts',
+        builder:  (context , state ) => Midifyitem(),
       ),
 
     ],
   );
 }
 
-extension AppRouterExtension on BuildContext {
-  void goToLogin() => go('/login');
-  void goToRegistration() => go('/registration');
-  void goToHome(String userId) => go('/home/$userId');
-}

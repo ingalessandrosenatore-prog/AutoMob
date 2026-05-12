@@ -26,7 +26,7 @@ class AmChoiceChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withOpacity(0.1) : const Color(0xFF1C1C1E),
+          color: isSelected ? Colors.transparent : const Color(0xFF1C1C1E),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? activeColor : Colors.white.withOpacity(0.05),
@@ -35,7 +35,7 @@ class AmChoiceChip extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: activeColor.withOpacity(0.2),
+                    color: activeColor.withOpacity(0.1),
                     blurRadius: 8,
                     spreadRadius: 1,
                   )
@@ -49,14 +49,14 @@ class AmChoiceChip extends StatelessWidget {
               Icon(
                 Icons.check,
                 size: 14,
-                color: activeColor,
+                color: Colors.white,
               ),
               const SizedBox(width: 6),
             ],
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? activeColor : const Color(0xFF8E8E93),
+                color: isSelected ? Colors.white : const Color(0xFF8E8E93),
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),

@@ -4,7 +4,7 @@ import 'package:equatable/equatable.dart';
 class WorkLogState extends Equatable {
 
   final EnumPopUp type;
-  final Set<int> selectedParts;
+  final List<int> selectedParts;
   final int currentKm;
   final int intervallKM;
   final int prosssimoRichiamo;
@@ -16,7 +16,7 @@ WorkLogState({required this.type, required this.selectedParts, required this.cur
 
   WorkLogState copyWith({
     EnumPopUp? type,
-    Set <int>? selectedParts,
+    List <int>? selectedParts,
     int? currentKm,
     int? intervallKM,
     String? note,

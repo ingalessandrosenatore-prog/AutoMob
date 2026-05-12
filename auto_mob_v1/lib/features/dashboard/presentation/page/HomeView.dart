@@ -23,13 +23,14 @@ class HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<DashboardBloc>(
       create: (_) => GetIt.I<DashboardBloc>()..add(LoadDashboardData()),
-      child: const _HomeViewBody(),
+      child:  _HomeViewBody(),
     );
   }
 }
 
 class _HomeViewBody extends StatelessWidget {
-  const _HomeViewBody();
+
+   _HomeViewBody();
 
   @override
   Widget build(BuildContext context) {
@@ -295,14 +296,25 @@ class _HomeViewBody extends StatelessWidget {
           ),
           children: [
             AmFabAction(color:Color(0xFFFF6B00) , label:"AGGIORNA KM", icon: Icons.speed_outlined , onPressed:  (){}),
-            AmFabAction(color: Color(0xFF3192F3), icon: Icons.trip_origin_outlined, label: "GOMME", onPressed:  (){}),
-            AmFabAction(color:Color(0xFF7361AC), icon: Icons.build, label: "TAGLIANDO", onPressed: (){context.push("/addFunctional",extra: EnumPopUp.aggiornaTagliando);}),
-            AmFabAction(color: Color(0xFF7361AC), label:"DISTRIBUZIONE", icon: Icons.settings_input_component, onPressed:  (){}),
+            AmFabAction(color: Color(0xFF3192F3), icon: Icons.trip_origin_outlined, label: "GOMME", onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaCambioGomme)),
+            AmFabAction(color:Color(0xFF7361AC), icon: Icons.build, label: "TAGLIANDO", onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaTagliando)),
+            AmFabAction(color: Color(0xFF7361AC), label:"DISTRIBUZIONE", icon: Icons.settings_input_component, onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaDistribuzione)),
             AmFabAction(color: Color(0xFFFFB4AB) , icon: Icons.calendar_today_outlined, label:"REVSIONE", onPressed:  (){}),
       ],
       ),
     );
 
+  }
+
+  void _pushFunctional(BuildContext context, EnumPopUp type) {
+    final s = context.read<DashboardBloc>().state;
+    if (s is DashboardLoaded) {
+      context.push('/addFunctional', extra: {
+        'type': type,
+        'id': s.vehicles[s.index].id,
+      });
+      print(s.vehicles[s.index].id);
+    }
   }
 
   Color choseColor(double perc) {

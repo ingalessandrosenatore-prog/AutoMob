@@ -29,11 +29,13 @@ class CurrentKmChange extends WorkLogEvent{
 }
 
 class  RichiamoChange extends WorkLogEvent{
-  final int richiamoTra;
-  RichiamoChange({required this.richiamoTra});
+  final int intervallKM;
+  RichiamoChange({ required this.intervallKM});
 
   @override
-  List<Object?> get props => [richiamoTra];
+  List<Object?> get props => [intervallKM];
+
+
 }
 
 class OnSubmitEvent extends WorkLogEvent{

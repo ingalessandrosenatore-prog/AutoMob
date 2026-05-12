@@ -10,7 +10,7 @@ class AmTextField extends StatelessWidget {
   final bool obscureText;
   final TextInputType keyboardType;
   final Widget? suffixIcon; // Per passare l'occhio della password o icone di ricerca
-  final ValueChanged<String>? onChanged;
+  final ValueChanged<dynamic>? onChanged;
 
   const AmTextField({
     super.key,
