@@ -9,8 +9,9 @@ class AmTextField extends StatelessWidget {
   final bool isRequired;
   final bool obscureText;
   final TextInputType keyboardType;
-  final Widget? suffixIcon; // Per passare l'occhio della password o icone di ricerca
+  final Widget? suffixIcon;
   final ValueChanged<dynamic>? onChanged;
+  final VoidCallback? onEditingComplete;
 
   const AmTextField({
     super.key,
@@ -22,6 +23,7 @@ class AmTextField extends StatelessWidget {
     required this.keyboardType,
     this.suffixIcon,
     this.onChanged,
+    this.onEditingComplete,
   });
 
   @override
@@ -87,6 +89,7 @@ class AmTextField extends StatelessWidget {
                 suffixIcon: suffixIcon,
               ),
               onChanged: onChanged,
+              onEditingComplete: onEditingComplete,
             ),
           ),
         ],

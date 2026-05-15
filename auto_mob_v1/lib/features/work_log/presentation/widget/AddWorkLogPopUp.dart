@@ -502,7 +502,7 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
                     runSpacing: 10,
                     children: kParts.entries.map((entry) {
                       final partId = entry.key;
-                      final isSelected = state.selectedParts.contains(partId);
+                      final isSelected = state.selectedParts.any((item) => item.partId == partId);
                       return AmChoiceChip(
                         label: entry.value,
                         isSelected: isSelected,
@@ -523,13 +523,17 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
       ),
       const SizedBox(height: 24),
 
-      AmTextField(
-        label: "Note",
-        placeholder: "Dettagli aggiuntivi...",
-        controller: _noteController,
-        isRequired: false,
-        obscureText: false,
-        keyboardType: TextInputType.multiline,
+      Row(
+        children: [
+          AmTextField(
+            label: "Note",
+            placeholder: "Dettagli aggiuntivi...",
+            controller: _noteController,
+            isRequired: false,
+            obscureText: false,
+            keyboardType: TextInputType.multiline,
+          ),
+        ],
       ),
       const SizedBox(height: 24),
     ]

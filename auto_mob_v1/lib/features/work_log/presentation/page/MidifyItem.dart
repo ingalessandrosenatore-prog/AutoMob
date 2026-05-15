@@ -1,5 +1,6 @@
 import 'package:auto_mob_v1/core/widgets/Card/AmSparePartCard.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_bloc.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_event.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -122,13 +123,14 @@ class Midifyitem extends StatelessWidget {
           padding: const EdgeInsets.only(top: 140, left: 20, right: 20, bottom: 100),
           itemCount: state.selectedParts.length,
           itemBuilder: (context, index) {
-            final partId = state.selectedParts[index];
-            final name = kParts[partId] ?? 'Unknown';
+            final item = state.selectedParts[index];
+            final name = kParts[item.partId] ?? 'Unknown';
             return AmSparePartCard(
-              id: partId,
+              key: ValueKey(item.partId),
+              item: item,
               name: name,
-              quantityNotifier: ValueNotifier<int>(1),
-              isExpandedNotifier: ValueNotifier<bool>(false),
+              onRemove: () => context.read<WorkLogBloc>().add(RemovePartEvent(partId: item.partId)),
+              onItemChanged: (updated) => context.read<WorkLogBloc>().add(UpdatePartItemEvent(item: updated)),
             );
           },
         );
