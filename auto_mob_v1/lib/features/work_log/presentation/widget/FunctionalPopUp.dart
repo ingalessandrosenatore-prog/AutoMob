@@ -29,10 +29,10 @@ class BottomSheetPageFunc<T> extends Page<T> {
               color: const Color(0xFF0F0F11).withOpacity(0.6),
 
               child: switch(type) {
-                EnumPopUp.aggiornaKm => AddWorkLogPopUp(initialWorkType: type, id: idVeicolo,),
+
                 EnumPopUp.aggiornaTagliando => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
                 EnumPopUp.aggiornaDistribuzione =>  AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
-                EnumPopUp.aggiornaRevisione => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
+
                 EnumPopUp.aggiornaCambioGomme => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
                 EnumPopUp.altro => AddWorkLogPopUp(initialWorkType: type, id: idVeicolo,),
               },

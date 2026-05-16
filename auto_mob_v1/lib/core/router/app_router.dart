@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/page/SplashScreen.dart';
 import '../../features/auth/presentation/page/LoginView.dart';
 import '../../features/auth/presentation/page/RegistrationView.dart';
+import '../../features/vehicle/presentation/widget/KmUpdatePopUp.dart';
 import '../../features/vehicle/presentation/widget/PopUpAddVeicle.dart';
 import '../../features/work_log/presentation/widget/FunctionalPopUp.dart';
 import '../types/EnumPopUp.dart';
@@ -56,6 +57,17 @@ class AppRouter {
         path: '/parts',
         name: 'parts',
         builder:  (context , state ) => Midifyitem(),
+      ),
+
+      GoRoute(path: '/updatePopUp',
+        name: 'updateKm',
+        pageBuilder: (context ,state){
+          final extra = state.extra as Map<String, dynamic>?;
+          final currentKm = (extra?['currentKm'] as String?) ?? '0';
+
+          return KmUpdatePopUp(currentKm: currentKm);
+        },
+
       ),
 
     ],
