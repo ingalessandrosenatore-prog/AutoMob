@@ -301,7 +301,10 @@ class _HomeViewBody extends StatelessWidget {
               icon: Icons.speed_outlined,
               onPressed: () {
                 final s = context.read<DashboardBloc>().state;
-                context.push('/updatePopUp', extra: {'currentKm': s is DashboardLoaded ? s.vehicles[s.index].kmCurrent.toString() : '0'});
+                if (s is! DashboardLoaded) return;
+                final vehicle = s.vehicles[s.index];
+                if (vehicle.isPlaceholder) return;
+                context.push('/updatePopUp', extra: {'currentKm': vehicle.kmCurrent.toString()});
               },
             ),
             AmFabAction(color: Color(0xFF3192F3), icon: Icons.trip_origin_outlined, label: "GOMME", onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaCambioGomme)),

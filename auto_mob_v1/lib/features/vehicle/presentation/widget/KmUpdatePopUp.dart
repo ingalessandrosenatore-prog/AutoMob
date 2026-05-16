@@ -83,9 +83,9 @@ class _KmUpdateContent extends StatelessWidget {
               const SizedBox(height: 40),
 
               // Chilometraggio Attuale
-              const Text(
-                "Chilometraggio attuale",
-                style: TextStyle(
+               const Text(
+                "Chilometraggio attuale   ",
+                style: const TextStyle(
                   color: Color(0xFF636366),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
