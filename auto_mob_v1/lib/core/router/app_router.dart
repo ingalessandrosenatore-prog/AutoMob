@@ -1,5 +1,6 @@
 import 'package:auto_mob_v1/features/dashboard/presentation/page/HomeView.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/page/MidifyItem.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/page/WorkLogHistoryPage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -33,7 +34,7 @@ class AppRouter {
       GoRoute(
         path: '/home',
         name: 'home',
-       builder:  (context , state ) =>const HomeView(),
+       builder:  (context , state ) =>const WorkLogHistoryPage(),
       ),
 
       GoRoute(path: '/addVeichle',
