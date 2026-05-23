@@ -1,7 +1,7 @@
 import 'package:auto_mob_v1/core/types/EnumPopUp.dart';
-import 'package:auto_mob_v1/features/work_log/presentation/widget/FunctionalPopUp.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widget/WorkLogItemCard.dart';
 import 'package:auto_mob_v1/core/widgets/Card/AmVehicleSelectableCard.dart';
+import 'package:auto_mob_v1/core/widgets/Buttons/AmVehicleFloatingBadge.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
@@ -16,8 +16,30 @@ class WorkLogHistoryPage extends StatefulWidget {
 }
 
 class _WorkLogHistoryPageState extends State<WorkLogHistoryPage> {
-  late bool isSelct1=true;
-  late bool isSelct2=false;
+  late bool isSelct1 = true;
+  late bool isSelct2 = false;
+   ScrollController ?_scrollController;
+  bool _showBadge = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController!.addListener(() {
+      if (_scrollController!.offset > 180 && !_showBadge) {
+        setState(() => _showBadge = true);
+      } else if (_scrollController!.offset <= 180 && _showBadge) {
+        setState(() => _showBadge = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController!.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     const Color orangeColor = Color(0xFFE85A1A);
@@ -25,179 +47,210 @@ class _WorkLogHistoryPageState extends State<WorkLogHistoryPage> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SoftEdgeBlur(
-        edges: [
-          EdgeBlur(type: EdgeType.topEdge,
-              size: 140,
-              tintColor: Colors.black54,
-              sigma: 10, controlPoints:[
-                ControlPoint(position: 0.1, type: ControlPointType.visible),
-                ControlPoint(position: 0.6, type: ControlPointType.visible),
-                ControlPoint(position: 1.0, type: ControlPointType.transparent),
-              ]
-          ),
-          EdgeBlur(type: EdgeType.bottomEdge,
-              size: 150,
-              tintColor: Colors.black87,
-              sigma: 10, controlPoints:[
-                ControlPoint(position: 0.3, type: ControlPointType.visible),
-                ControlPoint(position: 1.0, type: ControlPointType.transparent),
-              ]
-          )
-        ],
-        child:SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 1. Header
-            const Padding(
-              padding: EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Storico",
-                    style: TextStyle(
-                      color: Color(0xFF636366),
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    "Lavori",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
+      body: Stack(
+        children: [
+          // 1. Corpo della pagina con Blur e Scroll
+          SoftEdgeBlur(
+            edges: [
+              EdgeBlur(
+                type: EdgeType.topEdge,
+                size: 140,
+                tintColor: Colors.black54,
+                sigma: 10,
+                controlPoints: [
+                  ControlPoint(position: 0.1, type: ControlPointType.visible),
+                  ControlPoint(position: 0.6, type: ControlPointType.visible),
+                  ControlPoint(position: 1.0, type: ControlPointType.transparent),
                 ],
               ),
-            ),
-
-            // 2. Selettore Veicoli (Orizzontale)
-            //TODO: implementare la selezione del veicolo
-            SizedBox(
-              height: 130,
+              EdgeBlur(
+                type: EdgeType.bottomEdge,
+                size: 150,
+                tintColor: Colors.black87,
+                sigma: 10,
+                controlPoints: [
+                  ControlPoint(position: 0.3, type: ControlPointType.visible),
+                  ControlPoint(position: 1.0, type: ControlPointType.transparent),
+                ],
+              )
+            ],
+            child: SafeArea(
               child: ListView(
-                scrollDirection: Axis.horizontal,
+                controller: _scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 physics: const BouncingScrollPhysics(),
                 children: [
-                  AmVehicleSelectableCard(
-                    brand: "Volkswagen",
-                    model: "Golf",
-                    plate: "AB 123 CD",
-                    fuelType: "BEN",
-                    isSelected: isSelct1,
-                    onTap: () {setState(() {
-                      isSelct1 = !isSelct1;
-                    });},
+                  // Header "Storico Lavori"
+                  const Padding(
+                    padding: EdgeInsets.only(top: 24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Storico",
+                          style: TextStyle(
+                            color: Color(0xFF636366),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Text(
+                          "Lavori",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  AmVehicleSelectableCard(
-                    brand: "Toyota",
-                    model: "Yaris",
-                    plate: "EF 456 GH",
-                    fuelType: "IBR",
-                    isSelected: isSelct2,
-                    onTap: () {setState(() {
-                      isSelct2=! isSelct2;
-                    });},
-                  ),
-                  AmVehicleSelectableCard(
-                    brand: "Fiat",
-                    model: "Panda",
-                    plate: "IL 789 MN",
-                    fuelType: "BEN",
-                    isSelected: false,
-                    onTap: () { },
-                  ),
-                ],
-              ),
-            ),
 
-            const SizedBox(height: 32),
+                  const SizedBox(height: 32),
 
-            // 3. Lista Interventi (Verticale)
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                physics: const BouncingScrollPhysics(),
-                children: const [
-                  WorkLogItemCard(
+                  // Selettore Veicoli (Orizzontale) - Ora parte del flusso di scroll
+                  SizedBox(
+                    height: 130,
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        AmVehicleSelectableCard(
+                          brand: "Volkswagen",
+                          model: "Golf",
+                          plate: "AB 123 CD",
+                          fuelType: "BEN",
+                          isSelected: isSelct1,
+                          onTap: () {
+                            setState(() {
+                              isSelct1 = !isSelct1;
+                            });
+                          },
+                        ),
+                        AmVehicleSelectableCard(
+                          brand: "Toyota",
+                          model: "Yaris",
+                          plate: "EF 456 GH",
+                          fuelType: "IBR",
+                          isSelected: isSelct2,
+                          onTap: () {
+                            setState(() {
+                              isSelct2 = !isSelct2;
+                            });
+                          },
+                        ),
+                        AmVehicleSelectableCard(
+                          brand: "Fiat",
+                          model: "Panda",
+                          plate: "IL 789 MN",
+                          fuelType: "BEN",
+                          isSelected: false,
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Lista Interventi
+                  const WorkLogItemCard(
                     title: "Tagliando",
                     date: "12 Nov 2023",
                     km: "42.000 km",
                     description: "Olio 5W30 + filtri",
                     hasWorkshop: true,
                   ),
-                  WorkLogItemCard(
+                  const WorkLogItemCard(
                     title: "Cambio gomme",
                     date: "03 Ott 2023",
                     km: "38.000 km",
                     description: "Invernali Pirelli",
                   ),
-                  WorkLogItemCard(
+                  const WorkLogItemCard(
                     title: "Freni anteriori",
                     date: "20 Mag 2023",
                     km: "35.200 km",
                     description: "Dischi + pastiglie",
                     hasWorkshop: true,
                   ),
-                  WorkLogItemCard(
-                    title: "Freni anteriori",
-                    date: "20 Mag 2023",
-                    km: "35.200 km",
-                    description: "Dischi + pastiglie",
-                    hasWorkshop: true,
-                  ),  WorkLogItemCard(
-                    title: "Freni anteriori",
-                    date: "20 Mag 2023",
-                    km: "35.200 km",
-                    description: "Dischi + pastiglie",
-                    hasWorkshop: true,
-                  ),  WorkLogItemCard(
-                    title: "Freni anteriori",
-                    date: "20 Mag 2023",
-                    km: "35.200 km",
-                    description: "Dischi + pastiglie",
-                    hasWorkshop: true,
-                  ),  WorkLogItemCard(
+                  const WorkLogItemCard(
                     title: "Freni anteriori",
                     date: "20 Mag 2023",
                     km: "35.200 km",
                     description: "Dischi + pastiglie",
                     hasWorkshop: true,
                   ),
-                  SizedBox(height: 100), // Spazio per non coprire l'ultimo elemento col FAB
+                  const WorkLogItemCard(
+                    title: "Freni anteriori",
+                    date: "20 Mag 2023",
+                    km: "35.200 km",
+                    description: "Dischi + pastiglie",
+                    hasWorkshop: true,
+                  ),
+                  const WorkLogItemCard(
+                    title: "Freni anteriori",
+                    date: "20 Mag 2023",
+                    km: "35.200 km",
+                    description: "Dischi + pastiglie",
+                    hasWorkshop: true,
+                  ),
+                  const WorkLogItemCard(
+                    title: "Freni anteriori",
+                    date: "20 Mag 2023",
+                    km: "35.200 km",
+                    description: "Dischi + pastiglie",
+                    hasWorkshop: true,
+                  ),
+                  const SizedBox(height: 120), // Spazio extra per il FAB
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+
+          // 2. Badge Veicolo Fluttuante (Animato in base allo scroll)
+          Positioned(
+            top: 20,
+            right: 24,
+            child: SafeArea(
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: _showBadge ? 1.0 : 0.0,
+                child: AmVehicleFloatingBadge(
+                  brand: "Volkswagen",
+                  model: "Golf",
+                  onTap: () {
+                    // Azione opzionale
+                  },
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      ),
-      // 4. FAB Aggiungi
+      // 3. FAB Aggiungi
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 80),
         child: FloatingActionButton.extended(
-        onPressed: () {
-          // Navigazione verso il pop-up funzionale
-          context.push(''); // Da recuperare dallo stato);
-        },
-        backgroundColor: orangeColor,
-        elevation: 10,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        label: const Text(
-          "Aggiungi",
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+          onPressed: () {
+            context.push('/addFunctional', extra: {
+              'type': EnumPopUp.altro,
+              'id': 'veicolo_id_mock',
+            });
+          },
+          backgroundColor: orangeColor,
+          elevation: 10,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          label: const Text(
+            "Aggiungi",
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        icon: const Icon(Icons.build_outlined, size: 20),
+          icon: const Icon(Icons.build_outlined, size: 20),
         ),
       ),
     );
