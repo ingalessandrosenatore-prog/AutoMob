@@ -4,6 +4,7 @@ import 'package:auto_mob_v1/features/work_log/presentation/widget/WorkLogItemCar
 import 'package:auto_mob_v1/core/widgets/Card/AmVehicleSelectableCard.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 /// Pagina dello storico lavori (WorkLog).
 /// Visualizza i veicoli selezionabili e la cronologia degli interventi.
@@ -24,7 +25,27 @@ class _WorkLogHistoryPageState extends State<WorkLogHistoryPage> {
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: SafeArea(
+      body: SoftEdgeBlur(
+        edges: [
+          EdgeBlur(type: EdgeType.topEdge,
+              size: 140,
+              tintColor: Colors.black54,
+              sigma: 10, controlPoints:[
+                ControlPoint(position: 0.1, type: ControlPointType.visible),
+                ControlPoint(position: 0.6, type: ControlPointType.visible),
+                ControlPoint(position: 1.0, type: ControlPointType.transparent),
+              ]
+          ),
+          EdgeBlur(type: EdgeType.bottomEdge,
+              size: 150,
+              tintColor: Colors.black87,
+              sigma: 10, controlPoints:[
+                ControlPoint(position: 0.3, type: ControlPointType.visible),
+                ControlPoint(position: 1.0, type: ControlPointType.transparent),
+              ]
+          )
+        ],
+        child:SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -125,6 +146,31 @@ class _WorkLogHistoryPageState extends State<WorkLogHistoryPage> {
                     description: "Dischi + pastiglie",
                     hasWorkshop: true,
                   ),
+                  WorkLogItemCard(
+                    title: "Freni anteriori",
+                    date: "20 Mag 2023",
+                    km: "35.200 km",
+                    description: "Dischi + pastiglie",
+                    hasWorkshop: true,
+                  ),  WorkLogItemCard(
+                    title: "Freni anteriori",
+                    date: "20 Mag 2023",
+                    km: "35.200 km",
+                    description: "Dischi + pastiglie",
+                    hasWorkshop: true,
+                  ),  WorkLogItemCard(
+                    title: "Freni anteriori",
+                    date: "20 Mag 2023",
+                    km: "35.200 km",
+                    description: "Dischi + pastiglie",
+                    hasWorkshop: true,
+                  ),  WorkLogItemCard(
+                    title: "Freni anteriori",
+                    date: "20 Mag 2023",
+                    km: "35.200 km",
+                    description: "Dischi + pastiglie",
+                    hasWorkshop: true,
+                  ),
                   SizedBox(height: 100), // Spazio per non coprire l'ultimo elemento col FAB
                 ],
               ),
@@ -132,8 +178,11 @@ class _WorkLogHistoryPageState extends State<WorkLogHistoryPage> {
           ],
         ),
       ),
+      ),
       // 4. FAB Aggiungi
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton.extended(
         onPressed: () {
           // Navigazione verso il pop-up funzionale
           context.push(''); // Da recuperare dallo stato);
@@ -149,6 +198,7 @@ class _WorkLogHistoryPageState extends State<WorkLogHistoryPage> {
           ),
         ),
         icon: const Icon(Icons.build_outlined, size: 20),
+        ),
       ),
     );
   }

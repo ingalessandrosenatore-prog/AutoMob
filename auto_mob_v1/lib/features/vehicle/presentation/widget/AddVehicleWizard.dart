@@ -34,8 +34,15 @@ class AddVehicleWizard extends StatelessWidget {
   }
 }
 
-class WizardBody extends StatelessWidget {
+class WizardBody extends StatefulWidget {
   const WizardBody({super.key});
+
+  @override
+  State<WizardBody> createState() => _WizardBodyState();
+}
+
+class _WizardBodyState extends State<WizardBody> {
+  late final PageController _pageController;
 
   static const _steps = [
     AddVehicleFormStep1(key: ValueKey(0)),
@@ -46,12 +53,33 @@ class WizardBody extends StatelessWidget {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    final initialStep = context.read<AddVehicleBloc>().state.currentStep;
+    _pageController = PageController(initialPage: initialStep);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return BlocConsumer<AddVehicleBloc, AddVehicleState>(
-      listenWhen: (prev, curr) => prev.status != curr.status,
-      listener: (context, state) {},
-      buildWhen: (prev, curr) =>
+      listenWhen: (prev, curr) =>
           prev.currentStep != curr.currentStep || prev.status != curr.status,
+      listener: (context, state) {
+        if (_pageController.hasClients) {
+          _pageController.animateToPage(
+            state.currentStep,
+            duration: const Duration(milliseconds: 380),
+            curve: Curves.easeInOutCubic,
+          );
+        }
+      },
+      buildWhen: (prev, curr) => prev.status != curr.status,
       builder: (context, state) {
         if (state.status == AddVehicleStatus.loading) {
           return const _WizardLoadingPage();
@@ -62,21 +90,10 @@ class WizardBody extends StatelessWidget {
         if (state.status == AddVehicleStatus.error) {
           return _WizardErrorPage(message: state.errorMessage ?? 'Errore sconosciuto');
         }
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          transitionBuilder: (child, animation) {
-            final slide = Tween<Offset>(
-              begin: const Offset(0.15, 0),
-              end: Offset.zero,
-            ).animate(
-              CurvedAnimation(parent: animation, curve: Curves.easeOut),
-            );
-            return FadeTransition(
-              opacity: animation,
-              child: SlideTransition(position: slide, child: child),
-            );
-          },
-          child: _steps[state.currentStep],
+        return PageView(
+          controller: _pageController,
+          physics: const NeverScrollableScrollPhysics(),
+          children: _steps,
         );
       },
     );

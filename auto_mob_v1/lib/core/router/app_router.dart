@@ -1,4 +1,5 @@
 import 'package:auto_mob_v1/features/dashboard/presentation/page/HomeView.dart';
+import 'package:auto_mob_v1/features/servizi/presentation/page/ServiziPage.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/page/MidifyItem.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/page/WorkLogHistoryPage.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import '../../features/vehicle/presentation/widget/KmUpdatePopUp.dart';
 import '../../features/vehicle/presentation/widget/PopUpAddVeicle.dart';
 import '../../features/work_log/presentation/widget/FunctionalPopUp.dart';
 import '../types/EnumPopUp.dart';
+import 'shell_scaffold.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -31,21 +33,36 @@ class AppRouter {
         name: 'registration',
         builder: (context, state) => const RegistrationView(),
       ),
+
+      ShellRoute(
+        builder: (context, state, child) => ShellScaffold(child: child),
+        routes: [
+          GoRoute(
+            path: '/home',
+            name: 'home',
+            builder: (context, state) => const HomeView(),
+          ),
+          GoRoute(
+            path: '/lavori',
+            name: 'lavori',
+            builder: (context, state) => const WorkLogHistoryPage(),
+          ),
+          GoRoute(
+            path: '/servizi',
+            name: 'servizi',
+            builder: (context, state) => const ServiziPage(),
+          ),
+        ],
+      ),
+
       GoRoute(
-        path: '/home',
-        name: 'home',
-       builder:  (context , state ) =>const WorkLogHistoryPage(),
+        path: '/addVeichle',
+        name: 'aggiungi_veicolo',
+        pageBuilder: (context, state) => BottomSheetPage(),
       ),
 
-      GoRoute(path: '/addVeichle',
-      name: 'aggiungi_veicolo',
-      pageBuilder: (context,state){
-       return BottomSheetPage();
-          },
-      ),
-
-
-      GoRoute(path: '/addFunctional',
+      GoRoute(
+        path: '/addFunctional',
         name: 'aggiungi_Funzione',
         pageBuilder: (context, state) {
           final extra = state.extra as Map<String, dynamic>;
@@ -54,24 +71,22 @@ class AppRouter {
           return BottomSheetPageFunc(type: typeEnum, idVeicolo: id);
         },
       ),
+
       GoRoute(
         path: '/parts',
         name: 'parts',
-        builder:  (context , state ) => Midifyitem(),
+        builder: (context, state) => Midifyitem(),
       ),
 
-      GoRoute(path: '/updatePopUp',
+      GoRoute(
+        path: '/updatePopUp',
         name: 'updateKm',
-        pageBuilder: (context ,state){
+        pageBuilder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final currentKm = (extra?['currentKm'] as String?) ?? '0';
-
           return KmUpdatePopUp(currentKm: currentKm);
         },
-
       ),
-
     ],
   );
 }
-

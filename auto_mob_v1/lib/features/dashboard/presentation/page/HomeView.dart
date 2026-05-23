@@ -65,8 +65,8 @@ class _HomeViewBody extends StatelessWidget {
               ]
           ),
           EdgeBlur(type: EdgeType.bottomEdge,
-              size: 50,
-              tintColor: Colors.black54,
+              size: 150,
+              tintColor: Colors.black87,
               sigma: 10, controlPoints:[
                 ControlPoint(position: 0.3, type: ControlPointType.visible),
                 ControlPoint(position: 1.0, type: ControlPointType.transparent),
@@ -247,12 +247,15 @@ class _HomeViewBody extends StatelessWidget {
                   },
                 ),
               ),
+              const SizedBox(height: 110),
             ],
           ),
         ),
       ),
       floatingActionButtonLocation: ExpandableFab.location,
-      floatingActionButton: ExpandableFab(
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: ExpandableFab(
           type:ExpandableFabType.up,
           distance: 70,
           duration: const Duration(milliseconds: 350),
@@ -312,6 +315,7 @@ class _HomeViewBody extends StatelessWidget {
             AmFabAction(color: Color(0xFF7361AC), label:"DISTRIBUZIONE", icon: Icons.settings_input_component, onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaDistribuzione)),
             AmFabAction(color: Color(0xFFFFB4AB) , icon: Icons.calendar_today_outlined, label:"REVSIONE", onPressed:  (){}),
       ],
+      ),
       ),
     );
 
