@@ -23,20 +23,17 @@ class BottomSheetPageFunc<T> extends Page<T> {
       ),
       builder: (context) =>  ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(50)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-            child: Container(
-              color: const Color(0xFF0F0F11).withOpacity(0.6),
+          child: Container(
+            color: const Color(0xFF0F0F11),
 
-              child: switch(type) {
+            child: switch(type) {
 
-                EnumPopUp.aggiornaTagliando => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
-                EnumPopUp.aggiornaDistribuzione =>  AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
+              EnumPopUp.aggiornaTagliando => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
+              EnumPopUp.aggiornaDistribuzione =>  AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
 
-                EnumPopUp.aggiornaCambioGomme => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
-                EnumPopUp.altro => AddWorkLogPopUp(initialWorkType: type, id: idVeicolo,),
-              },
-            ),
+              EnumPopUp.aggiornaCambioGomme => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
+              EnumPopUp.altro => AddWorkLogPopUp(initialWorkType: type, id: idVeicolo,),
+            },
           ),
         ),
 

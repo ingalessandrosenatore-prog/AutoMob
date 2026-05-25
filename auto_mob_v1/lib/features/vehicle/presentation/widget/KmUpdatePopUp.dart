@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/input/Textfield.dart';
@@ -39,12 +38,10 @@ class _KmUpdateContent extends StatelessWidget {
     
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(50)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-        child: Container(
-          color: const Color(0xFF0F0F11).withOpacity(0.95),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
+      child: Container(
+        color: const Color(0xFF0F0F11),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               // Header personalizzato per matchare la foto
@@ -191,7 +188,6 @@ class _KmUpdateContent extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 }

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 
 import 'core/di/injection_container.dart' as di;
 import 'core/router/app_router.dart';
@@ -8,7 +10,13 @@ import 'features/vehicle/presentation/provider/add_vehicle_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    try {
+      await FlutterDisplayMode.setHighRefreshRate();
+    } catch (_) {}
+  }
+
   await di.init();
   runApp(const AutoMobApp());
 }

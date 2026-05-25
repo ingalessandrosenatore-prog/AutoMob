@@ -2,10 +2,45 @@ import 'package:auto_mob_v1/core/widgets/Buttons/AmAnimatedNavButton.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class ShellScaffold extends StatelessWidget {
+class ShellScaffold extends StatefulWidget {
   final Widget child;
 
   const ShellScaffold({super.key, required this.child});
+
+  @override
+  State<ShellScaffold> createState() => _ShellScaffoldState();
+}
+
+class _ShellScaffoldState extends State<ShellScaffold> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _glowAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.05), weight: 50),
+      TweenSequenceItem(tween: Tween(begin: 1.05, end: 1.0), weight: 50),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTap() {
+    _controller.forward(from: 0.0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,42 +50,60 @@ class ShellScaffold extends StatelessWidget {
       backgroundColor: const Color(0xFF1A1C23),
       body: Stack(
         children: [
-          child,
+          RepaintBoundary(child: widget.child),
           Positioned(
             bottom: 24,
             left: 0,
             right: 0,
             child: Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AmAnimatedNavButton(
-                    icon: Icons.home_outlined,
-                    activeIcon: Icons.home,
-                    label: 'GARAGE',
-                    activeColor: const Color(0xFFFF6B00),
-                    isSelected: location == '/home',
-                    onTap: () => context.go('/home'),
+              child: RepaintBoundary(
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: GestureDetector(
+                    onTapDown: (_) => _handleTap(),
+                    behavior: HitTestBehavior.translucent,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AmAnimatedNavButton(
+                          icon: Icons.home_outlined,
+                          activeIcon: Icons.home,
+                          label: 'GARAGE',
+                          activeColor: const Color(0xFFFF6B00),
+                          isSelected: location == '/home',
+                          onTap: () {
+                            _handleTap();
+                            context.go('/home');
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        AmAnimatedNavButton(
+                          icon: Icons.build_outlined,
+                          activeIcon: Icons.build,
+                          label: 'LAVORI',
+                          activeColor: const Color(0xFF3192F3),
+                          isSelected: location == '/lavori',
+                          onTap: () {
+                            _handleTap();
+                            context.go('/lavori');
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        AmAnimatedNavButton(
+                          icon: Icons.list_rounded,
+                          activeIcon: Icons.list_sharp,
+                          label: 'SERVIZI',
+                          activeColor: const Color(0xFF7361AC),
+                          isSelected: location == '/servizi',
+                          onTap: () {
+                            _handleTap();
+                            context.go('/servizi');
+                          },
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  AmAnimatedNavButton(
-                    icon: Icons.build_outlined,
-                    activeIcon: Icons.build,
-                    label: 'LAVORI',
-                    activeColor: const Color(0xFF3192F3),
-                    isSelected: location == '/lavori',
-                    onTap: () => context.go('/lavori'),
-                  ),
-                  const SizedBox(width: 8),
-                  AmAnimatedNavButton(
-                    icon: Icons.list_rounded,
-                    activeIcon: Icons.list_sharp,
-                    label: 'SERVIZI',
-                    activeColor: const Color(0xFF7361AC),
-                    isSelected: location == '/servizi',
-                    onTap: () => context.go('/servizi'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

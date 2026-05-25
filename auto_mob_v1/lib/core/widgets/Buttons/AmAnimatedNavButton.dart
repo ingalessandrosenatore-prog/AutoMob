@@ -76,62 +76,62 @@ class _AmAnimatedNavButtonState extends State<AmAnimatedNavButton>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: _handleTap,
-      child: ScaleTransition(
-        scale: _scaleAnim,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeInOutCubic,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: _isClicked ? widget.activeColor : const Color(0xFF131315),
-            borderRadius: BorderRadius.circular(120),
-            border: Border.all(
-              color: _isClicked
-                  ? widget.activeColor
-                  : Colors.white.withOpacity(0.08),
-              width: 1.5,
-            ),
-            boxShadow: [
-              if (_isClicked)
-                BoxShadow(
-                  color: widget.activeColor.withOpacity(0.4),
-                  blurRadius: 15,
-                  spreadRadius: -2,
-                  offset: const Offset(0, 4),
-                )
-              else
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-            ],
-          ),
-          child: AnimatedSize(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOutBack,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _isClicked ? widget.activeIcon : widget.icon,
-                  color: _isClicked ? Colors.white : const Color(0xFF636366),
-                  size: 26,
-                ),
-                if (_isClicked) ...[
-                  const SizedBox(width: 10),
-                  Text(
-                    widget.label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
-                    ),
+    return RepaintBoundary(
+      child: GestureDetector(
+        onTap: _handleTap,
+        child: ScaleTransition(
+          scale: _scaleAnim,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: _isClicked ? widget.activeColor : const Color(0xFF131315).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(120),
+              border: Border.all(
+                color: _isClicked
+                    ? widget.activeColor
+                    : Colors.white.withOpacity(0.1),
+                width: 1.5,
+              ),
+              boxShadow: [
+                if (_isClicked)
+                  BoxShadow(
+                    color: widget.activeColor.withOpacity(0.4),
+                    blurRadius: 15,
+                    spreadRadius: -2,
+                    offset: const Offset(0, 4),
+                  )
+                else
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
-                ],
               ],
+            ),
+            child: AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _isClicked ? widget.activeIcon : widget.icon,
+                    color: _isClicked ? Colors.white : const Color(0xFF636366),
+                    size: 26,
+                  ),
+                  if (_isClicked) ...[
+                    const SizedBox(width: 10),
+                    Text(
+                      widget.label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ),

@@ -1,10 +1,9 @@
 import 'package:auto_mob_v1/core/types/EnumPopUp.dart';
-import 'package:auto_mob_v1/core/widgets/Buttons/AmFabActionRounded.dart';
+import 'package:auto_mob_v1/core/widgets/Buttons/AmGlassFab.dart';
 import 'package:auto_mob_v1/core/widgets/Buttons/SoftButton.dart';
 import 'package:auto_mob_v1/core/widgets/Card/KpiService.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -28,14 +27,32 @@ class HomeView extends StatelessWidget {
   }
 }
 
-class _HomeViewBody extends StatelessWidget {
+class _HomeViewBody extends StatefulWidget {
+  const _HomeViewBody();
 
-   _HomeViewBody();
+  @override
+  State<_HomeViewBody> createState() => _HomeViewBodyState();
+}
+
+class _HomeViewBodyState extends State<_HomeViewBody> {
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final controller = PageController();
     return Scaffold(
+
       backgroundColor: const Color(0xFF1A1C23),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -131,18 +148,20 @@ class _HomeViewBody extends StatelessWidget {
                             Expanded(
                               child: PageView.builder(
                                 scrollDirection: Axis.horizontal,
-                                controller: controller,
+                                controller: _pageController,
                                 onPageChanged: (index) {
                                   context.read<DashboardBloc>().add(DashboardPageChanged(index));
                                 },
                                 itemCount: vehicles.length,
                                 itemBuilder: (context, index) {
                                   final v = vehicles[index];
-                                  return CardAuto(
-                                    marca: v.brand,
-                                    modello: v.model,
-                                    kmTotali: v.isPlaceholder ? '—' : '${v.kmCurrent} km',
-                                    immaginePath: v.fotoPath,
+                                  return RepaintBoundary(
+                                    child: CardAuto(
+                                      marca: v.brand,
+                                      modello: v.model,
+                                      kmTotali: v.isPlaceholder ? '—' : '${v.kmCurrent} km',
+                                      immaginePath: v.fotoPath,
+                                    ),
                                   );
                                 },
                               ),
@@ -252,54 +271,13 @@ class _HomeViewBody extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButtonLocation: ExpandableFab.location,
+
       floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: ExpandableFab(
-          type:ExpandableFabType.up,
-          distance: 70,
-          duration: const Duration(milliseconds: 350),
-        overlayStyle: ExpandableFabOverlayStyle(
-          color: Colors.transparent,
-          blur: 60,
-        ),
-        openButtonBuilder: RotateFloatingActionButtonBuilder(
-            backgroundColor: const Color(0xFF1A1C23), // Sfondo scuro come in foto
-            foregroundColor: const Color(0xFF8BA2D4), // Colore icona bluastro
-            shape: const CircleBorder(),
-            child: Icon(
-              Icons.add,
-              size: 28,
-              shadows: [
-                Shadow(
-                  color: const Color(0xFF8BA2D4).withOpacity(0.8),
-                  blurRadius: 12,
-                ),
-              ],
-            ),
-          ),
-        closeButtonBuilder: FloatingActionButtonBuilder(
-            size: 56,
-            builder: (context, onPressed, progress) => FloatingActionButton(
-              onPressed: onPressed,
-              backgroundColor: const Color(0xFF1A1C23),
-              foregroundColor: const Color(0xFFFF6B00),
-              shape: const CircleBorder(),
-              child: Icon(
-                Icons.close,
-                size: 25,
-                shadows: [
-                  Shadow(
-                    color: const Color(0xFFFF6B00).withOpacity(0.6),
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          children: [
-            AmFabAction(
-              color: Color(0xFFFF6B00),
+        padding: const EdgeInsets.fromLTRB(0,0,0,70),
+        child: AmGlassFab(
+          actions: [
+           AmGlassAction(
+              color: Color(0xFF3192F3),
               label: "AGGIORNA KM",
               icon: Icons.speed_outlined,
               onPressed: () {
@@ -310,16 +288,35 @@ class _HomeViewBody extends StatelessWidget {
                 context.push('/updatePopUp', extra: {'currentKm': vehicle.kmCurrent.toString()});
               },
             ),
-            AmFabAction(color: Color(0xFF3192F3), icon: Icons.trip_origin_outlined, label: "GOMME", onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaCambioGomme)),
-            AmFabAction(color:Color(0xFF7361AC), icon: Icons.build, label: "TAGLIANDO", onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaTagliando)),
-            AmFabAction(color: Color(0xFF7361AC), label:"DISTRIBUZIONE", icon: Icons.settings_input_component, onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaDistribuzione)),
-            AmFabAction(color: Color(0xFFFFB4AB) , icon: Icons.calendar_today_outlined, label:"REVSIONE", onPressed:  (){}),
-      ],
-      ),
+           AmGlassAction(
+              color: const Color(0xFF7361AC) ,
+              icon: Icons.build,
+              label: "TAGLIANDO",
+              onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaTagliando),
+            ),
+            AmGlassAction(
+           color:  const Color(0xFF7361AC),
+              label: "DISTRIBUZIONE",
+              icon: Icons.settings_input_component,
+              onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaDistribuzione),
+            ),
+            AmGlassAction(
+          color: const Color(0xFFFF6B00) ,
+              icon: Icons.trip_origin_outlined,
+              label: "GOMME",
+              onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaCambioGomme),
+            ),
+            AmGlassAction(
+          color: const Color(0xFFFF6B00),
+              icon: Icons.calendar_today_outlined,
+              label: "REVISIONE",
+              onPressed: () {},
+            ),
+          ],
+        ),
       ),
     );
-
-  }
+    }
 
   void _pushFunctional(BuildContext context, EnumPopUp type) {
     final s = context.read<DashboardBloc>().state;

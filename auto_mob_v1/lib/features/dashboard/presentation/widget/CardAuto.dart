@@ -19,10 +19,13 @@ class CardAuto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final int decodeWidth =
+        (mediaQuery.size.width * 0.9 * mediaQuery.devicePixelRatio).round();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
+        width: mediaQuery.size.width * 0.9,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
           // Sfondo scuro che si vedrà in trasparenza sotto la sfocatura
@@ -62,7 +65,7 @@ class CardAuto extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    _buildImage(),
+                    _buildImage(decodeWidth),
                     // Overlay per scurire leggermente l'immagine e far risaltare il testo
                     Container(color: Colors.black.withOpacity(0.2)),
                   ],
@@ -151,16 +154,31 @@ class CardAuto extends StatelessWidget {
     );
   }
 
-  Widget _buildImage() {
+  Widget _buildImage(int cacheWidth) {
     final path = immaginePath;
     if (path == null || path.isEmpty) return _buildPlaceholder();
     if (path.startsWith('http')) {
-      return Image.network(path, fit: BoxFit.cover, errorBuilder: (_, _, _) => _buildPlaceholder());
+      return Image.network(
+        path,
+        fit: BoxFit.cover,
+        cacheWidth: cacheWidth,
+        errorBuilder: (_, _, _) => _buildPlaceholder(),
+      );
     }
     if (path.startsWith('lib/') || path.startsWith('assets/')) {
-      return Image.asset(path, fit: BoxFit.cover, errorBuilder: (_, _, _) => _buildPlaceholder());
+      return Image.asset(
+        path,
+        fit: BoxFit.cover,
+        cacheWidth: cacheWidth,
+        errorBuilder: (_, _, _) => _buildPlaceholder(),
+      );
     }
-    return Image.file(File(path), fit: BoxFit.cover, errorBuilder: (_, _, _) => _buildPlaceholder());
+    return Image.file(
+      File(path),
+      fit: BoxFit.cover,
+      cacheWidth: cacheWidth,
+      errorBuilder: (_, _, _) => _buildPlaceholder(),
+    );
   }
 
   Widget _buildPlaceholder() {
