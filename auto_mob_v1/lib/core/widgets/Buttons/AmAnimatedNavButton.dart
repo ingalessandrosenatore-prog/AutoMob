@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 class AmAnimatedNavButton extends StatelessWidget {
   final IconData icon;
@@ -26,37 +25,46 @@ class AmAnimatedNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 95,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: _isClicked ? Colors.white10 : Colors.transparent,
-            borderRadius: BorderRadius.circular(120),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                _isClicked ? activeIcon : icon,
-                color:  _isClicked ? const Color(0xFFFF6B00) : Colors.white ,
-                size: 30,
+    // IMPORTANTE: qui NON c'è nessun OCLiquidGlassGroup.
+    // La forma di vetro deve registrarsi nel gruppo condiviso della barra
+    // (vedi ShellScaffold) per potersi fondere con la bolla mobile.
+    // Mettere un gruppo qui isolerebbe la forma e impedirebbe la fusione.
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 75 ,
+        width: 100,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(100)),
+         // color: _isClicked ? Colors.white10 : Colors.transparent
+        ),
+        child:  Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              _isClicked ? activeIcon : icon,
+              color: _isClicked ? activeColor : Colors.white,
+              size: 30,
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                color: _isClicked ? activeColor : Colors.white,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1,
+                shadows: [
+                  Shadow(
+                    color: Colors.black87,
+                    offset: Offset(0, 1),
+                    blurRadius: 2,
+                  ),
+                ],
+                fontSize: 11,
               ),
-              const SizedBox(height: 5),
-              Text(
-                label,
-                style: TextStyle(
-                  color:_isClicked ? const Color(0xFFFF6B00) : Colors.white,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1,
-                  fontSize: 9,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -97,6 +97,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
           ),
           EdgeBlur(type: EdgeType.bottomEdge,
               size: 95,
+              tintColor: Colors.black54,
               sigma: 10, controlPoints:[
                 ControlPoint(position: 0.3, type: ControlPointType.visible),
                 ControlPoint(position: 1.0, type: ControlPointType.transparent),
