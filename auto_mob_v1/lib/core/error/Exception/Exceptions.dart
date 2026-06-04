@@ -39,3 +39,12 @@ class VehicleDataSourceException implements Exception {
   @override
   String toString() => 'VehicleDataSourceException($code): $message';
 }
+
+class WorkLogDataSourceException implements Exception {
+  final String message;
+  final String? code;
+  const WorkLogDataSourceException(this.message, {this.code});
+
+  @override
+  String toString() => 'WorkLogDataSourceException($code): $message';
+}

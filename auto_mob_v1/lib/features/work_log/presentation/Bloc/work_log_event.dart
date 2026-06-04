@@ -35,19 +35,11 @@ class RichiamoChange extends WorkLogEvent {
 }
 
 class OnSubmitEvent extends WorkLogEvent {
-  final EnumPopUp type;
-  final int currentKm;
-  final int intervallKM;
-  final String note;
-  final int prosssimoRichiamo;
+  final String id ;
+  OnSubmitEvent({required this.id});
 
-  OnSubmitEvent({
-    required this.type,
-    required this.currentKm,
-    required this.intervallKM,
-    required this.note,
-    required this.prosssimoRichiamo,
-  });
+  @override
+  List<Object?> get props => [id];
 }
 
 class OnWorkTypeChange extends WorkLogEvent {
@@ -57,6 +49,15 @@ class OnWorkTypeChange extends WorkLogEvent {
 
   @override
   List<Object?> get props => [type];
+}
+
+class CustomNameChange extends WorkLogEvent {
+  final String customName;
+
+  CustomNameChange({required this.customName});
+
+  @override
+  List<Object?> get props => [customName];
 }
 
 class RemovePartEvent extends WorkLogEvent {

@@ -31,6 +31,10 @@ import '../../features/vehicle/presentation/provider/add_vehicle_bloc.dart';
 import '../../features/dashboard/presentation/Bloc/dashboardBloc.dart';
 
 // WorkLog
+import '../../features/work_log/data/datasources/worklog_remote_data_source.dart';
+import '../../features/work_log/data/repositories/WorklogRepositoryImpl.dart';
+import '../../features/work_log/domain/repositories/WorklogRepo.dart';
+import '../../features/work_log/domain/usecase/CreateWorkLog.dart';
 import '../../features/work_log/presentation/Bloc/work_log_bloc.dart';
 
 final sl = GetIt.instance;
@@ -130,5 +134,24 @@ Future<void> _initDashboard() async {
 }
 
 void _initWorkLog() {
-  sl.registerFactory<WorkLogBloc>(() => WorkLogBloc());
+  // Data Source
+  sl.registerLazySingleton<WorklogRemoteDataSource>(
+    () => WorklogRemoteDataSourceImpl(supabaseClient: sl()),
+  );
+
+  // Repository
+  sl.registerLazySingleton<WorklogRepo>(
+    () => WorklogRepositoryImpl(remoteDataSource: sl()),
+  );
+
+  // Use Case
+  sl.registerLazySingleton<CreateWorkLog>(() => CreateWorkLog(sl()));
+
+  // BLoC — factory con param (vehicleId passato dal popup all'apertura)
+  sl.registerFactoryParam<WorkLogBloc, String, void>(
+    (vehicleId, _) => WorkLogBloc(
+
+      createWorkLog: sl(),
+    ),
+  );
 }

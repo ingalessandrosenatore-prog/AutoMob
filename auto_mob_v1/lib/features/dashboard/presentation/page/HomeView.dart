@@ -52,29 +52,43 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
       backgroundColor: const Color(0xFF1A1C23),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent.withOpacity(0),
         elevation: 0,
+
+        title:  Text(
+            "I MIEI VEICOLI",
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+              color: Colors.white,
+              shadows: [
+                Shadow(color: Colors.black12, offset: Offset(1, 1), blurRadius: 2)
+              ],
+            ),
+        ),
         scrolledUnderElevation: 0,
         actions: [
-          AmSoftButton(
-            label: 'AGGIUNGI',
-            width: 140,
-            height: 45,
-            color: const Color.fromRGBO(232, 90, 26, 1),
-            icon: Icons.add,
-            onPressed: () => context.pushNamed('aggiungi_veicolo'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0,0,10,0),
+            child: AmSoftButton(
+              label: "AGGIUNGI",
+              width: 45,
+              height: 45,
+              color: const Color(0xFFFF6B00),
+              icon: Icons.add,
+              onPressed: () => context.pushNamed('aggiungi_veicolo'),
+            ),
           ),
         ],
       ),
       body: SoftEdgeBlur(
         edges: [
           EdgeBlur(type: EdgeType.topEdge,
-              size: 140,
-              tintColor: Colors.black54,
+              size: 120,
               sigma: 10, controlPoints:[
                 ControlPoint(position: 0.1, type: ControlPointType.visible),
                 ControlPoint(position: 0.6, type: ControlPointType.visible),
@@ -82,8 +96,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
               ]
           ),
           EdgeBlur(type: EdgeType.bottomEdge,
-              size: 150,
-              tintColor: Colors.black87,
+              size: 95,
               sigma: 10, controlPoints:[
                 ControlPoint(position: 0.3, type: ControlPointType.visible),
                 ControlPoint(position: 1.0, type: ControlPointType.transparent),
@@ -95,30 +108,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: 100),
-              Padding(
-                padding: const EdgeInsets.all(9.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
 
-                    Container(
-                      color: Color(0xFF1A1C23), // Rosso solido, no opacità
-                      child: Text(
-                        "I MIEI VEICOLI",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(color: Colors.black12, offset: Offset(1, 1), blurRadius: 2)
-                          ],
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ),
               // lista auto
               BlocBuilder<DashboardBloc, DashboardState>(
                 builder: (context, state) {
@@ -140,7 +130,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                   if (state is DashboardLoaded) {
                     final vehicles = state.vehicles;
                     return SizedBox(
-                      height: 280,
+                      height: 500, // Leggermente aumentato per sicurezza
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -161,12 +151,14 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                       modello: v.model,
                                       kmTotali: v.isPlaceholder ? '—' : '${v.kmCurrent} km',
                                       immaginePath: v.fotoPath,
+                                      anno: v.year,
+                                      nextRevisionDate: v.nextRevisionDate,
                                     ),
                                   );
                                 },
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
                             AnimatedSmoothIndicator(
                               activeIndex: state.index,
                               count: vehicles.length,
@@ -254,11 +246,43 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                       final percInv = ((remainKmInv * 100) / currentVehicle.tireRotationIntervalKm).clamp(0.0, 100.0);
 
                       return Column(
+
                         children: [
-                          AmMaintenanceKpiCard(icon: Icons.handyman_outlined, color: choseColor(percTag), label: "tagliando", remainingKm: remainKmTag, nextServiceKm: nextServTag, percentage: percTag),
-                          AmMaintenanceKpiCard(icon: Icons.settings_outlined, color: choseColor(percDist), label: "distribuzione", remainingKm: remainKmDist, nextServiceKm: nextServDist, percentage: percDist),
-                          AmMaintenanceKpiCard(icon: Icons.tire_repair_outlined, color: choseColor(percGomme), label: "cambio gomme", remainingKm: remainKmGomme, nextServiceKm: nextServGomme, percentage: percGomme),
-                          AmMaintenanceKpiCard(icon: Icons.sync_outlined, color: choseColor(percInv), label: "inversione gomme", remainingKm: remainKmInv, nextServiceKm: nextServInv, percentage: percInv),
+                        AmMaintenanceKpiCard(
+                                icon: Icons.handyman_outlined,
+                                color: choseColor(percTag),
+                                label: "tagliando",
+                                remainingKm: remainKmTag,
+                                percentage: percTag,
+                                onTap: () => _pushFunctional(context, EnumPopUp.aggiornaTagliando),
+                            ),
+                          AmMaintenanceKpiCard(
+                                icon: Icons.settings_outlined,
+                                color: choseColor(percDist),
+                                label: "distribuzione",
+                                remainingKm: remainKmDist,
+                                percentage: percDist,
+                                onTap: () => _pushFunctional(context, EnumPopUp.aggiornaDistribuzione),
+                            ),
+
+
+                             AmMaintenanceKpiCard(
+                                icon: Icons.tire_repair_outlined,
+                                color: choseColor(percGomme),
+                                label: "cambio gomme",
+                                remainingKm: remainKmGomme,
+                                percentage: percGomme,
+                                onTap: () => _pushFunctional(context, EnumPopUp.aggiornaCambioGomme),
+                            ),
+                          AmMaintenanceKpiCard(
+                                icon: Icons.sync_outlined,
+                                color: choseColor(percInv),
+                                label: "inversione gomme",
+                                remainingKm: remainKmInv,
+                                percentage: percInv,
+                                onTap: () {}, // TODO: Implementa callback per inversione
+                            ),
+
                         ],
                       );
                     }
@@ -272,49 +296,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
         ),
       ),
 
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.fromLTRB(0,0,0,70),
-        child: AmGlassFab(
-          actions: [
-           AmGlassAction(
-              color: Color(0xFF3192F3),
-              label: "AGGIORNA KM",
-              icon: Icons.speed_outlined,
-              onPressed: () {
-                final s = context.read<DashboardBloc>().state;
-                if (s is! DashboardLoaded) return;
-                final vehicle = s.vehicles[s.index];
-                if (vehicle.isPlaceholder) return;
-                context.push('/updatePopUp', extra: {'currentKm': vehicle.kmCurrent.toString()});
-              },
-            ),
-           AmGlassAction(
-              color: const Color(0xFF7361AC) ,
-              icon: Icons.build,
-              label: "TAGLIANDO",
-              onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaTagliando),
-            ),
-            AmGlassAction(
-           color:  const Color(0xFF7361AC),
-              label: "DISTRIBUZIONE",
-              icon: Icons.settings_input_component,
-              onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaDistribuzione),
-            ),
-            AmGlassAction(
-          color: const Color(0xFFFF6B00) ,
-              icon: Icons.trip_origin_outlined,
-              label: "GOMME",
-              onPressed: () => _pushFunctional(context, EnumPopUp.aggiornaCambioGomme),
-            ),
-            AmGlassAction(
-          color: const Color(0xFFFF6B00),
-              icon: Icons.calendar_today_outlined,
-              label: "REVISIONE",
-              onPressed: () {},
-            ),
-          ],
-        ),
-      ),
+
     );
     }
 
@@ -345,3 +327,5 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     }
   }
 }
+
+

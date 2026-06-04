@@ -2,23 +2,29 @@ import 'dart:async';
 
 import 'package:auto_mob_v1/core/types/EnumPopUp.dart';
 import 'package:auto_mob_v1/features/work_log/domain/entiti/WorkLogItemEntity.dart';
+import 'package:auto_mob_v1/features/work_log/domain/usecase/CreateWorkLog.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_event.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
 
-  WorkLogBloc() : super(WorkLogState(type: EnumPopUp.altro, selectedParts: [], currentKm: 0, intervallKM: 0, note: "", prosssimoRichiamo: 0)) {
-    on<WorkLogEventCohiceTap>(_onTspOnChoice);
+  final CreateWorkLog createWorkLog;
+
+  WorkLogBloc({
+    required this.createWorkLog,
+  }) : super(WorkLogState.initial()) {
+    on<WorkLogEventCohiceTap>(_onTapOnChoice);
     on<OnSubmitEvent>(_onSubmitEvent);
     on<CurrentKmChange>(_onKmChange);
     on<RichiamoChange>(_onRichiamoChange);
     on<OnWorkTypeChange>(_onWorkTypeChange);
+    on<CustomNameChange>(_onCustomNameChange);
     on<RemovePartEvent>(_onRemovePart);
     on<UpdatePartItemEvent>(_onUpdatePartItem);
   }
 
-  FutureOr<void> _onTspOnChoice(WorkLogEventCohiceTap event, Emitter<WorkLogState> emit) {
+  FutureOr<void> _onTapOnChoice(WorkLogEventCohiceTap event, Emitter<WorkLogState> emit) {
     final current = List<WorkLogItem>.from(state.selectedParts);
     final alreadySelected = current.any((item) => item.partId == event.id);
     if (alreadySelected) {
@@ -35,8 +41,32 @@ class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
     emit(state.copyWith(selectedParts: current));
   }
 
-  FutureOr<void> _onSubmitEvent(OnSubmitEvent event, Emitter<WorkLogState> emit) {
-    // TODO: implementare salvataggio via usecase (layer dati)
+  Future<void> _onSubmitEvent(OnSubmitEvent event, Emitter<WorkLogState> emit) async {
+    final isAltro = state.type == EnumPopUp.altro;
+    final customNameTrimmed = state.customName?.trim() ?? '';
+    if (isAltro && customNameTrimmed.isEmpty) {
+      emit(state.copyWith(
+        status: WorkLogStatus.failure,
+        errorMessage: 'Inserisci un nome per l\'intervento "Altro"',
+      ));
+      return;
+    }
+
+    emit(state.copyWith(status: WorkLogStatus.loading, errorMessage: null));
+    final res = await createWorkLog(
+      vehicleId: event.id,
+      type: state.type.dbValue,
+      customName: isAltro ? customNameTrimmed : null,
+      serviceKm: state.currentKm,
+      serviceDate: DateTime.now(),
+      notes: state.note.isEmpty ? null : state.note,
+      intervallKm: state.intervallKM,
+      items: state.selectedParts,
+    );
+    res.fold(
+      (f) => emit(state.copyWith(status: WorkLogStatus.failure, errorMessage: f.message)),
+      (_) => emit(state.copyWith(status: WorkLogStatus.success)),
+    );
   }
 
   FutureOr<void> _onKmChange(CurrentKmChange event, Emitter<WorkLogState> emit) {
@@ -55,6 +85,10 @@ class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
 
   FutureOr<void> _onWorkTypeChange(OnWorkTypeChange event, Emitter<WorkLogState> emit) {
     emit(state.copyWith(type: event.type));
+  }
+
+  FutureOr<void> _onCustomNameChange(CustomNameChange event, Emitter<WorkLogState> emit) {
+    emit(state.copyWith(customName: event.customName));
   }
 
   FutureOr<void> _onRemovePart(RemovePartEvent event, Emitter<WorkLogState> emit) {

@@ -60,14 +60,38 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
     const Color backgroundColor = Color(0xFF0F0F11);
 
     return BlocProvider(
-      create: (context) => sl<WorkLogBloc>(),
-
-
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: ConstrainedBox(
+      create: (context) {
+        final bloc = sl<WorkLogBloc>(param1: widget.id);
+        bloc.add(OnWorkTypeChange(type: widget.initialWorkType));
+        return bloc;
+      },
+      child: BlocConsumer<WorkLogBloc, WorkLogState>(
+        listenWhen: (prev, curr) => prev.status != curr.status,
+        listener: (context, state) {
+          if (state.status == WorkLogStatus.success) {
+            final messenger = ScaffoldMessenger.of(context);
+            context.pop();
+            messenger.showSnackBar(
+              const SnackBar(
+                content: Text('Intervento salvato'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else if (state.status == WorkLogStatus.failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage ?? 'Errore durante il salvataggio'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.85,
               minHeight: MediaQuery.of(context).size.height * 0.85,
@@ -171,7 +195,14 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                           child: AmMainFab(
                             label: _currentPage == 0 ? 'CONTINUA' : 'SALVA',
                             color: _currentPage == 0 ? const Color(0x7E90E2FF) : const Color(0x4A90E2FF),
-                            onPressed: _currentPage == 0 ? _goToNextPage : () {},
+                            onPressed: _currentPage == 0
+                                ? _goToNextPage
+                                :  () {
+                              context.read<WorkLogBloc>().add(OnSubmitEvent(id: widget.id));
+                              print("cliccato");
+                              print(state.intervallKM);
+
+                            },
                             icon:  _currentPage == 0 ? Icons.arrow_forward_ios_outlined : Icons.add_task,
                             width: 260,
                             height: 65,
@@ -181,10 +212,23 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                     ),
                   ),
                 ),
+                if (state.status == WorkLogStatus.loading)
+                  const Positioned.fill(
+                    child: ColoredBox(
+                      color: Color(0xCC000000),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFE85A1A),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-        )
+          );
+        },
+      ),
         );
 
   }
@@ -205,6 +249,7 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
   final _kmController = TextEditingController();
   final _dateController = TextEditingController();
   final _noteController = TextEditingController();
+  final _customNameController = TextEditingController();
 
   static const Map<int, String> kParts = {
     1: 'Motore',
@@ -315,6 +360,7 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
     _kmController.dispose();
     _dateController.dispose();
     _noteController.dispose();
+    _customNameController.dispose();
     super.dispose();
   }
 
@@ -342,6 +388,26 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
             },
           ),
         ],
+      ),
+      BlocBuilder<WorkLogBloc, WorkLogState>(
+        buildWhen: (prev, curr) => prev.type != curr.type,
+        builder: (context, state) {
+          if (state.type != EnumPopUp.altro) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 24),
+            child: AmTextField(
+              label: "Nome intervento",
+              placeholder: "Specifica il tipo di intervento...",
+              controller: _customNameController,
+              isRequired: true,
+              obscureText: false,
+              keyboardType: TextInputType.text,
+              onChanged: (_) => context.read<WorkLogBloc>().add(
+                CustomNameChange(customName: _customNameController.text),
+              ),
+            ),
+          );
+        },
       ),
       const SizedBox(height: 24),
 

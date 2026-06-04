@@ -55,16 +55,16 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
 
   late final Listenable _animationListenable;
   late final double _maxMenuHeight;
-  late final Widget _cachedActionsList;
 
   @override
   void initState() {
     super.initState();
 
+    // MODIFICA 1: Rallentata l'animazione per godersi l'effetto onda
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
-      reverseDuration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 800), // Rallentato da 300 a 800
+      reverseDuration: const Duration(milliseconds: 400),
     );
 
     _stretchController = AnimationController(
@@ -103,21 +103,6 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
 
     _animationListenable = Listenable.merge([_controller, _dragY]);
     _maxMenuHeight = 60.0 + (widget.actions.length * 55.0);
-    _cachedActionsList = RepaintBoundary(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 20, left: 12, right: 12),
-        child: SizedBox(
-          width: 260,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final action in widget.actions)
-                _AmGlassFabActionItem(action: action, onClose: _toggle),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   @override
@@ -183,8 +168,7 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
 
         AnimatedBuilder(
           animation: _animationListenable,
-          child: _cachedActionsList,
-          builder: (context, child) {
+          builder: (context, _) {
 
             final bool isClosing = _controller.status == AnimationStatus.reverse;
 
@@ -210,7 +194,7 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
 
               dynamicWidth = 60.0 + (24.0 * swell) + (196.0 * expand);
               dynamicHeight = 60.0 + (24.0 * swell) + ((_maxMenuHeight - 84.0) * expand);
-              dynamicRadius = 30.0 + (10.0 * swell) + ((32.0 - 40.0) * expand);
+              dynamicRadius = 50.0 + (10.0 * swell) + ((32.0 - 40.0) * expand);
 
               iconScale = 1.0 + (0.25 * swell);
               currentRotation = _expandAnimation.value * 0.125 * 2 * math.pi;
@@ -223,14 +207,14 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
             )!;
 
             final double dragY = _dragY.value;
-            final bool showActions =
-                _controller.status == AnimationStatus.completed;
+            final bool showActions = safeExpand > 0.05;
+
             // ============= BAGLIORE ANIMATO =============
             // intensità: picco al 50% dell'animazione, va a 0 a inizio/fine
             final double glowIntensity = math.sin(safeExpand * math.pi);
             // centro: bottom-right in apertura, top-left in chiusura
             final Alignment glowCenter =
-                isClosing ? Alignment.topLeft : Alignment.bottomRight;
+            isClosing ? Alignment.topLeft : Alignment.bottomRight;
 
             return Positioned(
               right: 0,
@@ -312,7 +296,37 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
                                     top: 0,
                                     left: 0,
                                     right: 0,
-                                    child: child!,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 20, left: 12, right: 12),
+                                      child: SizedBox(
+                                        width: 260,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            for (int i = 0; i < widget.actions.length; i++)
+                                              Builder(
+                                                  builder: (context) {
+                                                    // MODIFICA 2: Inversione dell'indice per far partire prima gli elementi in basso
+                                                    int reversedIndex = widget.actions.length - 1 - i;
+
+                                                    return _AmGlassFabActionItem(
+                                                      action: widget.actions[i],
+                                                      onClose: _toggle,
+                                                      animation: CurvedAnimation(
+                                                        parent: _controller,
+                                                        curve: Interval(
+                                                          0.4 + (reversedIndex * 0.1).clamp(0.0, 0.5),
+                                                          1.0,
+                                                          curve: Curves.easeOutBack, // Questo curva genera il "rimbalzo"
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ),
 
                                 Container(
@@ -355,65 +369,82 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
 class _AmGlassFabActionItem extends StatelessWidget {
   final AmGlassAction action;
   final VoidCallback onClose;
+  final Animation<double> animation;
 
   const _AmGlassFabActionItem({
     required this.action,
     required this.onClose,
+    required this.animation,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          onClose();
-          action.onPressed();
-        },
-        borderRadius: BorderRadius.circular(20),
-        splashColor: action.color.withOpacity(0.1),
-        highlightColor: action.color.withOpacity(0.05),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: action.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: action.color.withOpacity(0.3),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: action.color.withOpacity(0.05),
-                      blurRadius: 10,
-                      spreadRadius: 1,
+    // MODIFICA 3: Aggiunta la transizione Y per l'effetto onda e il rimbalzo fisico
+    final offsetAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.8), // Parte dal basso
+      end: Offset.zero, // Arriva in posizione naturale
+    ).animate(animation);
+
+    return SlideTransition(
+      position: offsetAnimation, // Movimento verticale
+      child: ScaleTransition(
+        scale: animation, // Movimento in profondità
+        child: FadeTransition(
+          opacity: animation, // Apparizione graduale
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                onClose();
+                action.onPressed();
+              },
+              borderRadius: BorderRadius.circular(20),
+              splashColor: action.color.withOpacity(0.1),
+              highlightColor: action.color.withOpacity(0.05),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: action.color.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: action.color.withOpacity(0.3),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: action.color.withOpacity(0.05),
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        action.icon,
+                        color: action.color,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 18),
+                    Expanded(
+                      child: Text(
+                        action.label,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                child: Icon(
-                  action.icon,
-                  color: action.color,
-                  size: 20,
-                ),
               ),
-              const SizedBox(width: 18),
-              Expanded(
-                child: Text(
-                  action.label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

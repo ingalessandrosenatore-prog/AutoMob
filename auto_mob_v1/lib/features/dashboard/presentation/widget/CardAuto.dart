@@ -1,190 +1,276 @@
 import 'dart:io';
-
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 class CardAuto extends StatelessWidget {
   final String marca;
   final String modello;
   final String kmTotali;
   final String? immaginePath;
+  final int anno;
+  final DateTime? nextRevisionDate;
 
   const CardAuto({
     super.key,
     required this.marca,
     required this.modello,
     required this.kmTotali,
+    required this.anno,
     this.immaginePath,
+    this.nextRevisionDate,
   });
 
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final int decodeWidth =
-        (mediaQuery.size.width * 0.9 * mediaQuery.devicePixelRatio).round();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    final double cardWidth = mediaQuery.size.width * 0.90;
+
+    return Center(
       child: Container(
-        width: mediaQuery.size.width * 0.9,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
-          // Sfondo scuro che si vedrà in trasparenza sotto la sfocatura
-          color: const Color(0xFF1C1C1E),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.08),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.4),
-              blurRadius: 25,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
-          // Lo Stack come radice permette di sovrapporre elementi fuori dal blur
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // --- LIVELLO 1: SFONDO (FOTO CON BLUR IN BASSO) ---
-              SoftEdgeBlur(
-                edges: [
-                  EdgeBlur(
-                    type: EdgeType.bottomEdge,
-                    size: 140, // Area di sfocatura
-                    sigma: 50,
-                    tintColor: Colors.black,// Intensità
-                    controlPoints: [
-                      ControlPoint(position: 0.2, type: ControlPointType.visible),
-                      ControlPoint(position: 1.0, type: ControlPointType.transparent),
-                    ],
+        width: cardWidth,
+        margin: const EdgeInsets.symmetric(horizontal: 10),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // 1. LIVELLO BASE: IL GLOW (Immagine sfocata dietro)
+            Positioned(
+              top: -35,
+              bottom: -35,
+              left: -25,
+              right: -25,
+              child: Opacity(
+                opacity: 0.7, // Opacità abbassata come richiesto
+                child: ShaderMask(
+                  // La maschera radiale nasconde i bordi netti dell'immagine rendendoli trasparenti
+                  shaderCallback: (Rect bounds) {
+                    return const RadialGradient(
+                      center: Alignment.center,
+                      radius: 0.65,
+                      colors: [Colors.black, Colors.transparent],
+                      stops: [0.3, 1.0], // Svanisce dolcemente verso l'esterno
+                    ).createShader(bounds);
+                  },
+                  blendMode: BlendMode.dstIn,
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 45.0, sigmaY: 45.0),
+                    child: _buildImage(context),
                   ),
-                ],
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    _buildImage(decodeWidth),
-                    // Overlay per scurire leggermente l'immagine e far risaltare il testo
-                    Container(color: Colors.black.withOpacity(0.2)),
-                  ],
                 ),
               ),
+            ),
 
-              // --- LIVELLO 2: PRIMO PIANO (TESTI NITIDI, FUORI DAL BLUR) ---
-              Positioned(
-                bottom: 10, // Distanza dal fondo della card
-                left: 15,
-                right: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      marca.toUpperCase(),
-                      style: const TextStyle(
-                        color: Color(0xFF4A90E2),
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2.2,
-                      ),
-                    ),
-                    Text(
-                      modello.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24, // Leggermente ingrandito per impatto
-                        fontWeight: FontWeight.w900,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                    // Box KM Totali
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        // Sfondo semi-trasparente elegante sopra il blur
-                        color: Colors.black.withOpacity(0.5),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.1)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 3,
-                            height: 38,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF4A90E2),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "KM TOTALI",
-                                style: const TextStyle(
-                                  color: Color(0xFF8E8E93),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                kmTotali,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+            // 2. LIVELLO INTERMEDIO: IL VETRO (Glassmorphism)
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.12),
+                  width: 1.5,
                 ),
-              )
-            ],
-          ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 40,
+                    offset: const Offset(0, 20),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                  child: Container(
+                    color: const Color(0xFF1C1C1E).withOpacity(0.3),
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Immagine veicolo Top
+                        Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(24),
+                              child: AspectRatio(
+                                aspectRatio: 1.6, // Leggermente più basso per evitare overflow
+                                child: _buildImage(context),
+                              ),
+                            ),
+                            Positioned(
+                              top: 12,
+                              right: 12,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.4),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Info Veicolo
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "$marca $modello",
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20, // Leggermente ridotto
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "$anno",
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.3),
+                                      fontSize: 14, // Leggermente ridotto
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  "$kmTotali",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20, // Leggermente ridotto
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Bottom KPI cards
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildKpiCard(
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.calendar_today_outlined, color: Colors.white.withOpacity(0.6), size: 18),
+                                    const SizedBox(height: 8),
+                                    const Text("Revisione", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 8),
+                                    _buildStatusPill(_getRevisionStatus()),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _buildKpiCard(
+                                child: Column(
+                                  children: [
+                                    Text("CHILOMETRI", style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      kmTotali.replaceAll(RegExp(r'[^0-9]'), ''),
+                                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text("km totali", style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildImage(int cacheWidth) {
-    final path = immaginePath;
-    if (path == null || path.isEmpty) return _buildPlaceholder();
-    if (path.startsWith('http')) {
-      return Image.network(
-        path,
-        fit: BoxFit.cover,
-        cacheWidth: cacheWidth,
-        errorBuilder: (_, _, _) => _buildPlaceholder(),
-      );
-    }
-    if (path.startsWith('lib/') || path.startsWith('assets/')) {
-      return Image.asset(
-        path,
-        fit: BoxFit.cover,
-        cacheWidth: cacheWidth,
-        errorBuilder: (_, _, _) => _buildPlaceholder(),
-      );
-    }
-    return Image.file(
-      File(path),
-      fit: BoxFit.cover,
-      cacheWidth: cacheWidth,
-      errorBuilder: (_, _, _) => _buildPlaceholder(),
+  String _getDisplayValue() {
+    // Simuliamo un valore basato sui km o altro, per estetica come l'immagine
+    return "$kmTotali".split(' ')[0];
+  }
+
+  String _getRevisionStatus() {
+    if (nextRevisionDate == null) return "N.D.";
+    final now = DateTime.now();
+    if (nextRevisionDate!.isBefore(now)) return "Scad.";
+    return "OK";
+  }
+
+  Widget _buildStatusPill(String status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            status,
+            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildPlaceholder() {
+  Widget _buildKpiCard({required Widget child}) {
     return Container(
-      color: const Color(0xFF2C2C2E),
-      child: const Center(child: Icon(Icons.directions_car, color: Color(0xFF48484A), size: 50)),
+      padding: const EdgeInsets.symmetric(vertical: 12), // Ridotto da 16
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: child,
     );
+  }
+
+  Widget _buildImage(BuildContext context) {
+    if (immaginePath == null || immaginePath!.isEmpty) {
+      return Container(
+        color: const Color(0xFF2C2C2E),
+        child: const Center(child: Icon(Icons.directions_car, color: Colors.white10, size: 50)),
+      );
+    }
+    if (immaginePath!.startsWith('http')) {
+      return Image.network(immaginePath!, fit: BoxFit.cover);
+    }
+    if (immaginePath!.startsWith('lib/') || immaginePath!.startsWith('assets/')) {
+      return Image.asset(immaginePath!, fit: BoxFit.cover);
+    }
+    return Image.file(File(immaginePath!), fit: BoxFit.cover);
   }
 }

@@ -18,13 +18,18 @@ class Vehicle extends Equatable {
   final int tagliandoIntervalKm;
   final int tireChangeIntervalKm;
   final int tireRotationIntervalKm;
+  final int? distribuzioneIntervalKm;
 
-  // km dell'ultima manutenzione per tipo (null se mai eseguita).
-  // Letti dalla tabella maintenance_items, valore piu' recente per type.
+  // km e data dell'ultimo intervento per tipo (null se mai eseguita).
   final int? lastTagliandoKm;
+  final DateTime? lastTagliandoDate;
   final int? lastDistribuzioneKm;
+  final DateTime? lastDistribuzioneDate;
   final int? lastTireChangeKm;
+  final DateTime? lastTireChangeDate;
   final int? lastTireRotationKm;
+  final DateTime? lastTireRotationDate;
+  final DateTime? lastRevisionDate;
 
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -46,13 +51,19 @@ class Vehicle extends Equatable {
     required this.tireChangeIntervalKm,
     required this.tireRotationIntervalKm,
     required this.createdAt,
+    this.distribuzioneIntervalKm,
     this.powerCv,
     this.displacementCc,
     this.nextRevisionDate,
     this.lastTagliandoKm,
+    this.lastTagliandoDate,
     this.lastDistribuzioneKm,
+    this.lastDistribuzioneDate,
     this.lastTireChangeKm,
+    this.lastTireChangeDate,
     this.lastTireRotationKm,
+    this.lastTireRotationDate,
+    this.lastRevisionDate,
     this.updatedAt,
     this.fotoPath,
   });
@@ -70,14 +81,20 @@ class Vehicle extends Equatable {
       tagliandoIntervalKm: tagliandoIntervalKm,
       tireChangeIntervalKm: tireChangeIntervalKm,
       tireRotationIntervalKm: tireRotationIntervalKm,
+      distribuzioneIntervalKm: distribuzioneIntervalKm,
       createdAt: createdAt,
       powerCv: powerCv,
       displacementCc: displacementCc,
       nextRevisionDate: nextRevisionDate,
       lastTagliandoKm: lastTagliandoKm,
+      lastTagliandoDate: lastTagliandoDate,
       lastDistribuzioneKm: lastDistribuzioneKm,
+      lastDistribuzioneDate: lastDistribuzioneDate,
       lastTireChangeKm: lastTireChangeKm,
+      lastTireChangeDate: lastTireChangeDate,
       lastTireRotationKm: lastTireRotationKm,
+      lastTireRotationDate: lastTireRotationDate,
+      lastRevisionDate: lastRevisionDate,
       updatedAt: updatedAt,
       fotoPath: fotoPath ?? this.fotoPath,
     );
@@ -123,10 +140,16 @@ class Vehicle extends Equatable {
         tagliandoIntervalKm,
         tireChangeIntervalKm,
         tireRotationIntervalKm,
+        distribuzioneIntervalKm,
         lastTagliandoKm,
+        lastTagliandoDate,
         lastDistribuzioneKm,
+        lastDistribuzioneDate,
         lastTireChangeKm,
+        lastTireChangeDate,
         lastTireRotationKm,
+        lastTireRotationDate,
+        lastRevisionDate,
         createdAt,
         updatedAt,
         fotoPath,

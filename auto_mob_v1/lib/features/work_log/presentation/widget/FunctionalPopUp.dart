@@ -33,6 +33,10 @@ class BottomSheetPageFunc<T> extends Page<T> {
 
               EnumPopUp.aggiornaCambioGomme => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
               EnumPopUp.altro => AddWorkLogPopUp(initialWorkType: type, id: idVeicolo,),
+              // TODO: Handle this case.
+              EnumPopUp.revisione => throw UnimplementedError(),
+              // TODO: Handle this case.
+              EnumPopUp.pneumaticiInversione => throw UnimplementedError(),
             },
           ),
         ),
