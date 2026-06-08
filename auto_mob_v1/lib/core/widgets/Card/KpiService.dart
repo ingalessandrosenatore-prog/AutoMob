@@ -75,7 +75,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                           label.toUpperCase(),
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.9),
-                            fontSize: 14,
+                            fontSize: 11,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
                           ),
@@ -84,22 +84,31 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     // Chilometri Rimasti
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w900,
-                        ),
-                        children: [
-                          const TextSpan(text: 'Rimasti: '),
-                          TextSpan(
-                            text: '${formatKm(remainingKm)} KM',
-                            style: TextStyle(color: remainingKm < 0 ? Colors.redAccent : Colors.white),
+
+                          Row(
+                            children: [
+                              const Text( "Rimasti: ",style: TextStyle(
+                                fontSize: 17,
+                                fontWeight:FontWeight.w900,
+                                letterSpacing: 1.2,
+                                color: Colors.white,),
+                              ),
+                              Text(
+                                '${formatKm(remainingKm)} KM',
+                                style:   TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                    color:  remainingKm < 0 ? Colors.redAccent : Colors.white,
+                                
+                              ),
+                              )
+
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+
+
+
                     const SizedBox(height: 20),
                     // Segmented Rating Bar
                     _SegmentedProgressBar(percentage: percentage, color: color),

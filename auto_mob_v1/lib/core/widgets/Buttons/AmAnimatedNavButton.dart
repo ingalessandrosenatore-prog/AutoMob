@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AmAnimatedNavButton extends StatelessWidget {
+class AmAnimatedNavButton extends StatefulWidget {
   final IconData icon;
   final IconData activeIcon;
   final String label;
@@ -9,6 +9,9 @@ class AmAnimatedNavButton extends StatelessWidget {
   final bool initialIsClicked;
   // Se fornito, il bottone è controllato dall'esterno e non toggling da solo.
   final bool? isSelected;
+  // Notifica al genitore (la barra) lo stato di pressione, così il pill esterno
+  // può fare lo scale.
+  final ValueChanged<bool>? onPressChanged;
 
   const AmAnimatedNavButton({
     super.key,
@@ -19,9 +22,18 @@ class AmAnimatedNavButton extends StatelessWidget {
     this.onTap,
     this.initialIsClicked = false,
     this.isSelected,
+    this.onPressChanged,
   });
 
-  bool get _isClicked => isSelected ?? initialIsClicked;
+  @override
+  State<AmAnimatedNavButton> createState() => _AmAnimatedNavButtonState();
+}
+
+class _AmAnimatedNavButtonState extends State<AmAnimatedNavButton> {
+  bool get _isClicked => widget.isSelected ?? widget.initialIsClicked;
+  bool _isPressed = false;
+
+  static final BorderRadius _radius = BorderRadius.circular(100);
 
   @override
   Widget build(BuildContext context) {
@@ -30,31 +42,48 @@ class AmAnimatedNavButton extends StatelessWidget {
     // (vedi ShellScaffold) per potersi fondere con la bolla mobile.
     // Mettere un gruppo qui isolerebbe la forma e impedirebbe la fusione.
     return GestureDetector(
-      onTap: onTap,
       behavior: HitTestBehavior.opaque,
+      onTapDown: (_) {
+        setState(() => _isPressed = true);
+        widget.onPressChanged?.call(true);
+      },
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onPressChanged?.call(false);
+        widget.onTap?.call();
+      },
+      onTapCancel: () {
+        setState(() => _isPressed = false);
+        widget.onPressChanged?.call(false);
+      },
       child: Container(
         height: 75 ,
         width: 100,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(100)),
-         // color: _isClicked ? Colors.white10 : Colors.transparent
+          borderRadius: _radius,
+          // Flash "stile Apple": Overlay schiarisce il chiaro e scurisce lo
+          // scuro, dando luce integrata nel vetro senza patine.
+          backgroundBlendMode: BlendMode.overlay,
+          color: _isPressed
+              ? Colors.white.withOpacity(0.4)
+              : Colors.transparent,
         ),
         child:  Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              _isClicked ? activeIcon : icon,
-              color: _isClicked ? activeColor : Colors.white,
-              size: 30,
+              _isClicked ? widget.activeIcon : widget.icon,
+              color: _isClicked ? widget.activeColor : Colors.white,
+              size: 24,
             ),
             Text(
-              label,
+              widget.label,
               style: TextStyle(
-                color: _isClicked ? activeColor : Colors.white,
+                color: _isClicked ? widget.activeColor : Colors.white,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1,
-                shadows: [
+                shadows: const [
                   Shadow(
                     color: Colors.black87,
                     offset: Offset(0, 1),

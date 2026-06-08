@@ -22,7 +22,7 @@ class AmOutlinedButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(color: color, width: 1.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
         // Rimuoviamo il feedback splash standard per mantenere lo stile pulito
         foregroundColor: color,
       ),

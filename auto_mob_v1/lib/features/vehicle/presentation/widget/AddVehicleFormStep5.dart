@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/widgets/Blur/AmEdgeBlur.dart';
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Buttons/backButton.dart';
 import '../../../../core/widgets/Card/PupUpHeadCard.dart';
@@ -53,8 +54,13 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
         ),
 
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: AmEdgeBlur(
+            child: SingleChildScrollView(
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              bottom: 300,
+            ),
             child: Column(
               children: [
                 const SizedBox(height: 10),
@@ -212,6 +218,7 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                 const SizedBox(height: 30),
               ],
             ),
+          ),
           ),
         ),
       ],

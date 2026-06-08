@@ -27,15 +27,28 @@ class KmUpdatePopUp<T> extends Page<T> {
   }
 }
 
-class _KmUpdateContent extends StatelessWidget {
+class _KmUpdateContent extends StatefulWidget {
   final String currentKm;
   const _KmUpdateContent({required this.currentKm});
+
+  @override
+  State<_KmUpdateContent> createState() => _KmUpdateContentState();
+}
+
+class _KmUpdateContentState extends State<_KmUpdateContent> {
+  final _nuovoKmController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nuovoKmController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     const Color orangeColor = Color(0xFFE85A1A);
     const Color darkContainerColor = Color(0xFF1C1C1E);
-    
+
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(50)),
       child: Container(
@@ -82,7 +95,7 @@ class _KmUpdateContent extends StatelessWidget {
               // Chilometraggio Attuale
                const Text(
                 "Chilometraggio attuale   ",
-                style: const TextStyle(
+                style: TextStyle(
                   color: Color(0xFF636366),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -97,7 +110,7 @@ class _KmUpdateContent extends StatelessWidget {
                     fontWeight: FontWeight.w900,
                   ),
                   children: [
-                    TextSpan(text: currentKm),
+                    TextSpan(text: widget.currentKm),
                     const TextSpan(
                       text: " km",
                       style: TextStyle(
@@ -116,7 +129,7 @@ class _KmUpdateContent extends StatelessWidget {
                   AmTextField(
                     label: "NUOVO CHILOMETRAGGIO",
                     placeholder: "45230",
-                    controller: TextEditingController(),
+                    controller: _nuovoKmController,
                     isRequired: false,
                     obscureText: false,
                     keyboardType: TextInputType.number,
@@ -143,15 +156,15 @@ class _KmUpdateContent extends StatelessWidget {
                   color: const Color(0xFF1C1C1E).withOpacity(0.6),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: Row(
+                child: const Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.bolt,
                       color: orangeColor,
                       size: 20,
                     ),
-                    const SizedBox(width: 12),
-                    const Expanded(
+                    SizedBox(width: 12),
+                    Expanded(
                       child: Text(
                         "Il meccanico collegato riceverà una notifica dell'aggiornamento.",
                         style: TextStyle(

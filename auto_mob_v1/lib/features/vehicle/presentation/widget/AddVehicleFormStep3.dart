@@ -1,34 +1,51 @@
-import 'dart:ui';
-
 import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/Blur/AmEdgeBlur.dart';
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Buttons/backButton.dart';
 import '../../../../core/widgets/Card/PupUpHeadCard.dart';
 import '../../../../core/widgets/input/Textfield.dart';
 
-class AddVehicleFormStep3 extends StatelessWidget {
+class AddVehicleFormStep3 extends StatefulWidget {
   const AddVehicleFormStep3({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final potenzaController = TextEditingController();
-    final cilindrataController = TextEditingController();
-    final kmController = TextEditingController();
+  State<AddVehicleFormStep3> createState() => _AddVehicleFormStep3State();
+}
 
+class _AddVehicleFormStep3State extends State<AddVehicleFormStep3> {
+  final potenzaController = TextEditingController();
+  final cilindrataController = TextEditingController();
+  final kmController = TextEditingController();
+
+  @override
+  void dispose() {
+    potenzaController.dispose();
+    cilindrataController.dispose();
+    kmController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
+          child: AmEdgeBlur(
+            child: SingleChildScrollView(
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              bottom: 300,
+            ),
             child: Column(
 
               children: [
-                SizedBox(height: 150),
+                const SizedBox(height: 150),
                 Column(
                   children: [
                     Row(
@@ -51,7 +68,11 @@ class AddVehicleFormStep3 extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
                         AmTextField(
                           label: "Cilindrata",
                           placeholder: "1500",
@@ -59,7 +80,7 @@ class AddVehicleFormStep3 extends StatelessWidget {
                           isRequired: false,
                           obscureText: false,
                           keyboardType: TextInputType.number,
-                          suffixIcon: Text(
+                          suffixIcon: const Text(
                             "CC",
                             style: TextStyle(
                               color: Color(0xFF48484A),
@@ -114,69 +135,59 @@ class AddVehicleFormStep3 extends StatelessWidget {
               ],
             ),
           ),
+          ),
         ),
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 15),
-              child: WizardHeader(
-                stepIcon: Icons.speed,
-                stepNumber: 3,
-                totalSteps: 5,
-                title: "Dettagli tecnici",
-                onClose: () =>
-                    context.pop('/home'),
-              ),
-            ),
+          child: WizardHeader(
+            stepIcon: Icons.speed,
+            stepNumber: 3,
+            totalSteps: 5,
+            title: "Dettagli tecnici",
+            onClose: () => context.pop('/home'),
           ),
         ),
         Positioned(
           bottom: 0,
           left: 0,
           right: 0,
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 15),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: AmOutlinedButton(
-                        label: "Indietro",
-                        color: const Color(0xFF4A90E2),
-                        onPressed: () => context.read<AddVehicleBloc>().add(
-                          StepBackPressed(),
-                        ),
-                      ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: AmOutlinedButton(
+                    label: "Indietro",
+                    color: const Color(0xFF4A90E2),
+                    onPressed: () => context.read<AddVehicleBloc>().add(
+                      StepBackPressed(),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: AmMainFab(
-                        label: "Continua",
-                        height: 60,
-                        width: 180,
-                        color: const Color(0xFFE85A1A),
-                        icon: Icons.chevron_right,
-                        onPressed: () {
-                          context.read<AddVehicleBloc>().add(
-                            Step3Submitted(
-                              potenzaCv: int.tryParse(potenzaController.text),
-                              cilindrata: int.tryParse(
-                                cilindrataController.text,
-                              ),
-                              kmAttuali: int.tryParse(kmController.text),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: AmMainFab(
+                    label: "Continua",
+                    height: 60,
+                    width: 180,
+                    color: const Color(0xFFE85A1A),
+                    icon: Icons.chevron_right,
+                    onPressed: () {
+                      context.read<AddVehicleBloc>().add(
+                        Step3Submitted(
+                          potenzaCv: int.tryParse(potenzaController.text),
+                          cilindrata: int.tryParse(
+                            cilindrataController.text,
+                          ),
+                          kmAttuali: int.tryParse(kmController.text),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
         ),

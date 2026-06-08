@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:soft_edge_blur/soft_edge_blur.dart';
-import 'dart:ui';
 import 'AddVehicleWizard.dart';
 
 class BottomSheetPage<T> extends Page<T> {

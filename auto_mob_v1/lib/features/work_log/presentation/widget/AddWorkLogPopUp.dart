@@ -8,12 +8,15 @@ import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_bloc.da
 import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_event.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_state.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/page/MidifyItem.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/widget/AmExpandCont.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:soft_edge_blur/soft_edge_blur.dart';
+import '../../../../core/widgets/Blur/AmEdgeBlur.dart';
 import '../../../../core/widgets/Card/PupUpHeadCard.dart';
+import '../../../../core/widgets/input/DatePickerField.dart';
 import '../../../../core/widgets/input/Textfield.dart';
+import 'PartsPickerBody.dart';
 
 class AddWorkLogPopUp extends StatefulWidget {
   final EnumPopUp initialWorkType;
@@ -57,8 +60,6 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
 
   @override
   Widget build(BuildContext context) {
-    const Color backgroundColor = Color(0xFF0F0F11);
-
     return BlocProvider(
       create: (context) {
         final bloc = sl<WorkLogBloc>(param1: widget.id);
@@ -67,6 +68,7 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
       },
       child: BlocConsumer<WorkLogBloc, WorkLogState>(
         listenWhen: (prev, curr) => prev.status != curr.status,
+        buildWhen: (prev, curr) => prev.status != curr.status,
         listener: (context, state) {
           if (state.status == WorkLogStatus.success) {
             final messenger = ScaffoldMessenger.of(context);
@@ -87,14 +89,11 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
           }
         },
         builder: (context, state) {
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: ConstrainedBox(
+          final sheetHeight = MediaQuery.of(context).size.height * 0.85;
+          return ConstrainedBox(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.85,
-              minHeight: MediaQuery.of(context).size.height * 0.85,
+              maxHeight: sheetHeight,
+              minHeight: sheetHeight,
             ),
             child: Stack(
               children: [
@@ -102,31 +101,8 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                 top: 0,
                 right: 0,
                 left: 0,
-                child: SoftEdgeBlur(
-                  edges: [
-                    EdgeBlur(
-                      type: EdgeType.topEdge,
-                      size: 180,
-                    tintColor: Colors.black87.withOpacity(0.6),
-                      controlPoints: [
-                        ControlPoint(position: 0.4, type: ControlPointType.visible),
-                        ControlPoint(position: 1.0, type: ControlPointType.transparent),
-                      ],
-                      sigma: 30,
-                    ),
-                    EdgeBlur(
-                      type: EdgeType.bottomEdge,
-                      size: 150,
-                      tintColor: Colors.black87.withOpacity(0.8),
-                      controlPoints: [
-                        ControlPoint(position: 0.3, type: ControlPointType.visible),
-                        ControlPoint(position: 1.0, type: ControlPointType.transparent),
-                      ],
-                      sigma: 30,
-                    ),
-                  ],
-
-                child: PageView(
+                child: AmEdgeBlur(
+                  child: PageView(
                   controller: _pageController,
                   onPageChanged: (index) =>
                       setState(() => _currentPage = index),
@@ -135,7 +111,7 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                     const Midifyitem(),
                   ],
                 ),
-              ),
+                ),
               ),
 
                 Positioned(
@@ -188,24 +164,23 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                           curve: Curves.linear,
                           width: _currentPage > 0 ? 16 : 0,
                         ),
-                        AnimatedScale(
-                          curve: Curves.linear,
-                          scale: _currentPage == 0 ? 1.0 : 0.92,
-                          duration: const Duration(milliseconds: 300),
-                          child: AmMainFab(
-                            label: _currentPage == 0 ? 'CONTINUA' : 'SALVA',
-                            color: _currentPage == 0 ? const Color(0x7E90E2FF) : const Color(0x4A90E2FF),
-                            onPressed: _currentPage == 0
-                                ? _goToNextPage
-                                :  () {
-                              context.read<WorkLogBloc>().add(OnSubmitEvent(id: widget.id));
-                              print("cliccato");
-                              print(state.intervallKM);
-
-                            },
-                            icon:  _currentPage == 0 ? Icons.arrow_forward_ios_outlined : Icons.add_task,
-                            width: 260,
-                            height: 65,
+                        Expanded(
+                          child: AnimatedScale(
+                            curve: Curves.linear,
+                            scale: _currentPage == 0 ? 1.0 : 0.97,
+                            duration: const Duration(milliseconds: 300),
+                            child: AmMainFab(
+                              label: _currentPage == 0 ? 'CONTINUA' : 'SALVA',
+                              color: _currentPage == 0 ? const Color(0x7E90E2FF) : const Color(0x4A90E2FF),
+                              onPressed: _currentPage == 0
+                                  ? _goToNextPage
+                                  : () {
+                                      context.read<WorkLogBloc>().add(OnSubmitEvent(id: widget.id));
+                                    },
+                              icon: _currentPage == 0 ? Icons.arrow_forward_ios_outlined : Icons.add_task,
+                              width: double.infinity,
+                              height: 60,
+                            ),
                           ),
                         ),
                       ],
@@ -225,7 +200,6 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                   ),
               ],
             ),
-          ),
           );
         },
       ),
@@ -367,8 +341,13 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      padding: const EdgeInsets.only(
+        left: 20,
+        right: 20,
+        bottom: 300,
+      ),
       children: [
-        SizedBox(height: 150,),
+        const SizedBox(height: 150,),
         Row(
         children: [
           BlocBuilder<WorkLogBloc, WorkLogState>(
@@ -413,20 +392,16 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
 
       Row(
         children: [
-          AmTextField(
+          AmDatePickerField(
             label: "Data",
             placeholder: "gg/mm/aaaa",
             controller: _dateController,
-            isRequired: false,
-            obscureText: false,
-            keyboardType: TextInputType.datetime,
-            suffixIcon: const Icon(
-              Icons.calendar_today,
-              color: Color(0xFF48484A),
-              size: 18,
-            ),
           ),
-          const SizedBox(width: 16),
+        ],
+      ),
+      const SizedBox(height: 24),
+      Row(
+        children: [
           AmTextField(
             label: "Km attuali",
             placeholder: "45230",
@@ -484,54 +459,48 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
                     );
                   },
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "PROSSIMO RICHIAMO",
-                        style: TextStyle(
-                          color: Color(0xFF636366),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      BlocBuilder<WorkLogBloc, WorkLogState>(
-                        builder: (context, state) {
-                          return Container(
-                            height: 60,
-                            alignment: Alignment.centerLeft,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0F0F11),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: const Color(0xFFE85A1A).withOpacity(0.3),
-                              ),
-                            ),
-                            child: Text(
-                              "${state.prosssimoRichiamo}km",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
               ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "PROSSIMO RICHIAMO",
+              style: TextStyle(
+                color: Color(0xFF636366),
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            BlocBuilder<WorkLogBloc, WorkLogState>(
+              builder: (context, state) {
+                return Container(
+                  height: 60,
+                  width: double.infinity,
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F0F11),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFFE85A1A).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Text(
+                    "${state.prosssimoRichiamo}km",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
       ),
       const SizedBox(height: 24),
 
-      BlocBuilder<WorkLogBloc, WorkLogState>(
+     /* BlocBuilder<WorkLogBloc, WorkLogState>(
         builder: (context, state) {
           return Card(
             elevation: 8,
@@ -586,7 +555,14 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
             ),
           );
         },
-      ),
+      ),*/
+
+        AmExpandableContainer(title: "SEKEZIONA RICAMBI",
+            subtitle: "PARTI SELZIONATE ",
+            collapsedHeight: 72,   // <- l'altezza chiusa, decidi tu
+            expandedHeight: 400,   // <- l'altezza aperta, decidi tu
+            borderRadius: 16,
+            child: PartsPickerBody() ),
       const SizedBox(height: 24),
 
       Row(

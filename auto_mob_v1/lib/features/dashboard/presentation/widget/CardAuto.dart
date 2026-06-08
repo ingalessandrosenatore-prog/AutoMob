@@ -1,7 +1,10 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/Effects/PulsingGlowBorder.dart';
+
+/// Card del veicolo nel PageView della home.
+/// Card solida con ombra (3D), niente blur in tempo reale → swipe fluido.
 class CardAuto extends StatelessWidget {
   final String marca;
   final String modello;
@@ -9,6 +12,12 @@ class CardAuto extends StatelessWidget {
   final String? immaginePath;
   final int anno;
   final DateTime? nextRevisionDate;
+
+  /// Tap sul box KM → apre il pop-up di aggiornamento km.
+  final VoidCallback? onKmTap;
+
+  /// Tap sul box Revisione (azione futura).
+  final VoidCallback? onRevisionTap;
 
   const CardAuto({
     super.key,
@@ -18,188 +27,126 @@ class CardAuto extends StatelessWidget {
     required this.anno,
     this.immaginePath,
     this.nextRevisionDate,
+    this.onKmTap,
+    this.onRevisionTap,
   });
+
+  String get _revisionStatus {
+    if (nextRevisionDate == null) return "N.D.";
+    return nextRevisionDate!.isBefore(DateTime.now()) ? "Scaduta" : "OK";
+  }
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final double cardWidth = mediaQuery.size.width * 0.90;
+    final double cardWidth = MediaQuery.of(context).size.width * 0.90;
 
-    return Center(
-      child: Container(
-        width: cardWidth,
-        margin: const EdgeInsets.symmetric(horizontal: 10),
-        child: Stack(
-          clipBehavior: Clip.none,
+    return Container(
+      width: cardWidth,
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF232326), // stesso base delle card KPI
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          // Ombra profonda → effetto 3D
+          BoxShadow(
+            color: Colors.black.withOpacity(0.45),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
+          ),
+          // Sottile riflesso sul bordo superiore
+          BoxShadow(
+            color: Colors.white.withOpacity(0.05),
+            blurRadius: 0,
+            offset: const Offset(0, -1),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. LIVELLO BASE: IL GLOW (Immagine sfocata dietro)
-            Positioned(
-              top: -35,
-              bottom: -35,
-              left: -25,
-              right: -25,
-              child: Opacity(
-                opacity: 0.7, // Opacità abbassata come richiesto
-                child: ShaderMask(
-                  // La maschera radiale nasconde i bordi netti dell'immagine rendendoli trasparenti
-                  shaderCallback: (Rect bounds) {
-                    return const RadialGradient(
-                      center: Alignment.center,
-                      radius: 0.65,
-                      colors: [Colors.black, Colors.transparent],
-                      stops: [0.3, 1.0], // Svanisce dolcemente verso l'esterno
-                    ).createShader(bounds);
-                  },
-                  blendMode: BlendMode.dstIn,
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 45.0, sigmaY: 45.0),
-                    child: _buildImage(context),
+            // Immagine veicolo
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: AspectRatio(
+                    aspectRatio: 1.6,
+                    child: _VehicleImage(immaginePath: immaginePath),
                   ),
                 ),
-              ),
-            ),
-
-            // 2. LIVELLO INTERMEDIO: IL VETRO (Glassmorphism)
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.12),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.4),
-                    blurRadius: 40,
-                    offset: const Offset(0, 20),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                Positioned(
+                  top: 12,
+                  right: 12,
                   child: Container(
-                    color: const Color(0xFF1C1C1E).withOpacity(0.3),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Immagine veicolo Top
-                        Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: AspectRatio(
-                                aspectRatio: 1.6, // Leggermente più basso per evitare overflow
-                                child: _buildImage(context),
-                              ),
-                            ),
-                            Positioned(
-                              top: 12,
-                              right: 12,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.4),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.edit, color: Colors.white, size: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.4),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
 
-                        // Info Veicolo
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "$marca $modello",
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20, // Leggermente ridotto
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    "$anno",
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.3),
-                                      fontSize: 14, // Leggermente ridotto
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  "$kmTotali",
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 20, // Leggermente ridotto
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
+            // Box Nome / Anno (a tutta larghezza)
+            _InfoTile(marca: marca, modello: modello, anno: anno),
+            const SizedBox(height: 12),
 
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Bottom KPI cards
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildKpiCard(
-                                child: Column(
-                                  children: [
-                                    Icon(Icons.calendar_today_outlined, color: Colors.white.withOpacity(0.6), size: 18),
-                                    const SizedBox(height: 8),
-                                    const Text("Revisione", style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-                                    const SizedBox(height: 8),
-                                    _buildStatusPill(_getRevisionStatus()),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _buildKpiCard(
-                                child: Column(
-                                  children: [
-                                    Text("CHILOMETRI", style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      kmTotali.replaceAll(RegExp(r'[^0-9]'), ''),
-                                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text("km totali", style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 11)),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+            // Box Revisione + Km (stessa altezza, cliccabili)
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _TapTile(
+                      onTap: onRevisionTap,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.calendar_today_outlined,
+                              color: _kAppOrange, size: 20),
+                          const SizedBox(height: 8),
+                          const Text("REVISIONE", style: _kTileLabel),
+                          const SizedBox(height: 8),
+                          _RevisionStatusPill(status: _revisionStatus),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: PulsingGlowBorder(
+                      color: Colors.blueGrey.withOpacity(0.5),
+                      borderRadius: 20,
+                      child: _TapTile(
+                        onTap: onKmTap,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.speed_outlined,
+                                color: _kAppOrange, size: 20),
+                            const SizedBox(height: 8),
+                            const Text("KM", style: _kTileLabel),
+                            const SizedBox(height: 8),
+                            Text(
+                              kmTotali,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -207,24 +154,156 @@ class CardAuto extends StatelessWidget {
       ),
     );
   }
+}
 
-  String _getDisplayValue() {
-    // Simuliamo un valore basato sui km o altro, per estetica come l'immagine
-    return "$kmTotali".split(' ')[0];
+const TextStyle _kTileLabel = TextStyle(
+  color: Color(0xFF8E8E93),
+  fontSize: 8,
+  fontWeight: FontWeight.w800,
+  letterSpacing: 0.8,
+);
+
+/// Arancione accento dell'app (usato nella dashboard).
+const Color _kAppOrange = Color(0xFFFF6B00);
+
+/// Box info nome + anno (non cliccabile, stesso stile dei tile sotto).
+class _InfoTile extends StatelessWidget {
+  final String marca;
+  final String modello;
+  final int anno;
+
+  const _InfoTile({
+    required this.marca,
+    required this.modello,
+    required this.anno,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2C2C30),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.directions_car_filled_outlined,
+              color: _kAppOrange, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Brand (sopra)
+                      Text(
+                        marca.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      // Modello (sotto)
+                      Text(
+                        modello.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.55),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Anno (in fondo a destra)
+                if (anno > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      "$anno",
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.4),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
+}
 
-  String _getRevisionStatus() {
-    if (nextRevisionDate == null) return "N.D.";
-    final now = DateTime.now();
-    if (nextRevisionDate!.isBefore(now)) return "Scad.";
-    return "OK";
+/// Tile cliccabile con ombra (look "bottone 3D"). Usato per Revisione e Km.
+class _TapTile extends StatelessWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+
+  const _TapTile({required this.child, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: const Color(0xFF2C2C30),
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            child: Center(child: child),
+          ),
+        ),
+      ),
+    );
   }
+}
 
-  Widget _buildStatusPill(String status) {
+/// Pillola di stato revisione (OK / Scaduta / N.D.).
+class _RevisionStatusPill extends StatelessWidget {
+  final String status;
+
+  const _RevisionStatusPill({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
+        color: Colors.black.withOpacity(0.35),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
@@ -234,43 +313,49 @@ class CardAuto extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
           ),
           const SizedBox(width: 6),
           Text(
             status,
-            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildKpiCard({required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12), // Ridotto da 16
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-      ),
-      child: child,
-    );
-  }
+/// Immagine del veicolo: rete, asset o file locale, con placeholder.
+class _VehicleImage extends StatelessWidget {
+  final String? immaginePath;
 
-  Widget _buildImage(BuildContext context) {
-    if (immaginePath == null || immaginePath!.isEmpty) {
+  const _VehicleImage({this.immaginePath});
+
+  @override
+  Widget build(BuildContext context) {
+    final path = immaginePath;
+    if (path == null || path.isEmpty) {
       return Container(
         color: const Color(0xFF2C2C2E),
-        child: const Center(child: Icon(Icons.directions_car, color: Colors.white10, size: 50)),
+        child: const Center(
+          child: Icon(Icons.directions_car, color: Colors.white10, size: 50),
+        ),
       );
     }
-    if (immaginePath!.startsWith('http')) {
-      return Image.network(immaginePath!, fit: BoxFit.cover);
+    if (path.startsWith('http')) {
+      return Image.network(path, fit: BoxFit.cover);
     }
-    if (immaginePath!.startsWith('lib/') || immaginePath!.startsWith('assets/')) {
-      return Image.asset(immaginePath!, fit: BoxFit.cover);
+    if (path.startsWith('lib/') || path.startsWith('assets/')) {
+      return Image.asset(path, fit: BoxFit.cover);
     }
-    return Image.file(File(immaginePath!), fit: BoxFit.cover);
+    return Image.file(File(path), fit: BoxFit.cover);
   }
 }

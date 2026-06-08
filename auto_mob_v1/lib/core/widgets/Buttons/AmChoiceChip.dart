@@ -46,7 +46,7 @@ class AmChoiceChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isSelected) ...[
-              Icon(
+              const Icon(
                 Icons.check,
                 size: 14,
                 color: Colors.white,

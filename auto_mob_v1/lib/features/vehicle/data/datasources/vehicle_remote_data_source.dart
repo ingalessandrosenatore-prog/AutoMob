@@ -31,7 +31,7 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
 
 
     if (owner_id == null) {
-      throw ServerException('Utente non autenticato');
+      throw const ServerException('Utente non autenticato');
     }
 
       // 1. Prendi i dati dal tuo form model

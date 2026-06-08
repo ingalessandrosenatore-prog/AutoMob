@@ -54,7 +54,7 @@ class AmWorkshopCard extends StatelessWidget {
                   nomeOfficina,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 18,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -63,7 +63,7 @@ class AmWorkshopCard extends StatelessWidget {
                   'Meccanico · $codiceMeccanico',
                   style: const TextStyle(
                     color: Color(0xFF4E5D78),
-                    fontSize: 14,
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -87,7 +87,7 @@ class AmWorkshopCard extends StatelessWidget {
                 stato,
                 style: TextStyle(
                   color: colore,
-                  fontSize: 16,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -87,7 +87,7 @@ class AmVehicleSelectableCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               plate.toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 color: labelColor,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,

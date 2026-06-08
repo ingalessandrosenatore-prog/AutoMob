@@ -51,6 +51,9 @@ class _ShellScaffoldState extends State<ShellScaffold>
   ];
 
   static const Color _accent = Color(0xFFFF6B00);
+  // Sfondo del pill (niente più vetro qui). 0x1A000000 = nero ~10%.
+  // Metti Colors.transparent per un pill completamente invisibile.
+  static const Color _pillColor =  const Color(0xFF232326);
 
   late final AnimationController _controller;
   // Posizione orizzontale (alignment x, da -1 a 1) della bolla mobile.
@@ -60,13 +63,17 @@ class _ShellScaffoldState extends State<ShellScaffold>
   // Numero di "slot" saltati nel movimento corrente: scala la deformazione
   // (1.0 = salto tra due item adiacenti).
   double _stretchAmount = 0.0;
+  // True mentre un item è premuto: fa lo scale del pill esterno.
+  // ValueNotifier (non setState) così a cambiare è SOLO il pill, senza
+  // rieseguire il build dello ShellScaffold.
+  final ValueNotifier<bool> _pressed = ValueNotifier(false);
 
   // Geometria della barra, in px. Queste sono le manopole delle dimensioni.
   static const double _btnW = 100; // larghezza di ogni item
-  static const double _gap = 15; // spazio tra gli item
-  static const double _barH = 80; // altezza del pill
-  static const double _bubbleW = 100; // larghezza a riposo della bolla
-  static const double _bubbleH = 75; // altezza a riposo della bolla
+  static const double _gap = 6; // spazio tra gli item
+  static const double _barH = 60; // altezza del pill
+  static const double _bubbleW = _btnW; // = larghezza item: agli estremi la bolla combacia col bordo della pillola
+  static const double _bubbleH = 60; // altezza a riposo della bolla
 
   // Larghezza del pill: si adatta ESATTAMENTE a item + spazi tra loro.
   double get _contentW => _items.length * _btnW + (_items.length - 1) * _gap;
@@ -100,6 +107,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
   @override
   void dispose() {
     _controller.dispose();
+    _pressed.dispose();
     super.dispose();
   }
 
@@ -139,98 +147,102 @@ class _ShellScaffoldState extends State<ShellScaffold>
             // (_contentW) e resta centrato sullo schermo.
             child: Center(
               child: RepaintBoundary(
-                // Gruppo esterno: dà rifrazione + blur al pill di sfondo
-                // e il bordo bianco sfumato del pill (specular).
-                child:  OCLiquidGlassGroup(
-                  settings: const OCLiquidGlassSettings(
-                    blurRadiusPx: 6, // il blur lo dà la pillola
-                    refractStrength: -0.03,
-                    specStrength: 0, // intensità bordo bianco del pill
-                    specWidth: 0, // spessore del bordo
-                    specPower: 30, // più alto = bordo più sottile/netto
-                    specAngle: 45, // direzione della luce
+                // Il pill ora NON è più vetro: solo un Container traslucido,
+                // ritagliato a pillola. Il liquid glass resta solo sulla bolla.
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: _pressed,
+                  // child costruito UNA volta sola e ri-usato: il rebuild tocca
+                  // solo l'AnimatedScale, non l'intero pill/vetro.
+                  builder: (context, pressed, child) => AnimatedScale(
+                    scale: pressed ? 1.10 : 1.0,
+                    duration: const Duration(milliseconds: 80),
+                    curve: Curves.easeOutCubic,
+                    child: child,
                   ),
-                  child: OCLiquidGlass(
-                    borderRadius: 100,
+                  child: OCLiquidGlassGroup(
+                  repaint: _controller,
+                  settings: OCLiquidGlassSettings(
+                  specStrength: 0,
+                   blurRadiusPx: 3,
+                    lightbandColor:  Colors.white10
+
+
+                  ),
+                  child: OCLiquidGlass( //barra
                     height: _barH,
-                    // niente width: si adatta al contenuto.
-                    child: OCLiquidGlassGroup(
-                      repaint: _controller,
-                      // Gruppo interno: solo la bolla. Niente blur (lo dà il pill
-                      // sotto), specular/lightband accesi per il bordo bianco
-                      // sfumato che ti piace.
-                      settings: const OCLiquidGlassSettings(
-                        blurRadiusPx: 0,
-                        refractStrength: -0.06,
-                        specStrength: 10, // intensità bordo bianco bolla
-                        specWidth: 2.5, // spessore del bordo
-                        specPower: 20, // più alto = bordo più sottile
-                        specAngle: 45,
-                        lightbandStrength: 0.9, // banda chiara sul bordo
-                        lightbandWidthPx: 18,
-                        lightbandOffsetPx: 8,
-                      ),
-                      child: SizedBox(
-                        width: _contentW,
-                        height: _barH,
-                        child: Stack(
-                          children: [
-                            // Bolla mobile con effetto "gelatina", posizionata in px:
-                            // a metà percorso si allunga in orizzontale e si abbassa
-                            // in verticale, poi torna a riposo. sin(t·π)=0 agli
-                            // estremi, 1 a metà.
-                            AnimatedBuilder(
-                              animation: _controller,
-                              builder: (context, _) {
-                                final s =
-                                    math.sin(_controller.value * math.pi) *
-                                    _stretchAmount;
-                                final w = _bubbleW + s * 5; // allungo orizzontale
-                                final h = (_bubbleH - s * 22).clamp(
-                                  40.0,
-                                  _bubbleH,
-                                ); // schiaccio verticale
-                                return Positioned(
-                                  left: _bubbleX.value - w / 2,
-                                  top: (_barH - h) / 2,
-                                  width: w,
-                                  height: h,
+                    enabled: false,
+                    // Pillola larga ESATTAMENTE come il contenuto: così i bordi
+                    // estremi coincidono con la bolla sul primo/ultimo item.
+                    width: _contentW,
+                    color:  const Color(0xFF232326).withOpacity(0.8),
+                    borderRadius: 120,
+                    child: Container(
+                      child: Stack(
+                        children: [
+                          // Bolla mobile con effetto "gelatina", posizionata in px:
+                          // a metà percorso si allunga in orizzontale e si abbassa
+                          // in verticale, poi torna a riposo. sin(t·π)=0 agli
+                          // estremi, 1 a metà.
+                          // L'AnimatedBuilder è figlio DIRETTO dello Stack: solo
+                          // così il Positioned applica left/top/width/height e la
+                          // bolla arancione segue l'item selezionato.
+                          AnimatedBuilder(
+                            animation: _controller,
+                            builder: (context, _) {
+                              final s =
+                                  math.sin(_controller.value * math.pi) *
+                                  _stretchAmount;
+                              final w = _bubbleW + s * 5; // allungo orizzontale
+                              final h = (_bubbleH - s * 22).clamp(
+                                40.0,
+                                _bubbleH,
+                              ); // schiaccio verticale
+                              return Positioned(
+                                left: _bubbleX.value - w / 2,
+                                top: (_barH - h) / 2,
+                                width: w,
+                                height: h,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0x4DEC4C0B),
+                                    borderRadius: BorderRadius.circular(120),
+                                  ),
                                   child: const OCLiquidGlass(
                                     borderRadius: 100,
-                                    color:  const Color(0x24FDA67F),
-                                    enabled: true,
+                                    color: Color(0x2AFD6D2C),
+                                    enabled: false,
                                   ),
-                                );
-                              },
-                            ),
+                                ),
+                              );
+                            },
+                          ),
 
-                            // Bottoni in fila: la fila definisce la larghezza
-                            // del pill (item + spazi).
-                            Center(
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  for (var i = 0; i < _items.length; i++) ...[
-                                    if (i > 0) const SizedBox(width: _gap),
-                                    AmAnimatedNavButton(
-                                      icon: _items[i].icon,
-                                      activeIcon: _items[i].activeIcon,
-                                      label: _items[i].label,
-                                      activeColor: _accent,
-                                      isSelected: location.startsWith(
-                                        _items[i].route,
-                                      ),
-                                      onTap: () => _onTap(i),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                          // Bottoni in fila: la fila definisce la larghezza
+                          // del pill (item + spazi).
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (var i = 0; i < _items.length; i++) ...[
+                                if (i > 0) const SizedBox(width: _gap),
+                                AmAnimatedNavButton(
+                                  icon: _items[i].icon,
+                                  activeIcon: _items[i].activeIcon,
+                                  label: _items[i].label,
+                                  activeColor: _accent,
+                                  isSelected: location.startsWith(
+                                    _items[i].route,
+                                  ),
+                                  onPressChanged: (p) => _pressed.value = p,
+                                  onTap: () => _onTap(i),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ),
+                ),
                 ),
               ),
             ),

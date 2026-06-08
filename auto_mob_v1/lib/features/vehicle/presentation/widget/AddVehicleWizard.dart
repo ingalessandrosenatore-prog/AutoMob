@@ -16,19 +16,15 @@ class AddVehicleWizard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sheetHeight = MediaQuery.of(context).size.height * 0.75;
     return BlocProvider(
       create: (_) => GetIt.I<AddVehicleBloc>()..add(AddVehicleStarted()),
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: sheetHeight,
+          minHeight: sheetHeight,
         ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.75,
-            minHeight: MediaQuery.of(context).size.height * 0.75,
-          ),
-          child: WizardBody(),
-        ),
+        child: const WizardBody(),
       ),
     );
   }
@@ -81,35 +77,34 @@ class _WizardBodyState extends State<WizardBody> {
       },
       buildWhen: (prev, curr) => prev.status != curr.status,
       builder: (context, state) {
-        if (state.status == AddVehicleStatus.loading) {
-          return const _WizardLoadingPage();
-        }
         if (state.status == AddVehicleStatus.completed) {
           return _WizardCompletedPage(draft: state.draft);
         }
         if (state.status == AddVehicleStatus.error) {
           return _WizardErrorPage(message: state.errorMessage ?? 'Errore sconosciuto');
         }
-        return PageView(
-          controller: _pageController,
-          physics: const NeverScrollableScrollPhysics(),
-          children: _steps,
+        // Il PageView resta SEMPRE montato: il loading è solo un overlay,
+        // così il PageController non perde i client e l'animazione tra step
+        // (listener -> animateToPage) non viene mai saltata.
+        return Stack(
+          children: [
+            PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: _steps,
+            ),
+            if (state.status == AddVehicleStatus.loading)
+              const Positioned.fill(
+                child: ColoredBox(
+                  color: Color(0x66000000),
+                  child: Center(
+                    child: CircularProgressIndicator(color: Color(0xFFE85A1A)),
+                  ),
+                ),
+              ),
+          ],
         );
       },
-    );
-  }
-}
-
-class _WizardLoadingPage extends StatelessWidget {
-  const _WizardLoadingPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      height: 300,
-      child: Center(
-        child: CircularProgressIndicator(),
-      ),
     );
   }
 }
@@ -126,8 +121,8 @@ class _WizardCompletedPage extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               Icon(Icons.check_circle, color: Color(0xFF34C759), size: 28),
               SizedBox(width: 12),
               Text(

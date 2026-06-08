@@ -2,7 +2,6 @@ import 'package:auto_mob_v1/features/dashboard/presentation/page/HomeView.dart';
 import 'package:auto_mob_v1/features/servizi/presentation/page/ServiziPage.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/page/MidifyItem.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/page/WorkLogHistoryPage.dart';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/page/SplashScreen.dart';
@@ -58,7 +57,7 @@ class AppRouter {
       GoRoute(
         path: '/addVeichle',
         name: 'aggiungi_veicolo',
-        pageBuilder: (context, state) => BottomSheetPage(),
+        pageBuilder: (context, state) => const BottomSheetPage(),
       ),
 
       GoRoute(
@@ -75,7 +74,7 @@ class AppRouter {
       GoRoute(
         path: '/parts',
         name: 'parts',
-        builder: (context, state) => Midifyitem(),
+        builder: (context, state) => const Midifyitem(),
       ),
 
       GoRoute(

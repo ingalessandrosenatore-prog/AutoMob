@@ -31,16 +31,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (response.user == null) {
-        throw AuthDataSourceException('Login fallito');
+        throw const AuthDataSourceException('Login fallito');
       }
 
       return AppAuthUserModel.fromSupabaseUser(response.user!);
     } on AuthException catch (e) {
       throw AuthDataSourceException(e.message, code: e.statusCode);
     } on SocketException {
-      throw NetworkException('Errore di connessione');
+      throw const NetworkException('Errore di connessione');
     } catch (e) {
-      throw AuthDataSourceException('Errore durante il login');
+      throw const AuthDataSourceException('Errore durante il login');
     }
   }
 
@@ -52,21 +52,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (response == false) {
-        throw AuthDataSourceException('Google login annullato');
+        throw const AuthDataSourceException('Google login annullato');
       }
 
       final session = supabaseClient.auth.currentSession;
       if (session?.user == null) {
-        throw AuthDataSourceException('Sessione non disponibile');
+        throw const AuthDataSourceException('Sessione non disponibile');
       }
 
       return AppAuthUserModel.fromSupabaseUser(session!.user);
     } on AuthException catch (e) {
       throw AuthDataSourceException(e.message, code: e.statusCode);
     } on SocketException {
-      throw NetworkException('Errore di connessione');
+      throw const NetworkException('Errore di connessione');
     } catch (e) {
-      throw AuthDataSourceException('Errore durante Google login');
+      throw const AuthDataSourceException('Errore durante Google login');
     }
   }
 
@@ -78,21 +78,21 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (response == false) {
-        throw AuthDataSourceException('Apple login annullato');
+        throw const AuthDataSourceException('Apple login annullato');
       }
 
       final session = supabaseClient.auth.currentSession;
       if (session?.user == null) {
-        throw AuthDataSourceException('Sessione non disponibile');
+        throw const AuthDataSourceException('Sessione non disponibile');
       }
 
       return AppAuthUserModel.fromSupabaseUser(session!.user);
     } on AuthException catch (e) {
       throw AuthDataSourceException(e.message, code: e.statusCode);
     } on SocketException {
-      throw NetworkException('Errore di connessione');
+      throw const NetworkException('Errore di connessione');
     } catch (e) {
-      throw AuthDataSourceException('Errore durante Apple login');
+      throw const AuthDataSourceException('Errore durante Apple login');
     }
   }
 
@@ -113,16 +113,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (response.user == null) {
-        throw AuthDataSourceException('Registrazione fallita');
+        throw const AuthDataSourceException('Registrazione fallita');
       }
 
       return AppAuthUserModel.fromSupabaseUser(response.user!);
     } on AuthException catch (e) {
       throw AuthDataSourceException(e.message, code: e.statusCode);
     } on SocketException {
-      throw NetworkException('Errore di connessione');
+      throw const NetworkException('Errore di connessione');
     } catch (e) {
-      throw AuthDataSourceException('Errore durante la registrazione');
+      throw const AuthDataSourceException('Errore durante la registrazione');
     }
   }
 
@@ -131,9 +131,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       await supabaseClient.auth.signOut();
     } on SocketException {
-      throw NetworkException('Errore di connessione');
+      throw const NetworkException('Errore di connessione');
     } catch (e) {
-      throw AuthDataSourceException('Errore durante il logout');
+      throw const AuthDataSourceException('Errore durante il logout');
     }
   }
 
@@ -143,7 +143,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final session = supabaseClient.auth.currentSession;
       return session?.user != null ? AppAuthUserModel.fromSupabaseUser(session!.user) : null;
     } on SocketException {
-      throw NetworkException('Errore di connessione');
+      throw const NetworkException('Errore di connessione');
     } catch (e) {
       return null;
     }

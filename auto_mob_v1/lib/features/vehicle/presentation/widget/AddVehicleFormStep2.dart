@@ -1,27 +1,15 @@
-import 'dart:ui';
 
 import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:soft_edge_blur/soft_edge_blur.dart';
+import '../../../../core/widgets/Blur/AmEdgeBlur.dart';
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Buttons/backButton.dart';
 import '../../../../core/widgets/Card/PupUpHeadCard.dart';
 import '../../../../core/widgets/input/Textfield.dart';
 import 'MaintenanceSectionCard.dart';
-
-DateTime? _parseDate(String text) {
-  if (text.isEmpty) return null;
-  final parts = text.split('/');
-  if (parts.length != 3) return null;
-  final day = int.tryParse(parts[0]);
-  final month = int.tryParse(parts[1]);
-  final year = int.tryParse(parts[2]);
-  if (day == null || month == null || year == null) return null;
-  return DateTime(year, month, day);
-}
 
 class AddVehicleFormStep2 extends StatefulWidget {
   const AddVehicleFormStep2({super.key});
@@ -48,29 +36,13 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
     return Stack(
       children: [
     Positioned.fill(
-      child: SoftEdgeBlur(
-        edges: [
-      EdgeBlur(
-      type: EdgeType.topEdge,
-        size: 150,
-        controlPoints: [
-          ControlPoint(position: 0.7, type: ControlPointType.visible),
-          ControlPoint(position: 1.0, type: ControlPointType.transparent),
-        ],
-        sigma: 10,
-      ),
-      EdgeBlur(
-      type: EdgeType.bottomEdge,
-      size: 150,
-      controlPoints: [
-      ControlPoint(position: 0.7, type: ControlPointType.visible),
-      ControlPoint(position: 1.0, type: ControlPointType.transparent),
-      ],
-      sigma: 10,
-      ),
-      ],
+      child: AmEdgeBlur(
         child: SingleChildScrollView(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              bottom: 300,
+            ),
             child: Column(
               children: [
 
@@ -79,7 +51,7 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
 
 
                     // 1. Ultimo Tagliando
-                    SizedBox(height: 150),
+                    const SizedBox(height: 150),
                     MaintenanceSectionCard(
                       icon: Icons.handyman,
                       title: "Ultimo tagliando",
@@ -87,8 +59,6 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
 
                         Row(
                           children: [
-
-                            const SizedBox(width: 16),
                             AmTextField(
                               label: "Km effettuato",
                               placeholder: "45000",
@@ -102,6 +72,11 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                                 child: Text("km", style: TextStyle(color: Color(0xFF48484A), fontWeight: FontWeight.bold)),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
                             AmTextField(
                               label: "Intervallo di km ",
                               placeholder: "15000",
@@ -109,19 +84,22 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                               controller: IntervalloTagliandoController,
                               isRequired: false,
                               obscureText: false,
-                              keyboardType: TextInputType.datetime,
-                              suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF48484A), size: 20),
+                              keyboardType: TextInputType.number,
+                              suffixIcon: const Padding(
+                                padding: EdgeInsets.only(top: 14),
+                                child: Text("km", style: TextStyle(color: Color(0xFF48484A), fontWeight: FontWeight.bold)),
+                              ),
                             ),
                           ],
                         ),
 
-                        SizedBox(height: 10,),
+                        const SizedBox(height: 10,),
                         Container(
-                          color: Color(0xFF0F0F11).withOpacity(0.6),
+                          color: const Color(0xFF0F0F11).withOpacity(0.6),
                           child: Row(children: [
                             Text(
                               "Prossima sostituzione prevista a : ${(int.tryParse(kmLAstTaglIns) ?? 0) + (int.tryParse(kmIntervalloTagInseriti) ?? 0)} km",
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                             ),
                           ],),
                         )
@@ -135,12 +113,6 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                       icon: Icons.link,
                       title: "Distribuzione / Cinghia",
                       children: [
-                        Row(
-                          children: [
-
-                          ],
-                        ),
-                        SizedBox(height: 10,),
                         Row(
                           children: [
                             AmTextField(
@@ -157,6 +129,11 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                                 child: Text("km", style: TextStyle(color: Color(0xFF48484A), fontWeight: FontWeight.bold)),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
                             AmTextField(
                               label: "Sostituzione Prevista ogni ",
                               placeholder: "60000",
@@ -164,18 +141,21 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                                 controller:  IntervalloDistribuzioneController,
                               isRequired: false,
                               obscureText: false,
-                              keyboardType: TextInputType.datetime,
-                              suffixIcon: const Icon(Icons.calendar_today, color: Color(0xFF48484A), size: 20),
+                              keyboardType: TextInputType.number,
+                              suffixIcon: const Padding(
+                                padding: EdgeInsets.only(top: 14),
+                                child: Text("km", style: TextStyle(color: Color(0xFF48484A), fontWeight: FontWeight.bold)),
+                              ),
                             ),
                           ],
                         ),
 
-                        SizedBox(height: 10,),
+                        const SizedBox(height: 10,),
                         Row(
                           children: [
                             Text(
                               "Prossima sostituzione prevista a : ${(int.tryParse(kmLastDist) ?? 0) + (int.tryParse (kmIntervallDistInseriti) ?? 0)} km",
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
 
 
                             ),

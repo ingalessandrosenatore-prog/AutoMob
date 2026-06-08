@@ -3,7 +3,6 @@
 // ============================================================
 
 import 'package:auto_mob_v1/core/types/EnumPopUp.dart';
-import 'package:fpdart/fpdart.dart';
 
 class MaintenanceRecord {
   final String? id;

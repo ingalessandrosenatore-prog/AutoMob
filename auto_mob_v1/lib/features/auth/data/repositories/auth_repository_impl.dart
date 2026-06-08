@@ -18,9 +18,9 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AuthDataSourceException catch (e) {
       return Left(_mapAuthException(e));
     } on NetworkException {
-      return Left(const NetworkFailure());
+      return const Left(NetworkFailure());
     } catch (e) {
-      return Left(const ServerFailure());
+      return const Left(ServerFailure());
     }
   }
 
@@ -31,13 +31,13 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(authUser);
     } on AuthDataSourceException catch (e) {
       if (e.message.contains('annullato')) {
-        return Left(const AuthCancelledFailure());
+        return const Left(AuthCancelledFailure());
       }
       return Left(_mapAuthException(e));
     } on NetworkException {
-      return Left(const NetworkFailure());
+      return const Left(NetworkFailure());
     } catch (e) {
-      return Left(const ServerFailure());
+      return const Left(ServerFailure());
     }
   }
 
@@ -48,13 +48,13 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(authUser);
     } on AuthDataSourceException catch (e) {
       if (e.message.contains('annullato')) {
-        return Left(const AuthCancelledFailure());
+        return const Left(AuthCancelledFailure());
       }
       return Left(_mapAuthException(e));
     } on NetworkException {
-      return Left(const NetworkFailure());
+      return const Left(NetworkFailure());
     } catch (e) {
-      return Left(const ServerFailure());
+      return const Left(ServerFailure());
     }
   }
 
@@ -75,9 +75,9 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AuthDataSourceException catch (e) {
       return Left(_mapAuthException(e));
     } on NetworkException {
-      return Left(const NetworkFailure());
+      return const Left(NetworkFailure());
     } catch (e) {
-      return Left(const ServerFailure());
+      return const Left(ServerFailure());
     }
   }
 
@@ -87,9 +87,9 @@ class AuthRepositoryImpl implements AuthRepository {
       await remoteDataSource.logout();
       return const Right(null);
     } on NetworkException {
-      return Left(const NetworkFailure());
+      return const Left(NetworkFailure());
     } catch (e) {
-      return Left(const ServerFailure());
+      return const Left(ServerFailure());
     }
   }
 
@@ -99,9 +99,9 @@ class AuthRepositoryImpl implements AuthRepository {
       final authUser = await remoteDataSource.checkSession();
       return Right(authUser);
     } on NetworkException {
-      return Left(const NetworkFailure());
+      return const Left(NetworkFailure());
     } catch (e) {
-      return Left(const ServerFailure());
+      return const Left(ServerFailure());
     }
   }
 

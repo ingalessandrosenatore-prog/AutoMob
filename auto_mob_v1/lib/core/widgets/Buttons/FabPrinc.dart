@@ -47,7 +47,7 @@ class AmMainFab extends StatelessWidget {
           borderRadius: BorderRadius.circular(32),
           child: InkWell(
             borderRadius: BorderRadius.circular(32),
-            onTap: isLoading ? null : onPressed,
+            onTap:  onPressed,
             child: isLoading
                 ? const SizedBox(
                     width: 24,

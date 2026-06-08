@@ -46,10 +46,10 @@ class VehicleRepositoryImpl implements VehicleRepository {
     } on VehicleDataSourceException catch (e) {
       // QUESTO È IL TUO SALVAVITA: ti dirà ESATTAMENTE quale constraint fallisce
       print("ERRORE SUPABASE: ${e.message} - Dettagli: ");
-      return Left(ServerFailure());
+      return const Left(ServerFailure());
     } catch (e) {
       print("ERRORE SCONOSCIUTO: $e");
-      return Left(ServerFailure());
+      return const Left(ServerFailure());
     }
   }
 
@@ -63,9 +63,9 @@ class VehicleRepositoryImpl implements VehicleRepository {
       }).toList();
       return Right(vehiclesWithFoto);
     } on VehicleDataSourceException {
-      return Left(const ServerFailure());
+      return const Left(ServerFailure());
     } on NetworkException {
-      return Left(const NetworkFailure());
+      return const Left(NetworkFailure());
     }
   }
 }

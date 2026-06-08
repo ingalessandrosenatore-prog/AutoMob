@@ -3,11 +3,12 @@ import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_e
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:ui';
 
+import '../../../../core/widgets/Blur/AmEdgeBlur.dart';
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Buttons/backButton.dart';
 import '../../../../core/widgets/Card/PupUpHeadCard.dart';
+import '../../../../core/widgets/input/DatePickerField.dart';
 import '../../../../core/widgets/input/Textfield.dart';
 import 'MaintenanceSectionCard.dart';
 
@@ -22,43 +23,56 @@ DateTime? _parseDateStep4(String text) {
   return DateTime(year, month, day);
 }
 
-class AddVehicleFormStep4 extends StatelessWidget {
+class AddVehicleFormStep4 extends StatefulWidget {
   const AddVehicleFormStep4({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final revisioneDateController = TextEditingController();
-    final ultimoCambioGommeController = TextEditingController();
-    final prossimoCambioGommeController = TextEditingController();
-    final ultimaInversioneController = TextEditingController();
-    final prossimaInversioneController = TextEditingController();
+  State<AddVehicleFormStep4> createState() => _AddVehicleFormStep4State();
+}
 
+class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
+  final revisioneDateController = TextEditingController();
+  final ultimoCambioGommeController = TextEditingController();
+  final prossimoCambioGommeController = TextEditingController();
+  final ultimaInversioneController = TextEditingController();
+  final prossimaInversioneController = TextEditingController();
+
+  @override
+  void dispose() {
+    revisioneDateController.dispose();
+    ultimoCambioGommeController.dispose();
+    prossimoCambioGommeController.dispose();
+    ultimaInversioneController.dispose();
+    prossimaInversioneController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Stack(
       children: [
         Positioned.fill(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
+          child: AmEdgeBlur(
+            child: SingleChildScrollView(
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              bottom: 300,
+            ),
             child: Column(
               children: [
-                SizedBox(height: 150),
+                const SizedBox(height: 150),
                 MaintenanceSectionCard(
                   icon: Icons.calendar_month,
                   title: "Revisione",
                   children: [
                     Row(
                       children: [
-                        AmTextField(
+                        AmDatePickerField(
                           label: "Prossima revisione",
                           placeholder: "gg/mm/aaaa",
                           controller: revisioneDateController,
                           isRequired: true,
-                          obscureText: false,
-                          keyboardType: TextInputType.datetime,
-                          suffixIcon: const Icon(
-                            Icons.calendar_today,
-                            color: Color(0xFF48484A),
-                            size: 18,
-                          ),
                         ),
                       ],
                     ),
@@ -230,47 +244,37 @@ class AddVehicleFormStep4 extends StatelessWidget {
               ],
             ),
           ),
+          ),
         ),
         Positioned(
           top: 0,
           left: 0,
           right: 0,
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 15),
-              child: Container(
-                child: WizardHeader(
-                  stepIcon: Icons.calendar_today_outlined,
-                  stepNumber: 4,
-                  totalSteps: 5,
-                  title: "Scadenze",
-                  onClose: () =>
-                      context.pop('/home'),
-                ),
-              ),
-            ),
+          child: WizardHeader(
+            stepIcon: Icons.calendar_today_outlined,
+            stepNumber: 4,
+            totalSteps: 5,
+            title: "Scadenze",
+            onClose: () => context.pop('/home'),
           ),
         ),
         Positioned(
           bottom: 0,
           left: 0,
           right: 0,
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 15),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: AmOutlinedButton(
-                        label: "Indietro",
-                        color: const Color(0xFF4A90E2),
-                        onPressed: () => context.read<AddVehicleBloc>().add(
-                          StepBackPressed(),
-                        ),
-                      ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Expanded(
+                  child: AmOutlinedButton(
+                    label: "Indietro",
+                    color: const Color(0xFF4A90E2),
+                    onPressed: () => context.read<AddVehicleBloc>().add(
+                      StepBackPressed(),
                     ),
+                  ),
+                ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: AmMainFab(
@@ -305,8 +309,6 @@ class AddVehicleFormStep4 extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          ),
         ),
       ],
     );

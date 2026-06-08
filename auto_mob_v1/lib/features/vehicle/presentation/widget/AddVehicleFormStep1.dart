@@ -2,7 +2,7 @@ import 'package:auto_mob_v1/features/vehicle/presentation/provider/add_vehicle_b
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:soft_edge_blur/soft_edge_blur.dart';
+import '../../../../core/widgets/Blur/AmEdgeBlur.dart';
 import '../../../../core/widgets/Buttons/FabPrinc.dart';
 import '../../../../core/widgets/Card/PupUpHeadCard.dart';
 import '../../../../core/widgets/input/DropDownReact.dart';
@@ -78,36 +78,19 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
     return
         Stack(
           children : [
-            Positioned(
-              child: SoftEdgeBlur(
-                edges: [
-                  EdgeBlur(
-                    type: EdgeType.topEdge,
-                    size: 180,
-                    controlPoints: [
-                      ControlPoint(position: 0.7, type: ControlPointType.visible),
-                      ControlPoint(position: 1.0, type: ControlPointType.transparent),
-                    ],
-                    sigma: 30,
-                  ),
-                  EdgeBlur(
-                    type: EdgeType.bottomEdge,
-                    size: 150,
-                    controlPoints: [
-                      ControlPoint(position: 0.7, type: ControlPointType.visible),
-                      ControlPoint(position: 1.0, type: ControlPointType.transparent),
-                    ],
-                    sigma: 30,
-                  ),
-                ],
+            Positioned.fill(
+              child: AmEdgeBlur(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(left: 20, right: 20, bottom: 100),
+                  padding: const EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    bottom: 300,
+                  ),
                   child: Column(
                     children: [
-                      SizedBox(height: 150),
+                      const SizedBox(height: 150),
                       Row(
                         children: [
-                          const SizedBox(height: 20),
                           AmDropdown<String>(
                             label: "Brand",
                             items: kMarcheAuto,
@@ -119,10 +102,9 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10,),
                       Row(
                         children: [
-                          const SizedBox(height: 20),
                           AmTextField(
                             label: "Modello",
                             placeholder: "es. Golf VIII",
@@ -133,10 +115,9 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10,),
                       Row(
                         children: [
-                          const SizedBox(height: 20),
                           AmDropdown<String>(
                             label: "Anno",
                             items: kAnniAuto,
@@ -146,7 +127,11 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
                             placeholder: "Seleziona...",
                             isRequired: true,
                           ),
-                          const SizedBox(width: 16),
+                        ],
+                      ),
+                      const SizedBox(height: 10,),
+                      Row(
+                        children: [
                           AmDropdown<String>(
                             label: "Carburante",
                             items: kTipiCarburante,
@@ -160,7 +145,7 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10,),
+                      const SizedBox(height: 10,),
                       Row(
                         children: [
 
