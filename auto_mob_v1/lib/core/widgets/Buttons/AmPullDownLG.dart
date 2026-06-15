@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
@@ -43,7 +42,7 @@ class AmPullDownLG extends StatefulWidget {
 class _AmPullDownLGState extends State<AmPullDownLG>
     with TickerProviderStateMixin {
   // Stato per tracciare il tap
-  bool _isPressed = false;
+  final bool _isPressed = false;
   late final AnimationController bounceCtrl;
   late final AnimationController lightCtrl;
   late final AnimationController morpheCtrl;
@@ -138,10 +137,10 @@ class _AmPullDownLGState extends State<AmPullDownLG>
           return Transform.scale(
             scale: scala,
             child: OCLiquidGlass(
-              enabled: false ,
+              enabled: true ,
               color:
-                  widget.color?.withOpacity(0.8) ??
-                  const Color(0xFF232326).withOpacity(0.5),
+                  widget.color?.withOpacity(0.2) ??
+                  const Color(0xFF232326).withOpacity(0.2),
               borderRadius: 100,
               child: Stack(
                 alignment: Alignment.center,
@@ -180,10 +179,10 @@ class _AmPullDownLGState extends State<AmPullDownLG>
                         Icon(
                             widget.buttonIcons,
                             size: widget.buttonIconsSize,
-                             color: widget.buttonIconColor,
+                            color: widget.buttonIconColor,
 
                         ),
-                        if (widget.arrow!) ...[const SizedBox(width: 4)],
+                        if (widget.arrow) ...[const SizedBox(width: 4)],
                         Flexible(
                           child: Text(
                             widget.lable.toUpperCase(),
@@ -192,10 +191,10 @@ class _AmPullDownLGState extends State<AmPullDownLG>
                             style: widget.buttonLableStyle,
                           ),
                         ),
-                        if (widget.arrow!) ...[
+                        if (widget.arrow) ...[
                           const SizedBox(width: 4),
                         ], // Un po' di margine prima della freccia per simmetria
-                        if (widget.arrow!) ...[
+                        if (widget.arrow) ...[
                           Icon(
                             Icons.keyboard_arrow_down,
                             color: widget.buttonIconColor,
@@ -214,7 +213,7 @@ class _AmPullDownLGState extends State<AmPullDownLG>
     );
   }
 
-  _apriPopup(BuildContext context, AnimationController m) {
+  void _apriPopup(BuildContext context, AnimationController m) {
     final Rect r = Rect.fromLTWH(
       _triggerPos.dx,
       _triggerPos.dy,
@@ -234,9 +233,9 @@ class _AmPullDownLGState extends State<AmPullDownLG>
           ) {
             return MorphPopUp(
               rectButton: r,
-              children: widget.children,
               larghezza: widget.larghezza,
               ctrlm: m,
+              children: widget.children,
             );
           },
     );
@@ -277,10 +276,6 @@ class _PopUpState extends State<MorphPopUp>
         });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   static final SpringDescription _springDescription =
       SpringDescription.withDurationAndBounce(
@@ -328,14 +323,14 @@ class _PopUpState extends State<MorphPopUp>
               child: Opacity(
                 opacity: opac,
                 child: OCLiquidGlassGroup(
-                  settings: OCLiquidGlassSettings(
+                  settings: const OCLiquidGlassSettings(
                     blurRadiusPx: 10,
                     refractStrength: 0.15,
                     specStrength: 0,
                     specWidth: 0,
                   ),
                   child: OCLiquidGlass(
-                    enabled: false,
+                    enabled: true,
                     borderRadius:
                         30, // Ridotto da 100 per adattarsi meglio alla forma rettangolare
                     color: const Color(0xFF232326).withValues(alpha: 0.7),
@@ -373,7 +368,7 @@ class ItemMorphPopUp extends StatelessWidget {
   final FontWeight? iconsWheight;
 
   const ItemMorphPopUp({
-    Key? key,
+    super.key,
     required this.icon,
     required this.text,
     this.textSize = 16.0,
@@ -383,7 +378,7 @@ class ItemMorphPopUp extends StatelessWidget {
     this.textColor = Colors.white,
     required this.onTap,
     this.iconsWheight = FontWeight.w900,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -391,7 +386,7 @@ class ItemMorphPopUp extends StatelessWidget {
       color: Colors.transparent, // riposo: invisibile, si fonde col pop-up
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.all(Radius.circular(30)),
+        borderRadius: const BorderRadius.all(Radius.circular(30)),
         hoverColor: Colors.white.withValues(alpha: 0.08), // mouse sopra
         splashColor: Colors.white.withValues(alpha: 0.15), // ripple al tap
         highlightColor: Colors.white.withValues(

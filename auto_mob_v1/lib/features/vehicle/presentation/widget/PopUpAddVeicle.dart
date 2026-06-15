@@ -9,7 +9,13 @@ class BottomSheetPage<T> extends Page<T> {
     return ModalBottomSheetRoute<T>(
       settings: this,
       useSafeArea: true,
-      backgroundColor: Colors.transparent,
+      sheetAnimationStyle: const AnimationStyle(
+        curve: Curves.easeInSine,
+        duration: Duration(milliseconds: 500),
+        reverseCurve: Curves.easeOut,
+        reverseDuration: Duration(milliseconds: 500),
+      ),
+      backgroundColor: const Color(0xFF1A1C23),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
       ),

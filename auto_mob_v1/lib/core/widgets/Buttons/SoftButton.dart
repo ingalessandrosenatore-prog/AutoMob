@@ -90,6 +90,7 @@ class _AmSoftButtonState extends State<AmSoftButton> with TickerProviderStateMix
     final fallbackColor = Colors.yellow.shade100.withOpacity(0.1);
 
     return GestureDetector(
+      onTap: widget.onPressed,
       onTapDown: (_) => _onPress(),
       onTapUp: (_) => _onRelese(),
       onTapCancel:() => _onCancel(),
@@ -104,22 +105,13 @@ class _AmSoftButtonState extends State<AmSoftButton> with TickerProviderStateMix
           height: widget.height,
           width: widget.width,
           borderRadius: 100,
-          enabled: false,
+          enabled: true,
           color: widget.color?.withOpacity(0.8) ?? Colors.transparent,
           child: Stack(
             alignment: Alignment.center,
             children: [
               // 1. BASE
-              Container(
-                width: widget.width,
-                height: widget.height,
-                decoration: BoxDecoration(
-                  borderRadius: radius,
-                  color: widget.color == null ? fallbackColor : Colors
-                      .transparent,
-                  // Rimossa l'ombra interna che si espandeva troppo
-                ),
-              ),
+
 
               // 2. IL FLASH "STILE APPLE" CENTRATO E CONTROLLATO
               Positioned.fill(

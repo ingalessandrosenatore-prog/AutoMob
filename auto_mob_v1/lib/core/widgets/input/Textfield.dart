@@ -13,6 +13,14 @@ class AmTextField extends StatelessWidget {
   final ValueChanged<dynamic>? onChanged;
   final VoidCallback? onEditingComplete;
 
+  /// Messaggio mostrato SOTTO il campo. Null = niente messaggio.
+  /// Puo' essere un errore (rosso acceso) o un semplice avviso (rosso tenue):
+  /// il colore lo decide `errorColor`.
+  final String? errorText;
+
+  /// Colore del messaggio sotto il campo. Default: rosso acceso (errore).
+  final Color errorColor;
+
   const AmTextField({
     super.key,
     required this.label,
@@ -24,6 +32,8 @@ class AmTextField extends StatelessWidget {
     this.suffixIcon,
     this.onChanged,
     this.onEditingComplete,
+    this.errorText,
+    this.errorColor = const Color(0xFFFF453A),
   });
 
   @override
@@ -92,6 +102,19 @@ class AmTextField extends StatelessWidget {
               onEditingComplete: onEditingComplete,
             ),
           ),
+          // Messaggio sotto il campo (errore rosso acceso o avviso rosso tenue).
+          if (errorText != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              errorText!,
+              style: TextStyle(
+                color: errorColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+
         ],
       ),
     );

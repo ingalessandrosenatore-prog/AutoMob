@@ -19,9 +19,9 @@ class VehicleDraftModel extends VehicleDraft {
     super.kmAttuali,
     super.prossimarevisione,
     super.kmUltimoCambioGomme,
-    super.kmProssimoCambioGomme,
+    super.intervalloCambioGomme,
     super.kmUltimaInversioneGomme,
-    super.kmProssimaInversioneGomme,
+    super.intervalloInversioneGomme,
     super.fotoFile,
     super.codiceMeccanico,
   });
@@ -44,9 +44,9 @@ class VehicleDraftModel extends VehicleDraft {
       kmAttuali: draft.kmAttuali,
       prossimarevisione: draft.prossimarevisione,
       kmUltimoCambioGomme: draft.kmUltimoCambioGomme,
-      kmProssimoCambioGomme: draft.kmProssimoCambioGomme,
+      intervalloCambioGomme: draft.intervalloCambioGomme,
       kmUltimaInversioneGomme: draft.kmUltimaInversioneGomme,
-      kmProssimaInversioneGomme: draft.kmProssimaInversioneGomme,
+      intervalloInversioneGomme: draft.intervalloInversioneGomme,
       fotoFile: draft.fotoFile,
       codiceMeccanico: draft.codiceMeccanico,
     );
@@ -72,9 +72,9 @@ class VehicleDraftModel extends VehicleDraft {
           ? DateTime.parse(json['prossima_revisione'])
           : null,
       kmUltimoCambioGomme: json['km_ultimo_cambio_gomme'],
-      kmProssimoCambioGomme: json['km_prossimo_cambio_gomme'],
+      intervalloCambioGomme: json['intervallo_cambio_gomme'],
       kmUltimaInversioneGomme: json['km_ultima_inversione_gomme'],
-      kmProssimaInversioneGomme: json['km_prossima_inversione_gomme'],
+      intervalloInversioneGomme: json['intervallo_inversione_gomme'],
       codiceMeccanico: json['codice_meccanico'],
       fotoFile: json['foto_path'] != null ? File(json['foto_path'] as String) : null,
     );
@@ -98,9 +98,9 @@ class VehicleDraftModel extends VehicleDraft {
       'km_attuali': kmAttuali,
       'prossima_revisione': prossimarevisione?.toIso8601String(),
       'km_ultimo_cambio_gomme': kmUltimoCambioGomme,
-      'km_prossimo_cambio_gomme': kmProssimoCambioGomme,
+      'intervallo_cambio_gomme': intervalloCambioGomme,
       'km_ultima_inversione_gomme': kmUltimaInversioneGomme,
-      'km_prossima_inversione_gomme': kmProssimaInversioneGomme,
+      'intervallo_inversione_gomme': intervalloInversioneGomme,
       'codice_meccanico': codiceMeccanico,
       'foto_path': fotoFile?.path,
     };

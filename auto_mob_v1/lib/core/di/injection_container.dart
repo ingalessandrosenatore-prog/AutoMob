@@ -25,6 +25,7 @@ import '../../features/vehicle/domain/repositories/VehicleRepository.dart';
 import '../../features/vehicle/domain/usecases/SaveDraftStep.dart';
 import '../../features/vehicle/domain/usecases/SaveVehicle.dart';
 import '../../features/vehicle/domain/usecases/GetVehicles.dart';
+import '../../features/vehicle/domain/usecases/ComputeMaintenanceKpis.dart';
 import '../../features/vehicle/presentation/provider/add_vehicle_bloc.dart';
 
 // Dashboard
@@ -126,10 +127,13 @@ Future<void> _initVehicle() async {
 }
 
 Future<void> _initDashboard() async {
+  // Use case di calcolo KPI: logica pura, nessuna dipendenza -> singleton.
+  sl.registerLazySingleton<ComputeMaintenanceKpis>(() => ComputeMaintenanceKpis());
+
   // BLoC — factory: nuova istanza ad ogni apertura della home.
   // Riusa GetVehicles della feature vehicle (domain shared via use case).
   sl.registerFactory<DashboardBloc>(
-    () => DashboardBloc(getVehicles: sl()),
+    () => DashboardBloc(getVehicles: sl(), computeKpis: sl()),
   );
 }
 

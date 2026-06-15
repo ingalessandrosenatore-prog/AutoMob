@@ -85,9 +85,9 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
     final draft = state.draft.copyWith(
       prossimarevisione: event.prossimarevisione,
       kmUltimoCambioGomme: event.kmUltimoCambioGomme,
-      kmProssimoCambioGomme: event.kmProssimoCambioGomme,
+      intervalloCambioGomme: event.intervalloCambioGomme,
       kmUltimaInversioneGomme: event.kmUltimaInversioneGomme,
-      kmProssimaInversioneGomme: event.kmProssimaInversioneGomme,
+      intervalloInversioneGomme: event.intervalloInversioneGomme,
     );
     emit(state.copyWith(draft: draft, status: AddVehicleStatus.loading));
     final failure = await _persist(draft);

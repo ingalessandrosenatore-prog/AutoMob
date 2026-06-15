@@ -79,10 +79,9 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
               surface: Color(0xFF151517),
               onSurface: Colors.white,
             ),
-            dialogBackgroundColor: const Color(0xFF151517),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(foregroundColor: accent),
-            ),
+            ), dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF151517)),
           ),
           child: child!,
         );

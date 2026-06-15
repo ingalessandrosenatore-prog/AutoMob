@@ -74,25 +74,25 @@ class Step3Submitted extends AddVehicleEvent {
 class Step4Submitted extends AddVehicleEvent {
   final DateTime? prossimarevisione;
   final int? kmUltimoCambioGomme;
-  final int? kmProssimoCambioGomme;
+  final int? intervalloCambioGomme;
   final int? kmUltimaInversioneGomme;
-  final int? kmProssimaInversioneGomme;
+  final int? intervalloInversioneGomme;
 
   Step4Submitted({
     this.prossimarevisione,
     this.kmUltimoCambioGomme,
-    this.kmProssimoCambioGomme,
+    this.intervalloCambioGomme,
     this.kmUltimaInversioneGomme,
-    this.kmProssimaInversioneGomme,
+    this.intervalloInversioneGomme,
   });
 
   @override
   List<Object?> get props => [
         prossimarevisione,
         kmUltimoCambioGomme,
-        kmProssimoCambioGomme,
+        intervalloCambioGomme,
         kmUltimaInversioneGomme,
-        kmProssimaInversioneGomme,
+        intervalloInversioneGomme,
       ];
 }
 

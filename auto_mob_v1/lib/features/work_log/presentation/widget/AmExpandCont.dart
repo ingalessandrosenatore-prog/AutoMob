@@ -1,6 +1,9 @@
+import 'package:auto_mob_v1/core/widgets/Smart/SmartEdge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
+
+import '../../../../core/config/performance_flags.dart';
 
 /// CONTAINER ESPANDIBILE PERSONALIZZATO — niente ExpansionTile.
 ///
@@ -85,7 +88,7 @@ class _AmExpandableContainerState extends State<AmExpandableContainer>
             ],
           ),
           clipBehavior: Clip.antiAlias, // taglia il contenuto ai bordi tondi
-          child: SoftEdgeBlur(
+          child: SmartEdge(
             edges: [
               EdgeBlur(type: EdgeType.bottomEdge,
                   size: 30,
@@ -97,6 +100,7 @@ class _AmExpandableContainerState extends State<AmExpandableContainer>
                   ]
               )
             ],
+            fallbackTint: Colors.black54, blur: kHeavyEffects,
             child: Column(
               children: [
                 // ── HEADER (sempre visibile, cliccabile) ──────────────────

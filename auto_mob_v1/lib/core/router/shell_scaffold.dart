@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:auto_mob_v1/core/widgets/Buttons/AmAnimatedNavButton.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
 import 'package:go_router/go_router.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
@@ -30,10 +30,29 @@ class ShellScaffold extends StatefulWidget {
 }
 
 class _ShellScaffoldState extends State<ShellScaffold>
-    with SingleTickerProviderStateMixin {
-  // Aggiungere qui una voce (es. 'SERVIZI') la integra automaticamente nel
-  // layout e nell'animazione della bolla. Max 3 voci: lo shader supporta
-  // al massimo 4 forme di vetro per gruppo (bolla + voci).
+    with TickerProviderStateMixin {
+  late final AnimationController bounceCtrl;
+  late final AnimationController lightCtrl;
+  bool isSelect1 = true;
+  bool isSelect2 = false;
+  bool isSelect3 = false;
+
+  final ValueNotifier<Offset?> _tapPositionNotifier = ValueNotifier<Offset?>(
+    null,
+  );
+
+  static final SpringDescription _springDescription =
+      SpringDescription.withDurationAndBounce(
+        duration: const Duration(milliseconds: 300),
+        bounce: 0.1,
+      );
+
+  static final SpringDescription _lightDescription =
+      SpringDescription.withDurationAndBounce(
+        duration: const Duration(milliseconds: 250),
+        bounce: 0,
+      );
+
   static const List<_NavItem> _items = [
     _NavItem(
       route: '/home',
@@ -47,94 +66,83 @@ class _ShellScaffoldState extends State<ShellScaffold>
       activeIcon: Icons.build,
       label: 'LAVORI',
     ),
-    _NavItem(route: '/servizi', icon: Icons.list_sharp, activeIcon: Icons.list, label: 'SERVIZI')
+    _NavItem(
+      route: '/servizi',
+      icon: Icons.list_sharp,
+      activeIcon: Icons.list,
+      label: 'SERVIZI',
+    ),
   ];
-
-  static const Color _accent = Color(0xFFFF6B00);
-  // Sfondo del pill (niente più vetro qui). 0x1A000000 = nero ~10%.
-  // Metti Colors.transparent per un pill completamente invisibile.
-  static const Color _pillColor =  const Color(0xFF232326);
-
-  late final AnimationController _controller;
-  // Posizione orizzontale (alignment x, da -1 a 1) della bolla mobile.
-  // Inizializzata inline (non `late`) per sopravvivere all'hot reload.
-  Animation<double> _bubbleX = const AlwaysStoppedAnimation(0.0);
-  int _index = 0;
-  // Numero di "slot" saltati nel movimento corrente: scala la deformazione
-  // (1.0 = salto tra due item adiacenti).
-  double _stretchAmount = 0.0;
-  // True mentre un item è premuto: fa lo scale del pill esterno.
-  // ValueNotifier (non setState) così a cambiare è SOLO il pill, senza
-  // rieseguire il build dello ShellScaffold.
-  final ValueNotifier<bool> _pressed = ValueNotifier(false);
-
-  // Geometria della barra, in px. Queste sono le manopole delle dimensioni.
-  static const double _btnW = 100; // larghezza di ogni item
-  static const double _gap = 6; // spazio tra gli item
-  static const double _barH = 60; // altezza del pill
-  static const double _bubbleW = _btnW; // = larghezza item: agli estremi la bolla combacia col bordo della pillola
-  static const double _bubbleH = 60; // altezza a riposo della bolla
-
-  // Larghezza del pill: si adatta ESATTAMENTE a item + spazi tra loro.
-  double get _contentW => _items.length * _btnW + (_items.length - 1) * _gap;
-
-  /// Centro orizzontale (px dal bordo sinistro) dell'item [i].
-  double _centerFor(int i) => i * (_btnW + _gap) + _btnW / 2;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _bubbleX = AlwaysStoppedAnimation(_centerFor(_index));
+    bounceCtrl = AnimationController.unbounded(vsync: this, value: 1.0);
+    lightCtrl = AnimationController(vsync: this, value: 0.0);
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Sincronizza la bolla con la rotta corrente (avvio o navigazione esterna),
-    // così parte già centrata sull'item giusto senza animare.
-    final location = GoRouterState.of(context).uri.path;
-    final i = _items.indexWhere((e) => location.startsWith(e.route));
-    if (i >= 0 && i != _index && !_controller.isAnimating) {
-      _index = i;
-      _bubbleX = AlwaysStoppedAnimation(_centerFor(i));
-    }
-  }
+  void didChangeDependencies() {}
 
   @override
   void dispose() {
-    _controller.dispose();
-    _pressed.dispose();
+    bounceCtrl.dispose();
+    lightCtrl.dispose();
+    _tapPositionNotifier.dispose();
+
     super.dispose();
   }
 
-  void _onTap(int i) {
-    context.go(_items[i].route);
-    if (i == _index) return;
+  void _onRelese() {
+    final bcS = SpringSimulation(_springDescription, bounceCtrl.value, 1, 0);
+    final lcS = SpringSimulation(_lightDescription, lightCtrl.value, 0, 0);
 
-    final begin = _bubbleX.value;
-    final end = _centerFor(i);
-    // Numero di slot saltati: scala la deformazione (1 = item adiacente).
-    _stretchAmount = (end - begin).abs() / (_btnW + _gap);
+    bounceCtrl.animateWith(bcS);
+    lightCtrl.animateWith(lcS);
+  }
 
-    // Riparte dalla posizione attuale verso quella nuova.
-    _bubbleX = Tween<double>(
-      begin: begin,
-      end: end,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
-    _index = i;
-    _controller.forward(from: 0.0);
+  void _onCancel() {
+    final bcS = SpringSimulation(_springDescription, bounceCtrl.value, 1, 0);
+    final lcS = SpringSimulation(_lightDescription, lightCtrl.value, 0, 0);
+
+    bounceCtrl.animateWith(bcS);
+    lightCtrl.animateWith(lcS);
+  }
+
+  void _onPress() {
+    final bcS = SpringSimulation(_springDescription, bounceCtrl.value, 1.05, 0);
+    final lcS = SpringSimulation(_lightDescription, lightCtrl.value, 0.5, 0);
+    isSelect1 = false;
+    isSelect3 = false;
+    isSelect2 = false;
+    bounceCtrl.animateWith(bcS);
+    lightCtrl.animateWith(lcS);
   }
 
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
+    var selected = _items.indexWhere((it) => location.startsWith(it.route));
+    if (selected == -1) selected = 0;
+
+
+
+
+    final larghezzaSchermo = MediaQuery.sizeOf(context).width;
+    final margine = (larghezzaSchermo * 15) / 100;
+    const maxLarghezza = 500.0;
+    final larghezzaBarra = math.min(
+      larghezzaSchermo - 2 * margine,
+      maxLarghezza,
+    );
+
+    void goTo(int index) {
+      if (index < 0 || index >= _items.length) return;
+      context.go(_items[index].route);
+    }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1C23),
+      // backgroundColor: const Color(0xFF1A1C23),
       body: Stack(
         children: [
           RepaintBoundary(child: widget.child),
@@ -143,106 +151,105 @@ class _ShellScaffoldState extends State<ShellScaffold>
             bottom: 24,
             left: 0,
             right: 0,
-            // Center + niente width sul pill => il pill si adatta al contenuto
-            // (_contentW) e resta centrato sullo schermo.
-            child: Center(
-              child: RepaintBoundary(
-                // Il pill ora NON è più vetro: solo un Container traslucido,
-                // ritagliato a pillola. Il liquid glass resta solo sulla bolla.
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: _pressed,
-                  // child costruito UNA volta sola e ri-usato: il rebuild tocca
-                  // solo l'AnimatedScale, non l'intero pill/vetro.
-                  builder: (context, pressed, child) => AnimatedScale(
-                    scale: pressed ? 1.10 : 1.0,
-                    duration: const Duration(milliseconds: 80),
-                    curve: Curves.easeOutCubic,
-                    child: child,
-                  ),
-                  child: OCLiquidGlassGroup(
-                  repaint: _controller,
-                  settings: OCLiquidGlassSettings(
-                  specStrength: 0,
-                   blurRadiusPx: 3,
-                    lightbandColor:  Colors.white10
+
+            child:GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanDown: (event) {
+                  _onPress();
+                  _tapPositionNotifier.value = event.localPosition;
+                },
+                onPanUpdate: (event) {
+                  _tapPositionNotifier.value = event.localPosition;
+                },
+                onPanEnd: (event) {
+                  final dito = _tapPositionNotifier.value;
+                  if (dito != null) {
+                    // Il pan si conclude su un item: naviga davvero.
+                    final itemWidth = larghezzaBarra / 3;
+                    // localPosition è relativa al GestureDetector (tutto
+                    // lo schermo in larghezza): riportala dentro la barra.
+                    final inBar =
+                        dito.dx - (larghezzaSchermo - larghezzaBarra) / 2;
+                    final indice =
+                    (inBar / itemWidth).floor().clamp(0, _items.length - 1);
+                    goTo(indice);
+                  }
+                  _onRelese();
+                },
+                onPanCancel: () {
+                  _onRelese();
+                  _tapPositionNotifier.value = null;
+                },
+              child: Center(
+                child: Expanded(
+
+                  child: AnimatedBuilder(
+
+                    animation: bounceCtrl,
+                    builder: (context, child) =>
+                        Transform.scale(
+                      scale: bounceCtrl.value,
+                      child: child,
+                    ),
 
 
-                  ),
-                  child: OCLiquidGlass( //barra
-                    height: _barH,
-                    enabled: false,
-                    // Pillola larga ESATTAMENTE come il contenuto: così i bordi
-                    // estremi coincidono con la bolla sul primo/ultimo item.
-                    width: _contentW,
-                    color:  const Color(0xFF232326).withOpacity(0.8),
-                    borderRadius: 120,
-                    child: Container(
-                      child: Stack(
-                        children: [
-                          // Bolla mobile con effetto "gelatina", posizionata in px:
-                          // a metà percorso si allunga in orizzontale e si abbassa
-                          // in verticale, poi torna a riposo. sin(t·π)=0 agli
-                          // estremi, 1 a metà.
-                          // L'AnimatedBuilder è figlio DIRETTO dello Stack: solo
-                          // così il Positioned applica left/top/width/height e la
-                          // bolla arancione segue l'item selezionato.
-                          AnimatedBuilder(
-                            animation: _controller,
-                            builder: (context, _) {
-                              final s =
-                                  math.sin(_controller.value * math.pi) *
-                                  _stretchAmount;
-                              final w = _bubbleW + s * 5; // allungo orizzontale
-                              final h = (_bubbleH - s * 22).clamp(
-                                40.0,
-                                _bubbleH,
-                              ); // schiaccio verticale
-                              return Positioned(
-                                left: _bubbleX.value - w / 2,
-                                top: (_barH - h) / 2,
-                                width: w,
-                                height: h,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0x4DEC4C0B),
-                                    borderRadius: BorderRadius.circular(120),
-                                  ),
-                                  child: const OCLiquidGlass(
-                                    borderRadius: 100,
-                                    color: Color(0x2AFD6D2C),
-                                    enabled: false,
+                    child: OCLiquidGlassGroup(
+                      settings: const OCLiquidGlassSettings(
+                        blurRadiusPx: 0,
+                        specWidth: 0,
+                        specStrength: 0,
+                        refractStrength: 0.04
+                      ),
+                      child: OCLiquidGlass(
+                        width: larghezzaBarra,
+                        height: 58,
+                        borderRadius: 100,
+                        color: const Color(0x00595050),
+
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: AnimatedBuilder(
+                                  animation: lightCtrl,
+                                  builder: (context, child) => CustomPaint(
+                                    painter: GlowPainter(
+                                      intensity: lightCtrl.value,
+                                      color: Colors.white,
+                                      tapPosition: _tapPositionNotifier.value,
+                                    ),
                                   ),
                                 ),
-                              );
-                            },
-                          ),
+                              ),
+                            ),
 
-                          // Bottoni in fila: la fila definisce la larghezza
-                          // del pill (item + spazi).
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              for (var i = 0; i < _items.length; i++) ...[
-                                if (i > 0) const SizedBox(width: _gap),
-                                AmAnimatedNavButton(
-                                  icon: _items[i].icon,
-                                  activeIcon: _items[i].activeIcon,
-                                  label: _items[i].label,
-                                  activeColor: _accent,
-                                  isSelected: location.startsWith(
-                                    _items[i].route,
-                                  ),
-                                  onPressChanged: (p) => _pressed.value = p,
-                                  onTap: () => _onTap(i),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ],
+                            Row(
+                              children: List.generate(_items.length, (i) {
+                                final item = _items[i];
+                                return AmNavItem(
+                                  icon: item.icon,
+                                  iconIsActive: item.activeIcon,
+                                  iconColor: Colors.white,
+                                  iconSize: 26,
+                                  iconColoractive: const Color(0xFF3192F3),
+                                  lable: item.label,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w500,
+                                  textColor: Colors.white,
+                                  textColorIsActive: const Color(0xFF3192F3),
+                                  background: Colors.transparent,
+                                  backgorundIsActive:
+                                  const Color(0xFF3192F3).withValues(alpha: 0.3),
+                                  onTap: () => goTo(i),
+                                  isSelect: selected == i,
+                                );
+                              }),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
                 ),
               ),
             ),
@@ -250,5 +257,149 @@ class _ShellScaffoldState extends State<ShellScaffold>
         ],
       ),
     );
+  }
+}
+
+class AmNavItem extends StatefulWidget {
+  final IconData icon;
+  final IconData iconIsActive;
+  final Color iconColor;
+  final double iconSize;
+  final Color iconColoractive;
+  final String lable;
+  final FontWeight fontWeight;
+  final double fontSize;
+  final Color textColor;
+  final Color textColorIsActive;
+  final Color background;
+  final Color backgorundIsActive;
+  final GestureTapCallback? onTap;
+  final bool isSelect;
+
+  const AmNavItem({
+    super.key,
+    required this.icon,
+    required this.iconColor,
+    required this.iconSize,
+    required this.iconColoractive,
+    required this.lable,
+    required this.fontWeight,
+    required this.textColor,
+    required this.textColorIsActive,
+    required this.background,
+    required this.backgorundIsActive,
+    required this.fontSize,
+    required this.onTap,
+    required this.isSelect,
+    required this.iconIsActive,
+  });
+
+  @override
+  State<AmNavItem> createState() => _AmNavItemState();
+}
+
+class _AmNavItemState extends State<AmNavItem> {
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    return Expanded(
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(100),
+            color: widget.isSelect
+                ? widget.backgorundIsActive
+                : widget.background,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                widget.isSelect ? widget.iconIsActive : widget.icon,
+                size: widget.iconSize,
+                color: widget.isSelect
+                    ? widget.iconColoractive
+                    : widget.iconColor,
+              ),
+              Text(
+                widget.lable,
+                style: TextStyle(
+                  fontWeight: widget.fontWeight,
+                  fontSize: widget.fontSize,
+                  color: widget.isSelect
+                      ? widget.textColorIsActive
+                      : widget.textColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class GlowPainter extends CustomPainter {
+  final double intensity;
+  final Color color;
+  final Offset? tapPosition; // <-- Nuova variabile
+
+  GlowPainter({required this.intensity, required this.color, this.tapPosition});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (intensity <= 0) return;
+
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(
+      rect,
+      Radius.circular(size.height / 2),
+    );
+
+    // Base del vetro
+    final basePaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = color.withValues(alpha: 0.15 * intensity);
+    canvas.drawRRect(rrect, basePaint);
+
+    // --- CALCOLO POSIZIONE LUCE ---
+
+    // ------------------------------
+
+    // Il Fascio di Luce dinamico
+    final highlightPaint = Paint()..blendMode = BlendMode.plus;
+    highlightPaint.shader = RadialGradient(
+      // <-- Usiamo l'allineamento calcolato!
+      radius: 1.3,
+      colors: [
+        color.withValues(alpha: 0.85 * intensity),
+        color.withValues(alpha: 0.25 * intensity),
+        color.withValues(alpha: 0.0),
+      ],
+      stops: const [0.0, 0.5, 1.0],
+    ).createShader(rect);
+
+    canvas.drawRRect(rrect, highlightPaint);
+
+    // Riflesso (rimane fermo per dare l'illusione della curvatura fissa del vetro)
+    final reflectionPaint = Paint()..blendMode = BlendMode.screen;
+    reflectionPaint.shader = LinearGradient(
+      colors: [
+        Colors.white.withValues(alpha: 0.3 * intensity),
+        Colors.white.withValues(alpha: 0.0),
+        Colors.white.withValues(alpha: 0.05 * intensity),
+      ],
+      stops: const [0.0, 0.4, 1.0],
+    ).createShader(rect);
+
+    canvas.drawRRect(rrect, reflectionPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant GlowPainter oldDelegate) {
+    return oldDelegate.intensity != intensity ||
+        oldDelegate.color != color ||
+        oldDelegate.tapPosition != tapPosition; // Ridisegna se il tocco cambia
   }
 }

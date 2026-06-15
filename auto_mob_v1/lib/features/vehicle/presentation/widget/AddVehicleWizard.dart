@@ -40,10 +40,13 @@ class WizardBody extends StatefulWidget {
 class _WizardBodyState extends State<WizardBody> {
   late final PageController _pageController;
 
+  // Ordine: 1) dati base, 2) dati tecnici + KM ATTUALI, 3) storico manutenzioni,
+  // 4) scadenze/gomme, 5) foto/meccanico. I km attuali sono chiesti come 2° step
+  // cosi' negli step successivi possiamo validare che gli "ultimo km" non li superino.
   static const _steps = [
     AddVehicleFormStep1(key: ValueKey(0)),
-    AddVehicleFormStep2(key: ValueKey(1)),
-    AddVehicleFormStep3(key: ValueKey(2)),
+    AddVehicleFormStep3(key: ValueKey(1)), // dati tecnici + km attuali
+    AddVehicleFormStep2(key: ValueKey(2)), // storico manutenzioni
     AddVehicleFormStep4(key: ValueKey(3)),
     AddVehicleFormStep5(key: ValueKey(4)),
   ];
@@ -158,9 +161,9 @@ class _WizardCompletedPage extends StatelessWidget {
           const Divider(color: Color(0xFF1C1C1E), height: 24),
           _DraftRow(label: 'Prossima revisione', value: _fmtDate(draft.prossimarevisione)),
           _DraftRow(label: 'Km ult. cambio gomme', value: draft.kmUltimoCambioGomme?.toString()),
-          _DraftRow(label: 'Km pross. cambio gomme', value: draft.kmProssimoCambioGomme?.toString()),
+          _DraftRow(label: 'Intervallo cambio gomme', value: draft.intervalloCambioGomme?.toString()),
           _DraftRow(label: 'Km ult. inversione', value: draft.kmUltimaInversioneGomme?.toString()),
-          _DraftRow(label: 'Km pross. inversione', value: draft.kmProssimaInversioneGomme?.toString()),
+          _DraftRow(label: 'Intervallo inversione', value: draft.intervalloInversioneGomme?.toString()),
           const Divider(color: Color(0xFF1C1C1E), height: 24),
           _DraftRow(label: 'Foto path', value: draft.fotoFile?.path),
           _DraftRow(label: 'Codice meccanico', value: draft.codiceMeccanico),

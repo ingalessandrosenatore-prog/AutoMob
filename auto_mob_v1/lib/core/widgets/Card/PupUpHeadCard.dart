@@ -1,3 +1,4 @@
+import 'package:auto_mob_v1/core/widgets/Buttons/SoftButton.dart';
 import 'package:flutter/material.dart';
 
 /// Header per i Wizard dell'app AutoMob.
@@ -21,9 +22,6 @@ class WizardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color orangeColor = Color(0xFFE85A1A);
-    const Color darkContainerColor = Color(0xFF1C1C1E);
-    const Color iconContainerColor = Color(0xFF2C2C2E);
 
     return Padding(
       padding: const EdgeInsets.all(20.0),
@@ -31,90 +29,49 @@ class WizardHeader extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
+
+            
             children: [
               // 1. Contenitore Icona (Sinistra)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: darkContainerColor.withOpacity(0.6),
-                  borderRadius: BorderRadius.circular(10),
-
-                ),
-                child: Icon(
-                  stepIcon,
-                  color: orangeColor,
-                  size: 24,
-                  shadows: [
-                    Shadow(
-                      color: orangeColor.withOpacity(0.8),
-                      blurRadius: 50,
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
+              Expanded(child: Container()),
               // 2. Testi (Centro)
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'STEP $stepNumber DI $totalSteps',
-                      style: const TextStyle(
-                        color: orangeColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      title.toUpperCase(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  title.toUpperCase(),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
+
               // 3. Pulsante X (Destra)
-              GestureDetector(
-                onTap: onClose,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: darkContainerColor.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: orangeColor.withOpacity(0.3),
-                      width: 0.9,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: orangeColor.withOpacity(0.3),
-                        blurRadius: 25,
-
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: orangeColor,
-
-                    size: 20,
+              Expanded(
+                child: Align(
+                  alignment: AlignmentGeometry.centerRight,
+                  child: AmSoftButton(
+                    width: 45,
+                    height: 45,
+                    color: const Color(0xFFFF6B00),
+                    icon: Icons.close,
+                    onPressed: () {
+                      onClose();
+                    },
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+         const SizedBox(height: 6,),
           // 4. Indicatore di progresso a pallini
           WizardProgressIndicator(
             currentStep: stepNumber,
             totalSteps: totalSteps,
-            activeColor: orangeColor,
+            activeColor:  const Color(0xFFFF6B00),
           ),
         ],
       ),

@@ -3,30 +3,30 @@ import 'dart:io';
 import 'package:equatable/equatable.dart';
 
 class VehicleDraft extends Equatable {
-  // Step 1 — Dati base (tutti required)
+  // Step 1 — Dati base
   final String? targa;
   final String? marca;
   final String? modello;
   final int? anno;
   final String? carburante;
 
-  // Step 2 — Tagliando e distribuzione
+  // Step 2 — Tagliando e distribuzione (ultimo km + intervallo, espliciti)
   final int? intervalloUltimoTagliando;
-  final int? kmUltimoTagliando; // required
+  final int? kmUltimoTagliando;
   final int? intervalloUltimaDistribuzione;
-  final int? kmUltimaDistribuzione; // required
+  final int? kmUltimaDistribuzione;
 
   // Step 3 — Dati tecnici
   final int? potenzaCv;
   final int? cilindrata;
-  final int? kmAttuali; // required
+  final int? kmAttuali;
 
-  // Step 4 — Revisione e gomme
-  final DateTime? prossimarevisione; // required
+  // Step 4 — Revisione e gomme (ultimo km + intervallo, espliciti)
+  final DateTime? prossimarevisione;
   final int? kmUltimoCambioGomme;
-  final int? kmProssimoCambioGomme;
+  final int? intervalloCambioGomme;
   final int? kmUltimaInversioneGomme;
-  final int? kmProssimaInversioneGomme;
+  final int? intervalloInversioneGomme;
 
   // Step 5 — Foto e meccanico
   final File? fotoFile; // path locale, non va sul DB
@@ -47,9 +47,9 @@ class VehicleDraft extends Equatable {
     this.kmAttuali,
     this.prossimarevisione,
     this.kmUltimoCambioGomme,
-    this.kmProssimoCambioGomme,
+    this.intervalloCambioGomme,
     this.kmUltimaInversioneGomme,
-    this.kmProssimaInversioneGomme,
+    this.intervalloInversioneGomme,
     this.fotoFile,
     this.codiceMeccanico,
   });
@@ -60,23 +60,20 @@ class VehicleDraft extends Equatable {
     String? modello,
     int? anno,
     String? carburante,
-    DateTime? dataUltimoTagliando,
+    int? intervalloUltimoTagliando,
     int? kmUltimoTagliando,
-    DateTime? dataUltimaDistribuzione,
+    int? intervalloUltimaDistribuzione,
     int? kmUltimaDistribuzione,
     int? potenzaCv,
     int? cilindrata,
     int? kmAttuali,
     DateTime? prossimarevisione,
     int? kmUltimoCambioGomme,
-    int? kmProssimoCambioGomme,
+    int? intervalloCambioGomme,
     int? kmUltimaInversioneGomme,
-    int? kmProssimaInversioneGomme,
-    String? fotoPath,
+    int? intervalloInversioneGomme,
+    File? fotoFile,
     String? codiceMeccanico,
-    int? intervalloUltimaDistribuzione,
-    int? intervalloUltimoTagliando,
-    File ? fotoFile,
   }) {
     return VehicleDraft(
       targa: targa ?? this.targa,
@@ -84,18 +81,23 @@ class VehicleDraft extends Equatable {
       modello: modello ?? this.modello,
       anno: anno ?? this.anno,
       carburante: carburante ?? this.carburante,
-      intervalloUltimoTagliando: intervalloUltimoTagliando ?? this.intervalloUltimoTagliando,
+      intervalloUltimoTagliando:
+          intervalloUltimoTagliando ?? this.intervalloUltimoTagliando,
       kmUltimoTagliando: kmUltimoTagliando ?? this.kmUltimoTagliando,
-      intervalloUltimaDistribuzione: intervalloUltimaDistribuzione ?? this.intervalloUltimaDistribuzione,
+      intervalloUltimaDistribuzione:
+          intervalloUltimaDistribuzione ?? this.intervalloUltimaDistribuzione,
       kmUltimaDistribuzione: kmUltimaDistribuzione ?? this.kmUltimaDistribuzione,
       potenzaCv: potenzaCv ?? this.potenzaCv,
       cilindrata: cilindrata ?? this.cilindrata,
       kmAttuali: kmAttuali ?? this.kmAttuali,
       prossimarevisione: prossimarevisione ?? this.prossimarevisione,
       kmUltimoCambioGomme: kmUltimoCambioGomme ?? this.kmUltimoCambioGomme,
-      kmProssimoCambioGomme: kmProssimoCambioGomme ?? this.kmProssimoCambioGomme,
-      kmUltimaInversioneGomme: kmUltimaInversioneGomme ?? this.kmUltimaInversioneGomme,
-      kmProssimaInversioneGomme: kmProssimaInversioneGomme ?? this.kmProssimaInversioneGomme,
+      intervalloCambioGomme:
+          intervalloCambioGomme ?? this.intervalloCambioGomme,
+      kmUltimaInversioneGomme:
+          kmUltimaInversioneGomme ?? this.kmUltimaInversioneGomme,
+      intervalloInversioneGomme:
+          intervalloInversioneGomme ?? this.intervalloInversioneGomme,
       fotoFile: fotoFile ?? this.fotoFile,
       codiceMeccanico: codiceMeccanico ?? this.codiceMeccanico,
     );
@@ -108,8 +110,8 @@ class VehicleDraft extends Equatable {
         intervalloUltimaDistribuzione, kmUltimaDistribuzione,
         potenzaCv, cilindrata, kmAttuali,
         prossimarevisione,
-        kmUltimoCambioGomme, kmProssimoCambioGomme,
-        kmUltimaInversioneGomme, kmProssimaInversioneGomme,
+        kmUltimoCambioGomme, intervalloCambioGomme,
+        kmUltimaInversioneGomme, intervalloInversioneGomme,
         fotoFile, codiceMeccanico,
       ];
 }

@@ -1,6 +1,5 @@
 import 'package:auto_mob_v1/core/di/injection_container.dart';
 import 'package:auto_mob_v1/core/types/EnumPopUp.dart';
-import 'package:auto_mob_v1/core/widgets/Buttons/AmChoiceChip.dart';
 import 'package:auto_mob_v1/core/widgets/Buttons/FabPrinc.dart';
 import 'package:auto_mob_v1/core/widgets/Buttons/backButton.dart';
 import 'package:auto_mob_v1/core/widgets/input/DropDownReact.dart';
@@ -500,64 +499,9 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
       ),
       const SizedBox(height: 24),
 
-     /* BlocBuilder<WorkLogBloc, WorkLogState>(
-        builder: (context, state) {
-          return Card(
-            elevation: 8,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            child: ExpansionTile(
-              title: const Text(
-                "SELEZIONA PEZZI DI RICAMBIO",
-                style: TextStyle(
-                  color: Color(0xFF636366),
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Text(
-                "PEZZI SELEZIONATI: ${state.selectedParts.length}",
-                style: const TextStyle(
-                  color: Color(0xFF636366),
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              initiallyExpanded: false,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              collapsedShape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              collapsedBackgroundColor: const Color(0xFF151517),
-              backgroundColor: const Color(0xFF29292B),
-              textColor: const Color(0xFF636366),
-              iconColor: const Color(0xFF636366),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 10,
-                    children: kParts.entries.map((entry) {
-                      final partId = entry.key;
-                      final isSelected = state.selectedParts.any((item) => item.partId == partId);
-                      return AmChoiceChip(
-                        label: entry.value,
-                        isSelected: isSelected,
-                        onTap: () {
-                          context.read<WorkLogBloc>().add(
-                            WorkLogEventCohiceTap(isSelected: isSelected, id: partId),
-                          );
-                        },
-                        id: partId,
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),*/
 
-        AmExpandableContainer(title: "SEKEZIONA RICAMBI",
+
+        const AmExpandableContainer(title: "SEKEZIONA RICAMBI",
             subtitle: "PARTI SELZIONATE ",
             collapsedHeight: 72,   // <- l'altezza chiusa, decidi tu
             expandedHeight: 400,   // <- l'altezza aperta, decidi tu
