@@ -42,7 +42,8 @@ dependencies:
 
   # State Management
   flutter_bloc: ^8.1.5
-  
+  bloc_concurrency: ^0.2.5
+
   # Dependency Injection
   get_it: ^8.0.0
   

@@ -1,12 +1,12 @@
-import 'package:auto_mob_v1/features/work_log/domain/entiti/WorkLogItemEntity.dart';
+import 'package:auto_mob_v1/features/work_log/domain/entiti/SelectedPart.dart';
 import 'package:flutter/material.dart';
 import '../input/Textfield.dart';
 
 class AmSparePartCard extends StatefulWidget {
-  final WorkLogItem item;
+  final SelectedPart item;
   final String name;
   final VoidCallback onRemove;
-  final void Function(WorkLogItem) onItemChanged;
+  final void Function(SelectedPart) onItemChanged;
 
   const AmSparePartCard({
     super.key,
@@ -28,8 +28,8 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
   @override
   void initState() {
     super.initState();
-    _noteController = TextEditingController(text: widget.item.partNote ?? '');
-    _priceController = TextEditingController(text: widget.item.partPrice?.toString() ?? '');
+    _noteController = TextEditingController(text: widget.item.note ?? '');
+    _priceController = TextEditingController(text: widget.item.unitPrice?.toString() ?? '');
   }
 
   @override
@@ -93,7 +93,7 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
                                 children: [
                                   const TextSpan(text: "Quantità: "),
                                   TextSpan(
-                                    text: "${item.partQuantity.toInt()}",
+                                    text: "${item.quantity.toInt()}",
                                     style: const TextStyle(
                                       color: orangeColor,
                                       fontWeight: FontWeight.bold,
@@ -121,9 +121,15 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
                   ),
                 ),
               ),
-              // Sezione espandibile
+              // Sezione espandibile.
+              // GestureDetector: un tap sullo spazio vuoto del corpo chiude la card.
+              // I controlli interattivi (bottoni quantità, textfield) assorbono il
+              // proprio tap, quindi NON fanno chiudere la card — come le chip in alto.
               if (_isExpanded) ...[
-                Padding(
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setState(() => _isExpanded = false),
+                  child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +148,7 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
                             obscureText: false,
                             keyboardType: TextInputType.text,
                             onEditingComplete: () => widget.onItemChanged(
-                              widget.item.copyWith(partNote: _noteController.text),
+                              widget.item.copyWith(note: _noteController.text),
                             ),
                           ),
                         ],
@@ -159,7 +165,7 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
                             onEditingComplete: () => widget.onItemChanged(
                               widget.item.copyWith(
-                                partPrice: double.tryParse(_priceController.text.replaceAll(',', '.')),
+                                unitPrice: double.tryParse(_priceController.text.replaceAll(',', '.')),
                               ),
                             ),
                             suffixIcon: const Padding(
@@ -175,6 +181,7 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
                       ),
                     ],
                   ),
+                ),
                 ),
               ],
             ],
@@ -206,7 +213,7 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
   }
 
   Widget _buildQuantitySelector(Color orangeColor) {
-    final qty = widget.item.partQuantity.toInt();
+    final qty = widget.item.quantity.toInt();
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -229,8 +236,7 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
             children: [
               _buildCircleBtn(Icons.remove, const Color(0xFF2C2C2E), () {
                 if (qty > 1) {
-                  widget.onItemChanged(widget.item.copyWith(partQuantity: (qty - 1).toDouble()));
-                  print("modifico quantita");
+                  widget.onItemChanged(widget.item.copyWith(quantity: (qty - 1).toDouble()));
                 }
               }),
               const SizedBox(width: 20),
@@ -240,7 +246,7 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
               ),
               const SizedBox(width: 20),
               _buildCircleBtn(Icons.add, orangeColor, () {
-                widget.onItemChanged(widget.item.copyWith(partQuantity: (qty + 1).toDouble()));
+                widget.onItemChanged(widget.item.copyWith(quantity: (qty + 1).toDouble()));
               }),
             ],
           ),

@@ -1,7 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/Exception/Exception.dart';
-import '../entiti/WorkLogItemEntity.dart';
+import '../entiti/SelectedPart.dart';
+import '../entiti/VehicleOption.dart';
+import '../entiti/WorkLogRow.dart';
 
 abstract class WorklogRepo {
   /// Salva una sessione di manutenzione completa (record + item + parts + update interval).
@@ -14,6 +16,16 @@ abstract class WorklogRepo {
     required DateTime serviceDate,
     String? notes,
     required int? intervallKm,
-    required List<WorkLogItem> items,
+    required List<SelectedPart> items,
+  });
+
+  /// Veicoli dell'utente per il dropdown dello storico.
+  Future<Either<Failure, List<VehicleOption>>> getVehicleOptions();
+
+  /// Una pagina di lavori del veicolo ([from]/[to] indici inclusi).
+  Future<Either<Failure, List<WorkLogRow>>> getWorks({
+    required String vehicleId,
+    required int from,
+    required int to,
   });
 }

@@ -25,8 +25,10 @@ import '../../features/vehicle/domain/repositories/VehicleRepository.dart';
 import '../../features/vehicle/domain/usecases/SaveDraftStep.dart';
 import '../../features/vehicle/domain/usecases/SaveVehicle.dart';
 import '../../features/vehicle/domain/usecases/GetVehicles.dart';
+import '../../features/vehicle/domain/usecases/UpdateVehicleKm.dart';
 import '../../features/vehicle/domain/usecases/ComputeMaintenanceKpis.dart';
 import '../../features/vehicle/presentation/provider/add_vehicle_bloc.dart';
+import '../../features/vehicle/presentation/provider/km_update_cubit.dart';
 
 // Dashboard
 import '../../features/dashboard/presentation/Bloc/dashboardBloc.dart';
@@ -36,7 +38,10 @@ import '../../features/work_log/data/datasources/worklog_remote_data_source.dart
 import '../../features/work_log/data/repositories/WorklogRepositoryImpl.dart';
 import '../../features/work_log/domain/repositories/WorklogRepo.dart';
 import '../../features/work_log/domain/usecase/CreateWorkLog.dart';
+import '../../features/work_log/domain/usecase/GetVehicleOptions.dart';
+import '../../features/work_log/domain/usecase/GetVehicleWorks.dart';
 import '../../features/work_log/presentation/Bloc/work_log_bloc.dart';
+import '../../features/work_log/presentation/Bloc/work_log_history_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -108,6 +113,10 @@ Future<void> _initVehicle() async {
   sl.registerLazySingleton<SaveDraftStep>(() => SaveDraftStep(sl()));
   sl.registerLazySingleton<SaveVehicle>(() => SaveVehicle(sl()));
   sl.registerLazySingleton<GetVehicles>(() => GetVehicles(sl()));
+  sl.registerLazySingleton<UpdateVehicleKm>(() => UpdateVehicleKm(sl()));
+
+  // Cubit modale "Aggiorna KM" — factory: nuova istanza ad ogni apertura.
+  sl.registerFactory<KmUpdateCubit>(() => KmUpdateCubit(sl()));
 
   // Repository
   sl.registerLazySingleton<VehicleRepository>(
@@ -150,12 +159,22 @@ void _initWorkLog() {
 
   // Use Case
   sl.registerLazySingleton<CreateWorkLog>(() => CreateWorkLog(sl()));
+  sl.registerLazySingleton<GetVehicleOptions>(() => GetVehicleOptions(sl()));
+  sl.registerLazySingleton<GetVehicleWorks>(() => GetVehicleWorks(sl()));
 
   // BLoC — factory con param (vehicleId passato dal popup all'apertura)
   sl.registerFactoryParam<WorkLogBloc, String, void>(
     (vehicleId, _) => WorkLogBloc(
 
       createWorkLog: sl(),
+    ),
+  );
+
+  // BLoC storico — factory: nuova istanza ad ogni apertura della pagina.
+  sl.registerFactory<WorkLogHistoryBloc>(
+    () => WorkLogHistoryBloc(
+      getVehicleOptions: sl(),
+      getVehicleWorks: sl(),
     ),
   );
 }

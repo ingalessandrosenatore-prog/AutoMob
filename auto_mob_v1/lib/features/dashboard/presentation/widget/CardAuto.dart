@@ -46,23 +46,10 @@ class CardAuto extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF232326), // stesso base delle card KPI
         borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          // Ombra profonda → effetto 3D
-          BoxShadow(
-            color: Colors.black.withOpacity(0.45),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-          // Sottile riflesso sul bordo superiore
-          BoxShadow(
-            color: Colors.white.withOpacity(0.05),
-            blurRadius: 0,
-            offset: const Offset(0, -1),
-          ),
-        ],
+
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -86,7 +73,11 @@ class CardAuto extends StatelessWidget {
                       color: Colors.black.withOpacity(0.4),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.edit, color: Colors.white, size: 18),
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
                 ),
               ],
@@ -100,24 +91,28 @@ class CardAuto extends StatelessWidget {
             // Box Revisione + Km (stessa altezza, cliccabili)
             IntrinsicHeight(
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
                     child: _TapTile(
                       onTap: onRevisionTap,
-                      child: Column(
+                      watermarkIcon: Icons.calendar_today,
+                      child:Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.calendar_today_outlined,
-                              color: _kAppOrange, size: 20),
-                          const SizedBox(height: 8),
-                          const Text("REVISIONE", style: _kTileLabel),
-                          const SizedBox(height: 8),
+                          const Text("REVISIONE", style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                          ),),
+                           SizedBox(width: 6,),
                           _RevisionStatusPill(status: _revisionStatus),
                         ],
                       ),
                     ),
                   ),
+
                   const SizedBox(width: 12),
                   Expanded(
                     child: PulsingGlowBorder(
@@ -125,19 +120,18 @@ class CardAuto extends StatelessWidget {
                       borderRadius: 20,
                       child: _TapTile(
                         onTap: onKmTap,
-                        child: Column(
+                        watermarkIcon: Icons.speed_outlined,
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.speed_outlined,
-                                color: _kAppOrange, size: 20),
-                            const SizedBox(height: 8),
-                            const Text("KM", style: _kTileLabel),
-                            const SizedBox(height: 8),
+
+
+
                             Text(
                               kmTotali,
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
@@ -158,9 +152,9 @@ class CardAuto extends StatelessWidget {
 
 const TextStyle _kTileLabel = TextStyle(
   color: Color(0xFF8E8E93),
-  fontSize: 8,
-  fontWeight: FontWeight.w800,
-  letterSpacing: 0.8,
+  fontSize: 11,
+  fontWeight: FontWeight.w900,
+  letterSpacing: 1.0,
 );
 
 /// Arancione accento dell'app (usato nella dashboard).
@@ -195,8 +189,11 @@ class _InfoTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.directions_car_filled_outlined,
-              color: _kAppOrange, size: 24),
+          const Icon(
+            Icons.directions_car_filled_outlined,
+            color: _kAppOrange,
+            size: 24,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Row(
@@ -260,14 +257,29 @@ class _InfoTile extends StatelessWidget {
 class _TapTile extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final IconData? watermarkIcon;
+  final Color? watermarkColor;
 
-  const _TapTile({required this.child, this.onTap});
+  const _TapTile({
+    required this.child,
+    this.onTap,
+    this.watermarkIcon,
+    this.watermarkColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF2C2C2E),
+            Color(0xFF1C1C1E),
+          ],
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.35),
@@ -276,16 +288,47 @@ class _TapTile extends StatelessWidget {
           ),
         ],
       ),
-      child: Material(
-        color: const Color(0xFF2C2C30),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-            child: Center(child: child),
-          ),
+        child: Stack(
+          children: [
+            if (watermarkIcon != null)
+              Positioned(
+                right: -20,
+                bottom: -15,
+                child: Transform.rotate(
+                  angle: -0,
+                  child: ShaderMask(
+                    shaderCallback: (Rect bounds) {
+                      return LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withOpacity(0.2),
+                          (watermarkColor ?? _kAppOrange).withOpacity(0.1)
+                        ],
+                      ).createShader(bounds);
+                    },
+                    child: Icon(
+                      watermarkIcon,
+                      size: 90,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: onTap,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
+                  child: Center(child: child),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

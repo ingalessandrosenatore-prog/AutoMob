@@ -231,6 +231,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                         child: Column(
                           children: [
                             Expanded(
+
                               child: PageView.builder(
                                 scrollDirection: Axis.horizontal,
                                 controller: _pageController,
@@ -254,12 +255,24 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                       nextRevisionDate: v.nextRevisionDate,
                                       onKmTap: v.isPlaceholder
                                           ? null
-                                          : () => context.pushNamed(
-                                              'updateKm',
-                                              extra: {
-                                                'currentKm': '${v.kmCurrent}',
-                                              },
-                                            ),
+                                          : () async {
+                                              final dashboardBloc =
+                                                  context.read<DashboardBloc>();
+                                              final aggiornato =
+                                                  await context.pushNamed(
+                                                'updateKm',
+                                                extra: {
+                                                  'id': v.id,
+                                                  'currentKm': '${v.kmCurrent}',
+                                                },
+                                              );
+                                              // Al ritorno, se i km sono stati
+                                              // aggiornati, ricarico la dashboard.
+                                              if (aggiornato == true) {
+                                                dashboardBloc
+                                                    .add(LoadDashboardData());
+                                              }
+                                            },
                                     ),
                                   );
                                 },
@@ -371,13 +384,19 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     );
   }
 
-  void _pushFunctional(BuildContext context, EnumPopUp type) {
+  Future<void> _pushFunctional(BuildContext context, EnumPopUp type) async {
     final s = context.read<DashboardBloc>().state;
     if (s is DashboardLoaded) {
-      context.push(
+      final v = s.vehicles[s.index];
+      final dashboardBloc = context.read<DashboardBloc>();
+      final salvato = await context.push(
         '/addFunctional',
-        extra: {'type': type, 'id': s.vehicles[s.index].id},
+        extra: {'type': type, 'id': v.id, 'currentKm': v.kmCurrent},
       );
+      // Al ritorno, se il lavoro e' stato salvato, ricarico la dashboard.
+      if (salvato == true) {
+        dashboardBloc.add(LoadDashboardData());
+      }
     }
   }
 

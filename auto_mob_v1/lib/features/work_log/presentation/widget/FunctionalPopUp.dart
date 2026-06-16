@@ -9,7 +9,13 @@ import 'package:flutter/material.dart';
 class BottomSheetPageFunc<T> extends Page<T> {
   final EnumPopUp type;
   final String idVeicolo;
-  const BottomSheetPageFunc({super.key, required this.type, required this.idVeicolo});
+  final int currentKm;
+  const BottomSheetPageFunc({
+    super.key,
+    required this.type,
+    required this.idVeicolo,
+    required this.currentKm,
+  });
 
   @override
   Route<T> createRoute(BuildContext context) {
@@ -27,11 +33,11 @@ class BottomSheetPageFunc<T> extends Page<T> {
 
             child: switch(type) {
 
-              EnumPopUp.aggiornaTagliando => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
-              EnumPopUp.aggiornaDistribuzione =>  AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
+              EnumPopUp.aggiornaTagliando => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo, currentKm: currentKm,),
+              EnumPopUp.aggiornaDistribuzione =>  AddWorkLogPopUp( initialWorkType: type, id: idVeicolo, currentKm: currentKm,),
 
-              EnumPopUp.aggiornaCambioGomme => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo,),
-              EnumPopUp.altro => AddWorkLogPopUp(initialWorkType: type, id: idVeicolo,),
+              EnumPopUp.aggiornaCambioGomme => AddWorkLogPopUp( initialWorkType: type, id: idVeicolo, currentKm: currentKm,),
+              EnumPopUp.altro => AddWorkLogPopUp(initialWorkType: type, id: idVeicolo, currentKm: currentKm,),
               // TODO: Handle this case.
               EnumPopUp.revisione => throw UnimplementedError(),
               // TODO: Handle this case.

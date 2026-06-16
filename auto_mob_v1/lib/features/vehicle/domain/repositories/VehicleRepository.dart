@@ -16,4 +16,11 @@ abstract class VehicleRepository {
   /// Restituisce tutti i veicoli accessibili dall'utente corrente
   /// (RLS lato DB filtra per owner_id).
   Future<Either<Failure, List<Vehicle>>> getVehicles();
+
+  /// Aggiorna i km del veicolo (senza lavoro). Ritorna i km effettivi salvati
+  /// (i km salgono solo, mai indietro).
+  Future<Either<Failure, int>> updateKm({
+    required String vehicleId,
+    required int newKm,
+  });
 }

@@ -67,7 +67,12 @@ class AppRouter {
           final extra = state.extra as Map<String, dynamic>;
           final typeEnum = extra['type'] as EnumPopUp;
           final id = extra['id'] as String;
-          return BottomSheetPageFunc(type: typeEnum, idVeicolo: id);
+          final currentKm = (extra['currentKm'] as int?) ?? 0;
+          return BottomSheetPageFunc(
+            type: typeEnum,
+            idVeicolo: id,
+            currentKm: currentKm,
+          );
         },
       ),
 
@@ -83,7 +88,8 @@ class AppRouter {
         pageBuilder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final currentKm = (extra?['currentKm'] as String?) ?? '0';
-          return KmUpdatePopUp(currentKm: currentKm);
+          final id = (extra?['id'] as String?) ?? '';
+          return KmUpdatePopUp(vehicleId: id, currentKm: currentKm);
         },
       ),
     ],

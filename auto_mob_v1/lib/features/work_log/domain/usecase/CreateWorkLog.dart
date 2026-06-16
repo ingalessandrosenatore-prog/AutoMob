@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/Exception/Exception.dart';
-import '../entiti/WorkLogItemEntity.dart';
+import '../entiti/SelectedPart.dart';
 import '../repositories/WorklogRepo.dart';
 
 class CreateWorkLog {
@@ -17,7 +17,7 @@ class CreateWorkLog {
     required DateTime serviceDate,
     String? notes,
     required int? intervallKm,
-    required List<WorkLogItem> items,
+    required List<SelectedPart> items,
   }) {
     return worklogRepo.createWorkLog(
       vehicleId: vehicleId,

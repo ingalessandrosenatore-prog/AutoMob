@@ -20,11 +20,13 @@ import 'PartsPickerBody.dart';
 class AddWorkLogPopUp extends StatefulWidget {
   final EnumPopUp initialWorkType;
   final String id;
+  final int currentKm;
 
   const AddWorkLogPopUp({
     super.key,
     required this.initialWorkType,
     required this.id,
+    required this.currentKm,
   });
 
   @override
@@ -63,6 +65,9 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
       create: (context) {
         final bloc = sl<WorkLogBloc>(param1: widget.id);
         bloc.add(OnWorkTypeChange(type: widget.initialWorkType));
+        // Seed dei km attuali del veicolo: pavimento per la validazione (il km
+        // del lavoro non puo' regredire) e base per il "prossimo richiamo".
+        bloc.add(InitKm(vehicleKm: widget.currentKm));
         return bloc;
       },
       child: BlocConsumer<WorkLogBloc, WorkLogState>(
@@ -71,7 +76,7 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
         listener: (context, state) {
           if (state.status == WorkLogStatus.success) {
             final messenger = ScaffoldMessenger.of(context);
-            context.pop();
+            context.pop(true);
             messenger.showSnackBar(
               const SnackBar(
                 content: Text('Intervento salvato'),
@@ -106,7 +111,10 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                   onPageChanged: (index) =>
                       setState(() => _currentPage = index),
                   children: [
-                    FirstPageAddWork(initialWorkType: widget.initialWorkType),
+                    FirstPageAddWork(
+                      initialWorkType: widget.initialWorkType,
+                      currentKm: widget.currentKm,
+                    ),
                     const Midifyitem(),
                   ],
                 ),
@@ -209,8 +217,13 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
 
 class FirstPageAddWork extends StatefulWidget {
   final EnumPopUp initialWorkType;
+  final int currentKm;
 
-  const FirstPageAddWork({super.key, required this.initialWorkType});
+  const FirstPageAddWork({
+    super.key,
+    required this.initialWorkType,
+    required this.currentKm,
+  });
 
   @override
   State<FirstPageAddWork> createState() => _FirstPageAddWorkState();
@@ -224,108 +237,33 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
   final _noteController = TextEditingController();
   final _customNameController = TextEditingController();
 
-  static const Map<int, String> kParts = {
-    1: 'Motore',
-    2: 'Pistoni',
-    3: 'Bielle',
-    4: 'Albero motore',
-    5: 'Testata',
-    6: 'Guarnizione testata',
-    7: 'Candele',
-    8: 'Candelette',
-    9: 'Cinghia distribuzione',
-    10: 'Catena distribuzione',
-    11: 'Tendicinghia',
-    12: 'Pompa olio',
-    13: 'Coppa olio',
-    14: 'Valvole',
-    15: 'Filtro olio',
-    16: 'Filtro aria',
-    17: 'Filtro abitacolo',
-    18: 'Filtro carburante',
-    19: 'Filtro gasolio',
-    20: 'Pastiglie freno anteriori',
-    21: 'Pastiglie freno posteriori',
-    22: 'Dischi freno anteriori',
-    23: 'Dischi freno posteriori',
-    24: 'Tamburi freno',
-    25: 'Ceppi freno',
-    26: 'Liquido freni',
-    27: 'Pompa freno',
-    28: 'Ammortizzatori anteriori',
-    29: 'Ammortizzatori posteriori',
-    30: 'Molle anteriori',
-    31: 'Molle posteriori',
-    32: 'Silent block',
-    33: 'Bracci sospensione',
-    34: 'Tiranti sterzo',
-    35: 'Scatola sterzo',
-    36: 'Cambio',
-    37: 'Frizione',
-    38: 'Disco frizione',
-    39: 'Volano',
-    40: 'Cinghia trasmissione',
-    41: 'Variatore',
-    42: 'Giunto cardanico',
-    43: 'Semiassi',
-    44: 'Cuscinetti ruota',
-    45: 'Marmitta',
-    46: 'Catalizzatore',
-    47: 'Collettore scarico',
-    48: 'Silenziatore',
-    49: 'Tubo di scarico',
-    50: 'Sonda lambda',
-    51: 'Alternatore',
-    52: 'Motorino avviamento',
-    53: 'Batteria',
-    54: 'Bobina accensione',
-    55: 'Centralina',
-    56: 'Regolatore di tensione',
-    57: 'Relay',
-    58: 'Fusibili',
-    59: 'Faro anteriore sinistro',
-    60: 'Faro anteriore destro',
-    61: 'Luce posteriore sinistra',
-    62: 'Luce posteriore destra',
-    63: 'Luce posizione anteriore sinistra',
-    64: 'Luce posizione anteriore destra',
-    65: 'Luce posizione posteriore sinistra',
-    66: 'Luce posizione posteriore destra',
-    67: 'Lampada targa',
-    68: 'Luce freno',
-    69: 'Freccia anteriore sinistra',
-    70: 'Freccia anteriore destra',
-    71: 'Freccia posteriore sinistra',
-    72: 'Freccia posteriore destra',
-    73: 'Radiatore',
-    74: 'Pompa acqua',
-    75: 'Termostato',
-    76: 'Vaschetta espansione',
-    77: 'Ventola raffreddamento',
-    78: 'Liquido raffreddamento',
-    79: 'Manicotti raffreddamento',
-    80: 'Serbatoio carburante',
-    81: 'Pompa carburante',
-    82: 'Iniettori',
-    83: 'Carburatore',
-    84: 'Corpo farfallato',
-    85: 'Tubo carburante',
-    86: 'Pneumatici',
-    87: 'Cerchi',
-    88: 'Valvole pneumatici',
-    89: 'Cintura di sicurezza',
-    90: 'Parabrezza',
-    91: 'Tergicristalli',
-    92: 'Pompa tergicristalli',
-    93: 'Specchietto sinistro',
-    94: 'Specchietto destro',
-    95: 'Altro',
-  };
+  /// Messaggio di errore sotto il campo km (null = ok).
+  String? _erroreKm;
 
   @override
   void initState() {
     super.initState();
     _selectedWorkType = widget.initialWorkType;
+    // Prefill: parto dai km attuali del veicolo (l'utente li vede e li alza).
+    _kmController.text = '${widget.currentKm}';
+  }
+
+  /// Il km del lavoro non puo' essere inferiore agli attuali (no regressione).
+  void _onKmChanged(dynamic _) {
+    final testo = _kmController.text.trim();
+    final n = int.tryParse(testo);
+    setState(() {
+      if (testo.isEmpty || n == null) {
+        _erroreKm = 'Inserisci un numero valido';
+      } else if (n < widget.currentKm) {
+        _erroreKm = 'Non possono essere meno degli attuali (${widget.currentKm} km)';
+      } else {
+        _erroreKm = null;
+      }
+    });
+    context.read<WorkLogBloc>().add(
+      CurrentKmChange(currentKm: int.tryParse(_kmController.text) ?? 0),
+    );
   }
 
   @override
@@ -395,6 +333,9 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
             label: "Data",
             placeholder: "gg/mm/aaaa",
             controller: _dateController,
+            onDateSelected: (date) => context.read<WorkLogBloc>().add(
+              ServiceDateChange(date: date),
+            ),
           ),
         ],
       ),
@@ -402,16 +343,13 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
       Row(
         children: [
           AmTextField(
-            label: "Km attuali",
-            placeholder: "45230",
+            label: "Km al lavoro (attuali: ${widget.currentKm})",
+            placeholder: "${widget.currentKm}",
             controller: _kmController,
             isRequired: true,
             obscureText: false,
-            onChanged: (_) {
-              context.read<WorkLogBloc>().add(
-                CurrentKmChange(currentKm: int.tryParse(_kmController.text) ?? 0),
-              );
-            },
+            onChanged: _onKmChanged,
+            errorText: _erroreKm,
             keyboardType: TextInputType.number,
             suffixIcon: const Padding(
               padding: EdgeInsets.only(top: 14),
@@ -446,7 +384,10 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
                       label: "Richiamo tra",
                       placeholder: "Seleziona...",
                       value: _valore,
-                      items: const [0, 1000, 2000, 5000, 10000, 15000, 20000, 25000],
+                      items: const [
+                        0, 1000, 2000, 5000, 10000, 15000, 20000, 25000,
+                        30000, 40000, 50000, 60000, 80000, 100000, 120000, 150000,
+                      ],
                       itemLabelBuilder: (val) => val.toString(),
                       onChanged: (v) {
                         if (v == null) return;
@@ -518,6 +459,9 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
             isRequired: false,
             obscureText: false,
             keyboardType: TextInputType.multiline,
+            onChanged: (_) => context.read<WorkLogBloc>().add(
+              NoteChange(note: _noteController.text),
+            ),
           ),
         ],
       ),

@@ -38,16 +38,21 @@ class AmMaintenanceKpiCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF232326), // Sfondo scuro profondo
         borderRadius: BorderRadius.circular(28),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF2C2C2E), // Grigio scuro leggermente più chiaro
+            Color(0xEF151414), // Grigio molto scuro
+          ],
+        ),
         boxShadow: [
-          // Ombra esterna profonda per effetto 3D
           BoxShadow(
             color: Colors.black.withOpacity(0.4),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
-          // Sottile riflesso sul bordo superiore
           BoxShadow(
             color: Colors.white.withOpacity(0.05),
             blurRadius: 0,
@@ -55,97 +60,103 @@ class AmMaintenanceKpiCard extends StatelessWidget {
           ),
         ],
       ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Stack(
           children: [
-            // Contenuto Principale
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header: Icona + Label
-                    Row(
-                      children: [
-                        Icon(icon, color: color, size: 20),
-                        const SizedBox(width: 10),
-                        Text(
-                          label.toUpperCase(),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    // Chilometri Rimasti
-
-                          Row(
-                            children: [
-                              const Text( "Rimasti: ",style: TextStyle(
-                                fontSize: 17,
-                                fontWeight:FontWeight.w900,
-                                letterSpacing: 1.2,
-                                color: Colors.white,),
-                              ),
-                              Text(
-                                '${formatKm(remainingKm)} KM',
-                                style:   TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.2,
-                                    color:  remainingKm < 0 ? Colors.redAccent : Colors.white,
-                                
-                              ),
-                              )
-
-                            ],
-                          ),
-
-
-
-                    const SizedBox(height: 20),
-                    // Segmented Rating Bar
-                    _SegmentedProgressBar(percentage: percentage, color: color),
-
-                  ],
+            // Icona di Sfondo (Watermark)
+            Positioned(
+              right: -30,
+              bottom: -20,
+              child: Transform.rotate(
+                angle: -0.2, // Leggera rotazione stile design
+                child: ShaderMask(
+                  shaderCallback: (Rect bounds) {
+                    return LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Colors.white.withOpacity(0.2), color.withOpacity(0.1)],
+                    ).createShader(bounds);
+                  },
+                  child: Icon(
+                    icon,
+                    size: 160,
+                    // Il colore base viene sovrascritto dallo ShaderMask
+                  ),
                 ),
               ),
             ),
-            // Sezione Laterale Clickable (Chevron)
+            // Contenuto Interattivo
             Material(
-              color: Colors.white.withOpacity(0.02),
-              borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(28),
-                bottomRight: Radius.circular(28),
-              ),
+              color: Colors.transparent,
               child: InkWell(
                 onTap: onTap,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
-                child: Container(
-                  width: 60,
-                  decoration: BoxDecoration(
-                    border: Border(
-                      left: BorderSide(
-                        color: Colors.white.withOpacity(0.05),
-                        width: 1,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      // Contenuto Principale
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header: Icona + Label
+                            Row(
+                              children: [
+                                Icon(icon, color: color, size: 20),
+                                const SizedBox(width: 10),
+                                Text(
+                                  label.toUpperCase(),
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            // Chilometri Rimasti
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  '${formatKm(remainingKm)} ',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2,
+                                    color: remainingKm < 0
+                                        ? Colors.redAccent
+                                        : Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  "KM Rimasti",
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white.withOpacity(0.5),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            // Segmented Rating Bar
+                            _SegmentedProgressBar(
+                                percentage: percentage, color: color),
+                          ],
+                        ),
                       ),
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.chevron_right,
-                      color: Colors.white.withOpacity(0.3),
-                      size: 28,
-                    ),
+                      // Freccia di navigazione (Chevron)
+                      Icon(
+                        Icons.chevron_right,
+                        color: Colors.white.withOpacity(0.2),
+                        size: 28,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -168,11 +179,11 @@ class _SegmentedProgressBar extends StatelessWidget {
     return Row(
       children: List.generate(4, (index) {
         final segmentThreshold = (index + 1) * 25;
-        final isActive = percentage >= segmentThreshold - 12; // Un po' di tolleranza
+        final isActive = percentage >= segmentThreshold - 12;
 
         return Expanded(
           child: Container(
-            height: 12,
+            height: 10,
             margin: EdgeInsets.only(right: index == 3 ? 0 : 8),
             decoration: BoxDecoration(
               color: isActive ? color : color.withOpacity(0.1),

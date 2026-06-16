@@ -11,6 +11,9 @@ class AmDatePickerField extends StatefulWidget {
   final TextEditingController controller;
   final bool isRequired;
 
+  /// Chiamata quando l'utente sceglie una data dal calendario.
+  final ValueChanged<DateTime>? onDateSelected;
+
   /// Limiti del calendario. Se non passati usa un range ragionevole.
   final DateTime? firstDate;
   final DateTime? lastDate;
@@ -21,6 +24,7 @@ class AmDatePickerField extends StatefulWidget {
     required this.placeholder,
     required this.controller,
     this.isRequired = false,
+    this.onDateSelected,
     this.firstDate,
     this.lastDate,
   });
@@ -92,6 +96,7 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
       setState(() {
         widget.controller.text = _format(picked);
       });
+      widget.onDateSelected?.call(picked);
     }
   }
 

@@ -1,4 +1,4 @@
-import 'package:auto_mob_v1/features/work_log/domain/entiti/WorkLogItemEntity.dart';
+import 'package:auto_mob_v1/features/work_log/domain/entiti/SelectedPart.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/types/EnumPopUp.dart';
@@ -26,12 +26,37 @@ class CurrentKmChange extends WorkLogEvent {
   List<Object?> get props => [currentKm];
 }
 
+/// Inizializza i km del veicolo (pavimento + valore di partenza del campo).
+class InitKm extends WorkLogEvent {
+  final int vehicleKm;
+  InitKm({required this.vehicleKm});
+
+  @override
+  List<Object?> get props => [vehicleKm];
+}
+
 class RichiamoChange extends WorkLogEvent {
   final int intervallKM;
   RichiamoChange({required this.intervallKM});
 
   @override
   List<Object?> get props => [intervallKM];
+}
+
+class NoteChange extends WorkLogEvent {
+  final String note;
+  NoteChange({required this.note});
+
+  @override
+  List<Object?> get props => [note];
+}
+
+class ServiceDateChange extends WorkLogEvent {
+  final DateTime date;
+  ServiceDateChange({required this.date});
+
+  @override
+  List<Object?> get props => [date];
 }
 
 class OnSubmitEvent extends WorkLogEvent {
@@ -70,7 +95,7 @@ class RemovePartEvent extends WorkLogEvent {
 }
 
 class UpdatePartItemEvent extends WorkLogEvent {
-  final WorkLogItem item;
+  final SelectedPart item;
 
   UpdatePartItemEvent({required this.item});
 

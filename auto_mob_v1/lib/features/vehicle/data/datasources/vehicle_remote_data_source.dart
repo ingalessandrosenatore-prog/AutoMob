@@ -17,6 +17,11 @@ abstract class VehicleRemoteDataSource {
 
   /// Lista veicoli accessibili dall'utente corrente (RLS filtra per owner_id).
   Future<List<VehicleModel>> getVehicles();
+
+  /// Aggiorna i km del veicolo (modale "Aggiorna KM", senza lavoro) via RPC
+  /// `aggiorna_km_veicolo`. I km salgono solo (mai indietro). Ritorna i km
+  /// effettivi salvati sul DB.
+  Future<int> updateKm({required String vehicleId, required int newKm});
 }
 
 class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
@@ -78,6 +83,31 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     } catch (e) {
       throw const VehicleDataSourceException(
           'Errore durante il caricamento dei veicoli');
+    }
+  }
+
+
+  @override
+  Future<int> updateKm({required String vehicleId, required int newKm}) async {
+    if (owner_id == null) {
+      throw const ServerException('Utente non autenticato');
+    }
+
+    try {
+      // L'RPC fa GREATEST + controllo proprietario; il trigger DB registra
+      // l'aggiornamento nello storico km. Ritorna i km effettivi salvati.
+      final result = await supabaseClient.rpc(
+        'aggiorna_km_veicolo',
+        params: {'p_vehicle_id': vehicleId, 'p_nuovo_km': newKm},
+      );
+      return (result as num).toInt();
+    } on PostgrestException catch (e) {
+      throw VehicleDataSourceException(e.message, code: e.code);
+    } on SocketException {
+      throw const NetworkException();
+    } catch (e) {
+      throw const VehicleDataSourceException(
+          'Errore durante l\'aggiornamento dei km');
     }
   }
 

@@ -54,6 +54,28 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
+  Future<Either<Failure, int>> updateKm({
+    required String vehicleId,
+    required int newKm,
+  }) async {
+    try {
+      final kmSalvati = await remoteDataSource.updateKm(
+        vehicleId: vehicleId,
+        newKm: newKm,
+      );
+      return Right(kmSalvati);
+    } on VehicleDataSourceException catch (e) {
+      print("ERRORE SUPABASE updateKm: ${e.message}");
+      return const Left(ServerFailure());
+    } on NetworkException {
+      return const Left(NetworkFailure());
+    } catch (e) {
+      print("ERRORE SCONOSCIUTO updateKm: $e");
+      return const Left(ServerFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, List<Vehicle>>> getVehicles() async {
     try {
       final vehicles = await remoteDataSource.getVehicles();
