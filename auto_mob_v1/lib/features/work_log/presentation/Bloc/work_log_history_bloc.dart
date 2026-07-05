@@ -1,8 +1,8 @@
-import 'package:bloc_concurrency/bloc_concurrency.dart';
+﻿import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/usecase/GetVehicleOptions.dart';
-import '../../domain/usecase/GetVehicleWorks.dart';
+import '../../domain/usecases/get_vehicle_options.dart';
+import '../../domain/usecases/get_vehicle_works.dart';
 import 'work_log_history_event.dart';
 import 'work_log_history_state.dart';
 

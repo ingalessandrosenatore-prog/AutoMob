@@ -1,11 +1,11 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/error/Exception/Exceptions.dart';
+import '../../../../core/error/exceptions/exceptions.dart';
 
 import '../../domain/entities/vehicle_draft.dart';
-import '../models/VehicleModel.dart';
+import '../models/vehicle_model.dart';
 
 
 abstract class VehicleRemoteDataSource {

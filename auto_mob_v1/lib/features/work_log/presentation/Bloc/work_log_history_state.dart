@@ -1,7 +1,7 @@
-import 'package:equatable/equatable.dart';
+﻿import 'package:equatable/equatable.dart';
 
-import '../../domain/entiti/VehicleOption.dart';
-import '../../domain/entiti/WorkLogRow.dart';
+import '../../domain/entities/vehicle_option.dart';
+import '../../domain/entities/work_log_row.dart';
 
 /// Stato globale della pagina (il "primo caricamento"):
 /// - initial: appena creato;

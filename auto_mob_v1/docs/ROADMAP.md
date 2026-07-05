@@ -1,7 +1,7 @@
 # AutoMob — Roadmap operativa
 
 > Documento vivo. Per ogni punto, man mano che decidiamo, scriviamo qui **le scelte prese** (sezione "Decisioni").
-> Aggiornato durante le sessioni di lavoro. Ultima revisione: 2026-06-16.
+> Aggiornato durante le sessioni di lavoro. Ultima revisione: 2026-06-17.
 
 Legenda stato: 🔲 da fare · 🛠️ in corso · ✅ fatto
 
@@ -197,6 +197,74 @@ usecase (`GetVehicleOptions`/`GetVehicleWorks`), `WorkLogHistoryBloc` (eventi `L
 - Togliere il ricaricamento automatico ad ogni ingresso nella Home: caricare i dati SOLO all'avvio e poi su pull-to-refresh.
 - Serve schermata di caricamento + show dialog di errore.
 - _(Aggiungere pull-to-refresh anche alla pagina storico, riusando `AmStatusDialog`.)_
+
+---
+
+## 7. 🐛 BUG BLOCCANTE — crash all'apertura del pop-up "Aggiungi lavoro" (2026-06-17)
+
+**Sintomo:** aprendo il pop-up di registrazione lavoro dalla pagina WorkLog → **schermata grigia**.
+In console (il primo errore, NON il `DiagnosticsProperty<void>` che è solo rumore secondario):
+`type 'BoxParentData' is not a subtype of type 'FlexParentData' in type cast` (`Flexible.applyParentData`).
+
+**Causa:** `AmTextField`, `AmDatePickerField` e `AmDropdown` hanno come **root un `Expanded`**
+→ vanno usati SOLO dentro un `Row`/`Column`. Nel ramo `type == altro` di `FirstPageAddWork`
+(`AddWorkLogPopUp.dart` ~riga 312) il campo "Nome intervento" è avvolto in un **`Padding`** (non-Flex):
+`Padding(child: AmTextField(...))` → l'`Expanded` trova un genitore `RenderPadding` (`BoxParentData`)
+→ cast fallisce. Si apre SEMPRE con `EnumPopUp.altro` dalla pagina worklog ⇒ crash garantito.
+
+**Fix puntuale (1 riga):** avvolgere quel campo in un `Row` come tutti gli altri:
+```dart
+return Padding(
+  padding: const EdgeInsets.only(top: 24),
+  child: Row(children: [ AmTextField(...) ]),
+);
+```
+**Fix di fondo (debito tecnico):** è fragile che questi widget ritornino `Expanded` di nascosto.
+Meglio rimuovere l'`Expanded` interno e lasciare che sia il chiamante a decidere (`Expanded`/`Flexible`
+solo quando serve davvero, dentro un Flex). Da valutare nel rework dei pop-up (punto 9).
+
+**Bug minore correlato (stesso file):** il bottone "INDIETRO" sulla pagina 0 viene messo in un
+`AnimatedContainer` con `width:0, height:0` → un `OutlinedButton` forzato in un box 0×0 genera
+overflow ad ogni frame. Animare solo la larghezza tenendo l'altezza fissa (+ `ClipRect`/`OverflowBox`).
+
+---
+
+## 8. 🔲 Backlog UI/UX (sessione 2026-06-17)
+
+Lista raccolta dall'utente. NON ancora in sviluppo — solo registrata.
+
+1. **Dropdown pull-down veicolo (`AmPullDownLG`) — la lista non segue lo scroll.**
+   Il menu si apre con `showGeneralDialog` e disegna la lista in un `Positioned` calcolato UNA
+   volta sulle coordinate del trigger (`_misuraTrigger`). Se la pagina sotto scrolla, il trigger si
+   muove ma la lista resta fissa nel punto iniziale. Serve far seguire la lista al trigger (o chiudere
+   il menu allo scroll). Valutare `CompositedTransformTarget`/`CompositedTransformFollower` +
+   `LayerLink`, oppure un `OverlayPortal` ancorato.
+
+2. **Pop-up → pagine full-screen.** Non piace il layout attuale a `ModalBottomSheet`. Convertire sia
+   **Aggiungi veicolo** sia **Aggiungi lavoro** in vere pagine (route dedicate, transizione di pagina).
+   Occasione giusta per sistemare il debito tecnico dell'`Expanded` nascosto (vedi punto 7).
+
+3. **Foto veicolo.**
+   - Poter aggiungere/cambiare la foto **toccando la card del veicolo** (non solo in registrazione).
+   - Oggi la foto si può prendere solo dalla **galleria** in fase di registrazione → aggiungere anche
+     **fotocamera** (sorgente a scelta).
+
+4. **Tema chiaro/scuro.** Switch per attivare/disattivare il tema scuro (persistere la scelta).
+
+5. **Bottom bar.** Rework della bottom bar + migliorare le **transizioni** al cambio tab.
+
+6. **WorkLog History — card lavori.**
+   - Espansione delle card lavoro (tap → dettaglio).
+   - Miglioramento UI delle card lavoro.
+
+7. **Card veicolo.** Miglioramento UI della card veicolo.
+
+### Stato attuale dello switch veicolo (per riferimento, vedi spiegazione in chat 2026-06-17)
+- Trigger: `AmPullDownLG` nell'AppBar di `WorkLogHistoryPage` (`_VehicleDropdown`).
+- Al tap su una voce → `VehicleChanged(v.id)` + `Navigator.maybePop()` (chiude il menu).
+- `WorkLogHistoryBloc._onVehicleChanged`: se id uguale a quello attuale → no-op; altrimenti svuota
+  `works`, setta `isLoadingMore` (spinner inline, NIENTE pop-up a tutto schermo), ricarica pagina 0.
+- Refresh dopo aggiunta lavoro: `ReloadCurrent` (mantiene la selezione).
 
 ---
 </content>

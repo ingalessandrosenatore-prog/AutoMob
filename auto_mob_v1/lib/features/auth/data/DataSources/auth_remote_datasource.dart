@@ -1,7 +1,7 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/error/Exception/Exceptions.dart';
+import '../../../../core/error/exceptions/Exceptions.dart';
 import '../models/app_user_model.dart';
 
 abstract class AuthRemoteDataSource {

@@ -1,11 +1,11 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/error/Exception/Exceptions.dart';
-import '../../domain/entiti/SelectedPart.dart';
-import '../model/VehicleOptionModel.dart';
-import '../model/WorkLogRowModel.dart';
+import '../../../../core/error/exceptions/exceptions.dart';
+import '../../domain/entities/selected_part.dart';
+import '../models/vehicle_option_model.dart';
+import '../models/work_log_row_model.dart';
 
 abstract class WorklogRemoteDataSource {
   /// Salva una sessione di manutenzione completa (record + item + parts + update interval).

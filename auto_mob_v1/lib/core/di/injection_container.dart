@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
@@ -15,33 +15,33 @@ import '../../features/auth/domain/usecases/login_with_google.dart';
 import '../../features/auth/domain/usecases/login_with_apple.dart';
 import '../../features/auth/domain/usecases/signup_with_email.dart';
 import '../../features/auth/domain/usecases/logout.dart';
-import '../../features/auth/presentation/Bloc/authBloc.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 // Vehicle
 import '../../features/vehicle/data/datasources/vehicle_draft_local_data_source.dart';
 import '../../features/vehicle/data/datasources/vehicle_remote_data_source.dart';
 import '../../features/vehicle/data/repositories/vehicle_repository_impl.dart';
-import '../../features/vehicle/domain/repositories/VehicleRepository.dart';
-import '../../features/vehicle/domain/usecases/SaveDraftStep.dart';
-import '../../features/vehicle/domain/usecases/SaveVehicle.dart';
-import '../../features/vehicle/domain/usecases/GetVehicles.dart';
-import '../../features/vehicle/domain/usecases/UpdateVehicleKm.dart';
-import '../../features/vehicle/domain/usecases/ComputeMaintenanceKpis.dart';
-import '../../features/vehicle/presentation/provider/add_vehicle_bloc.dart';
-import '../../features/vehicle/presentation/provider/km_update_cubit.dart';
+import '../../features/vehicle/domain/repositories/vehicle_repository.dart';
+import '../../features/vehicle/domain/usecases/save_draft_step.dart';
+import '../../features/vehicle/domain/usecases/save_vehicle.dart';
+import '../../features/vehicle/domain/usecases/get_vehicles.dart';
+import '../../features/vehicle/domain/usecases/update_vehicle_km.dart';
+import '../../features/vehicle/domain/usecases/compute_maintenance_kpis.dart';
+import '../../features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
+import '../../features/vehicle/presentation/bloc/km_update_cubit.dart';
 
 // Dashboard
-import '../../features/dashboard/presentation/Bloc/dashboardBloc.dart';
+import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
 
 // WorkLog
 import '../../features/work_log/data/datasources/worklog_remote_data_source.dart';
-import '../../features/work_log/data/repositories/WorklogRepositoryImpl.dart';
-import '../../features/work_log/domain/repositories/WorklogRepo.dart';
-import '../../features/work_log/domain/usecase/CreateWorkLog.dart';
-import '../../features/work_log/domain/usecase/GetVehicleOptions.dart';
-import '../../features/work_log/domain/usecase/GetVehicleWorks.dart';
-import '../../features/work_log/presentation/Bloc/work_log_bloc.dart';
-import '../../features/work_log/presentation/Bloc/work_log_history_bloc.dart';
+import '../../features/work_log/data/repositories/worklog_repository_impl.dart';
+import '../../features/work_log/domain/repositories/worklog_repo.dart';
+import '../../features/work_log/domain/usecases/create_work_log.dart';
+import '../../features/work_log/domain/usecases/get_vehicle_options.dart';
+import '../../features/work_log/domain/usecases/get_vehicle_works.dart';
+import '../../features/work_log/presentation/bloc/work_log_bloc.dart';
+import '../../features/work_log/presentation/bloc/work_log_history_bloc.dart';
 
 final sl = GetIt.instance;
 

@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Necessario in TUTTE le build, RELEASE inclusa: senza questo, in release
+         l'app non ha accesso a internet e Supabase/DB non risponde.
+         In debug e profile Flutter aggiunge il permesso in automatico (vedi i
+         manifest in src/debug e src/profile), ecco perche' "in debug funziona". -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="auto_mob_v1"
         android:name="${applicationName}"

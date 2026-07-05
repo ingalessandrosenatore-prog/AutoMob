@@ -1,5 +1,5 @@
-import 'package:auto_mob_v1/core/types/EnumPopUp.dart';
-import 'package:auto_mob_v1/features/work_log/domain/entiti/SelectedPart.dart';
+﻿import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
+import 'package:auto_mob_v1/features/work_log/domain/entities/selected_part.dart';
 import 'package:equatable/equatable.dart';
 
 enum WorkLogStatus { initial, loading, success, failure }

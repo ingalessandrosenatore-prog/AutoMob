@@ -1,6 +1,6 @@
-import 'package:equatable/equatable.dart';
+﻿import 'package:equatable/equatable.dart';
 
-import 'package:auto_mob_v1/core/types/EnumPopUp.dart';
+import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 
 /// KPI di una manutenzione "a chilometri" (tagliando, distribuzione, gomme...).
 /// E' un valore CALCOLATO (non sta sul DB): dice quanti km mancano al prossimo

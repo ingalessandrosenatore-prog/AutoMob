@@ -1,10 +1,10 @@
-import 'dart:async';
+﻿import 'dart:async';
 
-import 'package:auto_mob_v1/core/types/EnumPopUp.dart';
-import 'package:auto_mob_v1/features/work_log/domain/entiti/SelectedPart.dart';
-import 'package:auto_mob_v1/features/work_log/domain/usecase/CreateWorkLog.dart';
-import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_event.dart';
-import 'package:auto_mob_v1/features/work_log/presentation/Bloc/work_log_state.dart';
+import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
+import 'package:auto_mob_v1/features/work_log/domain/entities/selected_part.dart';
+import 'package:auto_mob_v1/features/work_log/domain/usecases/create_work_log.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/bloc/work_log_event.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/bloc/work_log_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {

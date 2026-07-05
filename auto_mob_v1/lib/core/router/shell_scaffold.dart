@@ -181,72 +181,69 @@ class _ShellScaffoldState extends State<ShellScaffold>
                   _tapPositionNotifier.value = null;
                 },
               child: Center(
-                child: Expanded(
+                child: AnimatedBuilder(
 
-                  child: AnimatedBuilder(
+                  animation: bounceCtrl,
+                  builder: (context, child) =>
+                      Transform.scale(
+                    scale: bounceCtrl.value,
+                    child: child,
+                  ),
 
-                    animation: bounceCtrl,
-                    builder: (context, child) =>
-                        Transform.scale(
-                      scale: bounceCtrl.value,
-                      child: child,
+
+                  child: OCLiquidGlassGroup(
+                    settings: const OCLiquidGlassSettings(
+                      blurRadiusPx: 0,
+                      specWidth: 0,
+                      specStrength: 0,
+                      refractStrength: 0.04
                     ),
+                    child: OCLiquidGlass(
+                      width: larghezzaBarra,
+                      height: 58,
+                      borderRadius: 100,
+                      color: const Color(0x00595050),
 
-
-                    child: OCLiquidGlassGroup(
-                      settings: const OCLiquidGlassSettings(
-                        blurRadiusPx: 0,
-                        specWidth: 0,
-                        specStrength: 0,
-                        refractStrength: 0.04
-                      ),
-                      child: OCLiquidGlass(
-                        width: larghezzaBarra,
-                        height: 58,
-                        borderRadius: 100,
-                        color: const Color(0x00595050),
-
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              child: IgnorePointer(
-                                child: AnimatedBuilder(
-                                  animation: lightCtrl,
-                                  builder: (context, child) => CustomPaint(
-                                    painter: GlowPainter(
-                                      intensity: lightCtrl.value,
-                                      color: Colors.white,
-                                      tapPosition: _tapPositionNotifier.value,
-                                    ),
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: AnimatedBuilder(
+                                animation: lightCtrl,
+                                builder: (context, child) => CustomPaint(
+                                  painter: GlowPainter(
+                                    intensity: lightCtrl.value,
+                                    color: Colors.white,
+                                    tapPosition: _tapPositionNotifier.value,
                                   ),
                                 ),
                               ),
                             ),
+                          ),
 
-                            Row(
-                              children: List.generate(_items.length, (i) {
-                                final item = _items[i];
-                                return AmNavItem(
-                                  icon: item.icon,
-                                  iconIsActive: item.activeIcon,
-                                  iconColor: Colors.white,
-                                  iconSize: 26,
-                                  iconColoractive: const Color(0xFF3192F3),
-                                  lable: item.label,
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w500,
-                                  textColor: Colors.white,
-                                  textColorIsActive: const Color(0xFF3192F3),
-                                  background: Colors.transparent,
-                                  backgorundIsActive:
-                                  const Color(0xFF3192F3).withValues(alpha: 0.3),
-                                  onTap: () => goTo(i),
-                                  isSelect: selected == i,
-                                );
-                              }),
-                            ),
-                          ],
-                        ),
+                          Row(
+                            children: List.generate(_items.length, (i) {
+                              final item = _items[i];
+                              return AmNavItem(
+                                icon: item.icon,
+                                iconIsActive: item.activeIcon,
+                                iconColor: Colors.white,
+                                iconSize: 26,
+                                iconColoractive: const Color(0xFF3192F3),
+                                lable: item.label,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w500,
+                                textColor: Colors.white,
+                                textColorIsActive: const Color(0xFF3192F3),
+                                background: Colors.transparent,
+                                backgorundIsActive:
+                                const Color(0xFF3192F3).withValues(alpha: 0.3),
+                                onTap: () => goTo(i),
+                                isSelect: selected == i,
+                              );
+                            }),
+                          ),
+                        ],
                       ),
                     ),
                   ),

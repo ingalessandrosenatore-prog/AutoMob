@@ -1,10 +1,10 @@
-import 'package:fpdart/fpdart.dart';
+﻿import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/error/Exception/Exception.dart';
-import '../../../../core/error/Exception/Exceptions.dart';
+import '../../../../core/error/exceptions/exception.dart';
+import '../../../../core/error/exceptions/exceptions.dart';
 import '../../domain/entities/vehicle.dart';
 import '../../domain/entities/vehicle_draft.dart';
-import '../../domain/repositories/VehicleRepository.dart';
+import '../../domain/repositories/vehicle_repository.dart';
 import '../datasources/vehicle_draft_local_data_source.dart';
 import '../datasources/vehicle_remote_data_source.dart';
 import '../models/vehicle_draft_model.dart';

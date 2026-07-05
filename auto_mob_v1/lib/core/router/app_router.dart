@@ -1,21 +1,33 @@
-import 'package:auto_mob_v1/features/dashboard/presentation/page/HomeView.dart';
-import 'package:auto_mob_v1/features/servizi/presentation/page/ServiziPage.dart';
-import 'package:auto_mob_v1/features/work_log/presentation/page/MidifyItem.dart';
-import 'package:auto_mob_v1/features/work_log/presentation/page/WorkLogHistoryPage.dart';
+﻿import 'package:auto_mob_v1/features/dashboard/presentation/pages/home_view.dart';
+import 'package:auto_mob_v1/features/servizi/presentation/pages/servizi_page.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/pages/midify_item.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/pages/work_log_history_page.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/presentation/page/SplashScreen.dart';
-import '../../features/auth/presentation/page/LoginView.dart';
-import '../../features/auth/presentation/page/RegistrationView.dart';
-import '../../features/vehicle/presentation/widget/KmUpdatePopUp.dart';
-import '../../features/vehicle/presentation/widget/PopUpAddVeicle.dart';
-import '../../features/work_log/presentation/widget/FunctionalPopUp.dart';
-import '../types/EnumPopUp.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/auth/presentation/bloc/auth_state.dart';
+import '../../features/auth/presentation/pages/splash_screen.dart';
+import '../../features/auth/presentation/pages/login_view.dart';
+import '../../features/auth/presentation/pages/registration_view.dart';
+import '../../features/vehicle/presentation/widgets/km_update_pop_up.dart';
+import '../../features/vehicle/presentation/widgets/pop_up_add_veicle.dart';
+import '../../features/work_log/presentation/widgets/functional_pop_up.dart';
+import '../di/injection_container.dart' as di;
+import '../types/enum_pop_up.dart';
+import 'go_router_refresh_stream.dart';
 import 'shell_scaffold.dart';
 
 class AppRouter {
+  // Istanza unica dell'AuthBloc (registrato come lazy singleton nel DI):
+  // e' la sorgente di verita' per capire dove mandare l'utente.
+  static final AuthBloc _auth = di.sl<AuthBloc>();
+
   static final GoRouter router = GoRouter(
     initialLocation: '/splash',
+    // Ogni cambio di stato dell'auth fa rivalutare la `redirect`.
+    refreshListenable: GoRouterRefreshStream(_auth.stream),
+    redirect: _guard,
     routes: [
       GoRoute(
         path: '/splash',
@@ -94,4 +106,31 @@ class AppRouter {
       ),
     ],
   );
+
+  /// Unico punto che decide la navigazione legata all'auth.
+  /// Ritorna la rotta verso cui reindirizzare, oppure `null` per restare
+  /// dove si e'.
+  static String? _guard(BuildContext context, GoRouterState state) {
+    final s = _auth.state;
+    final loc = state.uri.path;
+
+    final atAuth = loc == '/login' || loc == '/registration';
+    final atSplash = loc == '/splash';
+
+    // Stati transitori: non forzo nulla. All'avvio resto sullo splash
+    // (initialLocation), durante un login/logout resto sulla pagina
+    // corrente che mostra spinner/errore via BlocBuilder.
+    if (s is AuthInitial || s is AuthLoading || s is AuthError) {
+      return null;
+    }
+
+    // Autenticato: se sono ancora su splash/login/registration vado a home.
+    if (s is AuthAuthenticated) {
+      return (atSplash || atAuth) ? '/home' : null;
+    }
+
+    // Non autenticato (AuthUnauthenticated / AuthLoggedOut):
+    // se sono su login o registration resto, altrimenti torno al login.
+    return atAuth ? null : '/login';
+  }
 }

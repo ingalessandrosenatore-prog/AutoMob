@@ -1,6 +1,6 @@
-import 'package:fpdart/fpdart.dart';
+﻿import 'package:fpdart/fpdart.dart';
 import '../entities/app_user.dart';
-import '../../../../core/error/Exception/Exception.dart';
+import '../../../../core/error/exceptions/exception.dart';
 
 abstract class AuthRepository {
   Future<Either<Failure, AppAuthUser>> loginWithEmail(String email, String password);

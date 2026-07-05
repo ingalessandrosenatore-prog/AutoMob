@@ -1,6 +1,6 @@
-import 'package:fpdart/fpdart.dart';
+﻿import 'package:fpdart/fpdart.dart';
 import '../repositories/auth_repository.dart';
-import '../../../../core/error/Exception/Exception.dart';
+import '../../../../core/error/exceptions/exception.dart';
 
 class Logout {
   final AuthRepository repository;
