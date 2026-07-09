@@ -263,26 +263,46 @@ class MorphPopUp extends StatefulWidget {
 
 class _PopUpState extends State<MorphPopUp>
     with SingleTickerProviderStateMixin {
+  bool _closing = false;
+
   @override
   void initState() {
     super.initState();
   }
 
-  void _closePopUp() {
-    widget.ctrlm
-        .animateWith(
-          SpringSimulation(_springDescription, widget.ctrlm.value, 0, 0),
-        )
-        .whenComplete(() {
-          Navigator.of(context).pop();
-        });
+  @override
+  void dispose() {
+    if (_closing) widget.ctrlm.removeListener(_onCloseTick);
+    super.dispose();
   }
 
+  // Il pop avviene qui, appena il popup è visivamente sparito (t<=0),
+  // invece di aspettare `whenComplete` della SpringSimulation: con bounce>0
+  // la molla resta sotto tolleranza numerica per svariati frame *dopo*
+  // essere già invisibile, tenendo la barriera full-screen "opaque" a
+  // intercettare i tap e dando la sensazione di UI bloccata.
+  void _onCloseTick() {
+    if (widget.ctrlm.value <= 0) {
+      widget.ctrlm.removeListener(_onCloseTick);
+      _closing = false;
+      if (mounted) Navigator.of(context).pop();
+    }
+  }
+
+  void _closePopUp() {
+    if (_closing) return;
+    _closing = true;
+    widget.ctrlm.addListener(_onCloseTick);
+    widget.ctrlm.animateWith(
+      SpringSimulation(_springDescription, widget.ctrlm.value, 0, 0),
+    );
+  }
 
   static final SpringDescription _springDescription =
       SpringDescription.withDurationAndBounce(
         duration: const Duration(milliseconds: 400),
-        bounce: 0.30,
+        bounce: 0, // niente rimbalzo in chiusura: raggiunge lo 0 senza
+        // oscillare, così il popup si richiude senza "rimbalzino" residuo
       );
 
   @override
@@ -418,13 +438,17 @@ class ItemMorphPopUp extends StatelessWidget {
             children: [
               Icon(icon, size: iconSize, color: iconColor,fontWeight:  iconsWheight,),
               const SizedBox(width: 12),
-              Text(
-                text,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: textSize,
-                  fontWeight: textWeight,
-                  letterSpacing: 1.2,
+              Flexible(
+                child: Text(
+                  text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: textSize,
+                    fontWeight: textWeight,
+                    letterSpacing: 1.2,
+                  ),
                 ),
               ),
             ],

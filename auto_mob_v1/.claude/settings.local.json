@@ -10,7 +10,10 @@
       "PowerShell(flutter test *)",
       "PowerShell(dart run *)",
       "PowerShell(./tool/verify.ps1; Write-Host \"VERIFY EXIT: $LASTEXITCODE\")",
-      "mcp__claude_ai_Supabase__execute_sql"
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash(flutter analyze *)",
+      "PowerShell(./tool/verify.ps1)",
+      "PowerShell(./tool/ship.ps1 \"fix: AmPullDownLG chiusura senza rimbalzo residuo \\(pop appena invisibile, non a molla settata\\) + overflow testo item durante apertura\")"
     ]
   },
   "skillOverrides": {
