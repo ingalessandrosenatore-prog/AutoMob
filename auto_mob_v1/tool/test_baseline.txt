@@ -11,5 +11,4 @@
 features/auth/domain/usecases/login_with_apple.dart
 features/auth/domain/usecases/login_with_google.dart
 features/dashboard/domain/usecases/get_profile.dart
-features/work_log/presentation/bloc/work_log_bloc.dart
 features/work_log/presentation/bloc/work_log_history_bloc.dart
