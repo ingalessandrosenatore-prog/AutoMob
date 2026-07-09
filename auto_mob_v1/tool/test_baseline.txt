@@ -8,7 +8,6 @@
 #
 #  Formato: path relativo a lib/
 # =====================================================================
-features/auth/data/repositories/auth_repository_impl.dart
 features/auth/domain/usecases/login_with_apple.dart
 features/auth/domain/usecases/login_with_google.dart
 features/auth/presentation/bloc/auth_bloc.dart
