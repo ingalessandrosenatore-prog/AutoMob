@@ -1,42 +1,69 @@
 import 'dart:math' as math;
 
-import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 const String _wheelAsset = 'lib/assets/icons/ruota.svg';
 
-/// Pull-to-refresh riutilizzabile tra feature diverse: avvolge una lista o
-/// uno scroll esistente (`ListView`, `SingleChildScrollView`, ...) SENZA
-/// ristrutturarli in sliver. Mostra una ruota che gira con un effetto di
-/// polvere durante il pull e il caricamento.
-///
-/// Volutamente indipendente dal pop-up modale di caricamento (`AmStatusDialog`):
-/// [onRefresh] va collegato a un evento bloc dedicato che NON passa per lo
-/// stato "loading" a tutto schermo (vedi `RefreshRequested`/
-/// `DashboardRefreshRequested`), altrimenti i due si sovrapporrebbero.
-class AmWheelRefreshIndicator extends StatefulWidget {
-  final Widget child;
+/// Sliver di pull-to-refresh: a differenza di un overlay (`RefreshIndicator`),
+/// [CupertinoSliverRefreshControl] occupa spazio REALE nella lista di sliver
+/// e quindi spinge fisicamente giu' tutto cio' che lo segue (inclusa
+/// un'eventuale app bar sliver dopo di lui) mentre viene tirato e finche'
+/// [onRefresh] non si risolve. Va messo come PRIMO sliver di una
+/// `CustomScrollView` che usa `BouncingScrollPhysics` (l'overscroll che
+/// triggera il pull non esiste con `ClampingScrollPhysics`, il default
+/// Android).
+class AmRefreshControlSliver extends StatelessWidget {
   final Future<void> Function() onRefresh;
   final Color color;
 
-  const AmWheelRefreshIndicator({
+  const AmRefreshControlSliver({
     super.key,
-    required this.child,
     required this.onRefresh,
     this.color = const Color(0xFFFF6B00),
   });
 
   @override
-  State<AmWheelRefreshIndicator> createState() =>
-      _AmWheelRefreshIndicatorState();
+  Widget build(BuildContext context) {
+    return CupertinoSliverRefreshControl(
+      onRefresh: onRefresh,
+      builder: (context, refreshState, pulledExtent, refreshTriggerPullDistance, refreshIndicatorExtent) {
+        return Center(
+          child: AmWheelRefreshVisual(
+            refreshState: refreshState,
+            pulledExtent: pulledExtent,
+            refreshTriggerPullDistance: refreshTriggerPullDistance,
+            color: color,
+          ),
+        );
+      },
+    );
+  }
 }
 
-class _AmWheelRefreshIndicatorState extends State<AmWheelRefreshIndicator>
+/// Ruota che gira + effetto polvere, pilotata dallo stato del
+/// [CupertinoSliverRefreshControl]: rotazione proporzionale al pull durante
+/// il drag, rotazione continua durante [RefreshIndicatorMode.refresh].
+class AmWheelRefreshVisual extends StatefulWidget {
+  final RefreshIndicatorMode refreshState;
+  final double pulledExtent;
+  final double refreshTriggerPullDistance;
+  final Color color;
+
+  const AmWheelRefreshVisual({
+    super.key,
+    required this.refreshState,
+    required this.pulledExtent,
+    required this.refreshTriggerPullDistance,
+    this.color = const Color(0xFFFF6B00),
+  });
+
+  @override
+  State<AmWheelRefreshVisual> createState() => _AmWheelRefreshVisualState();
+}
+
+class _AmWheelRefreshVisualState extends State<AmWheelRefreshVisual>
     with SingleTickerProviderStateMixin {
-  // Rotazione continua della ruota mentre il refresh e' in corso; durante il
-  // pull (prima del rilascio) la rotazione segue invece il progresso del
-  // trascinamento, guidato direttamente dall'IndicatorController.
   late final AnimationController _spinCtrl = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
@@ -50,55 +77,44 @@ class _AmWheelRefreshIndicatorState extends State<AmWheelRefreshIndicator>
 
   @override
   Widget build(BuildContext context) {
-    return CustomRefreshIndicator(
-      onRefresh: widget.onRefresh,
-      builder: (context, child, controller) {
-        return Stack(
-          children: [
-            child,
-            PositionedIndicatorContainer(
-              controller: controller,
-              child: AnimatedBuilder(
-                animation: Listenable.merge([controller, _spinCtrl]),
-                builder: (context, _) {
-                  final pullProgress = controller.value.clamp(0.0, 1.0);
-                  final spinning = controller.isLoading;
-                  final angle = spinning
-                      ? _spinCtrl.value * 2 * math.pi
-                      : pullProgress * 2 * math.pi;
-                  final active = spinning || controller.isDragging || controller.isArmed;
+    final spinning = widget.refreshState == RefreshIndicatorMode.refresh;
+    final pullProgress = widget.refreshTriggerPullDistance <= 0
+        ? 0.0
+        : (widget.pulledExtent / widget.refreshTriggerPullDistance).clamp(0.0, 1.0);
+    final active = widget.refreshState != RefreshIndicatorMode.inactive;
 
-                  return SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: CustomPaint(
-                      painter: _DustPainter(
-                        progress: spinning ? _spinCtrl.value : pullProgress,
-                        active: active,
-                        color: widget.color,
-                      ),
-                      child: Center(
-                        child: Opacity(
-                          opacity: pullProgress,
-                          child: Transform.rotate(
-                            angle: angle,
-                            child: SvgPicture.asset(
-                              _wheelAsset,
-                              width: 32,
-                              height: 32,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+    return AnimatedBuilder(
+      animation: _spinCtrl,
+      builder: (context, _) {
+        final angle = spinning
+            ? _spinCtrl.value * 2 * math.pi
+            : pullProgress * 2 * math.pi;
+
+        return SizedBox(
+          width: 52,
+          height: 52,
+          child: CustomPaint(
+            painter: _DustPainter(
+              progress: spinning ? _spinCtrl.value : pullProgress,
+              active: active,
+              color: widget.color,
+            ),
+            child: Center(
+              child: Opacity(
+                opacity: pullProgress,
+                child: Transform.rotate(
+                  angle: angle,
+                  child: SvgPicture.asset(
+                    _wheelAsset,
+                    width: 32,
+                    height: 32,
+                  ),
+                ),
               ),
             ),
-          ],
+          ),
         );
       },
-      child: widget.child,
     );
   }
 }

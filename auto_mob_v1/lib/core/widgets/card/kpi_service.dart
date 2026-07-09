@@ -66,10 +66,10 @@ class AmMaintenanceKpiCard extends StatelessWidget {
           children: [
             // Icona di Sfondo (Watermark)
             Positioned(
-              right: -30,
-              bottom: -20,
+              right: -10,
+              bottom: 0,
               child: Transform.rotate(
-                angle: -0.2, // Leggera rotazione stile design
+                angle: -0.1, // Leggera rotazione stile design
                 child: ShaderMask(
                   shaderCallback: (Rect bounds) {
                     return LinearGradient(
@@ -78,7 +78,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                       colors: [Colors.white.withValues(alpha: 0.2), color.withValues(alpha: 0.1)],
                     ).createShader(bounds);
                   },
-                  child: iconBuilder(160, Colors.white),
+                  child: iconBuilder(100, Colors.white),
                 ),
               ),
             ),

@@ -5,6 +5,7 @@ import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
+import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:flutter/material.dart';
@@ -238,6 +239,11 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       ),
     );
 
+    // Altezza reale del contenuto della Row dell'app bar: Padding(v:12)*2 +
+    // 45 (altezza di pillola/bottoni). Serve per dimensionare lo sliver.
+    const appBarContentHeight = 69.0;
+    final topSafeArea = MediaQuery.paddingOf(context).top;
+
     return BlocListener<DashboardBloc, DashboardState>(
       listenWhen: (previous, current) {
         final pv = previous is DashboardLoaded ? previous.vehicles : null;
@@ -246,64 +252,70 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       },
       listener: _onStateForDialogs,
       child: Scaffold(
-      backgroundColor: const Color(0xFF1A1C23),
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent.withValues(alpha: 0),
-        scrolledUnderElevation: 0,
-        title: OCLiquidGlassGroup(
-                settings: const OCLiquidGlassSettings(
-                  refractStrength: -0.130,
-                  blurRadiusPx: 1.0,
-                  specStrength: 0,
-                  specWidth: 0.0,
-                  specAngle: 145,
-                  blendPx: 70,
-                  specPower: 10,
+        backgroundColor: const Color(0xFF1A1C23),
+        body: SmartEdge(
+          blur: kHeavyEffects,
+          fallbackTint: const Color(0xFF1A1C23),
+          edges: [
+            EdgeBlur(
+              type: EdgeType.topEdge,
+              size: 160,
+              tintColor: const Color(0xFF17181E),
+              sigma: 10,
+              controlPoints: [
+                ControlPoint(position: 0.1, type: ControlPointType.visible),
+                ControlPoint(position: 0.6, type: ControlPointType.visible),
+                ControlPoint(position: 1.0, type: ControlPointType.transparent),
+              ],
+            ),
+            EdgeBlur(
+              type: EdgeType.bottomEdge,
+              size: 135,
+              tintColor: const Color(0xFF17181E),
+              sigma: 10,
+              controlPoints: [
+                ControlPoint(position: 0.5, type: ControlPointType.visible),
+                ControlPoint(position: 1.0, type: ControlPointType.transparent),
+              ],
+            ),
+          ],
+          // CustomScrollView + sliver refresh control: a differenza di un
+          // overlay, questo spinge fisicamente giu' l'header (sliver dopo di
+          // lui) durante il pull e lo tiene giu' finche' il refresh non finisce.
+          child: CustomScrollView(
+            // AlwaysScrollable+Bouncing: CupertinoSliverRefreshControl richiede
+            // overscroll per attivarsi, non disponibile con Clamping (default Android).
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: [
+              AmRefreshControlSliver(onRefresh: () => _handleRefresh(context)),
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: AmSliverAppBarDelegate(
+                  height: topSafeArea + appBarContentHeight,
+                  child: Padding(
+                    padding: EdgeInsets.only(top: topSafeArea),
+                    child: OCLiquidGlassGroup(
+                      settings: const OCLiquidGlassSettings(
+                        refractStrength: -0.130,
+                        blurRadiusPx: 1.0,
+                        specStrength: 0,
+                        specWidth: 0.0,
+                        specAngle: 145,
+                        blendPx: 70,
+                        specPower: 10,
+                      ),
+                      child: appBarContent,
+                    ),
+                  ),
                 ),
-                child: appBarContent,
-              )
-           ,
-      ),
-
-      body: SmartEdge(
-        blur: kHeavyEffects,
-        fallbackTint:  const Color(0xFF1A1C23),
-        edges: [
-          EdgeBlur(
-            type: EdgeType.topEdge,
-            size: 160,
-            tintColor: const Color(0xFF17181E),
-            sigma: 10,
-            controlPoints: [
-              ControlPoint(position: 0.1, type: ControlPointType.visible),
-              ControlPoint(position: 0.6, type: ControlPointType.visible),
-              ControlPoint(position: 1.0, type: ControlPointType.transparent),
-            ],
-          ),
-          EdgeBlur(
-            type: EdgeType.bottomEdge,
-            size: 135,
-            tintColor:  const Color(0xFF17181E),
-            sigma: 10,
-            controlPoints: [
-              ControlPoint(position: 0.5, type: ControlPointType.visible),
-              ControlPoint(position: 1.0, type: ControlPointType.transparent),
-            ],
-          ),
-        ],
-        child: AmWheelRefreshIndicator(
-          onRefresh: () => _handleRefresh(context),
-          child: SingleChildScrollView(
-          // AlwaysScrollable: il pull-to-refresh deve poter registrare il
-          // gesto anche quando il contenuto e' piu' corto della viewport.
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 200),
+              ),
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+              const SizedBox(height: 16),
 
               // lista auto
               BlocBuilder<DashboardBloc, DashboardState>(
@@ -498,11 +510,12 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 ),
               ),
               const SizedBox(height: 110),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
-        ),
-      ),
       ),
     );
   }

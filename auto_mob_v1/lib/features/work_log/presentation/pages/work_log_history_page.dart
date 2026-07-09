@@ -1,5 +1,6 @@
 ﻿import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
+import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_item_card.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
@@ -213,31 +214,29 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
     return null;
   }
 
+  /// Dispaccia il pull-to-refresh e attende il completamento (isRefreshing
+  /// torna false), sia in caso di successo che di errore. Un solo punto
+  /// condiviso: il refresh control ora vive una volta sola nel body, non
+  /// piu' duplicato per ogni branch di _WorkListView.
+  Future<void> _handleRefresh(BuildContext context) async {
+    final bloc = context.read<WorkLogHistoryBloc>();
+    bloc.add(const RefreshRequested());
+    await bloc.stream.firstWhere((s) => !s.isRefreshing);
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Altezza reale del contenuto della Row dell'app bar: Padding(v:12)*2 +
+    // 45 (altezza di pillola/bottoni). Serve per dimensionare lo sliver.
+    const appBarContentHeight = 69.0;
+    final topSafeArea = MediaQuery.paddingOf(context).top;
+
     return BlocListener<WorkLogHistoryBloc, WorkLogHistoryState>(
       listenWhen: (p, c) =>
           p.status != c.status || p.vehicles != c.vehicles,
       listener: _onStateForDialogs,
       child: Scaffold(
         backgroundColor: _background,
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent.withValues(alpha: 0),
-          scrolledUnderElevation: 0,
-          title: OCLiquidGlassGroup(
-            settings: const OCLiquidGlassSettings(
-              refractStrength: -0.130,
-              blurRadiusPx: 1.0,
-              specStrength: 0,
-              specWidth: 0.0,
-              specAngle: 145,
-              blendPx: 20,
-              specPower: 10,
-            ),
-            child: _AppBarContent(onAdd: _addWork),
-          ),
-        ),
         body: Stack(
           children: [
             SmartEdge(
@@ -270,9 +269,45 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
                   ],
                 ),
               ],
-              child: BlocBuilder<WorkLogHistoryBloc, WorkLogHistoryState>(
-                builder: (context, state) =>
-                    _WorkListView(state: state, controller: _scroll),
+              // CustomScrollView + sliver refresh control: a differenza di un
+              // overlay, questo spinge fisicamente giu' l'header (sliver dopo
+              // di lui) durante il pull e lo tiene giu' finche' il refresh
+              // non finisce.
+              child: CustomScrollView(
+                controller: _scroll,
+                // AlwaysScrollable+Bouncing: CupertinoSliverRefreshControl
+                // richiede overscroll per attivarsi, non disponibile con
+                // Clamping (default Android).
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                slivers: [
+                  AmRefreshControlSliver(onRefresh: () => _handleRefresh(context)),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: AmSliverAppBarDelegate(
+                      height: topSafeArea + appBarContentHeight,
+                      child: Padding(
+                        padding: EdgeInsets.only(top: topSafeArea),
+                        child: OCLiquidGlassGroup(
+                          settings: const OCLiquidGlassSettings(
+                            refractStrength: -0.130,
+                            blurRadiusPx: 1.0,
+                            specStrength: 0,
+                            specWidth: 0.0,
+                            specAngle: 145,
+                            blendPx: 20,
+                            specPower: 10,
+                          ),
+                          child: _AppBarContent(onAdd: _addWork),
+                        ),
+                      ),
+                    ),
+                  ),
+                  BlocBuilder<WorkLogHistoryBloc, WorkLogHistoryState>(
+                    builder: (context, state) => _WorkListView(state: state),
+                  ),
+                ],
               ),
             ),
           ],
@@ -398,10 +433,13 @@ class _VehicleDropdown extends StatelessWidget {
 }
 
 /// La lista vera: gestisce i 3 casi (spinner inline, vuoto, lista paginata).
+/// Ritorna sempre UNO sliver, per stare dentro la CustomScrollView condivisa
+/// del body insieme al refresh control e all'app bar sliver (niente
+/// ListView/ListView.builder qui: creerebbero uno scroll annidato
+/// indipendente e romperebbero il pull-to-refresh condiviso).
 class _WorkListView extends StatelessWidget {
   final WorkLogHistoryState state;
-  final ScrollController controller;
-  const _WorkListView({required this.state, required this.controller});
+  const _WorkListView({required this.state});
 
   @override
   Widget build(BuildContext context) {
@@ -410,73 +448,54 @@ class _WorkListView extends StatelessWidget {
     if (works.isEmpty) {
       // Cambio veicolo / refresh in corso: spinner centrale.
       if (state.isLoadingMore) {
-        return const Center(
-          child: Padding(
-            padding: EdgeInsets.only(top: 140),
-            child: CircularProgressIndicator(color: _orange),
+        return const SliverToBoxAdapter(
+          child: Center(
+            child: Padding(
+              padding: EdgeInsets.only(top: 140),
+              child: CircularProgressIndicator(color: _orange),
+            ),
           ),
         );
       }
       // Pronto ma il veicolo non ha lavori: messaggio inline (niente pop-up).
-      // Resta comunque scrollabile (ListView invece di un widget statico)
-      // cosi' il pull-to-refresh puo' registrare il gesto anche a lista vuota.
       if (state.status == HistoryStatus.loaded &&
           state.selectedVehicleId != null) {
-        return AmWheelRefreshIndicator(
-          onRefresh: () => _handleRefresh(context),
-          child: ListView(
-            controller: controller,
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            children: const [_EmptyWorks()],
-          ),
-        );
+        return const SliverToBoxAdapter(child: _EmptyWorks());
       }
       // Primo caricamento: il body resta vuoto dietro al pop-up spinner.
-      // Niente refresh control: non c'e' ancora nulla da tirare giu'.
-      return const SizedBox.shrink();
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    return AmWheelRefreshIndicator(
-      onRefresh: () => _handleRefresh(context),
-      child: ListView.builder(
-        controller: controller,
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(10, 150, 10, 0),
-        itemCount: works.length + 1, // +1 = footer (spinner o spazio finale)
-        itemBuilder: (context, i) {
-          if (i == works.length) {
-            if (state.isLoadingMore) {
-              return const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
-                child: Center(child: CircularProgressIndicator(color: _orange)),
-              );
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, i) {
+            if (i == works.length) {
+              if (state.isLoadingMore) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator(color: _orange)),
+                );
+              }
+              return const SizedBox(height: 120); // spazio finale sotto la lista
             }
-            return const SizedBox(height: 120); // spazio finale sotto la lista
-          }
 
-          final w = works[i];
-          return WorkLogItemCard(
-            title: _workTitle(w),
-            date: _formatDate(w.serviceDate),
-            km: _formatKm(w.serviceKm),
-            description: (w.notes != null && w.notes!.trim().isNotEmpty)
-                ? w.notes!.trim()
-                : '—',
-            hasWorkshop: w.hasWorkshop,
-          );
-        },
+            final w = works[i];
+            return WorkLogItemCard(
+              title: _workTitle(w),
+              date: _formatDate(w.serviceDate),
+              km: _formatKm(w.serviceKm),
+              description: (w.notes != null && w.notes!.trim().isNotEmpty)
+                  ? w.notes!.trim()
+                  : '—',
+              hasWorkshop: w.hasWorkshop,
+            );
+          },
+          childCount: works.length + 1, // +1 = footer (spinner o spazio finale)
+        ),
       ),
     );
-  }
-
-  /// Dispaccia il pull-to-refresh e attende il completamento (isRefreshing
-  /// torna false), sia in caso di successo che di errore.
-  Future<void> _handleRefresh(BuildContext context) async {
-    final bloc = context.read<WorkLogHistoryBloc>();
-    bloc.add(const RefreshRequested());
-    await bloc.stream.firstWhere((s) => !s.isRefreshing);
   }
 }
 

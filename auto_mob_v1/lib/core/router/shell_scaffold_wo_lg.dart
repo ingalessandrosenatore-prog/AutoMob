@@ -84,7 +84,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
       route: '/servizi',
       icon: Icons.list_sharp,
       activeIcon: Icons.list,
-      label: 'SERVIZI',
+      label: 'SERVIZ',
     ),
   ];
 
