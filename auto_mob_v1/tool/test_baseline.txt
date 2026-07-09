@@ -1,0 +1,30 @@
+# =====================================================================
+#  BASELINE COPERTURA TEST — debito tecnico tracciato (non silenziato).
+# ---------------------------------------------------------------------
+#  Questi file di logica (usecase/repository/bloc) NON avevano un test
+#  quando e' stato introdotto tool/check_test_coverage.dart. Il gate
+#  blocca solo i file NUOVI senza test: questo debito non deve crescere.
+#  Quando scrivi il test per uno di questi, CANCELLA la riga corrispondente.
+#
+#  Formato: path relativo a lib/
+# =====================================================================
+features/auth/data/repositories/auth_repository_impl.dart
+features/auth/domain/usecases/login_with_apple.dart
+features/auth/domain/usecases/login_with_email.dart
+features/auth/domain/usecases/login_with_google.dart
+features/auth/domain/usecases/logout.dart
+features/auth/domain/usecases/signup_with_email.dart
+features/auth/presentation/bloc/auth_bloc.dart
+features/dashboard/domain/usecases/get_profile.dart
+features/dashboard/presentation/bloc/dashboard_bloc.dart
+features/vehicle/domain/usecases/compute_maintenance_kpis.dart
+features/vehicle/domain/usecases/save_draft_step.dart
+features/vehicle/domain/usecases/save_vehicle.dart
+features/vehicle/domain/usecases/update_vehicle_km.dart
+features/vehicle/presentation/bloc/add_vehicle_bloc.dart
+features/work_log/data/repositories/worklog_repository_impl.dart
+features/work_log/domain/usecases/create_work_log.dart
+features/work_log/domain/usecases/get_vehicle_options.dart
+features/work_log/domain/usecases/get_vehicle_works.dart
+features/work_log/presentation/bloc/work_log_bloc.dart
+features/work_log/presentation/bloc/work_log_history_bloc.dart
