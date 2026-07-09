@@ -265,37 +265,22 @@ class _PopUpState extends State<MorphPopUp>
     with SingleTickerProviderStateMixin {
   bool _closing = false;
 
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    if (_closing) widget.ctrlm.removeListener(_onCloseTick);
-    super.dispose();
-  }
-
-  // Il pop avviene qui, appena il popup è visivamente sparito (t<=0),
-  // invece di aspettare `whenComplete` della SpringSimulation: con bounce>0
-  // la molla resta sotto tolleranza numerica per svariati frame *dopo*
-  // essere già invisibile, tenendo la barriera full-screen "opaque" a
-  // intercettare i tap e dando la sensazione di UI bloccata.
-  void _onCloseTick() {
-    if (widget.ctrlm.value <= 0) {
-      widget.ctrlm.removeListener(_onCloseTick);
-      _closing = false;
-      if (mounted) Navigator.of(context).pop();
-    }
-  }
-
   void _closePopUp() {
     if (_closing) return;
     _closing = true;
-    widget.ctrlm.addListener(_onCloseTick);
-    widget.ctrlm.animateWith(
-      SpringSimulation(_springDescription, widget.ctrlm.value, 0, 0),
-    );
+    // La molla di chiusura ha bounce 0: raggiunge lo 0 in modo *asintotico*,
+    // senza mai attraversarlo. Un check `value <= 0` quindi non scatterebbe
+    // MAI, la route resterebbe montata e la sua barriera full-screen (più le
+    // voci invisibili) continuerebbe a intercettare i tap → pagina "freezata".
+    // `whenComplete` invece scatta appena la molla si assesta entro tolleranza,
+    // quando il popup è già visivamente sparito.
+    widget.ctrlm
+        .animateWith(
+          SpringSimulation(_springDescription, widget.ctrlm.value, 0, 0),
+        )
+        .whenComplete(() {
+          if (mounted) Navigator.of(context).pop();
+        });
   }
 
   static final SpringDescription _springDescription =

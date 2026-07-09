@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 
 /// Campo di testo personalizzato AutoMob.
 /// Tutto è controllato dall'esterno: tipo, oscuramento, obbligatorietà.
-class AmTextField extends StatelessWidget {
+///
+/// Quando [obscureText] è true il campo è trattato come password: mostra da
+/// solo un pulsante "occhietto" che alterna testo visibile/nascosto (stato
+/// locale, gestito internamente — l'eventuale [suffixIcon] passato dall'esterno
+/// viene ignorato in questo caso).
+class AmTextField extends StatefulWidget {
   final String label;
   final String placeholder;
   final TextEditingController controller;
@@ -37,6 +42,29 @@ class AmTextField extends StatelessWidget {
   });
 
   @override
+  State<AmTextField> createState() => _AmTextFieldState();
+}
+
+class _AmTextFieldState extends State<AmTextField> {
+  /// Stato locale del mascheramento. Parte dal valore richiesto dall'esterno
+  /// e viene alternato dall'occhietto solo per i campi password.
+  late bool _obscured = widget.obscureText;
+
+  /// Suffisso da mostrare nel campo. Per i campi password è l'occhietto
+  /// interattivo; altrimenti l'eventuale icona passata dall'esterno.
+  Widget? get _suffix {
+    if (!widget.obscureText) return widget.suffixIcon;
+    return IconButton(
+      onPressed: () => setState(() => _obscured = !_obscured),
+      splashRadius: 20,
+      icon: Icon(
+        _obscured ? Icons.visibility_off : Icons.visibility,
+        color: const Color(0xFF48484A),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     const Color labelColor = Color(0xFF636366);
     const Color asteriskColor = Color(0xFF4A90E2);
@@ -58,8 +86,8 @@ class AmTextField extends StatelessWidget {
                 letterSpacing: 1.1,
               ),
               children: [
-                TextSpan(text: label.toUpperCase()),
-                if (isRequired)
+                TextSpan(text: widget.label.toUpperCase()),
+                if (widget.isRequired)
                   const TextSpan(
                     text: ' *',
                     style: TextStyle(color: asteriskColor),
@@ -79,9 +107,9 @@ class AmTextField extends StatelessWidget {
               ),
             ),
             child: TextFormField(
-              controller: controller,
-              obscureText: obscureText,
-              keyboardType: keyboardType,
+              controller: widget.controller,
+              obscureText: _obscured,
+              keyboardType: widget.keyboardType,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -90,25 +118,25 @@ class AmTextField extends StatelessWidget {
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16, vertical: 20),
-                hintText: placeholder,
+                hintText: widget.placeholder,
                 hintStyle: const TextStyle(
                   color: hintColor,
                   fontSize: 16,
                 ),
                 border: InputBorder.none,
-                suffixIcon: suffixIcon,
+                suffixIcon: _suffix,
               ),
-              onChanged: onChanged,
-              onEditingComplete: onEditingComplete,
+              onChanged: widget.onChanged,
+              onEditingComplete: widget.onEditingComplete,
             ),
           ),
           // Messaggio sotto il campo (errore rosso acceso o avviso rosso tenue).
-          if (errorText != null) ...[
+          if (widget.errorText != null) ...[
             const SizedBox(height: 6),
             Text(
-              errorText!,
+              widget.errorText!,
               style: TextStyle(
-                color: errorColor,
+                color: widget.errorColor,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),

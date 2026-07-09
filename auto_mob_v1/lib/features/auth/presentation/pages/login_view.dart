@@ -86,10 +86,6 @@ class _LoginViewState extends State<LoginView> {
                         isRequired: true,
                         obscureText: true,
                         keyboardType: TextInputType.visiblePassword,
-                        suffixIcon: const Icon(
-                          Icons.visibility_off,
-                          color: Color(0xFF48484A),
-                        ),
                       ),
                     ],
                   ),

@@ -104,10 +104,6 @@ class _RegistrationViewState extends State<RegistrationView> {
                           isRequired: true,
                           obscureText: true,
                           keyboardType: TextInputType.visiblePassword,
-                          suffixIcon: const Icon(
-                            Icons.visibility_off,
-                            color: Color(0xFF48484A),
-                          ),
                         ),
                       ],
                     ),
