@@ -37,6 +37,11 @@ class AuthCancelledFailure extends Failure {
   const AuthCancelledFailure() : super("Accesso annullato.");
 }
 
+class EmailNotConfirmedFailure extends Failure {
+  const EmailNotConfirmedFailure()
+      : super("Non hai verificato la tua email. Verifica e riprova.");
+}
+
 class EmailAlreadyInUseFailure extends Failure {
   const EmailAlreadyInUseFailure() : super("Questa email � gi� registrata. Effettua il login.");
 }

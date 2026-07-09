@@ -4,6 +4,7 @@ import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
+import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,6 +46,10 @@ class _HomeViewBody extends StatefulWidget {
 class _HomeViewBodyState extends State<_HomeViewBody> {
   late final PageController _pageController;
 
+  // Tiene traccia se un pop-up di stato e' attualmente aperto, per poterlo
+  // chiudere prima di mostrarne un altro (evita pop-up sovrapposti).
+  bool _dialogOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -55,6 +60,62 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _closeDialogIfOpen() {
+    if (_dialogOpen) {
+      Navigator.of(context, rootNavigator: true).pop();
+      _dialogOpen = false;
+    }
+  }
+
+  /// Effetto collaterale: in base allo stato apro/chiudo il pop-up giusto.
+  /// Stesso pattern della pagina lavori: spinner durante il caricamento,
+  /// warning con scorciatoia quando non ci sono ancora veicoli registrati.
+  void _onStateForDialogs(BuildContext context, DashboardState s) {
+    _closeDialogIfOpen();
+
+    if (s is DashboardLoading || s is DashboardInitial) {
+      _dialogOpen = true;
+      showAmStatusDialog(
+        context,
+        showSpinner: true,
+        iconColor: const Color(0xFFFF6B00),
+        title: 'Caricamento',
+        message: 'Sto recuperando i tuoi veicoli…',
+      );
+      return;
+    }
+
+    if (s is DashboardLoaded &&
+        s.vehicles.length == 1 &&
+        s.vehicles.first.isPlaceholder) {
+      _dialogOpen = true;
+      showAmStatusDialog(
+        context,
+        icon: Icons.directions_car_outlined,
+        iconColor: const Color(0xFFFFB4AB),
+        title: 'Registra il tuo primo veicolo',
+        message: 'Non hai ancora nessun veicolo. Aggiungine uno per '
+            'iniziare a usare AutoMob.',
+        actions: [
+          AmDialogAction(
+            label: 'Annulla',
+            color: const Color(0xFF8E8E93),
+            onPressed: _closeDialogIfOpen,
+          ),
+          AmDialogAction(
+            label: 'Registra',
+            color: const Color(0xFFFF6B00),
+            filled: true,
+            onPressed: () {
+              _closeDialogIfOpen();
+              context.pushNamed('aggiungi_veicolo');
+            },
+          ),
+        ],
+      );
+    }
   }
 
   @override
@@ -160,7 +221,14 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       ),
     );
 
-    return Scaffold(
+    return BlocListener<DashboardBloc, DashboardState>(
+      listenWhen: (previous, current) {
+        final pv = previous is DashboardLoaded ? previous.vehicles : null;
+        final cv = current is DashboardLoaded ? current.vehicles : null;
+        return previous.runtimeType != current.runtimeType || pv != cv;
+      },
+      listener: _onStateForDialogs,
+      child: Scaffold(
       backgroundColor: const Color(0xFF1A1C23),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -211,13 +279,15 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 100),
+              const SizedBox(height: 200),
 
               // lista auto
               BlocBuilder<DashboardBloc, DashboardState>(
                 builder: (context, state) {
                   if (state is DashboardLoading || state is DashboardInitial) {
-                    return const Center(child: CircularProgressIndicator());
+                    // Il caricamento e' comunicato dal pop-up di stato
+                    // (BlocListener sopra): il body resta vuoto dietro di esso.
+                    return const SizedBox.shrink();
                   }
                   if (state is DashboardError) {
                     return Center(
@@ -407,6 +477,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

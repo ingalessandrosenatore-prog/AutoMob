@@ -31,6 +31,17 @@ class AuthDataSourceException implements Exception {
   String toString() => 'AuthDataSourceException($code): $message';
 }
 
+/// Login rifiutato perche' l'email non e' ancora stata confermata.
+/// Isolata da [AuthDataSourceException] perche' Supabase la segnala con un
+/// `code` semantico dedicato ('email_not_confirmed'), distinto dallo status
+/// HTTP generico che [AuthDataSourceException.code] gia' porta con se'.
+class EmailNotConfirmedException implements Exception {
+  const EmailNotConfirmedException();
+
+  @override
+  String toString() => 'EmailNotConfirmedException';
+}
+
 class VehicleDataSourceException implements Exception {
   final String message;
   final String? code;

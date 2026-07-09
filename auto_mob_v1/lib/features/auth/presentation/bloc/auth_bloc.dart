@@ -1,5 +1,6 @@
 ﻿
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/error/exceptions/exception.dart';
 import '../../domain/usecases/check_session.dart';
 import '../../domain/usecases/login_with_email.dart';
 import '../../domain/usecases/login_with_google.dart';
@@ -66,9 +67,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     
     final result = await loginWithEmail(event.email, event.password);
-    
+
     result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
+      (failure) => emit(AuthError(
+        message: failure.message,
+        emailNotConfirmed: failure is EmailNotConfirmedFailure,
+      )),
       (user) => emit(AuthAuthenticated(user: user)),
     );
   }

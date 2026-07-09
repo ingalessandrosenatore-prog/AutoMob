@@ -10,7 +10,7 @@
 //  report di fine loop).
 // =====================================================================
 
-import 'package:auto_mob_v1/core/error/exceptions/Exceptions.dart';
+import 'package:auto_mob_v1/core/error/exceptions/exceptions.dart';
 import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
 import 'package:auto_mob_v1/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:auto_mob_v1/features/auth/data/models/app_user_model.dart';
@@ -68,6 +68,19 @@ void main() {
       final result = await repository.loginWithEmail(tEmail, tPassword);
 
       expect(result, const Left<Failure, AppAuthUser>(NetworkFailure()));
+    });
+
+    test('mappa EmailNotConfirmedException in EmailNotConfirmedFailure',
+        () async {
+      when(() => remote.loginWithEmail(tEmail, tPassword))
+          .thenThrow(const EmailNotConfirmedException());
+
+      final result = await repository.loginWithEmail(tEmail, tPassword);
+
+      expect(
+        result,
+        const Left<Failure, AppAuthUser>(EmailNotConfirmedFailure()),
+      );
     });
   });
 

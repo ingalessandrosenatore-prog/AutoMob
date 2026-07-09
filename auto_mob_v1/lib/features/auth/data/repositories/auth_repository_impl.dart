@@ -3,7 +3,7 @@ import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../../../../core/error/exceptions/exception.dart';
-import '../../../../core/error/exceptions/Exceptions.dart';
+import '../../../../core/error/exceptions/exceptions.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -15,6 +15,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final authUser = await remoteDataSource.loginWithEmail(email, password);
       return Right(authUser);
+    } on EmailNotConfirmedException {
+      return const Left(EmailNotConfirmedFailure());
     } on AuthDataSourceException catch (e) {
       return Left(_mapAuthException(e));
     } on NetworkException {

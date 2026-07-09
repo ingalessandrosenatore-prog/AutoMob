@@ -28,10 +28,15 @@ class AuthUnauthenticated extends AuthState {}
 class AuthError extends AuthState {
   final String message;
 
-  AuthError({required this.message});
+  /// True quando il login e' stato rifiutato perche' l'email non e' ancora
+  /// stata confermata: la UI mostra un pop-up dedicato con "Riprova" invece
+  /// del banner d'errore generico.
+  final bool emailNotConfirmed;
+
+  AuthError({required this.message, this.emailNotConfirmed = false});
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [message, emailNotConfirmed];
 }
 
 // Stato di logout completato

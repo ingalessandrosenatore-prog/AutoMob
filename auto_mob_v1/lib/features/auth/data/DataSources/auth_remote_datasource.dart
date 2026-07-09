@@ -1,7 +1,7 @@
 ﻿import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/error/exceptions/Exceptions.dart';
+import '../../../../core/error/exceptions/exceptions.dart';
 import '../models/app_user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -36,6 +36,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       return AppAuthUserModel.fromSupabaseUser(response.user!);
     } on AuthException catch (e) {
+      // Supabase segnala l'email non confermata con un `code` semantico
+      // dedicato (non uno statusCode qualsiasi): va isolato PRIMA di
+      // scartarlo nella mappatura generica sotto, altrimenti si perde.
+      if (e.code == 'email_not_confirmed') {
+        throw const EmailNotConfirmedException();
+      }
       throw AuthDataSourceException(e.message, code: e.statusCode);
     } on SocketException {
       throw const NetworkException('Errore di connessione');

@@ -140,6 +140,25 @@ void main() {
   );
 
   blocTest<AuthBloc, AuthState>(
+    'emette [loading, error] con emailNotConfirmed quando l\'email non e\' '
+    'confermata',
+    build: () {
+      when(() => loginWithEmail(tEmail, tPassword)).thenAnswer(
+          (_) async => const Left(EmailNotConfirmedFailure()));
+      return buildBloc();
+    },
+    act: (bloc) =>
+        bloc.add(LoginWithEmailEvent(email: tEmail, password: tPassword)),
+    expect: () => [
+      AuthLoading(),
+      AuthError(
+        message: const EmailNotConfirmedFailure().message,
+        emailNotConfirmed: true,
+      ),
+    ],
+  );
+
+  blocTest<AuthBloc, AuthState>(
     'emette [loading, authenticated] quando la registrazione riesce',
     build: () {
       when(() => signupWithEmail(tName, tEmail, tPassword))
