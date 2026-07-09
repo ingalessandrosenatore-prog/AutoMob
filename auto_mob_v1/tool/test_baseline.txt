@@ -10,7 +10,6 @@
 # =====================================================================
 features/auth/domain/usecases/login_with_apple.dart
 features/auth/domain/usecases/login_with_google.dart
-features/auth/presentation/bloc/auth_bloc.dart
 features/dashboard/domain/usecases/get_profile.dart
 features/dashboard/presentation/bloc/dashboard_bloc.dart
 features/vehicle/domain/usecases/compute_maintenance_kpis.dart
