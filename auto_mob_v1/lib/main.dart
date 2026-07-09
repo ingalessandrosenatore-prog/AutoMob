@@ -40,14 +40,16 @@ class AutoMobApp extends StatelessWidget {
       // DashboardBloc/WorkLogHistoryBloc sono lazySingleton (cache dati tra
       // i cambi di tab, vedi injection_container.dart): senza questo reset
       // sopravvivrebbero al logout, mostrando i dati del vecchio utente a
-      // chi fa login dopo sullo stesso device. `listenWhen` richiede una
-      // vera transizione autenticato -> sloggato, cosi' il cold-boot
-      // (AuthInitial -> AuthUnauthenticated, nessun login ancora avvenuto)
-      // non spreca un reset inutile.
+      // chi fa login dopo sullo stesso device.
+      // NB: AuthBloc._onLogout emette AuthLoading() PRIMA di AuthLoggedOut(),
+      // quindi lo stato immediatamente precedente a AuthLoggedOut e' sempre
+      // AuthLoading, mai AuthAuthenticated: un guard su `previous` si
+      // perderebbe la transizione vera. Si reagisce solo su `current`.
+      // Nessun rischio di reset superfluo: resetLazySingleton su un
+      // singleton mai istanziato (es. cold-boot) e' un no-op sicuro.
       child: BlocListener<AuthBloc, AuthState>(
-        listenWhen: (previous, current) =>
-            previous is AuthAuthenticated &&
-            (current is AuthLoggedOut || current is AuthUnauthenticated),
+        listenWhen: (_, current) =>
+            current is AuthLoggedOut || current is AuthUnauthenticated,
         listener: (_, _) {
           di.sl.resetLazySingleton<DashboardBloc>();
           di.sl.resetLazySingleton<WorkLogHistoryBloc>();
