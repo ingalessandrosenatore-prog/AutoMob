@@ -1,4 +1,6 @@
-﻿import 'package:fpdart/fpdart.dart';
+﻿import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/exceptions/exception.dart';
 import '../../../../core/error/exceptions/exceptions.dart';
@@ -66,6 +68,19 @@ class VehicleRepositoryImpl implements VehicleRepository {
       return const Left(NetworkFailure());
     } catch (_) {
       return const Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateVehiclePhoto({
+    required String targa,
+    required File foto,
+  }) async {
+    try {
+      await localDataSource.saveFoto(foto, targa);
+      return const Right(null);
+    } on CacheException {
+      return const Left(StorageFailure());
     }
   }
 

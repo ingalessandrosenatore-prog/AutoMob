@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/Effects/pulsing_glow_border.dart';
+import '../../../../core/widgets/buttons/am_pull_down_lg.dart';
 
 /// Card del veicolo nel PageView della home.
 /// Card solida con ombra (3D), niente blur in tempo reale → swipe fluido.
@@ -19,6 +20,10 @@ class CardAuto extends StatelessWidget {
   /// Tap sul box Revisione (azione futura).
   final VoidCallback? onRevisionTap;
 
+  /// Voce "MODIFICA FOTO" del pull-down sulla matita -> apre il picker e
+  /// salva la nuova foto del veicolo.
+  final VoidCallback? onEditPhotoTap;
+
   const CardAuto({
     super.key,
     required this.marca,
@@ -29,6 +34,7 @@ class CardAuto extends StatelessWidget {
     this.nextRevisionDate,
     this.onKmTap,
     this.onRevisionTap,
+    this.onEditPhotoTap,
   });
 
   String get _revisionStatus {
@@ -60,33 +66,41 @@ class CardAuto extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: AspectRatio(
-                    aspectRatio: 1.6,
+                    aspectRatio: 2.0,
                     child: _VehicleImage(immaginePath: immaginePath),
                   ),
                 ),
                 Positioned(
                   top: 12,
                   right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.4),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.edit,
-                      color: Colors.white,
-                      size: 18,
-                    ),
+                  child: AmPullDownLG(
+                    brand: '',
+                    lable: '',
+                    onTap: () {},
+                    larghezza: 260,
+                    buttonIcons: Icons.edit,
+                    buttonIconsSize: 18,
+                    buttonIconColor: Colors.white,
+                    buttonLableStyle: const TextStyle(fontSize: 0),
+                    arrow: false,
+                    children: [
+                      ItemMorphPopUp(
+                        icon: Icons.photo_camera_outlined,
+                        text: "MODIFICA FOTO",
+                        onTap: onEditPhotoTap ?? () {},
+                        iconColor: const Color(0xFFF48A37),
+                        iconSize: 20,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
 
             // Box Nome / Anno (a tutta larghezza)
             _InfoTile(marca: marca, modello: modello, anno: anno),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
             // Box Revisione + Km (stessa altezza, cliccabili)
             IntrinsicHeight(
@@ -98,8 +112,9 @@ class CardAuto extends StatelessWidget {
                     child: _TapTile(
                       onTap: onRevisionTap,
                       watermarkIcon: Icons.calendar_today,
-                      child:Row(
+                      child:Column(
                         mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 3,
                         children: [
                           const Text("REVISIONE", style: TextStyle(
                             color: Colors.white,
@@ -121,12 +136,10 @@ class CardAuto extends StatelessWidget {
                       child: _TapTile(
                         onTap: onKmTap,
                         watermarkIcon: Icons.speed_outlined,
-                        child: Row(
+                        child: Column(
+                          spacing: 3,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-
-
-
                             Text(
                               kmTotali,
                               style: const TextStyle(
@@ -135,6 +148,7 @@ class CardAuto extends StatelessWidget {
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
+                            const _RevisionStatusPill(status: "AGGIORNA"),
                           ],
                         ),
                       ),
@@ -325,7 +339,7 @@ class _TapTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 onTap: onTap,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                   child: Center(child: child),
                 ),
               ),

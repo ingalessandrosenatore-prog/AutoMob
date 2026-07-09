@@ -6,6 +6,8 @@
 //  passaggio dei valori. Qui usiamo updateKm come esempio.
 // =====================================================================
 
+import 'dart:io';
+
 import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
 import 'package:auto_mob_v1/core/error/exceptions/exceptions.dart';
 import 'package:auto_mob_v1/features/vehicle/data/datasources/vehicle_draft_local_data_source.dart';
@@ -19,10 +21,16 @@ class MockRemote extends Mock implements VehicleRemoteDataSource {}
 
 class MockLocal extends Mock implements VehicleDraftLocalDataSource {}
 
+class FakeFile extends Fake implements File {}
+
 void main() {
   late VehicleRepositoryImpl repository;
   late MockRemote remote;
   late MockLocal local;
+
+  setUpAll(() {
+    registerFallbackValue(FakeFile());
+  });
 
   setUp(() {
     remote = MockRemote();
@@ -61,6 +69,34 @@ void main() {
       final result = await repository.updateKm(vehicleId: 'v1', newKm: 12000);
 
       expect(result, const Left<Failure, int>(NetworkFailure()));
+    });
+  });
+
+  group('updateVehiclePhoto', () {
+    final tFile = File('veicolo_AB123CD.jpg');
+
+    test('ritorna Right e riusa saveFoto con la stessa targa', () async {
+      when(() => local.saveFoto(tFile, 'AB123CD')).thenAnswer((_) async {});
+
+      final result = await repository.updateVehiclePhoto(
+        targa: 'AB123CD',
+        foto: tFile,
+      );
+
+      expect(result, const Right<Failure, void>(null));
+      verify(() => local.saveFoto(tFile, 'AB123CD')).called(1);
+    });
+
+    test('mappa CacheException in StorageFailure', () async {
+      when(() => local.saveFoto(tFile, 'AB123CD'))
+          .thenThrow(const CacheException('boom'));
+
+      final result = await repository.updateVehiclePhoto(
+        targa: 'AB123CD',
+        foto: tFile,
+      );
+
+      expect(result, const Left<Failure, void>(StorageFailure()));
     });
   });
 }

@@ -220,7 +220,13 @@ class _AmPullDownLGState extends State<AmPullDownLG>
       context: context,
       barrierDismissible: false,
       barrierLabel: 'chiudi',
-      barrierColor: Colors.white.withValues(alpha: 0),
+      barrierColor: Colors.transparent,
+      // L'animazione di apertura/chiusura è gestita interamente da `m`
+      // (spring controller): la transizione di default della route (200ms)
+      // altrimenti si somma a quella, tenendo la barriera "opaque" a
+      // intercettare i tap per altri ~200ms dopo che il popup è già
+      // sparito visivamente, dando la sensazione di UI bloccata.
+      transitionDuration: Duration.zero,
       pageBuilder:
           (
             BuildContext context,
@@ -283,11 +289,29 @@ class _PopUpState extends State<MorphPopUp>
   Widget build(BuildContext context) {
     // TODO: implement build
     const altezzaRiga = 48.0;
+    const margine = 8.0;
 
     final altezzaFinale = widget.children.length * altezzaRiga + 16;
 
+    // Direzione dinamica: se non c'è spazio a sufficienza a destra del
+    // bottone, il popup si apre verso sinistra (allineando il bordo destro
+    // al bordo destro del bottone) invece di uscire dallo schermo.
+    final screenWidth = MediaQuery.of(context).size.width;
+    final apreVersoSinistra =
+        widget.rectButton.left + widget.larghezza > screenWidth - margine;
+    final double leftFinale;
+    if (widget.larghezza + margine * 2 > screenWidth) {
+      leftFinale = margine;
+    } else {
+      final maxLeft = screenWidth - widget.larghezza - margine;
+      final leftNaturale = apreVersoSinistra
+          ? widget.rectButton.right - widget.larghezza
+          : widget.rectButton.left;
+      leftFinale = leftNaturale.clamp(margine, maxLeft).toDouble();
+    }
+
     final reactFine = Rect.fromLTWH(
-      widget.rectButton.left, // left: stesso angolo del bottone
+      leftFinale,
       widget.rectButton.top,
       widget.larghezza,
       altezzaFinale,

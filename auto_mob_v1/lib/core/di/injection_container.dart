@@ -26,6 +26,7 @@ import '../../features/vehicle/domain/usecases/save_draft_step.dart';
 import '../../features/vehicle/domain/usecases/save_vehicle.dart';
 import '../../features/vehicle/domain/usecases/get_vehicles.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_km.dart';
+import '../../features/vehicle/domain/usecases/update_vehicle_photo.dart';
 import '../../features/vehicle/domain/usecases/compute_maintenance_kpis.dart';
 import '../../features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import '../../features/vehicle/presentation/bloc/km_update_cubit.dart';
@@ -114,6 +115,7 @@ Future<void> _initVehicle() async {
   sl.registerLazySingleton<SaveVehicle>(() => SaveVehicle(sl()));
   sl.registerLazySingleton<GetVehicles>(() => GetVehicles(sl()));
   sl.registerLazySingleton<UpdateVehicleKm>(() => UpdateVehicleKm(sl()));
+  sl.registerLazySingleton<UpdateVehiclePhoto>(() => UpdateVehiclePhoto(sl()));
 
   // Cubit modale "Aggiorna KM" — factory: nuova istanza ad ogni apertura.
   sl.registerFactory<KmUpdateCubit>(() => KmUpdateCubit(sl()));
@@ -142,7 +144,11 @@ Future<void> _initDashboard() async {
   // BLoC — factory: nuova istanza ad ogni apertura della home.
   // Riusa GetVehicles della feature vehicle (domain shared via use case).
   sl.registerFactory<DashboardBloc>(
-    () => DashboardBloc(getVehicles: sl(), computeKpis: sl()),
+    () => DashboardBloc(
+      getVehicles: sl(),
+      computeKpis: sl(),
+      updateVehiclePhoto: sl(),
+    ),
   );
 }
 

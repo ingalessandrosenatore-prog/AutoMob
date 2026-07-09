@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Card KPI tridimensionale per la manutenzione.
 /// Mostra lo stato, la valutazione di affidabilità e il pulsante per i dettagli.
 class AmMaintenanceKpiCard extends StatelessWidget {
-  final IconData icon;
+  final Widget Function(double size, Color color) iconBuilder;
   final Color color;
   final String label;
   final int remainingKm;
@@ -14,7 +14,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
 
   const AmMaintenanceKpiCard({
     super.key,
-    required this.icon,
+    required this.iconBuilder,
     required this.color,
     required this.label,
     required this.remainingKm,
@@ -36,7 +36,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
@@ -78,11 +78,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                       colors: [Colors.white.withValues(alpha: 0.2), color.withValues(alpha: 0.1)],
                     ).createShader(bounds);
                   },
-                  child: Icon(
-                    icon,
-                    size: 160,
-                    // Il colore base viene sovrascritto dallo ShaderMask
-                  ),
+                  child: iconBuilder(160, Colors.white),
                 ),
               ),
             ),
@@ -92,7 +88,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
               child: InkWell(
                 onTap: onTap,
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(14),
                   child: Row(
                     children: [
                       // Contenuto Principale
@@ -103,7 +99,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                             // Header: Icona + Label
                             Row(
                               children: [
-                                Icon(icon, color: color, size: 20),
+                                iconBuilder(20, color),
                                 const SizedBox(width: 10),
                                 Text(
                                   label.toUpperCase(),
@@ -116,7 +112,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 10),
                             // Chilometri Rimasti
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -143,7 +139,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 12),
                             // Segmented Rating Bar
                             _SegmentedProgressBar(
                                 percentage: percentage, color: color),

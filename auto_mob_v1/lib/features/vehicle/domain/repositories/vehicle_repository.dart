@@ -1,4 +1,6 @@
-﻿import 'package:fpdart/fpdart.dart';
+﻿import 'dart:io';
+
+import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/exceptions/exception.dart';
 import '../entities/vehicle.dart';
@@ -22,5 +24,12 @@ abstract class VehicleRepository {
   Future<Either<Failure, int>> updateKm({
     required String vehicleId,
     required int newKm,
+  });
+
+  /// Sovrascrive la foto locale di un veicolo già esistente, riusando la
+  /// stessa convenzione di naming di saveVehicle (nessuna chiamata remota).
+  Future<Either<Failure, void>> updateVehiclePhoto({
+    required String targa,
+    required File foto,
   });
 }

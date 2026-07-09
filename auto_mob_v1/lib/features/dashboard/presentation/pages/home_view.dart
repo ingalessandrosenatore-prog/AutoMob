@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
+import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import 'package:auto_mob_v1/core/config/performance_flags.dart';
 import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
@@ -230,7 +234,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                   if (state is DashboardLoaded) {
                     final vehicles = state.vehicles;
                     return SizedBox(
-                      height: 500, // Leggermente aumentato per sicurezza
+                      height: 420,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
@@ -277,6 +281,24 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                                 dashboardBloc
                                                     .add(LoadDashboardData());
                                               }
+                                            },
+                                      onEditPhotoTap: v.isPlaceholder
+                                          ? null
+                                          : () async {
+                                              final dashboardBloc =
+                                                  context.read<DashboardBloc>();
+                                              final picker = ImagePicker();
+                                              final picked = await picker
+                                                  .pickImage(
+                                                source: ImageSource.gallery,
+                                              );
+                                              if (picked == null) return;
+                                              dashboardBloc.add(
+                                                VehiclePhotoUpdateRequested(
+                                                  targa: v.plate,
+                                                  foto: File(picked.path),
+                                                ),
+                                              );
                                             },
                                     ),
                                   );
@@ -368,7 +390,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                         final kpi = kpis[i];
                         return RepaintBoundary(
                           child: AmMaintenanceKpiCard(
-                            icon: kpi.type.kpiIcon,
+                            iconBuilder: kpi.type.kpiIconBuilder,
                             color: choseColor(kpi.percentage),
                             label: kpi.type.kpiLabel,
                             remainingKm: kpi.remainingKm,
@@ -425,13 +447,18 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
 /// Mapping di sola presentazione: dal tipo di manutenzione all'icona e
 /// all'etichetta mostrate nella card KPI. Sta qui (UI) e non nel dominio.
 extension _KpiPresentation on EnumPopUp {
-  IconData get kpiIcon => switch (this) {
-        EnumPopUp.aggiornaTagliando => Icons.handyman_outlined,
-        EnumPopUp.aggiornaDistribuzione => Icons.settings_outlined,
-        EnumPopUp.aggiornaCambioGomme => Icons.tire_repair_outlined,
-        EnumPopUp.pneumaticiInversione => Icons.sync_outlined,
-        EnumPopUp.revisione => Icons.verified_outlined,
-        EnumPopUp.altro => Icons.build_outlined,
+  Widget Function(double size, Color color) get kpiIconBuilder => switch (this) {
+        EnumPopUp.aggiornaTagliando => (s, c) =>
+            Icon(Icons.handyman_outlined, size: s, color: c),
+        EnumPopUp.aggiornaDistribuzione => (s, c) =>
+            AmEngineIcon(size: s, color: c),
+        EnumPopUp.aggiornaCambioGomme => (s, c) =>
+            Icon(Icons.tire_repair_outlined, size: s, color: c),
+        EnumPopUp.pneumaticiInversione => (s, c) =>
+            Icon(Icons.sync_outlined, size: s, color: c),
+        EnumPopUp.revisione => (s, c) =>
+            Icon(Icons.verified_outlined, size: s, color: c),
+        EnumPopUp.altro => (s, c) => Icon(Icons.build_outlined, size: s, color: c),
       };
 
   String get kpiLabel => switch (this) {

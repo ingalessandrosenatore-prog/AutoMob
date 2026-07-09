@@ -1,4 +1,4 @@
-import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
+﻿import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_item_card.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
@@ -292,34 +292,29 @@ class _AppBarContent extends StatelessWidget {
               ),
             ),
           ),
-          Expanded(
+          const Expanded(
             child: Align(
               alignment: Alignment.center,
-              child: OCLiquidGlass(
-                borderRadius: 100,
-                height: 45,
-                color: const Color(0xFF232326).withValues(alpha: 0.5),
-                child: const Center(
-                  child: Text(
-                    "LAVORI",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black12,
-                          offset: Offset(1, 1),
-                          blurRadius: 2,
-                        ),
-                      ],
-                    ),
+              child: Center(
+                child: Text(
+                  "LAVORI",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black12,
+                        offset: Offset(1, 1),
+                        blurRadius: 2,
+                      ),
+                    ],
                   ),
                 ),
-              ),
+              )),
             ),
-          ),
+
           Expanded(
             child: Align(
               alignment: Alignment.centerRight,
