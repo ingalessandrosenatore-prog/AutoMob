@@ -5,7 +5,22 @@
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(Sort-Object)",
       "mcp__claude_ai_Supabase__list_projects",
-      "mcp__claude_ai_Supabase__list_tables"
+      "mcp__claude_ai_Supabase__list_tables",
+      "PowerShell(flutter analyze *)",
+      "PowerShell(flutter test *)",
+      "PowerShell(dart run *)",
+      "PowerShell(./tool/verify.ps1; Write-Host \"VERIFY EXIT: $LASTEXITCODE\")",
+      "mcp__claude_ai_Supabase__execute_sql"
     ]
+  },
+  "skillOverrides": {
+    "dart-add-unit-test": "name-only",
+    "dart-fix-runtime-errors": "name-only",
+    "dart-generate-test-mocks": "name-only",
+    "dart-resolve-package-conflicts": "name-only",
+    "dart-run-static-analysis": "name-only",
+    "dart-use-pattern-matching": "name-only",
+    "flutter-add-widget-preview": "name-only",
+    "flutter-add-widget-test": "name-only"
   }
 }

@@ -65,7 +65,7 @@ class _AmAnimatedNavButtonState extends State<AmAnimatedNavButton> {
           // scuro, dando luce integrata nel vetro senza patine.
           backgroundBlendMode: BlendMode.overlay,
           color: _isPressed
-              ? Colors.white.withOpacity(0.4)
+              ? Colors.white.withValues(alpha: 0.4)
               : Colors.transparent,
         ),
         child:  Column(

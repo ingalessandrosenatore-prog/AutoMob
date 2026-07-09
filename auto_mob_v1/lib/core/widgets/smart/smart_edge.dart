@@ -64,7 +64,7 @@ class _EdgeGradient extends StatelessWidget {
   Widget build(BuildContext context) {
     final tint = edge.tintColor ?? fallbackTint;
     // Pieno al bordo esterno -> trasparente verso l'interno.
-    final colors = [tint, tint.withOpacity(0.0)];
+    final colors = [tint, tint.withValues(alpha: 0.0)];
 
     switch (edge.type) {
       case EdgeType.topEdge:

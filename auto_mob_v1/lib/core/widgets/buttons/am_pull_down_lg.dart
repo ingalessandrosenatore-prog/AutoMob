@@ -41,8 +41,6 @@ class AmPullDownLG extends StatefulWidget {
 
 class _AmPullDownLGState extends State<AmPullDownLG>
     with TickerProviderStateMixin {
-  // Stato per tracciare il tap
-  final bool _isPressed = false;
   late final AnimationController bounceCtrl;
   late final AnimationController lightCtrl;
   late final AnimationController morpheCtrl;
@@ -132,15 +130,13 @@ class _AmPullDownLGState extends State<AmPullDownLG>
           final apertura = (1 - morpheCtrl.value).clamp(0.0, 1.0);
           final scala = bounceCtrl.value * apertura;
 
-          final aper = (1 - morpheCtrl.value).clamp(0.0, 1.0);
-
           return Transform.scale(
             scale: scala,
             child: OCLiquidGlass(
               enabled: true ,
               color:
-                  widget.color?.withOpacity(0.2) ??
-                  const Color(0xFF232326).withOpacity(0.2),
+                  widget.color?.withValues(alpha: 0.2) ??
+                  const Color(0xFF232326).withValues(alpha: 0.2),
               borderRadius: 100,
               child: Stack(
                 alignment: Alignment.center,
@@ -245,9 +241,9 @@ class _AmPullDownLGState extends State<AmPullDownLG>
 class MorphPopUp extends StatefulWidget {
   final Rect rectButton;
   final List<ItemMorphPopUp> children;
-  late double larghezza;
+  final double larghezza;
   final AnimationController ctrlm;
-  MorphPopUp({
+  const MorphPopUp({
     super.key,
     required this.rectButton,
     required this.children,
@@ -286,7 +282,6 @@ class _PopUpState extends State<MorphPopUp>
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    var t = widget.ctrlm.value;
     const altezzaRiga = 48.0;
 
     final altezzaFinale = widget.children.length * altezzaRiga + 16;

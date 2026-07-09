@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/auth_bloc.dart';
@@ -75,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: orangeColor.withOpacity(0.3),
+                          color: orangeColor.withValues(alpha: 0.3),
                           blurRadius: 40,
                           spreadRadius: 10,
                         ),
@@ -103,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen>
                         letterSpacing: 2.0,
                         shadows: [
                           Shadow(
-                            color: blueColor.withOpacity(0.8),
+                            color: blueColor.withValues(alpha: 0.8),
                             blurRadius: 20,
                           ),
                         ],

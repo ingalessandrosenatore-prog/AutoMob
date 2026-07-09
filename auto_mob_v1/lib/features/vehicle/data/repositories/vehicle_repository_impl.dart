@@ -40,15 +40,11 @@ class VehicleRepositoryImpl implements VehicleRepository {
       }
 
       return const Right(null);
-    } on CacheException catch (e) {
-      print("ERRORE STORAGE LOCALE: ${e.message}");
+    } on CacheException {
       return const Left(StorageFailure());
-    } on VehicleDataSourceException catch (e) {
-      // QUESTO È IL TUO SALVAVITA: ti dirà ESATTAMENTE quale constraint fallisce
-      print("ERRORE SUPABASE: ${e.message} - Dettagli: ");
+    } on VehicleDataSourceException {
       return const Left(ServerFailure());
-    } catch (e) {
-      print("ERRORE SCONOSCIUTO: $e");
+    } catch (_) {
       return const Left(ServerFailure());
     }
   }
@@ -64,13 +60,11 @@ class VehicleRepositoryImpl implements VehicleRepository {
         newKm: newKm,
       );
       return Right(kmSalvati);
-    } on VehicleDataSourceException catch (e) {
-      print("ERRORE SUPABASE updateKm: ${e.message}");
+    } on VehicleDataSourceException {
       return const Left(ServerFailure());
     } on NetworkException {
       return const Left(NetworkFailure());
-    } catch (e) {
-      print("ERRORE SCONOSCIUTO updateKm: $e");
+    } catch (_) {
       return const Left(ServerFailure());
     }
   }

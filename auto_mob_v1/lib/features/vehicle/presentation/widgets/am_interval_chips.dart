@@ -30,11 +30,11 @@ class IntervalChoiceChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: selected
-                ? arancione.withOpacity(0.15)
+                ? arancione.withValues(alpha: 0.15)
                 : const Color(0xFF1C1C1E),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected ? arancione : Colors.white.withOpacity(0.05),
+              color: selected ? arancione : Colors.white.withValues(alpha: 0.05),
             ),
           ),
           child: Center(

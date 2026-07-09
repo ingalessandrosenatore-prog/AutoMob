@@ -150,8 +150,8 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: _isOpen
-                      ? const Color(0xFFFF6B00).withOpacity(0.5)
-                      : Colors.white.withOpacity(0.05),
+                      ? const Color(0xFFFF6B00).withValues(alpha: 0.5)
+                      : Colors.white.withValues(alpha: 0.05),
                 ),
               ),
               child: Row(
@@ -236,10 +236,10 @@ class _DropdownOverlay<T> extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF252528),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.45),
+                    color: Colors.black.withValues(alpha: 0.45),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -285,7 +285,7 @@ class _DropdownOverlay<T> extends StatelessWidget {
 
                   Container(
                     height: 1,
-                    color: Colors.white.withOpacity(0.06),
+                    color: Colors.white.withValues(alpha: 0.06),
                   ),
 
                   // Lista filtrata
@@ -324,9 +324,9 @@ class _DropdownOverlay<T> extends StatelessWidget {
                               onTap: () => onSelect(item),
                               borderRadius: BorderRadius.circular(8),
                               highlightColor:
-                                  const Color(0xFFFF6B00).withOpacity(0.1),
+                                  const Color(0xFFFF6B00).withValues(alpha: 0.1),
                               splashColor:
-                                  const Color(0xFFFF6B00).withOpacity(0.08),
+                                  const Color(0xFFFF6B00).withValues(alpha: 0.08),
                               child: Container(
                                 height: _itemHeight,
                                 padding: const EdgeInsets.symmetric(

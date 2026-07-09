@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/core/di/injection_container.dart';
+import 'package:auto_mob_v1/core/di/injection_container.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -139,10 +139,10 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: darkContainerColor.withOpacity(0.6),
+                          color: darkContainerColor.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFF4A90E2).withOpacity(0.2),
+                            color: const Color(0xFF4A90E2).withValues(alpha: 0.2),
                             width: 1,
                           ),
                         ),
@@ -220,7 +220,7 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1C1C1E).withOpacity(0.6),
+                    color: const Color(0xFF1C1C1E).withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Row(
@@ -250,7 +250,7 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                     width: double.infinity,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: orangeColor.withOpacity(attivo ? 1.0 : 0.4),
+                      color: orangeColor.withValues(alpha: attivo ? 1.0 : 0.4),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     alignment: Alignment.center,

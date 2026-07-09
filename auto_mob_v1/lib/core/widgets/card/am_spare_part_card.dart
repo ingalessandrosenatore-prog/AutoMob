@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/features/work_log/domain/entities/selected_part.dart';
+import 'package:auto_mob_v1/features/work_log/domain/entities/selected_part.dart';
 import 'package:flutter/material.dart';
 import '../input/textfield.dart';
 
@@ -60,7 +60,7 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
             color: boxColor,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: _isExpanded ? orangeColor.withOpacity(0.3) : Colors.white.withOpacity(0.05),
+              color: _isExpanded ? orangeColor.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.05),
               width: 1,
             ),
           ),
@@ -264,7 +264,7 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
           color: color,
           shape: BoxShape.circle,
           boxShadow: color != const Color(0xFF2C2C2E)
-              ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, spreadRadius: 1)]
+              ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 1)]
               : [],
         ),
         child: Icon(icon, color: Colors.white, size: 20),

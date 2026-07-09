@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_event.dart';
@@ -78,13 +78,13 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                             color: const Color(0xFF1C1C1E),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               width: 2,
                             ),
                           ),
                           child: Icon(
                             Icons.camera_alt,
-                            color: Colors.white.withOpacity(0.5),
+                            color: Colors.white.withValues(alpha: 0.5),
                             size: 40,
                           ),
                         ),
@@ -139,7 +139,7 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF1C1412),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white.withOpacity(0.03)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,

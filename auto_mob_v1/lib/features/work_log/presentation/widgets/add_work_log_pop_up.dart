@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/core/di/injection_container.dart';
+import 'package:auto_mob_v1/core/di/injection_container.dart';
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/fab_princ.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/back_button.dart';
@@ -369,7 +369,7 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
       Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF1C1C1E).withOpacity(0.5),
+          color: const Color(0xFF1C1C1E).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -422,7 +422,7 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
                     color: const Color(0xFF0F0F11),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFFE85A1A).withOpacity(0.3),
+                      color: const Color(0xFFE85A1A).withValues(alpha: 0.3),
                     ),
                   ),
                   child: Text(

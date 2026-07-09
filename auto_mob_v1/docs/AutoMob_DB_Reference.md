@@ -1,5 +1,10 @@
 # AutoMob — Database Reference
 
+> ⚠️ **SUPERATO — non usare.** Nomi di RPC e schema qui descritti non corrispondono
+> più al DB live (es. `add_maintenance_session`/`add_item_to_session` non esistono:
+> la RPC reale è `crea_sessione_manutenzione`). Fonte di verità aggiornata:
+> **`docs/DATABASE.md`**. Questo file resta solo per contesto storico.
+
 > Documento operativo del database AutoMob su Supabase. Pensato per essere letto da uno sviluppatore umano **o da un agente AI** prima di scrivere codice client che tocchi il DB. Se segui questo documento, non puoi sbagliare gli INSERT, gli UPDATE e le chiamate RPC.
 
 **Project ID Supabase:** `tvxcyjqaiyxmmhktwhdb`

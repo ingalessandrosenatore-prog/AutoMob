@@ -35,7 +35,7 @@ class AmOutlinedButton extends StatelessWidget {
           shadows: [
             // Effetto Glow sulla scritta
             Shadow(
-              color: color.withOpacity(0.5),
+              color: color.withValues(alpha: 0.5),
               blurRadius: 8.0,
               offset: const Offset(0, 0),
             ),

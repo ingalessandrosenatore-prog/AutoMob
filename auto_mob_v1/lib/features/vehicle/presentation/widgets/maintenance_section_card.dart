@@ -20,7 +20,7 @@ class MaintenanceSectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF151517),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.03)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
       ),
       child: Column(
         children: [

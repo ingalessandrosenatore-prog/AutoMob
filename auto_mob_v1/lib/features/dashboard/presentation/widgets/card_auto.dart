@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/Effects/pulsing_glow_border.dart';
@@ -70,7 +70,7 @@ class CardAuto extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -101,12 +101,12 @@ class CardAuto extends StatelessWidget {
                       child:Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("REVISIONE", style: const TextStyle(
+                          const Text("REVISIONE", style: TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontWeight: FontWeight.w900,
                           ),),
-                           SizedBox(width: 6,),
+                           const SizedBox(width: 6,),
                           _RevisionStatusPill(status: _revisionStatus),
                         ],
                       ),
@@ -116,7 +116,7 @@ class CardAuto extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: PulsingGlowBorder(
-                      color: Colors.blueGrey.withOpacity(0.5),
+                      color: Colors.blueGrey.withValues(alpha: 0.5),
                       borderRadius: 20,
                       child: _TapTile(
                         onTap: onKmTap,
@@ -150,6 +150,7 @@ class CardAuto extends StatelessWidget {
   }
 }
 
+// ignore: unused_element -- debito tecnico, vedi docs/TECH_DEBT.md
 const TextStyle _kTileLabel = TextStyle(
   color: Color(0xFF8E8E93),
   fontSize: 11,
@@ -181,7 +182,7 @@ class _InfoTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -222,7 +223,7 @@ class _InfoTile extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.55),
+                          color: Colors.white.withValues(alpha: 0.55),
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.5,
@@ -238,7 +239,7 @@ class _InfoTile extends StatelessWidget {
                     child: Text(
                       "$anno",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.4),
+                        color: Colors.white.withValues(alpha: 0.4),
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
@@ -264,6 +265,7 @@ class _TapTile extends StatelessWidget {
     required this.child,
     this.onTap,
     this.watermarkIcon,
+    // ignore: unused_element_parameter -- debito tecnico, vedi docs/TECH_DEBT.md
     this.watermarkColor,
   });
 
@@ -282,7 +284,7 @@ class _TapTile extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -304,8 +306,8 @@ class _TapTile extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.2),
-                          (watermarkColor ?? _kAppOrange).withOpacity(0.1)
+                          Colors.white.withValues(alpha: 0.2),
+                          (watermarkColor ?? _kAppOrange).withValues(alpha: 0.1)
                         ],
                       ).createShader(bounds);
                     },
@@ -346,9 +348,9 @@ class _RevisionStatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.35),
+        color: Colors.black.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

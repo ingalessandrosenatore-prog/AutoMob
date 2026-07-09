@@ -215,7 +215,7 @@ type: {{user, feedback, project, reference}}
 
 ## Before recommending from memory
 
-A memory that names a specific function, file, or flag is a claim that it existed *when the memory was written*. It may have been renamed, removed, or never merged. Before recommending it:
+A memory that names a specific function, filie, or flag is a claim that it existed *when the memory was written*. It may have been renamed, removed, or never merged. Before recommending it:
 
 - If the memory names a file path: check the file exists.
 - If the memory names a function or flag: grep for it.

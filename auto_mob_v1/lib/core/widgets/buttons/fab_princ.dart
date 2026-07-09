@@ -34,7 +34,7 @@ class AmMainFab extends StatelessWidget {
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.4),
+              color: color.withValues(alpha: 0.4),
               // Il glow basato sul colore in ingresso
               blurRadius: 20,
               spreadRadius: 2,

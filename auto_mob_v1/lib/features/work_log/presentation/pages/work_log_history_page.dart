@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
+import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_item_card.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
@@ -210,7 +210,7 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
         backgroundColor: _background,
         extendBodyBehindAppBar: true,
         appBar: AppBar(
-          backgroundColor: Colors.transparent.withOpacity(0),
+          backgroundColor: Colors.transparent.withValues(alpha: 0),
           scrolledUnderElevation: 0,
           title: OCLiquidGlassGroup(
             settings: const OCLiquidGlassSettings(
@@ -298,7 +298,7 @@ class _AppBarContent extends StatelessWidget {
               child: OCLiquidGlass(
                 borderRadius: 100,
                 height: 45,
-                color: const Color(0xFF232326).withOpacity(0.5),
+                color: const Color(0xFF232326).withValues(alpha: 0.5),
                 child: const Center(
                   child: Text(
                     "LAVORI",
@@ -462,7 +462,7 @@ class _EmptyWorks extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.build_circle_outlined,
-                size: 64, color: Colors.white.withOpacity(0.25)),
+                size: 64, color: Colors.white.withValues(alpha: 0.25)),
             const SizedBox(height: 16),
             const Text(
               'Nessun lavoro ancora inserito',
@@ -478,7 +478,7 @@ class _EmptyWorks extends StatelessWidget {
               'Aggiungi un intervento con il tasto + in alto.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 14,
               ),
             ),

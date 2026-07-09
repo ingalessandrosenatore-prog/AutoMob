@@ -31,7 +31,7 @@ class WorkLogItemCard extends StatelessWidget {
         color: darkContainerColor,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
@@ -53,7 +53,7 @@ class WorkLogItemCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
-                    color: orangeColor.withOpacity(0.15),
+                    color: orangeColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: const Text(

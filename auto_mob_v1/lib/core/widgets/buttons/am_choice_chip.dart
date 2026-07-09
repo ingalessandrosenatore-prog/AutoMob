@@ -29,13 +29,13 @@ class AmChoiceChip extends StatelessWidget {
           color: isSelected ? Colors.transparent : const Color(0xFF1C1C1E),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? activeColor : Colors.white.withOpacity(0.05),
+            color: isSelected ? activeColor : Colors.white.withValues(alpha: 0.05),
             width: 1.5,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: activeColor.withOpacity(0.1),
+                    color: activeColor.withValues(alpha: 0.1),
                     blurRadius: 8,
                     spreadRadius: 1,
                   )

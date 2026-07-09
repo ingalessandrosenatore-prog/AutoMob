@@ -36,13 +36,11 @@ class WorklogRepositoryImpl implements WorklogRepo {
         items: items,
       );
       return const Right(null);
-    } on WorkLogDataSourceException catch (e) {
-      print("ERRORE SUPABASE WorkLog: ${e.message}");
+    } on WorkLogDataSourceException {
       return const Left(ServerFailure());
     } on NetworkException {
       return const Left(NetworkFailure());
-    } catch (e) {
-      print("ERRORE SCONOSCIUTO WorkLog: $e");
+    } catch (_) {
       return const Left(ServerFailure());
     }
   }
@@ -52,13 +50,11 @@ class WorklogRepositoryImpl implements WorklogRepo {
     try {
       final res = await remoteDataSource.getVehicleOptions();
       return Right(res);
-    } on WorkLogDataSourceException catch (e) {
-      print("ERRORE SUPABASE WorkLog veicoli: ${e.message}");
+    } on WorkLogDataSourceException {
       return const Left(ServerFailure());
     } on NetworkException {
       return const Left(NetworkFailure());
-    } catch (e) {
-      print("ERRORE SCONOSCIUTO WorkLog veicoli: $e");
+    } catch (_) {
       return const Left(ServerFailure());
     }
   }
@@ -76,13 +72,11 @@ class WorklogRepositoryImpl implements WorklogRepo {
         to: to,
       );
       return Right(res);
-    } on WorkLogDataSourceException catch (e) {
-      print("ERRORE SUPABASE WorkLog lavori: ${e.message}");
+    } on WorkLogDataSourceException {
       return const Left(ServerFailure());
     } on NetworkException {
       return const Left(NetworkFailure());
-    } catch (e) {
-      print("ERRORE SCONOSCIUTO WorkLog lavori: $e");
+    } catch (_) {
       return const Left(ServerFailure());
     }
   }

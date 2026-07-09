@@ -84,11 +84,6 @@ class _AmSoftButtonState extends State<AmSoftButton> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(100);
-
-    // Fallback pastello: giallo chiarissimo quasi trasparente
-    final fallbackColor = Colors.yellow.shade100.withOpacity(0.1);
-
     return GestureDetector(
       onTap: widget.onPressed,
       onTapDown: (_) => _onPress(),
@@ -106,7 +101,7 @@ class _AmSoftButtonState extends State<AmSoftButton> with TickerProviderStateMix
           width: widget.width,
           borderRadius: 100,
           enabled: true,
-          color: widget.color?.withOpacity(0.8) ?? Colors.transparent,
+          color: widget.color?.withValues(alpha: 0.8) ?? Colors.transparent,
           child: Stack(
             alignment: Alignment.center,
             children: [

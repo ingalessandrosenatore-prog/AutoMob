@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "changes=$(git status --porcelain -- lib test 2>/dev/null); if [ -n \"$changes\" ]; then powershell.exe -NoProfile -ExecutionPolicy Bypass -File tool/verify.ps1; code=$?; if [ $code -ne 0 ]; then echo '{\"continue\": false, \"stopReason\": \"tool/verify.ps1 e fallito (architettura, flutter analyze o flutter test). Continua a correggere finche non e verde, poi rilancialo prima di fermarti.\"}'; fi; fi",
+            "timeout": 180,
+            "statusMessage": "Verifica architettura + analyze + test (tool/verify.ps1)..."
+          }
+        ]
+      }
+    ]
+  }
+}

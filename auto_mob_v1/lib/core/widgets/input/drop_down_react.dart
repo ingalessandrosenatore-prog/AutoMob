@@ -46,7 +46,7 @@ class AmDropdown<T> extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF1C1C1E),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.05)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<T>(

@@ -26,6 +26,7 @@ abstract class VehicleRemoteDataSource {
 
 class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
   final SupabaseClient supabaseClient;
+  // ignore: non_constant_identifier_names -- debito tecnico, vedi docs/TECH_DEBT.md
   String? get owner_id => supabaseClient.auth.currentUser?.id;
 
   VehicleRemoteDataSourceImpl({required this.supabaseClient});

@@ -82,7 +82,9 @@ class _ShellScaffoldState extends State<ShellScaffold>
   }
 
   @override
-  void didChangeDependencies() {}
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
 
   @override
   void dispose() {
@@ -101,6 +103,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
     lightCtrl.animateWith(lcS);
   }
 
+  // ignore: unused_element -- debito tecnico, vedi docs/TECH_DEBT.md
   void _onCancel() {
     final bcS = SpringSimulation(_springDescription, bounceCtrl.value, 1, 0);
     final lcS = SpringSimulation(_lightDescription, lightCtrl.value, 0, 0);

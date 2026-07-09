@@ -34,16 +34,16 @@ class AmVehicleSelectableCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? blueColor.withOpacity(0.05) : darkContainerColor,
+          color: isSelected ? blueColor.withValues(alpha: 0.05) : darkContainerColor,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? blueColor : Colors.white.withOpacity(0.05),
+            color: isSelected ? blueColor : Colors.white.withValues(alpha: 0.05),
             width: 2,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: blueColor.withOpacity(0.2),
+                    color: blueColor.withValues(alpha: 0.2),
                     blurRadius: 10,
                     spreadRadius: 1,
                   )

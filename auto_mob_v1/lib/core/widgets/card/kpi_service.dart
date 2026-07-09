@@ -49,12 +49,12 @@ class AmMaintenanceKpiCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.white.withOpacity(0.05),
+            color: Colors.white.withValues(alpha: 0.05),
             blurRadius: 0,
             offset: const Offset(0, -1),
           ),
@@ -75,7 +75,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                     return LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Colors.white.withOpacity(0.2), color.withOpacity(0.1)],
+                      colors: [Colors.white.withValues(alpha: 0.2), color.withValues(alpha: 0.1)],
                     ).createShader(bounds);
                   },
                   child: Icon(
@@ -108,7 +108,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                                 Text(
                                   label.toUpperCase(),
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 1.2,
@@ -138,7 +138,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white.withOpacity(0.5),
+                                    color: Colors.white.withValues(alpha: 0.5),
                                   ),
                                 ),
                               ],
@@ -153,7 +153,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                       // Freccia di navigazione (Chevron)
                       Icon(
                         Icons.chevron_right,
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         size: 28,
                       ),
                     ],
@@ -186,12 +186,12 @@ class _SegmentedProgressBar extends StatelessWidget {
             height: 10,
             margin: EdgeInsets.only(right: index == 3 ? 0 : 8),
             decoration: BoxDecoration(
-              color: isActive ? color : color.withOpacity(0.1),
+              color: isActive ? color : color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(6),
               boxShadow: isActive
                   ? [
                       BoxShadow(
-                        color: color.withOpacity(0.3),
+                        color: color.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       )

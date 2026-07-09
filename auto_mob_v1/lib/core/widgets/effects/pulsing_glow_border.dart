@@ -62,7 +62,7 @@ class _PulsingGlowBorderState extends State<PulsingGlowBorder>
               borderRadius: BorderRadius.circular(widget.borderRadius),
               boxShadow: [
                 BoxShadow(
-                  color: widget.color.withOpacity(0.12 + 0.33 * breath),
+                  color: widget.color.withValues(alpha: 0.12 + 0.33 * breath),
                   blurRadius: 6 + 12 * breath,
                   spreadRadius: 0.5 + 1.5 * breath,
                 ),
@@ -107,10 +107,10 @@ class _RotatingBorderPainter extends CustomPainter {
     // Sweep gradient: un arco luminoso che ruota lungo tutto il bordo.
     final shader = SweepGradient(
       colors: [
-        color .withOpacity(0.0),
-        color.withOpacity(0.0),
+        color .withValues(alpha: 0.0),
+        color.withValues(alpha: 0.0),
         color,
-        color.withOpacity(0.0),
+        color.withValues(alpha: 0.0),
       ],
       stops: const [0.0, 0.5, 0.78, 1.0],
       transform: GradientRotation(angle),

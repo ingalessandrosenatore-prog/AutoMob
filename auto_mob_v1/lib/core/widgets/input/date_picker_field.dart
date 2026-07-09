@@ -140,7 +140,7 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
                   color: boxColor,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     width: 1,
                   ),
                 ),

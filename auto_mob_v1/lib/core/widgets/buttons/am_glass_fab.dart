@@ -45,6 +45,7 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
   // FASI DI APERTURA PURE (Senza più flash luminosi)
   late Animation<double> _swellAnimation;
   late Animation<double> _expandAnimation;
+  // ignore: unused_field -- debito tecnico, vedi docs/TECH_DEBT.md
   late Animation<double> _rotationAnimation;
 
   // FASE UNICA DI CHIUSURA
@@ -173,6 +174,7 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
             final bool isClosing = _controller.status == AnimationStatus.reverse;
 
             double dynamicWidth, dynamicHeight, dynamicRadius;
+            // ignore: unused_local_variable -- debito tecnico, vedi docs/TECH_DEBT.md
             double iconScale, safeExpand, currentRotation;
 
             if (isClosing) {
@@ -222,6 +224,7 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
               child: Transform(
                 alignment: Alignment.bottomRight,
                 transform: Matrix4.identity()
+                  // ignore: deprecated_member_use -- debito tecnico, vedi docs/TECH_DEBT.md
                   ..scale(
                     1.0 + (dragY.abs() * 0.0005),
                     1.0 - (dragY * 0.002),
@@ -236,17 +239,17 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(dynamicRadius),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                           width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3 * (1.0 - safeExpand)),
+                            color: Colors.black.withValues(alpha: 0.3 * (1.0 - safeExpand)),
                             blurRadius: 12,
                             spreadRadius: 2,
                           ),
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3 * safeExpand),
+                            color: Colors.black.withValues(alpha: 0.3 * safeExpand),
                             blurRadius: 30,
                             spreadRadius: 5,
                           ),
@@ -259,10 +262,10 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
                           child: InkWell(
                             // Quando è aperto disattiviamo l'InkWell principale
                             onTap: _isOpen ? null : _toggle,
-                            splashColor: widget.inactiveColor?.withOpacity(0.5), // L'onda chiara
-                            highlightColor: Colors.white.withOpacity(0.25),
+                            splashColor: widget.inactiveColor?.withValues(alpha: 0.5), // L'onda chiara
+                            highlightColor: Colors.white.withValues(alpha: 0.25),
                             radius: 50,
-                            hoverColor:  widget.inactiveColor?.withOpacity(0.5) ,
+                            hoverColor:  widget.inactiveColor?.withValues(alpha: 0.5) ,
                             // Highlight morbidissimo
                             child: Stack(
                               alignment: Alignment.bottomRight,
@@ -279,9 +282,9 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
                                             radius: 1.4,
                                             colors: [
                                               widget.inactiveColor!
-                                                  .withOpacity(0.45 * glowIntensity),
+                                                  .withValues(alpha: 0.45 * glowIntensity),
                                               widget.inactiveColor!
-                                                  .withOpacity(0.10 * glowIntensity),
+                                                  .withValues(alpha: 0.10 * glowIntensity),
                                               Colors.transparent,
                                             ],
                                             stops: const [0.0, 0.45, 1.0],
@@ -340,7 +343,7 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
                                       Icons.add,
                                       color: Color.lerp(
                                           widget.inactiveColor,
-                                          widget.inactiveColor?.withOpacity(0.5),
+                                          widget.inactiveColor?.withValues(alpha: 0.5),
                                           safeExpand
                                       ),
                                       size:30,
@@ -399,8 +402,8 @@ class _AmGlassFabActionItem extends StatelessWidget {
                 action.onPressed();
               },
               borderRadius: BorderRadius.circular(20),
-              splashColor: action.color.withOpacity(0.1),
-              highlightColor: action.color.withOpacity(0.05),
+              splashColor: action.color.withValues(alpha: 0.1),
+              highlightColor: action.color.withValues(alpha: 0.05),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
                 child: Row(
@@ -409,15 +412,15 @@ class _AmGlassFabActionItem extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: action.color.withOpacity(0.1),
+                        color: action.color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(
-                          color: action.color.withOpacity(0.3),
+                          color: action.color.withValues(alpha: 0.3),
                           width: 1.2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: action.color.withOpacity(0.05),
+                            color: action.color.withValues(alpha: 0.05),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),

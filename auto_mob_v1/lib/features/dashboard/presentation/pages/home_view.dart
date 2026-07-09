@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
+import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
@@ -116,7 +116,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
 
                 borderRadius: 100,
                 height: 45,
-                color: const Color(0xFF232326).withOpacity(0.5),
+                color: const Color(0xFF232326).withValues(alpha: 0.5),
                 child: const Center(
                   child: Text(
                     "VEICOLI",
@@ -160,7 +160,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       backgroundColor: const Color(0xFF1A1C23),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent.withOpacity(0),
+        backgroundColor: Colors.transparent.withValues(alpha: 0),
         scrolledUnderElevation: 0,
         title: OCLiquidGlassGroup(
                 settings: const OCLiquidGlassSettings(

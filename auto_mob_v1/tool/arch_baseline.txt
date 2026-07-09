@@ -1,0 +1,16 @@
+# =====================================================================
+#  BASELINE ARCHITETTURALE — DEBITO TECNICO tracciato (non silenziato).
+# ---------------------------------------------------------------------
+#  Queste violazioni esistevano PRIMA di introdurre il check e sono
+#  accettate temporaneamente: il gate blocca solo le violazioni NUOVE.
+#  Quando ne ripaghi una, CANCELLA la riga corrispondente da qui.
+#  Spiegazione e piano di rientro: docs/TECH_DEBT.md
+#
+#  Formato:  file:linea:regola
+# =====================================================================
+core/widgets/card/am_spare_part_card.dart:1:R8
+core/widgets/card/am_spare_part_card.dart:194:R13
+core/widgets/card/am_spare_part_card.dart:215:R13
+core/widgets/card/am_spare_part_card.dart:258:R13
+features/dashboard/presentation/pages/home_view.dart:12:R9
+features/dashboard/presentation/pages/home_view.dart:13:R9

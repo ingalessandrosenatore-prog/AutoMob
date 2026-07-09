@@ -59,9 +59,9 @@ class AmStatusDialog extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1C1C1E).withOpacity(0.85),
+              color: const Color(0xFF1C1C1E).withValues(alpha: 0.85),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withOpacity(0.08)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -80,7 +80,7 @@ class AmStatusDialog extends StatelessWidget {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: iconColor.withOpacity(0.15),
+                      color: iconColor.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icon, color: iconColor, size: 34),
@@ -134,7 +134,7 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: action.filled ? action.color : action.color.withOpacity(0.12),
+      color: action.filled ? action.color : action.color.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -171,7 +171,7 @@ Future<T?> showAmStatusDialog<T>(
   return showDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    barrierColor: Colors.black.withOpacity(0.55),
+    barrierColor: Colors.black.withValues(alpha: 0.55),
     builder: (_) => AmStatusDialog(
       icon: icon,
       iconColor: iconColor,

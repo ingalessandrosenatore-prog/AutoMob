@@ -25,7 +25,7 @@ class AmWorkshopCard extends StatelessWidget {
         color: const Color(0xFF232326),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
@@ -35,7 +35,7 @@ class AmWorkshopCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colore.withOpacity(0.1),
+              color: colore.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(

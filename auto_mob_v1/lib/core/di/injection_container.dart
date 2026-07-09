@@ -57,7 +57,7 @@ Future<void> init() async {
 Future<void> _initSupabase() async {
   await Supabase.initialize(
     url: 'https://tvxcyjqaiyxmmhktwhdb.supabase.co',
-    anonKey: 'sb_publishable_3lGoL7YRneTfCS5z-LIWiQ_ilPxOklI',
+    publishableKey: 'sb_publishable_3lGoL7YRneTfCS5z-LIWiQ_ilPxOklI',
   );
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
 }
