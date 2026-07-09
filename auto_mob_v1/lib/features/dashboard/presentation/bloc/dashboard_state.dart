@@ -25,26 +25,35 @@ class DashboardLoaded extends DashboardState {
   /// Vengono ricalcolati dal BLoC al caricamento e ad ogni cambio pagina.
   final List<MaintenanceKpi> kpis;
 
+  /// true durante un pull-to-refresh esplicito (DashboardRefreshRequested):
+  /// a differenza del caricamento iniziale (DashboardLoading), qui si resta
+  /// su DashboardLoaded per tutta la durata -- vehicles/kpis restano
+  /// visibili finche' non arrivano i nuovi dati, niente pop-up modale.
+  final bool isRefreshing;
+
   DashboardLoaded({
     required this.vehicles,
     required this.index,
     required this.kpis,
+    this.isRefreshing = false,
   });
 
   DashboardLoaded copyWith({
     List<Vehicle>? vehicles,
     int? index,
     List<MaintenanceKpi>? kpis,
+    bool? isRefreshing,
   }) {
     return DashboardLoaded(
       vehicles: vehicles ?? this.vehicles,
       index: index ?? this.index,
       kpis: kpis ?? this.kpis,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
     );
   }
 
   @override
-  List<Object?> get props => [vehicles, index, kpis];
+  List<Object?> get props => [vehicles, index, kpis, isRefreshing];
 }
 
 class DashboardError extends DashboardState {

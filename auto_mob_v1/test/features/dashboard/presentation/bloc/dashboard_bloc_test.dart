@@ -125,6 +125,56 @@ void main() {
     },
   );
 
+  blocTest<DashboardBloc, DashboardState>(
+    'DashboardRefreshRequested: aggiorna i veicoli SENZA passare da DashboardLoading',
+    build: () {
+      when(() => getVehicles())
+          .thenAnswer((_) async => Right([tVehicle1, tVehicle2]));
+      when(() => computeKpis(any())).thenReturn(tKpis);
+      return buildBloc();
+    },
+    seed: () => DashboardLoaded(vehicles: [tVehicle1], index: 0, kpis: const []),
+    act: (bloc) => bloc.add(DashboardRefreshRequested()),
+    expect: () => [
+      isA<DashboardLoaded>()
+          .having((s) => s.isRefreshing, 'isRefreshing', true)
+          // i veicoli vecchi restano visibili durante il refresh.
+          .having((s) => s.vehicles, 'vehicles', [tVehicle1]),
+      DashboardLoaded(
+        vehicles: [tVehicle1, tVehicle2],
+        index: 0,
+        kpis: tKpis,
+      ),
+    ],
+  );
+
+  blocTest<DashboardBloc, DashboardState>(
+    'DashboardRefreshRequested: errore -> tiene i dati vecchi, spegne solo isRefreshing',
+    build: () {
+      when(() => getVehicles())
+          .thenAnswer((_) async => const Left(ServerFailure()));
+      return buildBloc();
+    },
+    seed: () => DashboardLoaded(vehicles: [tVehicle1], index: 0, kpis: const []),
+    act: (bloc) => bloc.add(DashboardRefreshRequested()),
+    expect: () => [
+      isA<DashboardLoaded>().having((s) => s.isRefreshing, 'isRefreshing', true),
+      isA<DashboardLoaded>()
+          .having((s) => s.isRefreshing, 'isRefreshing', false)
+          .having((s) => s.vehicles, 'vehicles', [tVehicle1]),
+    ],
+  );
+
+  blocTest<DashboardBloc, DashboardState>(
+    'DashboardRefreshRequested: non fa nulla se non e\' ancora DashboardLoaded',
+    build: buildBloc,
+    act: (bloc) => bloc.add(DashboardRefreshRequested()),
+    expect: () => [],
+    verify: (_) {
+      verifyNever(() => getVehicles());
+    },
+  );
+
   final tFoto = File('veicolo_v1.jpg');
 
   blocTest<DashboardBloc, DashboardState>(

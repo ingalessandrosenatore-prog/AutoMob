@@ -36,3 +36,9 @@ class Retry extends WorkLogHistoryEvent {
 class ReloadCurrent extends WorkLogHistoryEvent {
   const ReloadCurrent();
 }
+
+/// Pull-to-refresh esplicito dell'utente: ricarica la pagina 0 del veicolo
+/// selezionato SENZA svuotare prima `works` (la lista resta visibile).
+class RefreshRequested extends WorkLogHistoryEvent {
+  const RefreshRequested();
+}

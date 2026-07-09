@@ -24,6 +24,7 @@ class WorkLogHistoryBloc
     on<Retry>((_, emit) => _loadInitial(emit));
     on<VehicleChanged>(_onVehicleChanged);
     on<ReloadCurrent>(_onReloadCurrent);
+    on<RefreshRequested>(_onRefreshRequested, transformer: droppable());
     // droppable: mentre una LoadMore e' in corso, le altre vengono scartate.
     on<LoadMore>(_onLoadMore, transformer: droppable());
   }
@@ -125,6 +126,34 @@ class WorkLogHistoryBloc
       (works) => emit(state.copyWith(
         works: works,
         isLoadingMore: false,
+        hasReachedMax: works.length < pageSize,
+      )),
+    );
+  }
+
+  /// Pull-to-refresh: ricarica la pagina 0 del veicolo selezionato SENZA
+  /// svuotare prima `works` (a differenza di ReloadCurrent) -- la lista
+  /// resta visibile e si aggiorna solo quando i nuovi dati sono pronti,
+  /// cosi' l'indicatore di refresh inline non fa sparire tutto a meta' pull.
+  Future<void> _onRefreshRequested(
+    RefreshRequested event,
+    Emitter<WorkLogHistoryState> emit,
+  ) async {
+    final id = state.selectedVehicleId;
+    if (id == null) {
+      emit(state.copyWith(isRefreshing: false));
+      return;
+    }
+
+    emit(state.copyWith(isRefreshing: true));
+
+    final res = await getVehicleWorks(vehicleId: id, from: 0, to: pageSize - 1);
+    res.fold(
+      // Errore: tengo i dati vecchi in vista, spengo solo lo spinner.
+      (f) => emit(state.copyWith(isRefreshing: false)),
+      (works) => emit(state.copyWith(
+        works: works,
+        isRefreshing: false,
         hasReachedMax: works.length < pageSize,
       )),
     );

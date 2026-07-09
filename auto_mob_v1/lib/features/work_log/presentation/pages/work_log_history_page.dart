@@ -1,5 +1,6 @@
 ﻿import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
+import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_item_card.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:flutter/cupertino.dart';
@@ -417,42 +418,65 @@ class _WorkListView extends StatelessWidget {
         );
       }
       // Pronto ma il veicolo non ha lavori: messaggio inline (niente pop-up).
+      // Resta comunque scrollabile (ListView invece di un widget statico)
+      // cosi' il pull-to-refresh puo' registrare il gesto anche a lista vuota.
       if (state.status == HistoryStatus.loaded &&
           state.selectedVehicleId != null) {
-        return const _EmptyWorks();
+        return AmWheelRefreshIndicator(
+          onRefresh: () => _handleRefresh(context),
+          child: ListView(
+            controller: controller,
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            children: const [_EmptyWorks()],
+          ),
+        );
       }
       // Primo caricamento: il body resta vuoto dietro al pop-up spinner.
+      // Niente refresh control: non c'e' ancora nulla da tirare giu'.
       return const SizedBox.shrink();
     }
 
-    return ListView.builder(
-      controller: controller,
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(10, 150, 10, 0),
-      itemCount: works.length + 1, // +1 = footer (spinner o spazio finale)
-      itemBuilder: (context, i) {
-        if (i == works.length) {
-          if (state.isLoadingMore) {
-            return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: CircularProgressIndicator(color: _orange)),
-            );
+    return AmWheelRefreshIndicator(
+      onRefresh: () => _handleRefresh(context),
+      child: ListView.builder(
+        controller: controller,
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(10, 150, 10, 0),
+        itemCount: works.length + 1, // +1 = footer (spinner o spazio finale)
+        itemBuilder: (context, i) {
+          if (i == works.length) {
+            if (state.isLoadingMore) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator(color: _orange)),
+              );
+            }
+            return const SizedBox(height: 120); // spazio finale sotto la lista
           }
-          return const SizedBox(height: 120); // spazio finale sotto la lista
-        }
 
-        final w = works[i];
-        return WorkLogItemCard(
-          title: _workTitle(w),
-          date: _formatDate(w.serviceDate),
-          km: _formatKm(w.serviceKm),
-          description: (w.notes != null && w.notes!.trim().isNotEmpty)
-              ? w.notes!.trim()
-              : '—',
-          hasWorkshop: w.hasWorkshop,
-        );
-      },
+          final w = works[i];
+          return WorkLogItemCard(
+            title: _workTitle(w),
+            date: _formatDate(w.serviceDate),
+            km: _formatKm(w.serviceKm),
+            description: (w.notes != null && w.notes!.trim().isNotEmpty)
+                ? w.notes!.trim()
+                : '—',
+            hasWorkshop: w.hasWorkshop,
+          );
+        },
+      ),
     );
+  }
+
+  /// Dispaccia il pull-to-refresh e attende il completamento (isRefreshing
+  /// torna false), sia in caso di successo che di errore.
+  Future<void> _handleRefresh(BuildContext context) async {
+    final bloc = context.read<WorkLogHistoryBloc>();
+    bloc.add(const RefreshRequested());
+    await bloc.stream.firstWhere((s) => !s.isRefreshing);
   }
 }
 

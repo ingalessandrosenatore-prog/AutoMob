@@ -5,6 +5,7 @@ import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
+import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -291,7 +292,14 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
             ],
           ),
         ],
-        child: SingleChildScrollView(
+        child: AmWheelRefreshIndicator(
+          onRefresh: () => _handleRefresh(context),
+          child: SingleChildScrollView(
+          // AlwaysScrollable: il pull-to-refresh deve poter registrare il
+          // gesto anche quando il contenuto e' piu' corto della viewport.
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -493,8 +501,19 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
             ],
           ),
         ),
+        ),
       ),
       ),
+    );
+  }
+
+  /// Dispaccia il pull-to-refresh e attende il completamento (isRefreshing
+  /// torna false), sia in caso di successo che di errore.
+  Future<void> _handleRefresh(BuildContext context) async {
+    final bloc = context.read<DashboardBloc>();
+    bloc.add(DashboardRefreshRequested());
+    await bloc.stream.firstWhere(
+      (s) => s is! DashboardLoaded || !s.isRefreshing,
     );
   }
 

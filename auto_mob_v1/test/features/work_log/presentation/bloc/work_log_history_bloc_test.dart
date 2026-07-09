@@ -210,6 +210,52 @@ void main() {
   );
 
   blocTest<WorkLogHistoryBloc, WorkLogHistoryState>(
+    'RefreshRequested: ricarica la pagina 0 SENZA svuotare works durante il refresh',
+    build: () {
+      when(() => getVehicleWorks(vehicleId: 'v1', from: 0, to: 19))
+          .thenAnswer((_) async => Right([work('w3')]));
+      return buildBloc();
+    },
+    seed: () => WorkLogHistoryState.initial().copyWith(
+      status: HistoryStatus.loaded,
+      selectedVehicleId: 'v1',
+      works: [work('w1'), work('w2')],
+    ),
+    act: (bloc) => bloc.add(const RefreshRequested()),
+    expect: () => [
+      isA<WorkLogHistoryState>()
+          .having((s) => s.isRefreshing, 'isRefreshing', true)
+          // la lista vecchia resta visibile durante il refresh, a
+          // differenza di ReloadCurrent che la svuota subito.
+          .having((s) => s.works.map((w) => w.id), 'works', ['w1', 'w2']),
+      isA<WorkLogHistoryState>()
+          .having((s) => s.works.map((w) => w.id), 'works', ['w3'])
+          .having((s) => s.isRefreshing, 'isRefreshing', false),
+    ],
+  );
+
+  blocTest<WorkLogHistoryBloc, WorkLogHistoryState>(
+    'RefreshRequested: errore -> tiene i dati vecchi, spegne solo isRefreshing',
+    build: () {
+      when(() => getVehicleWorks(vehicleId: 'v1', from: 0, to: 19))
+          .thenAnswer((_) async => const Left(ServerFailure()));
+      return buildBloc();
+    },
+    seed: () => WorkLogHistoryState.initial().copyWith(
+      status: HistoryStatus.loaded,
+      selectedVehicleId: 'v1',
+      works: [work('w1')],
+    ),
+    act: (bloc) => bloc.add(const RefreshRequested()),
+    expect: () => [
+      isA<WorkLogHistoryState>().having((s) => s.isRefreshing, 'isRefreshing', true),
+      isA<WorkLogHistoryState>()
+          .having((s) => s.isRefreshing, 'isRefreshing', false)
+          .having((s) => s.works.map((w) => w.id), 'works', ['w1']),
+    ],
+  );
+
+  blocTest<WorkLogHistoryBloc, WorkLogHistoryState>(
     'ReloadCurrent: ricarica la pagina 0 mantenendo il veicolo selezionato',
     build: () {
       when(() => getVehicleWorks(vehicleId: 'v1', from: 0, to: 19))

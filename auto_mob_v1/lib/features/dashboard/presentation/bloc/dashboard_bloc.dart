@@ -1,5 +1,6 @@
 ﻿import 'dart:async';
 
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../vehicle/domain/entities/vehicle.dart';
@@ -22,6 +23,10 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<LoadDashboardData>(_onLoadDashboardData);
     on<DashboardPageChanged>(_onVehicleChange);
     on<VehiclePhotoUpdateRequested>(_onVehiclePhotoUpdateRequested);
+    on<DashboardRefreshRequested>(
+      _onDashboardRefreshRequested,
+      transformer: droppable(),
+    );
   }
 
   Future<void> _onLoadDashboardData(
@@ -41,6 +46,35 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
           index: 0,
           // KPI del primo veicolo (il placeholder restituisce lista vuota).
           kpis: computeKpis(lista.first),
+        ));
+      },
+    );
+  }
+
+  /// Pull-to-refresh: ricarica i veicoli restando su DashboardLoaded per
+  /// tutta la durata (mai DashboardLoading) -- vehicles/kpis restano
+  /// visibili finche' non arrivano i nuovi dati, cosi' l'indicatore di
+  /// refresh inline non fa comparire il pop-up di caricamento a tutto schermo.
+  Future<void> _onDashboardRefreshRequested(
+    DashboardRefreshRequested event,
+    Emitter<DashboardState> emit,
+  ) async {
+    final current = state;
+    if (current is! DashboardLoaded) return;
+
+    emit(current.copyWith(isRefreshing: true));
+
+    final result = await getVehicles();
+    result.fold(
+      // Errore: tengo i dati vecchi in vista, spengo solo lo spinner.
+      (failure) => emit(current.copyWith(isRefreshing: false)),
+      (vehicles) {
+        final lista = vehicles.isEmpty ? [Vehicle.placeholder()] : vehicles;
+        emit(DashboardLoaded(
+          vehicles: lista,
+          index: 0,
+          kpis: computeKpis(lista.first),
+          isRefreshing: false,
         ));
       },
     );

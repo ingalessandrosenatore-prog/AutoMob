@@ -22,6 +22,12 @@ class WorkLogHistoryState extends Equatable {
   /// true quando l'ultima fetta ha reso < pageSize: non ci sono altri lavori.
   final bool hasReachedMax;
 
+  /// true durante un pull-to-refresh esplicito (RefreshRequested): a
+  /// differenza di isLoadingMore/ReloadCurrent, `works` NON viene svuotato
+  /// prima del ricaricamento, cosi' la lista resta visibile durante il
+  /// refresh invece di sparire dietro uno spinner a tutto schermo.
+  final bool isRefreshing;
+
   final String? errorMessage;
 
   const WorkLogHistoryState({
@@ -31,6 +37,7 @@ class WorkLogHistoryState extends Equatable {
     this.works = const [],
     this.isLoadingMore = false,
     this.hasReachedMax = false,
+    this.isRefreshing = false,
     this.errorMessage,
   });
 
@@ -43,6 +50,7 @@ class WorkLogHistoryState extends Equatable {
     List<WorkLogRow>? works,
     bool? isLoadingMore,
     bool? hasReachedMax,
+    bool? isRefreshing,
     String? errorMessage,
   }) {
     return WorkLogHistoryState(
@@ -52,6 +60,7 @@ class WorkLogHistoryState extends Equatable {
       works: works ?? this.works,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
@@ -64,6 +73,7 @@ class WorkLogHistoryState extends Equatable {
         works,
         isLoadingMore,
         hasReachedMax,
+        isRefreshing,
         errorMessage,
       ];
 }

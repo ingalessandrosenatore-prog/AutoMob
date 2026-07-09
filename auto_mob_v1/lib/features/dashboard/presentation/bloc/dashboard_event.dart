@@ -16,6 +16,11 @@ class DashboardPageChanged extends DashboardEvent {
   DashboardPageChanged(this.newIndex);
 }
 
+/// Pull-to-refresh esplicito: ricarica i veicoli SENZA passare per
+/// DashboardLoading, cosi' vehicles/kpis restano visibili durante il
+/// refresh invece di far comparire il pop-up di caricamento a tutto schermo.
+class DashboardRefreshRequested extends DashboardEvent {}
+
 /// Richiesta di aggiornare la foto del veicolo (menu "MODIFICA FOTO" sulla
 /// card veicolo). Ricarica la dashboard al termine se il salvataggio riesce.
 class VehiclePhotoUpdateRequested extends DashboardEvent {

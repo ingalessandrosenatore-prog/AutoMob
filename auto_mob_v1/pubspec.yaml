@@ -63,6 +63,8 @@ dependencies:
   
   # Local Storage
   shared_preferences: ^2.2.3
+  flutter_svg: ^2.3.0
+  custom_refresh_indicator: ^4.0.1
 
 dev_dependencies:
   flutter_test:
@@ -92,6 +94,7 @@ flutter:
 
   assets:
     - lib/assets/images/
+    - lib/assets/icons/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
