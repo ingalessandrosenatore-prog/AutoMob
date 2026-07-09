@@ -31,7 +31,7 @@ void main() {
     repository = AuthRepositoryImpl(remoteDataSource: remote);
   });
 
-  final tUserModel = AppAuthUserModel(id: 'u1', email: 'test@automob.it');
+  const tUserModel = AppAuthUserModel(id: 'u1', email: 'test@automob.it');
   const tEmail = 'test@automob.it';
   const tPassword = 'password123';
   const tName = 'Mario Rossi';
@@ -44,7 +44,7 @@ void main() {
 
       final result = await repository.loginWithEmail(tEmail, tPassword);
 
-      expect(result, Right<Failure, AppAuthUser>(tUserModel));
+      expect(result, const Right<Failure, AppAuthUser>(tUserModel));
       verify(() => remote.loginWithEmail(tEmail, tPassword)).called(1);
     });
 
@@ -79,7 +79,7 @@ void main() {
 
       final result = await repository.signupWithEmail(tName, tEmail, tPassword);
 
-      expect(result, Right<Failure, AppAuthUser>(tUserModel));
+      expect(result, const Right<Failure, AppAuthUser>(tUserModel));
       verify(() => remote.signupWithEmail(tName, tEmail, tPassword)).called(1);
     });
 
@@ -133,7 +133,7 @@ void main() {
 
       final result = await repository.checkSession();
 
-      expect(result, Right<Failure, AppAuthUser?>(tUserModel));
+      expect(result, const Right<Failure, AppAuthUser?>(tUserModel));
     });
 
     test('ritorna Right(null) quando non c\'e\' sessione attiva', () async {
