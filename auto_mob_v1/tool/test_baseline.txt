@@ -11,7 +11,6 @@
 features/auth/domain/usecases/login_with_apple.dart
 features/auth/domain/usecases/login_with_google.dart
 features/dashboard/domain/usecases/get_profile.dart
-features/vehicle/presentation/bloc/add_vehicle_bloc.dart
 features/work_log/data/repositories/worklog_repository_impl.dart
 features/work_log/domain/usecases/create_work_log.dart
 features/work_log/domain/usecases/get_vehicle_options.dart
