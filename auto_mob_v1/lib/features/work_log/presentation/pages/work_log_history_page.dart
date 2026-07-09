@@ -29,8 +29,12 @@ class WorkLogHistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<WorkLogHistoryBloc>(
-      create: (_) => GetIt.I<WorkLogHistoryBloc>(),
+    // .value: il bloc e' un lazySingleton che sopravvive ai cambi di tab.
+    // Con `create:` flutter_bloc lo chiuderebbe ogni volta che si esce da
+    // questa pagina, e al rientro GetIt restituirebbe la stessa istanza
+    // ormai chiusa -> crash al primo evento.
+    return BlocProvider<WorkLogHistoryBloc>.value(
+      value: GetIt.I<WorkLogHistoryBloc>(),
       child: const _WorkLogHistoryBody(),
     );
   }
@@ -56,8 +60,16 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
     _scroll.addListener(_onScroll);
     // Lancio il caricamento dopo il primo frame, cosi' il BlocListener e' gia'
     // in ascolto e cattura la transizione verso "loading" (pop-up spinner).
+    // Solo pero' se non e' gia' stato fatto: il bloc e' un singleton che
+    // sopravvive ai cambi di tab, quindi rientrando qui i dati sono gia'
+    // li'. Riprova anche da HistoryStatus.error (stesso effetto di "Riprova").
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WorkLogHistoryBloc>().add(const LoadInitial());
+      if (!mounted) return;
+      final bloc = context.read<WorkLogHistoryBloc>();
+      final status = bloc.state.status;
+      if (status == HistoryStatus.initial || status == HistoryStatus.error) {
+        bloc.add(const LoadInitial());
+      }
     });
   }
 

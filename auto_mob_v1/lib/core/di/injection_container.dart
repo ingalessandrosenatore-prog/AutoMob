@@ -141,14 +141,18 @@ Future<void> _initDashboard() async {
   // Use case di calcolo KPI: logica pura, nessuna dipendenza -> singleton.
   sl.registerLazySingleton<ComputeMaintenanceKpis>(() => ComputeMaintenanceKpis());
 
-  // BLoC — factory: nuova istanza ad ogni apertura della home.
+  // BLoC — lazySingleton: la stessa istanza sopravvive ai cambi di tab, cosi'
+  // i dati restano in cache e non si ricaricano ad ogni apertura della home
+  // (il caricamento vero riparte solo se lo stato e' ancora Initial/Error —
+  // vedi guard in home_view.dart). Resettato al logout in main.dart.
   // Riusa GetVehicles della feature vehicle (domain shared via use case).
-  sl.registerFactory<DashboardBloc>(
+  sl.registerLazySingleton<DashboardBloc>(
     () => DashboardBloc(
       getVehicles: sl(),
       computeKpis: sl(),
       updateVehiclePhoto: sl(),
     ),
+    dispose: (b) => b.close(),
   );
 }
 
@@ -176,11 +180,13 @@ void _initWorkLog() {
     ),
   );
 
-  // BLoC storico — factory: nuova istanza ad ogni apertura della pagina.
-  sl.registerFactory<WorkLogHistoryBloc>(
+  // BLoC storico — lazySingleton: stessa logica di DashboardBloc sopra,
+  // cache tra le visite della pagina, guard su Initial/Error, reset al logout.
+  sl.registerLazySingleton<WorkLogHistoryBloc>(
     () => WorkLogHistoryBloc(
       getVehicleOptions: sl(),
       getVehicleWorks: sl(),
     ),
+    dispose: (b) => b.close(),
   );
 }

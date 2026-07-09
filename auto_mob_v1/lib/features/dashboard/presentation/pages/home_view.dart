@@ -30,8 +30,12 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<DashboardBloc>(
-      create: (_) => GetIt.I<DashboardBloc>()..add(LoadDashboardData()),
+    // .value: il bloc e' un lazySingleton che sopravvive ai cambi di tab.
+    // Con `create:` flutter_bloc lo chiuderebbe ogni volta che si esce da
+    // questa pagina, e al rientro GetIt restituirebbe la stessa istanza
+    // ormai chiusa -> crash al primo evento.
+    return BlocProvider<DashboardBloc>.value(
+      value: GetIt.I<DashboardBloc>(),
       child: const _HomeViewBody(),
     );
   }
@@ -54,6 +58,18 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   void initState() {
     super.initState();
     _pageController = PageController();
+    // Carica solo se non e' gia' stato fatto: il bloc e' un singleton che
+    // sopravvive ai cambi di tab, quindi rientrando in Home i dati sono
+    // gia' li'. Riprova anche da DashboardError: e' l'unico modo per
+    // uscire da un caricamento fallito (nessun bottone "riprova" inline).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final bloc = context.read<DashboardBloc>();
+      final s = bloc.state;
+      if (s is DashboardInitial || s is DashboardError) {
+        bloc.add(LoadDashboardData());
+      }
+    });
   }
 
   @override
