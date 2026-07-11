@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../services/haptic_service.dart';
+
 /// ChoiceChip personalizzato AutoMob.
 /// Segue lo stile della foto: bordo colorato quando selezionato, sfondo scuro,
 /// icona di check opzionale.
@@ -21,7 +23,10 @@ class AmChoiceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        AmHaptics.selection();
+        onTap();
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),

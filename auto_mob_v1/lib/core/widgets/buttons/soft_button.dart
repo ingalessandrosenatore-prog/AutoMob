@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
+import '../../services/haptic_service.dart';
+
 class AmSoftButton extends StatefulWidget {
   final String? label;
   final double? width;
@@ -85,7 +87,10 @@ class _AmSoftButtonState extends State<AmSoftButton> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: widget.onPressed,
+      onTap: () {
+        AmHaptics.tap();
+        widget.onPressed();
+      },
       onTapDown: (_) => _onPress(),
       onTapUp: (_) => _onRelese(),
       onTapCancel:() => _onCancel(),

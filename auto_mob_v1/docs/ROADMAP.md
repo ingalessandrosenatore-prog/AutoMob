@@ -200,7 +200,12 @@ usecase (`GetVehicleOptions`/`GetVehicleWorks`), `WorkLogHistoryBloc` (eventi `L
 
 ---
 
-## 7. 🐛 BUG BLOCCANTE — crash all'apertura del pop-up "Aggiungi lavoro" (2026-06-17)
+## 7. ✅ RISOLTO (2026-07-11) — crash all'apertura del pop-up "Aggiungi lavoro" (2026-06-17)
+
+**Fix applicati:** campo "Nome intervento" avvolto in `Row` (fix puntuale sotto) + bottone
+INDIETRO: animata solo la larghezza con altezza fissa dentro `ClipRect`+`OverflowBox`.
+Resta aperto solo il **fix di fondo** (togliere l'`Expanded` nascosto dai widget input),
+da valutare nel rework dei pop-up (punto 8.2).
 
 **Sintomo:** aprendo il pop-up di registrazione lavoro dalla pagina WorkLog → **schermata grigia**.
 In console (il primo errore, NON il `DiagnosticsProperty<void>` che è solo rumore secondario):

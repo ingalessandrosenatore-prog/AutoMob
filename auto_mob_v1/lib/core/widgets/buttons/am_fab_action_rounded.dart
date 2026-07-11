@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../services/haptic_service.dart';
+
 /// Un widget che rappresenta un'azione singola per un menu FAB espandibile.
 /// Segue lo stile: sfondo scuro trasparente, bordo colorato e effetto glow.
 class AmFabAction extends StatelessWidget {
@@ -53,7 +55,10 @@ class AmFabAction extends StatelessWidget {
           const SizedBox(width: 16),
           // Pulsante Circolare con bordo e Glow
           GestureDetector(
-            onTap: onPressed,
+            onTap: () {
+              AmHaptics.tap();
+              onPressed();
+            },
             child: Container(
               width: 60,
               height: 60,

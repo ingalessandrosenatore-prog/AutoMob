@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
+import '../../services/haptic_service.dart';
+
 /// Un badge flottante che indica il veicolo selezionato.
 /// Estetica: Pillola blu con icona auto e freccia per dropdown,
 /// ora animata con espansione e luce interna (BlendMode.overlay).
@@ -81,6 +83,7 @@ class _AmPullDownLGState extends State<AmPullDownLG>
   }
 
   void _onRelese() {
+    AmHaptics.selection();
     final bcS = SpringSimulation(_springDescription, bounceCtrl.value, 1, 0);
     final lcS = SpringSimulation(_lightDescription, lightCtrl.value, 0, 0);
     final mcS = SpringSimulation(_springDescription, morpheCtrl.value, 1, 0);
@@ -409,7 +412,10 @@ class ItemMorphPopUp extends StatelessWidget {
     return Material(
       color: Colors.transparent, // riposo: invisibile, si fonde col pop-up
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          AmHaptics.tap();
+          onTap();
+        },
         borderRadius: const BorderRadius.all(Radius.circular(30)),
         hoverColor: Colors.white.withValues(alpha: 0.08), // mouse sopra
         splashColor: Colors.white.withValues(alpha: 0.15), // ripple al tap

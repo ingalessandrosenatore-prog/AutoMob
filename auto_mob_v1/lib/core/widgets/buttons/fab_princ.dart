@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../services/haptic_service.dart';
+
 /// Il pulsante principale (Main FAB) dell'applicazione.
 /// Design a "pillola" con colore pieno, icona, testo e ombra luminescente (glow).
 class AmMainFab extends StatelessWidget {
@@ -47,7 +49,10 @@ class AmMainFab extends StatelessWidget {
           borderRadius: BorderRadius.circular(32),
           child: InkWell(
             borderRadius: BorderRadius.circular(32),
-            onTap:  onPressed,
+            onTap: () {
+              AmHaptics.action();
+              onPressed();
+            },
             child: isLoading
                 ? const SizedBox(
                     width: 24,

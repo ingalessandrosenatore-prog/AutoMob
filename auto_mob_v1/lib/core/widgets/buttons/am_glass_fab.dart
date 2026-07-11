@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+import '../../services/haptic_service.dart';
+
 /// A class representing an action in the Glass FAB menu.
 class AmGlassAction {
   final Color color;
@@ -121,6 +123,7 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
   }
 
   void _toggle() {
+    AmHaptics.tap();
     setState(() {
       _isOpen = !_isOpen;
     });
@@ -398,6 +401,7 @@ class _AmGlassFabActionItem extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
+                AmHaptics.tap();
                 onClose();
                 action.onPressed();
               },

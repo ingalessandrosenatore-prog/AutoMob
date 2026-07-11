@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../services/haptic_service.dart';
+
 /// Pulsante Outlined personalizzato per AutoMob.
 /// Utilizzato principalmente per azioni secondarie come "Indietro".
 /// Include un effetto glow sul testo basato sul colore principale.
@@ -18,7 +20,10 @@ class AmOutlinedButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OutlinedButton(
-      onPressed: onPressed,
+      onPressed: () {
+        AmHaptics.tap();
+        onPressed();
+      },
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(color: color, width: 1.5),

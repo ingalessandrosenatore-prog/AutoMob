@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../services/haptic_service.dart';
+
 const String _wheelAsset = 'lib/assets/icons/ruota.svg';
 
 /// Sliver di pull-to-refresh: a differenza di un overlay (`RefreshIndicator`),
@@ -26,7 +28,10 @@ class AmRefreshControlSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoSliverRefreshControl(
-      onRefresh: onRefresh,
+      onRefresh: () {
+        AmHaptics.action();
+        return onRefresh();
+      },
       builder: (context, refreshState, pulledExtent, refreshTriggerPullDistance, refreshIndicatorExtent) {
         return Center(
           child: AmWheelRefreshVisual(

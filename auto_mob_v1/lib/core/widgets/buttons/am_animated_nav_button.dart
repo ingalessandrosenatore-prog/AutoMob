@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../services/haptic_service.dart';
+
 class AmAnimatedNavButton extends StatefulWidget {
   final IconData icon;
   final IconData activeIcon;
@@ -50,6 +52,7 @@ class _AmAnimatedNavButtonState extends State<AmAnimatedNavButton> {
       onTapUp: (_) {
         setState(() => _isPressed = false);
         widget.onPressChanged?.call(false);
+        AmHaptics.selection();
         widget.onTap?.call();
       },
       onTapCancel: () {

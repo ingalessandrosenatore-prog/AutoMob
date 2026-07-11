@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/haptic_service.dart';
+
 /// Formatta un intero in km con il punto delle migliaia (es. 40000 -> "40.000").
 String fmtKm(int v) => v.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -25,7 +27,10 @@ class IntervalChoiceChip extends StatelessWidget {
     const arancione = Color(0xFFE85A1A);
     return Expanded(
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () {
+          AmHaptics.selection();
+          onTap();
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(

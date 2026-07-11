@@ -149,21 +149,31 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                       children: [
                         // Bottone INDIETRO con animazione di comparsa/scomparsa laterale e opacità
 
-                           AnimatedContainer(
-                             duration: const Duration(milliseconds: 300,),
-                             curve: Curves.easeInOut,
-                             width: _currentPage > 0 ? 120 : 0,
-                             height: _currentPage > 0 ? 60 : 0,
-                             child: AnimatedOpacity(
-                              duration: const Duration(milliseconds: 300),
-                               curve:  Curves.ease,
-                              opacity: _currentPage > 0 ? 1.0 : 0.0,
-                              child: AmOutlinedButton(
-                                label: 'INDIETRO',
-                                color: const Color(0xFFE85A1A),
-                                onPressed: _goToPreviousPage,
-                              ),
-                                                       ),
+                           // Solo la larghezza è animata: altezza fissa + ClipRect,
+                           // così il bottone non viene forzato in un box 0×0
+                           // (overflow ad ogni frame, vedi ROADMAP #7).
+                           ClipRect(
+                             child: AnimatedContainer(
+                               duration: const Duration(milliseconds: 300,),
+                               curve: Curves.easeInOut,
+                               width: _currentPage > 0 ? 120 : 0,
+                               height: 60,
+                               child: OverflowBox(
+                                 alignment: Alignment.centerRight,
+                                 maxWidth: 120,
+                                 minWidth: 120,
+                                 child: AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 300),
+                                   curve:  Curves.ease,
+                                  opacity: _currentPage > 0 ? 1.0 : 0.0,
+                                  child: AmOutlinedButton(
+                                    label: 'INDIETRO',
+                                    color: const Color(0xFFE85A1A),
+                                    onPressed: _goToPreviousPage,
+                                  ),
+                                 ),
+                               ),
+                             ),
                            ),
 
                         AnimatedContainer(
@@ -311,16 +321,22 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
           if (state.type != EnumPopUp.altro) return const SizedBox.shrink();
           return Padding(
             padding: const EdgeInsets.only(top: 24),
-            child: AmTextField(
-              label: "Nome intervento",
-              placeholder: "Specifica il tipo di intervento...",
-              controller: _customNameController,
-              isRequired: true,
-              obscureText: false,
-              keyboardType: TextInputType.text,
-              onChanged: (_) => context.read<WorkLogBloc>().add(
-                CustomNameChange(customName: _customNameController.text),
-              ),
+            // AmTextField ha un Expanded come root: serve un Flex come genitore
+            // diretto (vedi ROADMAP #7), altrimenti crash BoxParentData/FlexParentData.
+            child: Row(
+              children: [
+                AmTextField(
+                  label: "Nome intervento",
+                  placeholder: "Specifica il tipo di intervento...",
+                  controller: _customNameController,
+                  isRequired: true,
+                  obscureText: false,
+                  keyboardType: TextInputType.text,
+                  onChanged: (_) => context.read<WorkLogBloc>().add(
+                    CustomNameChange(customName: _customNameController.text),
+                  ),
+                ),
+              ],
             ),
           );
         },
