@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
+import '../../config/performance_flags.dart';
 import '../../services/haptic_service.dart';
+import '../smart/am_flat_glass.dart';
 
 class AmSoftButton extends StatefulWidget {
   final String? label;
@@ -86,6 +88,54 @@ class _AmSoftButtonState extends State<AmSoftButton> with TickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
+    final Color base = widget.color?.withValues(alpha: 0.8) ?? Colors.transparent;
+
+    // Contenuto del pulsante (glow + icona/testo), condiviso dai due rendering.
+    final Widget content = Stack(
+      alignment: Alignment.center,
+      children: [
+        // IL FLASH "STILE APPLE" CENTRATO E CONTROLLATO
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: lightCtrl,
+              builder: (context, child) => CustomPaint(
+                painter: GlowPainter(
+                  intensity: lightCtrl.value,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // CONTENUTI
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              widget.icon,
+              color: Colors.white,
+              size: 26,
+              fontWeight: FontWeight.w900,
+            ),
+            if (widget.label != null) ...[
+              const SizedBox(width: 8),
+              Text(
+                widget.label!,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ]
+          ],
+        ),
+      ],
+    );
+
     return GestureDetector(
       onTap: () {
         AmHaptics.tap();
@@ -101,63 +151,25 @@ class _AmSoftButtonState extends State<AmSoftButton> with TickerProviderStateMix
               scale: bounceCtrl.value,
               child: child,
             ),
-        child: OCLiquidGlass(
-          height: widget.height,
-          width: widget.width,
-          borderRadius: 100,
-          enabled: true,
-          color: widget.color?.withValues(alpha: 0.8) ?? Colors.transparent,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // 1. BASE
-
-
-              // 2. IL FLASH "STILE APPLE" CENTRATO E CONTROLLATO
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: AnimatedBuilder(
-                    animation: lightCtrl,
-                    builder: (context, child) =>
-                    CustomPaint(
-                      painter: GlowPainter(intensity : lightCtrl.value, color: Colors.white,)
-                    )
-                    ),
-
-
-
-                    ),
-                  ),
-              
-
-              // 3. CONTENUTI
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-
-                    widget.icon,
-                    color: Colors.white,
-                    size: 26,
-                    fontWeight: FontWeight.w900,
-                  ),
-                  if (widget.label != null) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      widget.label!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ]
-                ],
+        // Top di gamma: vetro reale. Altrimenti versione piatta (gradiente
+        // col colore che schiarisce verso i bordi + un filo di opacity).
+        child: kHeavyEffects
+            ? OCLiquidGlass(
+                height: widget.height,
+                width: widget.width,
+                borderRadius: 100,
+                enabled: true,
+                color: base,
+                child: content,
+              )
+            : AmFlatGlass(
+                height: widget.height,
+                width: widget.width,
+                borderRadius: 100,
+                color: base,
+                opacity: 0.9,
+                child: content,
               ),
-            ],
-          ),
-        ),
       ),
     );
   }

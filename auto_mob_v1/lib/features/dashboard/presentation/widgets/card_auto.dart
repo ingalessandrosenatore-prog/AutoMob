@@ -60,7 +60,7 @@ class CardAuto extends StatelessWidget {
       // larghezza = larghezza del MENU che si apre (non della matita, che si
       // dimensiona sul contenuto). A 60 la voce "MODIFICA FOTO" andava in
       // overflow (~32px): serve spazio per icona + padding + testo.
-      larghezza: 200,
+      larghezza: 260,
       buttonIcons: Icons.edit,
       buttonIconsSize: 18,
       buttonIconColor: Colors.white,
@@ -104,20 +104,7 @@ class CardAuto extends StatelessWidget {
                 Positioned(
                   top: 12,
                   right: 12,
-                  child: kHeavyEffects
-                      ? OCLiquidGlassGroup(
-                          settings: const OCLiquidGlassSettings(
-                            refractStrength: -0.130,
-                            blurRadiusPx: 1.0,
-                            specStrength: 0,
-                            specWidth: 0.0,
-                            specAngle: 145,
-                            blendPx: 70,
-                            specPower: 10,
-                          ),
-                          child: editPull,
-                        )
-                      : editPull,
+                  child: editPull,
                 ),
               ],
             ),

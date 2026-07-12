@@ -5,6 +5,7 @@ import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../../config/performance_flags.dart';
 import '../../services/haptic_service.dart';
+import '../smart/am_flat_glass.dart';
 
 /// Un badge flottante che indica il veicolo selezionato.
 /// Estetica: Pillola blu con icona auto e freccia per dropdown,
@@ -134,20 +135,10 @@ class _AmPullDownLGState extends State<AmPullDownLG>
           final apertura = (1 - morpheCtrl.value).clamp(0.0, 1.0);
           final scala = bounceCtrl.value * apertura;
 
-          return Transform.scale(
-            scale: scala,
-            // Vetro del trigger gatato come il gruppo esterno: senza un
-            // OCLiquidGlassGroup antenato (spento con kHeavyEffects) un
-            // OCLiquidGlass enabled continua a campionare/rifrangere lo sfondo
-            // in modo scorretto -> scorrendo la card "scappa" dall'icona. Con
-            // flag off diventa una forma piatta ferma.
-            child: OCLiquidGlass(
-              enabled: kHeavyEffects,
-              color:
-                  widget.color?.withValues(alpha: 0.2) ??
-                  const Color(0xFF232326).withValues(alpha: 0.2),
-              borderRadius: 100,
-              child: Stack(
+          final Color base = widget.color?.withValues(alpha: 0.2) ??
+              const Color(0xFF232326).withValues(alpha: 0.2);
+
+          final Widget content = Stack(
                 alignment: Alignment.center,
                 children: [
                   // 2. LIVELLO BASE E OMBRA
@@ -210,8 +201,36 @@ class _AmPullDownLGState extends State<AmPullDownLG>
                     ),
                   ),
                 ],
+              );
+
+          return Transform.scale(
+            scale: scala,
+            // Top di gamma: vetro reale del trigger. Altrimenti versione piatta
+            // (gradiente col colore che schiarisce verso i bordi + un filo di
+            // opacity): niente shader orfano che "scivola" durante lo scroll.
+            child: kHeavyEffects
+                ? OCLiquidGlass(
+                    enabled: true,
+                    color: base,
+                    borderRadius: 100,
+                    child: content,
+                  )
+            // TODO: in caso di false il comtainer si deve adattare alla forma del contenuto come fa ocliquid glass e inoltre e scomaprso il bagliorequando si preme sul puslante 
+                : Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF232326).withValues(alpha: 0.7),
+                    Colors.white.withValues(alpha: 0.1),
+                    Colors.white.withValues(alpha: 0.1),// Sfumatura intermedia
+                    Colors.white.withValues(alpha: 0.2), // Bordo diametro bianco lieve
+                  ],
+                  stops: const [0.8, 0.95,0.99, 1.0],
+                ),
               ),
-            ),
+              child: content,
+            )
           );
         },
       ),
@@ -353,21 +372,35 @@ class _PopUpState extends State<MorphPopUp>
               top: rect.top,
               height: rect.height,
               width: rect.width,
-              child: Opacity(
-                opacity: opac,
-                child: OCLiquidGlassGroup(
-                  settings: const OCLiquidGlassSettings(
-                    blurRadiusPx: 10,
-                    refractStrength: 0.15,
-                    specStrength: 0,
-                    specWidth: 0,
-                  ),
-                  child: OCLiquidGlass(
-                    enabled: true,
-                    borderRadius:
-                        30, // Ridotto da 100 per adattarsi meglio alla forma rettangolare
-                    color: const Color(0xFF232326).withValues(alpha: 0.7),
-                    child: ListView.builder(
+              // Il contenuto viene SEMPRE disposto alla dimensione FINALE
+              // (larghezza x altezzaFinale) via OverflowBox, e l'espansione la
+              // fa il ClipRRect che scopre progressivamente questa finestra.
+              // Cosi' la Row della voce non viene mai stretta piu' del suo
+              // contenuto durante l'apertura/chiusura -> niente RenderFlex
+              // overflow transitorio (l'errore "overflowed by 32px").
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: OverflowBox(
+                  alignment: Alignment.topLeft,
+                  minWidth: widget.larghezza,
+                  maxWidth: widget.larghezza,
+                  minHeight: altezzaFinale,
+                  maxHeight: altezzaFinale,
+                  child: Opacity(
+                    opacity: opac,
+                    child: OCLiquidGlassGroup(
+                      settings: const OCLiquidGlassSettings(
+                        blurRadiusPx: 10,
+                        refractStrength: 0.15,
+                        specStrength: 0,
+                        specWidth: 0,
+                      ),
+                      child: OCLiquidGlass(
+                        enabled: true,
+                        borderRadius:
+                            30, // Ridotto da 100 per adattarsi meglio alla forma rettangolare
+                        color: const Color(0xFF232326).withValues(alpha: 0.7),
+                        child: ListView.builder(
                       padding: const EdgeInsets.all(8),
                       itemCount: widget.children.length,
                       itemBuilder: (context, index) {
@@ -388,6 +421,8 @@ class _PopUpState extends State<MorphPopUp>
                       },
                     ),
                   ),
+                ),
+              ),
                 ),
               ),
             ),
