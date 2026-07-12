@@ -169,7 +169,7 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
                       child: AmSoftButton(
                         width: 45,
                         height: 45,
-                        color: const Color(0xFF232326).withValues(alpha: 0.3),
+                        color: const  Color(0xFFFF6B00),
                         icon: Icons.close,
                         onPressed: () => context.pop(),
                       ),

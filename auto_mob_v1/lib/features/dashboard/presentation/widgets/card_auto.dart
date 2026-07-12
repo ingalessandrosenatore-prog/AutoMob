@@ -57,7 +57,10 @@ class CardAuto extends StatelessWidget {
       brand: '',
       lable: '',
       onTap: () {},
-      larghezza: 60,
+      // larghezza = larghezza del MENU che si apre (non della matita, che si
+      // dimensiona sul contenuto). A 60 la voce "MODIFICA FOTO" andava in
+      // overflow (~32px): serve spazio per icona + padding + testo.
+      larghezza: 200,
       buttonIcons: Icons.edit,
       buttonIconsSize: 18,
       buttonIconColor: Colors.white,

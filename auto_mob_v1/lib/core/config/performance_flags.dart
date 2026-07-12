@@ -7,4 +7,4 @@
 ///
 /// TODO: in futuro derivarlo automaticamente dalla fascia del device
 /// (RAM disponibile, refresh rate, GPU, ecc.) invece di una costante.
-const bool kHeavyEffects = false;
+const bool kHeavyEffects = true;

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
+import '../../config/performance_flags.dart';
 import '../../services/haptic_service.dart';
 
 /// Un badge flottante che indica il veicolo selezionato.
@@ -135,8 +136,13 @@ class _AmPullDownLGState extends State<AmPullDownLG>
 
           return Transform.scale(
             scale: scala,
+            // Vetro del trigger gatato come il gruppo esterno: senza un
+            // OCLiquidGlassGroup antenato (spento con kHeavyEffects) un
+            // OCLiquidGlass enabled continua a campionare/rifrangere lo sfondo
+            // in modo scorretto -> scorrendo la card "scappa" dall'icona. Con
+            // flag off diventa una forma piatta ferma.
             child: OCLiquidGlass(
-              enabled: true ,
+              enabled: kHeavyEffects,
               color:
                   widget.color?.withValues(alpha: 0.2) ??
                   const Color(0xFF232326).withValues(alpha: 0.2),

@@ -36,9 +36,6 @@ class SmartEdge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (blur) {
-      return SoftEdgeBlur(edges: edges, child: child);
-    }
 
     return ClipRect(
       child: Stack(
