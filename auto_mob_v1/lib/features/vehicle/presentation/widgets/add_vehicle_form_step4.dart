@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
+import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -38,10 +38,14 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
   static const _inversioneIntervalli = [10000, 15000, 20000, 30000];
 
   final revisioneDateController = TextEditingController();
-  final ultimoCambioGommeController = TextEditingController(); // km ultimo cambio
-  final intervalloCambioController = TextEditingController(); // intervallo cambio
-  final ultimaInversioneController = TextEditingController(); // km ultima inversione
-  final intervalloInversioneController = TextEditingController(); // intervallo inversione
+  final ultimoCambioGommeController =
+      TextEditingController(); // km ultimo cambio
+  final intervalloCambioController =
+      TextEditingController(); // intervallo cambio
+  final ultimaInversioneController =
+      TextEditingController(); // km ultima inversione
+  final intervalloInversioneController =
+      TextEditingController(); // intervallo inversione
 
   // Chip attualmente evidenziata per ciascun tipo (null = nessuna / valore custom).
   int? _selectedCambio;
@@ -68,7 +72,8 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
       ultimaInversioneController.text = d.kmUltimaInversioneGomme.toString();
     }
     if (d.intervalloInversioneGomme != null) {
-      intervalloInversioneController.text = d.intervalloInversioneGomme.toString();
+      intervalloInversioneController.text = d.intervalloInversioneGomme
+          .toString();
       _selectedInversione = d.intervalloInversioneGomme;
     }
     final r = d.prossimarevisione;
@@ -100,7 +105,8 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
     final v = int.tryParse(c.text);
     if (v != null && v > km) {
       return (
-        text: 'Km attuali ${fmtKm(km)}: inserisci un numero inferiore o modificalo',
+        text:
+            'Km attuali ${fmtKm(km)}: inserisci un numero inferiore o modificalo',
         error: true,
       );
     }
@@ -187,7 +193,11 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          for (int i = 0; i < _cambioIntervalli.length; i++) ...[
+                          for (
+                            int i = 0;
+                            i < _cambioIntervalli.length;
+                            i++
+                          ) ...[
                             if (i > 0) const SizedBox(width: 8),
                             IntervalChoiceChip(
                               label: fmtKm(_cambioIntervalli[i]),
@@ -212,7 +222,8 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
                             obscureText: false,
                             keyboardType: TextInputType.number,
                             onChanged: (val) => setState(
-                                () => _selectedCambio = int.tryParse(val)),
+                              () => _selectedCambio = int.tryParse(val),
+                            ),
                             suffixIcon: kmSuffix,
                           ),
                         ],
@@ -259,14 +270,17 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          for (int i = 0;
-                              i < _inversioneIntervalli.length;
-                              i++) ...[
+                          for (
+                            int i = 0;
+                            i < _inversioneIntervalli.length;
+                            i++
+                          ) ...[
                             if (i > 0) const SizedBox(width: 8),
                             IntervalChoiceChip(
                               label: fmtKm(_inversioneIntervalli[i]),
                               selected:
-                                  _selectedInversione == _inversioneIntervalli[i],
+                                  _selectedInversione ==
+                                  _inversioneIntervalli[i],
                               onTap: () => setState(() {
                                 _selectedInversione = _inversioneIntervalli[i];
                                 intervalloInversioneController.text =
@@ -287,7 +301,8 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
                             obscureText: false,
                             keyboardType: TextInputType.number,
                             onChanged: (val) => setState(
-                                () => _selectedInversione = int.tryParse(val)),
+                              () => _selectedInversione = int.tryParse(val),
+                            ),
                             suffixIcon: kmSuffix,
                           ),
                         ],
@@ -339,31 +354,32 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
                     onPressed: () {
                       // Blocco l'avanzamento se un "ultimo km" supera i km attuali.
                       final bloccato =
-                          (_kmInfo(ultimoCambioGommeController)?.error ?? false) ||
-                              (_kmInfo(ultimaInversioneController)?.error ?? false);
+                          (_kmInfo(ultimoCambioGommeController)?.error ??
+                              false) ||
+                          (_kmInfo(ultimaInversioneController)?.error ?? false);
                       if (bloccato) {
                         setState(() {});
                         return;
                       }
                       context.read<AddVehicleBloc>().add(
-                            Step4Submitted(
-                              prossimarevisione: _parseDateStep4(
-                                revisioneDateController.text,
-                              ),
-                              kmUltimoCambioGomme: int.tryParse(
-                                ultimoCambioGommeController.text,
-                              ),
-                              intervalloCambioGomme: int.tryParse(
-                                intervalloCambioController.text,
-                              ),
-                              kmUltimaInversioneGomme: int.tryParse(
-                                ultimaInversioneController.text,
-                              ),
-                              intervalloInversioneGomme: int.tryParse(
-                                intervalloInversioneController.text,
-                              ),
-                            ),
-                          );
+                        Step4Submitted(
+                          prossimarevisione: _parseDateStep4(
+                            revisioneDateController.text,
+                          ),
+                          kmUltimoCambioGomme: int.tryParse(
+                            ultimoCambioGommeController.text,
+                          ),
+                          intervalloCambioGomme: int.tryParse(
+                            intervalloCambioController.text,
+                          ),
+                          kmUltimaInversioneGomme: int.tryParse(
+                            ultimaInversioneController.text,
+                          ),
+                          intervalloInversioneGomme: int.tryParse(
+                            intervalloInversioneController.text,
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),

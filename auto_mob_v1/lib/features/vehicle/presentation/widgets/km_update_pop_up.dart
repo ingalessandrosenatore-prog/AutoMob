@@ -85,9 +85,9 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
     if (!_valido) return;
     final nuovoKm = int.parse(_nuovoKmController.text.trim());
     context.read<KmUpdateCubit>().aggiorna(
-          vehicleId: widget.vehicleId,
-          newKm: nuovoKm,
-        );
+      vehicleId: widget.vehicleId,
+      newKm: nuovoKm,
+    );
   }
 
   @override
@@ -142,7 +142,9 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                           color: darkContainerColor.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFF4A90E2).withValues(alpha: 0.2),
+                            color: const Color(
+                              0xFF4A90E2,
+                            ).withValues(alpha: 0.2),
                             width: 1,
                           ),
                         ),
@@ -266,7 +268,9 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                         : Text(
                             "Salva aggiornamento",
                             style: TextStyle(
-                              color: attivo ? Colors.white : const Color(0xFF8E8E93),
+                              color: attivo
+                                  ? Colors.white
+                                  : const Color(0xFF8E8E93),
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),

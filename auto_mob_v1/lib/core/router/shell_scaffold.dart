@@ -37,9 +37,21 @@ class _ShellScaffoldState extends State<ShellScaffold> with TickerProviderStateM
   );
 
   static const List<_NavItem> _items = [
-    _NavItem(route: '/home', icon: Icons.home_outlined, activeIcon: Icons.home, label: 'Garage'),
-    _NavItem(route: '/lavori', icon: Icons.build_outlined, activeIcon: Icons.build, label: 'Lavori'),
-    _NavItem(route: '/servizi', icon: Icons.list_sharp, activeIcon: Icons.list, label: 'Servizi'),
+    _NavItem(
+        route: '/home',
+        icon: Icons.home_outlined,
+        activeIcon: Icons.home_outlined,
+        label: 'Garage'),
+    _NavItem(
+        route: '/lavori',
+        icon: Icons.construction_outlined,
+        activeIcon: Icons.construction_outlined,
+        label: 'Lavori'),
+    _NavItem(
+        route: '/servizi',
+        icon: Icons.view_list_outlined,
+        activeIcon: Icons.view_list_outlined,
+        label: 'Servizi'),
   ];
 
   @override
@@ -213,27 +225,17 @@ class AmNavItem extends StatelessWidget {
           vertical: 8.0,
         ),
         decoration: BoxDecoration(
-          // Quando selezionato diventa un'elegante capsula ovale, altrimenti è trasparente
-            gradient:isSelect? const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF2C2C2E), // Grigio scuro leggermente più chiaro
-                Color(0xEF151414),// Grigio antracite centrale
-                // Nero profondo sulla base inferiore
-              ],
-              stops: [0.1,  1.0],
-            ) : null,
+          // Background arancione semitrasparente come richiesto
+          color: isSelect ? _appOrange.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: Colors.transparent, width: 1),
           boxShadow: isSelect
               ? [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ]
+                  BoxShadow(
+                    color: _appOrange.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
               : [],
         ),
         child: Column(

@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
+import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 
 import '../entities/maintenance_kpi.dart';
 import '../entities/vehicle.dart';
@@ -24,17 +24,36 @@ class ComputeMaintenanceKpis {
       final perc = intervallo <= 0
           ? 0.0
           : ((mancanti * 100) / intervallo).clamp(0.0, 100.0);
-      return MaintenanceKpi(type: tipo, remainingKm: mancanti, percentage: perc);
+      return MaintenanceKpi(
+        type: tipo,
+        remainingKm: mancanti,
+        percentage: perc,
+      );
     }
 
     return [
-      calcola(EnumPopUp.aggiornaTagliando, v.lastTagliandoKm, v.tagliandoIntervalKm),
+      calcola(
+        EnumPopUp.aggiornaTagliando,
+        v.lastTagliandoKm,
+        v.tagliandoIntervalKm,
+      ),
       // La distribuzione la mostro solo se ho un intervallo valido sul veicolo.
       if (v.distribuzioneIntervalKm != null && v.distribuzioneIntervalKm! > 0)
-        calcola(EnumPopUp.aggiornaDistribuzione, v.lastDistribuzioneKm,
-            v.distribuzioneIntervalKm!),
-      calcola(EnumPopUp.aggiornaCambioGomme, v.lastTireChangeKm, v.tireChangeIntervalKm),
-      calcola(EnumPopUp.pneumaticiInversione, v.lastTireRotationKm, v.tireRotationIntervalKm),
+        calcola(
+          EnumPopUp.aggiornaDistribuzione,
+          v.lastDistribuzioneKm,
+          v.distribuzioneIntervalKm!,
+        ),
+      calcola(
+        EnumPopUp.aggiornaCambioGomme,
+        v.lastTireChangeKm,
+        v.tireChangeIntervalKm,
+      ),
+      calcola(
+        EnumPopUp.pneumaticiInversione,
+        v.lastTireRotationKm,
+        v.tireRotationIntervalKm,
+      ),
     ];
   }
 }

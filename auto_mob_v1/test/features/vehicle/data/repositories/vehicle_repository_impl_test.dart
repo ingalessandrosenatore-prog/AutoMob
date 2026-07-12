@@ -42,20 +42,24 @@ void main() {
   });
 
   group('updateKm', () {
-    test('ritorna Right con i km salvati quando il datasource risponde',
-        () async {
-      when(() => remote.updateKm(vehicleId: 'v1', newKm: 12000))
-          .thenAnswer((_) async => 12345);
+    test(
+      'ritorna Right con i km salvati quando il datasource risponde',
+      () async {
+        when(
+          () => remote.updateKm(vehicleId: 'v1', newKm: 12000),
+        ).thenAnswer((_) async => 12345);
 
-      final result = await repository.updateKm(vehicleId: 'v1', newKm: 12000);
+        final result = await repository.updateKm(vehicleId: 'v1', newKm: 12000);
 
-      expect(result, const Right<Failure, int>(12345));
-      verify(() => remote.updateKm(vehicleId: 'v1', newKm: 12000)).called(1);
-    });
+        expect(result, const Right<Failure, int>(12345));
+        verify(() => remote.updateKm(vehicleId: 'v1', newKm: 12000)).called(1);
+      },
+    );
 
     test('mappa VehicleDataSourceException in ServerFailure', () async {
-      when(() => remote.updateKm(vehicleId: 'v1', newKm: 12000))
-          .thenThrow(const VehicleDataSourceException('boom'));
+      when(
+        () => remote.updateKm(vehicleId: 'v1', newKm: 12000),
+      ).thenThrow(const VehicleDataSourceException('boom'));
 
       final result = await repository.updateKm(vehicleId: 'v1', newKm: 12000);
 
@@ -63,8 +67,9 @@ void main() {
     });
 
     test('mappa NetworkException in NetworkFailure', () async {
-      when(() => remote.updateKm(vehicleId: 'v1', newKm: 12000))
-          .thenThrow(const NetworkException());
+      when(
+        () => remote.updateKm(vehicleId: 'v1', newKm: 12000),
+      ).thenThrow(const NetworkException());
 
       final result = await repository.updateKm(vehicleId: 'v1', newKm: 12000);
 
@@ -88,8 +93,9 @@ void main() {
     });
 
     test('mappa CacheException in StorageFailure', () async {
-      when(() => local.saveFoto(tFile, 'AB123CD'))
-          .thenThrow(const CacheException('boom'));
+      when(
+        () => local.saveFoto(tFile, 'AB123CD'),
+      ).thenThrow(const CacheException('boom'));
 
       final result = await repository.updateVehiclePhoto(
         targa: 'AB123CD',

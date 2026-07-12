@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../../../../core/widgets/Effects/pulsing_glow_border.dart';
 import '../../../../core/widgets/buttons/am_pull_down_lg.dart';
@@ -48,7 +49,7 @@ class CardAuto extends StatelessWidget {
 
     return Container(
       width: cardWidth,
-      margin: const EdgeInsets.symmetric(horizontal: 10),
+
       decoration: BoxDecoration(
         color: const Color(0xFF232326), // stesso base delle card KPI
         borderRadius: BorderRadius.circular(32),
@@ -73,25 +74,36 @@ class CardAuto extends StatelessWidget {
                 Positioned(
                   top: 12,
                   right: 12,
-                  child: AmPullDownLG(
-                    brand: '',
-                    lable: '',
-                    onTap: () {},
-                    larghezza: 260,
-                    buttonIcons: Icons.edit,
-                    buttonIconsSize: 18,
-                    buttonIconColor: Colors.white,
-                    buttonLableStyle: const TextStyle(fontSize: 0),
-                    arrow: false,
-                    children: [
-                      ItemMorphPopUp(
-                        icon: Icons.photo_camera_outlined,
-                        text: "MODIFICA FOTO",
-                        onTap: onEditPhotoTap ?? () {},
-                        iconColor: const Color(0xFFF48A37),
-                        iconSize: 20,
-                      ),
-                    ],
+                  child: OCLiquidGlassGroup(
+                    settings: const OCLiquidGlassSettings(
+                      refractStrength: -0.130,
+                      blurRadiusPx: 1.0,
+                      specStrength: 0,
+                      specWidth: 0.0,
+                      specAngle: 145,
+                      blendPx: 70,
+                      specPower: 10,
+                    ),
+                    child: AmPullDownLG(
+                      brand: '',
+                      lable: '',
+                      onTap: () {},
+                      larghezza: 60,
+                      buttonIcons: Icons.edit,
+                      buttonIconsSize: 18,
+                      buttonIconColor: Colors.white,
+                      buttonLableStyle: const TextStyle(fontSize: 0),
+                      arrow: false,
+                      children: [
+                        ItemMorphPopUp(
+                          icon: Icons.photo_camera_outlined,
+                          text: "MODIFICA FOTO",
+                          onTap: onEditPhotoTap ?? () {},
+                          iconColor: const Color(0xFFF48A37),
+                          iconSize: 20,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

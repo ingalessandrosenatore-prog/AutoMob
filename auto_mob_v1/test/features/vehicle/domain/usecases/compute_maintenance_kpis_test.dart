@@ -61,8 +61,10 @@ void main() {
 
     final result = usecase(vehicle);
 
-    expect(result.map((k) => k.type),
-        isNot(contains(EnumPopUp.aggiornaDistribuzione)));
+    expect(
+      result.map((k) => k.type),
+      isNot(contains(EnumPopUp.aggiornaDistribuzione)),
+    );
     expect(result, hasLength(3));
   });
 
@@ -71,8 +73,10 @@ void main() {
 
     final result = usecase(vehicle);
 
-    expect(result.map((k) => k.type),
-        contains(EnumPopUp.aggiornaDistribuzione));
+    expect(
+      result.map((k) => k.type),
+      contains(EnumPopUp.aggiornaDistribuzione),
+    );
     expect(result, hasLength(4));
   });
 
@@ -84,8 +88,9 @@ void main() {
     );
 
     final result = usecase(vehicle);
-    final tagliando =
-        result.firstWhere((k) => k.type == EnumPopUp.aggiornaTagliando);
+    final tagliando = result.firstWhere(
+      (k) => k.type == EnumPopUp.aggiornaTagliando,
+    );
 
     expect(tagliando.remainingKm, 15000);
     expect(tagliando.percentage, 100.0);
@@ -99,37 +104,44 @@ void main() {
     );
 
     final result = usecase(vehicle);
-    final tagliando =
-        result.firstWhere((k) => k.type == EnumPopUp.aggiornaTagliando);
+    final tagliando = result.firstWhere(
+      (k) => k.type == EnumPopUp.aggiornaTagliando,
+    );
 
     // prossimoKm = 5000 + 15000 = 20000; mancanti = 20000 - 12000 = 8000
     expect(tagliando.remainingKm, 8000);
     expect(tagliando.percentage, closeTo(53.33, 0.01));
   });
 
-  test('intervento scaduto: km mancanti negativi e percentuale clampata a 0', () {
-    final vehicle = buildVehicle(
-      kmCurrent: 30000,
-      tagliandoIntervalKm: 15000,
-      lastTagliandoKm: 5000,
-    );
+  test(
+    'intervento scaduto: km mancanti negativi e percentuale clampata a 0',
+    () {
+      final vehicle = buildVehicle(
+        kmCurrent: 30000,
+        tagliandoIntervalKm: 15000,
+        lastTagliandoKm: 5000,
+      );
 
-    final result = usecase(vehicle);
-    final tagliando =
-        result.firstWhere((k) => k.type == EnumPopUp.aggiornaTagliando);
+      final result = usecase(vehicle);
+      final tagliando = result.firstWhere(
+        (k) => k.type == EnumPopUp.aggiornaTagliando,
+      );
 
-    // prossimoKm = 20000; mancanti = 20000 - 30000 = -10000
-    expect(tagliando.remainingKm, -10000);
-    expect(tagliando.percentage, 0.0);
-  });
+      // prossimoKm = 20000; mancanti = 20000 - 30000 = -10000
+      expect(tagliando.remainingKm, -10000);
+      expect(tagliando.percentage, 0.0);
+    },
+  );
 
-  test('ritorna un MaintenanceKpi per ognuno dei 4 tipi quando tutti configurati',
-      () {
-    final vehicle = buildVehicle(distribuzioneIntervalKm: 20000);
+  test(
+    'ritorna un MaintenanceKpi per ognuno dei 4 tipi quando tutti configurati',
+    () {
+      final vehicle = buildVehicle(distribuzioneIntervalKm: 20000);
 
-    final result = usecase(vehicle);
+      final result = usecase(vehicle);
 
-    expect(result, hasLength(4));
-    expect(result, everyElement(isA<MaintenanceKpi>()));
-  });
+      expect(result, hasLength(4));
+      expect(result, everyElement(isA<MaintenanceKpi>()));
+    },
+  );
 }

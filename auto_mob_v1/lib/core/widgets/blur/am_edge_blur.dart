@@ -24,25 +24,25 @@ class AmEdgeBlur extends StatelessWidget {
         edges: [
           EdgeBlur(
             type: EdgeType.topEdge,
-            size: 180,
+            size: 20,
             sigma: 10,
             controlPoints: [
-              ControlPoint(position: 0.6, type: ControlPointType.visible),
+              ControlPoint(position: 0.5, type: ControlPointType.visible),
               ControlPoint(position: 1.0, type: ControlPointType.transparent),
             ],
           ),
           EdgeBlur(
             type: EdgeType.bottomEdge,
-            size: 110,
+            size: 20,
             sigma: 10,
             controlPoints: [
-              ControlPoint(position: 0.6, type: ControlPointType.visible),
+              ControlPoint(position: 0.5, type: ControlPointType.visible),
               ControlPoint(position: 1.0, type: ControlPointType.transparent),
             ],
           ),
         ],
         blur: kHeavyEffects,
-        fallbackTint: Colors.black54,
+        fallbackTint: Colors.black,
         child: child,
       ),
     );

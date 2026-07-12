@@ -86,7 +86,8 @@ class VehicleDraft extends Equatable {
       kmUltimoTagliando: kmUltimoTagliando ?? this.kmUltimoTagliando,
       intervalloUltimaDistribuzione:
           intervalloUltimaDistribuzione ?? this.intervalloUltimaDistribuzione,
-      kmUltimaDistribuzione: kmUltimaDistribuzione ?? this.kmUltimaDistribuzione,
+      kmUltimaDistribuzione:
+          kmUltimaDistribuzione ?? this.kmUltimaDistribuzione,
       potenzaCv: potenzaCv ?? this.potenzaCv,
       cilindrata: cilindrata ?? this.cilindrata,
       kmAttuali: kmAttuali ?? this.kmAttuali,
@@ -105,13 +106,24 @@ class VehicleDraft extends Equatable {
 
   @override
   List<Object?> get props => [
-        targa, marca, modello, anno, carburante,
-        intervalloUltimoTagliando, kmUltimoTagliando,
-        intervalloUltimaDistribuzione, kmUltimaDistribuzione,
-        potenzaCv, cilindrata, kmAttuali,
-        prossimarevisione,
-        kmUltimoCambioGomme, intervalloCambioGomme,
-        kmUltimaInversioneGomme, intervalloInversioneGomme,
-        fotoFile, codiceMeccanico,
-      ];
+    targa,
+    marca,
+    modello,
+    anno,
+    carburante,
+    intervalloUltimoTagliando,
+    kmUltimoTagliando,
+    intervalloUltimaDistribuzione,
+    kmUltimaDistribuzione,
+    potenzaCv,
+    cilindrata,
+    kmAttuali,
+    prossimarevisione,
+    kmUltimoCambioGomme,
+    intervalloCambioGomme,
+    kmUltimaInversioneGomme,
+    intervalloInversioneGomme,
+    fotoFile,
+    codiceMeccanico,
+  ];
 }

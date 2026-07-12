@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/update_vehicle_km.dart';
@@ -43,7 +43,9 @@ class KmUpdateCubit extends Cubit<KmUpdateState> {
     emit(state.copyWith(status: KmUpdateStatus.loading, error: null));
     final res = await updateVehicleKm(vehicleId: vehicleId, newKm: newKm);
     res.fold(
-      (f) => emit(state.copyWith(status: KmUpdateStatus.failure, error: f.message)),
+      (f) => emit(
+        state.copyWith(status: KmUpdateStatus.failure, error: f.message),
+      ),
       (km) => emit(state.copyWith(status: KmUpdateStatus.success, savedKm: km)),
     );
   }

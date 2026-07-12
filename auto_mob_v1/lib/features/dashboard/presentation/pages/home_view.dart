@@ -260,8 +260,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
           edges: [
             EdgeBlur(
               type: EdgeType.topEdge,
-              size: 160,
-              tintColor: const Color(0xFF17181E),
+              size: 100,
+              tintColor: const Color(0xFF000000),
               sigma: 10,
               controlPoints: [
                 ControlPoint(position: 0.1, type: ControlPointType.visible),
@@ -272,7 +272,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
             EdgeBlur(
               type: EdgeType.bottomEdge,
               size: 135,
-              tintColor: const Color(0xFF17181E),
+              tintColor: const Color(0xFF000000),
               sigma: 10,
               controlPoints: [
                 ControlPoint(position: 0.5, type: ControlPointType.visible),
@@ -439,80 +439,16 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 title: 'Risparmia 215€/anno',
                 subtitle: 'Assicura Facile',
                 buttonLabel: 'Calcola preventivo',
-                imagePath: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=2073&auto=format&fit=crop',
-                logoPath: 'https://images.unsplash.com/photo-1599305090748-36655bc6f571?q=80&w=2070&auto=format&fit=crop', // Placeholder logo
+               // imagePath: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=2073&auto=format&fit=crop',
+              //  logoPath: 'https://images.unsplash.com/photo-1599305090748-36655bc6f571?q=80&w=2070&auto=format&fit=crop', // Placeholder logo
                 onTap: () {},
               ),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "In offerta per la tua auto",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        "Vedi tutti >",
-                        style: TextStyle(color: Color(0xFFFF6B00), fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
 
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    AmBannerSmall(
-                      discount: '-30%',
-                      brandName: 'otoTOP',
-                      productName: 'Olio motore 10W/40 1L',
-                      price: '34,90€',
-                      oldPrice: '49,90€',
-                      imagePath: 'https://images.unsplash.com/photo-1621252179027-94459d278660?q=80&w=1000&auto=format&fit=crop',
-                      brandLogo: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: const BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
-                        child: const Center(child: Text('o', style: TextStyle(fontSize: 10, color: Colors.white))),
-                      ),
-                      onTap: () {},
-                    ),
-                    const SizedBox(width: 12),
-                    AmBannerSmall(
-                      discount: '-40%',
-                      brandName: 'LumaCar',
-                      productName: 'Kit LED interni touch',
-                      price: '23,90€',
-                      oldPrice: '39,90€',
-                      imagePath: 'https://images.unsplash.com/photo-1542362567-b05503f35259?q=80&w=1000&auto=format&fit=crop',
-                      brandLogo: Container(
-                        width: 16,
-                        height: 16,
-                        decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
-                        child: const Center(child: Text('L', style: TextStyle(fontSize: 10, color: Colors.white))),
-                      ),
-                      onTap: () {},
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              // --- END BANNERS ---
 
               // lista kpi per il veicolo corrente
               const Padding(
-                padding: EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(9.0),
                 child: RepaintBoundary(
                   child: AmWorkshopCard(
                     nomeOfficina: 'Nessuna officina ',
@@ -587,7 +523,103 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                   },
                 ),
               ),
-              const SizedBox(height: 110),
+            //  const SizedBox(height: 110),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            "IN OFFERTA PER TE",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.white,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {},
+                            child: const Text(
+                              "Vedi tutti >",
+                              style: TextStyle(color: Color(0xFFFF6B00), fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Row(
+                        spacing: 8,
+                        children: [
+                          AmBannerSmall(
+                            discount: '-30%',
+                            brandName: 'otoTOP',
+                            productName: 'Olio motore 10W/40 1L',
+                            price: '34,90€',
+                            oldPrice: '49,90€',
+                            //  imagePath: 'https://images.unsplash.com/photo-1621252179027-94459d278660?q=80&w=1000&auto=format&fit=crop',
+                            brandLogo: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: const BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
+                              child: const Center(child: Text('o', style: TextStyle(fontSize: 10, color: Colors.white))),
+                            ),
+                            onTap: () {},
+                          ),
+
+                          AmBannerSmall(
+                            discount: '-40%',
+                            brandName: 'LumaCar',
+                            productName: 'Kit LED interni touch',
+                            price: '23,90€',
+                            oldPrice: '39,90€',
+                            //  imagePath: 'https://images.unsplash.com/photo-1542362567-b05503f35259?q=80&w=1000&auto=format&fit=crop',
+                            brandLogo: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                              child: const Center(child: Text('L', style: TextStyle(fontSize: 10, color: Colors.white))),
+                            ),
+                            onTap: () {},
+                          ),
+                          AmBannerSmall(
+                            discount: '-40%',
+                            brandName: 'LumaCar',
+                            productName: 'Kit LED interni touch',
+                            price: '23,90€',
+                            oldPrice: '39,90€',
+                            //  imagePath: 'https://images.unsplash.com/photo-1542362567-b05503f35259?q=80&w=1000&auto=format&fit=crop',
+                            brandLogo: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                              child: const Center(child: Text('L', style: TextStyle(fontSize: 10, color: Colors.white))),
+                            ),
+                            onTap: () {},
+                          ),
+                          AmBannerSmall(
+                            discount: '-40%',
+                            brandName: 'LumaCar',
+                            productName: 'Kit LED interni touch',
+                            price: '23,90€',
+                            oldPrice: '39,90€',
+                            //  imagePath: 'https://images.unsplash.com/photo-1542362567-b05503f35259?q=80&w=1000&auto=format&fit=crop',
+                            brandLogo: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                              child: const Center(child: Text('L', style: TextStyle(fontSize: 10, color: Colors.white))),
+                            ),
+                            onTap: () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // --- END BANNERS ---
                   ],
                 ),
               ),

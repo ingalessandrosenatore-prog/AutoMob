@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:get_it/get_it.dart';
 import 'package:path_provider/path_provider.dart';
@@ -21,15 +21,19 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/vehicle/data/datasources/vehicle_draft_local_data_source.dart';
 import '../../features/vehicle/data/datasources/vehicle_remote_data_source.dart';
 import '../../features/vehicle/data/repositories/vehicle_repository_impl.dart';
+import '../../features/vehicle/data/repositories/vehicle_lookup_repository_impl.dart';
 import '../../features/vehicle/domain/repositories/vehicle_repository.dart';
+import '../../features/vehicle/domain/repositories/vehicle_lookup_repository.dart';
 import '../../features/vehicle/domain/usecases/save_draft_step.dart';
 import '../../features/vehicle/domain/usecases/save_vehicle.dart';
 import '../../features/vehicle/domain/usecases/get_vehicles.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_km.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_photo.dart';
 import '../../features/vehicle/domain/usecases/compute_maintenance_kpis.dart';
+import '../../features/vehicle/domain/usecases/lookup_vehicle_by_plate.dart';
 import '../../features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import '../../features/vehicle/presentation/bloc/km_update_cubit.dart';
+import '../../features/vehicle/presentation/bloc/vehicle_registration_bloc.dart';
 
 // Dashboard
 import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
@@ -104,10 +108,7 @@ Future<void> _initVehicle() async {
 
   // BLoC — factory: nuova istanza ad ogni apertura del wizard
   sl.registerFactory<AddVehicleBloc>(
-    () => AddVehicleBloc(
-      saveDraftStep: sl(),
-      saveVehicle: sl(),
-    ),
+    () => AddVehicleBloc(saveDraftStep: sl(), saveVehicle: sl()),
   );
 
   // Use Cases
@@ -122,10 +123,7 @@ Future<void> _initVehicle() async {
 
   // Repository
   sl.registerLazySingleton<VehicleRepository>(
-    () => VehicleRepositoryImpl(
-      localDataSource: sl(),
-      remoteDataSource: sl(),
-    ),
+    () => VehicleRepositoryImpl(localDataSource: sl(), remoteDataSource: sl()),
   );
 
   // Data Sources
@@ -135,11 +133,25 @@ Future<void> _initVehicle() async {
   sl.registerLazySingleton<VehicleRemoteDataSource>(
     () => VehicleRemoteDataSourceImpl(supabaseClient: sl()),
   );
+
+  // Registrazione veicolo — pagina full-screen (rework da pop-up), solo
+  // front-end per ora: lookup targa mock, nessun salvataggio reale.
+  sl.registerFactory<VehicleRegistrationBloc>(
+    () => VehicleRegistrationBloc(lookupVehicleByPlate: sl()),
+  );
+  sl.registerLazySingleton<LookupVehicleByPlate>(
+    () => LookupVehicleByPlate(sl()),
+  );
+  sl.registerLazySingleton<VehicleLookupRepository>(
+    () => VehicleLookupRepositoryImpl(),
+  );
 }
 
 Future<void> _initDashboard() async {
   // Use case di calcolo KPI: logica pura, nessuna dipendenza -> singleton.
-  sl.registerLazySingleton<ComputeMaintenanceKpis>(() => ComputeMaintenanceKpis());
+  sl.registerLazySingleton<ComputeMaintenanceKpis>(
+    () => ComputeMaintenanceKpis(),
+  );
 
   // BLoC — lazySingleton: la stessa istanza sopravvive ai cambi di tab, cosi'
   // i dati restano in cache e non si ricaricano ad ogni apertura della home
@@ -174,19 +186,13 @@ void _initWorkLog() {
 
   // BLoC — factory con param (vehicleId passato dal popup all'apertura)
   sl.registerFactoryParam<WorkLogBloc, String, void>(
-    (vehicleId, _) => WorkLogBloc(
-
-      createWorkLog: sl(),
-    ),
+    (vehicleId, _) => WorkLogBloc(createWorkLog: sl()),
   );
 
   // BLoC storico — lazySingleton: stessa logica di DashboardBloc sopra,
   // cache tra le visite della pagina, guard su Initial/Error, reset al logout.
   sl.registerLazySingleton<WorkLogHistoryBloc>(
-    () => WorkLogHistoryBloc(
-      getVehicleOptions: sl(),
-      getVehicleWorks: sl(),
-    ),
+    () => WorkLogHistoryBloc(getVehicleOptions: sl(), getVehicleWorks: sl()),
     dispose: (b) => b.close(),
   );
 }

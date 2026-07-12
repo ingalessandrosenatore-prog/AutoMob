@@ -8,6 +8,7 @@ class AmDropdownSearch<T> extends StatefulWidget {
   final void Function(T?) onChanged;
   final String placeholder;
   final bool isRequired;
+  final double height;
 
   const AmDropdownSearch({
     super.key,
@@ -18,6 +19,7 @@ class AmDropdownSearch<T> extends StatefulWidget {
     this.value,
     required this.placeholder,
     this.isRequired = true,
+    this.height = 60,
   });
 
   @override
@@ -57,11 +59,13 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
     _filteredNotifier.value = query.isEmpty
         ? widget.items
         : widget.items
-            .where((item) => widget
-                .itemLabelBuilder(item)
-                .toLowerCase()
-                .contains(query.toLowerCase()))
-            .toList();
+              .where(
+                (item) => widget
+                    .itemLabelBuilder(item)
+                    .toLowerCase()
+                    .contains(query.toLowerCase()),
+              )
+              .toList();
   }
 
   void _toggleOverlay() {
@@ -112,8 +116,9 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedLabel =
-        widget.value != null ? widget.itemLabelBuilder(widget.value as T) : null;
+    final selectedLabel = widget.value != null
+        ? widget.itemLabelBuilder(widget.value as T)
+        : null;
 
     return Expanded(
       child: Column(
@@ -143,7 +148,7 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
             onTap: _toggleOverlay,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              height: 60,
+              height: widget.height,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: const Color(0xFF1C1C1E),
@@ -255,10 +260,7 @@ class _DropdownOverlay<T> extends StatelessWidget {
                       controller: searchCtrl,
                       onChanged: onSearchChanged,
                       autofocus: true,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
                       decoration: InputDecoration(
                         hintText: 'Cerca...',
                         hintStyle: const TextStyle(
@@ -272,8 +274,9 @@ class _DropdownOverlay<T> extends StatelessWidget {
                         ),
                         filled: true,
                         fillColor: const Color(0xFF1C1C1E),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 10),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide.none,
@@ -323,14 +326,17 @@ class _DropdownOverlay<T> extends StatelessWidget {
                             return InkWell(
                               onTap: () => onSelect(item),
                               borderRadius: BorderRadius.circular(8),
-                              highlightColor:
-                                  const Color(0xFFFF6B00).withValues(alpha: 0.1),
-                              splashColor:
-                                  const Color(0xFFFF6B00).withValues(alpha: 0.08),
+                              highlightColor: const Color(
+                                0xFFFF6B00,
+                              ).withValues(alpha: 0.1),
+                              splashColor: const Color(
+                                0xFFFF6B00,
+                              ).withValues(alpha: 0.08),
                               child: Container(
                                 height: _itemHeight,
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 16),
+                                  horizontal: 16,
+                                ),
                                 alignment: Alignment.centerLeft,
                                 child: Row(
                                   children: [

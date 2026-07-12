@@ -40,19 +40,26 @@ void main() {
   blocTest<AddVehicleBloc, AddVehicleState>(
     'Step1Submitted: salva il draft e avanza allo step successivo',
     build: () {
-      when(() => saveDraftStep(any())).thenAnswer((_) async => const Right(null));
+      when(
+        () => saveDraftStep(any()),
+      ).thenAnswer((_) async => const Right(null));
       return buildBloc();
     },
-    act: (bloc) => bloc.add(Step1Submitted(
-      marca: 'Fiat',
-      modello: 'Panda',
-      year: 2020,
-      carburante: 'benzina',
-      targa: 'AB123CD',
-    )),
+    act: (bloc) => bloc.add(
+      Step1Submitted(
+        marca: 'Fiat',
+        modello: 'Panda',
+        year: 2020,
+        carburante: 'benzina',
+        targa: 'AB123CD',
+      ),
+    ),
     expect: () => [
-      isA<AddVehicleState>()
-          .having((s) => s.status, 'status', AddVehicleStatus.loading),
+      isA<AddVehicleState>().having(
+        (s) => s.status,
+        'status',
+        AddVehicleStatus.loading,
+      ),
       isA<AddVehicleState>()
           .having((s) => s.status, 'status', AddVehicleStatus.idle)
           .having((s) => s.currentStep, 'currentStep', 1),
@@ -62,20 +69,26 @@ void main() {
   blocTest<AddVehicleBloc, AddVehicleState>(
     'Step1Submitted: emette errore quando il salvataggio del draft fallisce',
     build: () {
-      when(() => saveDraftStep(any()))
-          .thenAnswer((_) async => const Left(StorageFailure()));
+      when(
+        () => saveDraftStep(any()),
+      ).thenAnswer((_) async => const Left(StorageFailure()));
       return buildBloc();
     },
-    act: (bloc) => bloc.add(Step1Submitted(
-      marca: 'Fiat',
-      modello: 'Panda',
-      year: 2020,
-      carburante: 'benzina',
-      targa: 'AB123CD',
-    )),
+    act: (bloc) => bloc.add(
+      Step1Submitted(
+        marca: 'Fiat',
+        modello: 'Panda',
+        year: 2020,
+        carburante: 'benzina',
+        targa: 'AB123CD',
+      ),
+    ),
     expect: () => [
-      isA<AddVehicleState>()
-          .having((s) => s.status, 'status', AddVehicleStatus.loading),
+      isA<AddVehicleState>().having(
+        (s) => s.status,
+        'status',
+        AddVehicleStatus.loading,
+      ),
       isA<AddVehicleState>()
           .having((s) => s.status, 'status', AddVehicleStatus.error)
           .having((s) => s.errorMessage, 'errorMessage', isNotNull)
@@ -86,16 +99,24 @@ void main() {
   blocTest<AddVehicleBloc, AddVehicleState>(
     'SaveWizard: persiste il draft e salva il veicolo -> completed',
     build: () {
-      when(() => saveDraftStep(any())).thenAnswer((_) async => const Right(null));
+      when(
+        () => saveDraftStep(any()),
+      ).thenAnswer((_) async => const Right(null));
       when(() => saveVehicle(any())).thenAnswer((_) async => const Right(null));
       return buildBloc();
     },
     act: (bloc) => bloc.add(SaveWizard()),
     expect: () => [
-      isA<AddVehicleState>()
-          .having((s) => s.status, 'status', AddVehicleStatus.loading),
-      isA<AddVehicleState>()
-          .having((s) => s.status, 'status', AddVehicleStatus.completed),
+      isA<AddVehicleState>().having(
+        (s) => s.status,
+        'status',
+        AddVehicleStatus.loading,
+      ),
+      isA<AddVehicleState>().having(
+        (s) => s.status,
+        'status',
+        AddVehicleStatus.completed,
+      ),
     ],
     verify: (_) {
       verify(() => saveDraftStep(any())).called(1);
@@ -106,16 +127,23 @@ void main() {
   blocTest<AddVehicleBloc, AddVehicleState>(
     'SaveWizard: se il draft non si salva NON chiama saveVehicle',
     build: () {
-      when(() => saveDraftStep(any()))
-          .thenAnswer((_) async => const Left(StorageFailure()));
+      when(
+        () => saveDraftStep(any()),
+      ).thenAnswer((_) async => const Left(StorageFailure()));
       return buildBloc();
     },
     act: (bloc) => bloc.add(SaveWizard()),
     expect: () => [
-      isA<AddVehicleState>()
-          .having((s) => s.status, 'status', AddVehicleStatus.loading),
-      isA<AddVehicleState>()
-          .having((s) => s.status, 'status', AddVehicleStatus.error),
+      isA<AddVehicleState>().having(
+        (s) => s.status,
+        'status',
+        AddVehicleStatus.loading,
+      ),
+      isA<AddVehicleState>().having(
+        (s) => s.status,
+        'status',
+        AddVehicleStatus.error,
+      ),
     ],
     verify: (_) {
       verifyNever(() => saveVehicle(any()));
@@ -125,18 +153,28 @@ void main() {
   blocTest<AddVehicleBloc, AddVehicleState>(
     'SaveWizard: draft ok ma saveVehicle fallisce -> error',
     build: () {
-      when(() => saveDraftStep(any())).thenAnswer((_) async => const Right(null));
-      when(() => saveVehicle(any()))
-          .thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => saveDraftStep(any()),
+      ).thenAnswer((_) async => const Right(null));
+      when(
+        () => saveVehicle(any()),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
       return buildBloc();
     },
     act: (bloc) => bloc.add(SaveWizard()),
     expect: () => [
-      isA<AddVehicleState>()
-          .having((s) => s.status, 'status', AddVehicleStatus.loading),
+      isA<AddVehicleState>().having(
+        (s) => s.status,
+        'status',
+        AddVehicleStatus.loading,
+      ),
       isA<AddVehicleState>()
           .having((s) => s.status, 'status', AddVehicleStatus.error)
-          .having((s) => s.errorMessage, 'errorMessage', const ServerFailure().message),
+          .having(
+            (s) => s.errorMessage,
+            'errorMessage',
+            const ServerFailure().message,
+          ),
     ],
   );
 
@@ -145,9 +183,7 @@ void main() {
     build: buildBloc,
     seed: () => const AddVehicleState(currentStep: 2),
     act: (bloc) => bloc.add(StepBackPressed()),
-    expect: () => [
-      const AddVehicleState(currentStep: 1),
-    ],
+    expect: () => [const AddVehicleState(currentStep: 1)],
   );
 
   blocTest<AddVehicleBloc, AddVehicleState>(
@@ -155,8 +191,6 @@ void main() {
     build: buildBloc,
     seed: () => const AddVehicleState(currentStep: 3),
     act: (bloc) => bloc.add(AddVehicleStarted()),
-    expect: () => [
-      const AddVehicleState(currentStep: 0),
-    ],
+    expect: () => [const AddVehicleState(currentStep: 0)],
   );
 }

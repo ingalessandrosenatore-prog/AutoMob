@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import '../../domain/entities/vehicle_draft.dart';
@@ -84,7 +84,9 @@ class _WizardBodyState extends State<WizardBody> {
           return _WizardCompletedPage(draft: state.draft);
         }
         if (state.status == AddVehicleStatus.error) {
-          return _WizardErrorPage(message: state.errorMessage ?? 'Errore sconosciuto');
+          return _WizardErrorPage(
+            message: state.errorMessage ?? 'Errore sconosciuto',
+          );
         }
         // Il PageView resta SEMPRE montato: il loading è solo un overlay,
         // così il PageController non perde i client e l'animazione tra step
@@ -151,19 +153,40 @@ class _WizardCompletedPage extends StatelessWidget {
           _DraftRow(label: 'Targa', value: draft.targa),
           const Divider(color: Color(0xFF1C1C1E), height: 24),
 
-          _DraftRow(label: 'Km ult. tagliando', value: draft.kmUltimoTagliando?.toString()),
+          _DraftRow(
+            label: 'Km ult. tagliando',
+            value: draft.kmUltimoTagliando?.toString(),
+          ),
 
-          _DraftRow(label: 'Km ult. distribuzione', value: draft.kmUltimaDistribuzione?.toString()),
+          _DraftRow(
+            label: 'Km ult. distribuzione',
+            value: draft.kmUltimaDistribuzione?.toString(),
+          ),
           const Divider(color: Color(0xFF1C1C1E), height: 24),
           _DraftRow(label: 'Potenza (CV)', value: draft.potenzaCv?.toString()),
           _DraftRow(label: 'Cilindrata', value: draft.cilindrata?.toString()),
           _DraftRow(label: 'Km attuali', value: draft.kmAttuali?.toString()),
           const Divider(color: Color(0xFF1C1C1E), height: 24),
-          _DraftRow(label: 'Prossima revisione', value: _fmtDate(draft.prossimarevisione)),
-          _DraftRow(label: 'Km ult. cambio gomme', value: draft.kmUltimoCambioGomme?.toString()),
-          _DraftRow(label: 'Intervallo cambio gomme', value: draft.intervalloCambioGomme?.toString()),
-          _DraftRow(label: 'Km ult. inversione', value: draft.kmUltimaInversioneGomme?.toString()),
-          _DraftRow(label: 'Intervallo inversione', value: draft.intervalloInversioneGomme?.toString()),
+          _DraftRow(
+            label: 'Prossima revisione',
+            value: _fmtDate(draft.prossimarevisione),
+          ),
+          _DraftRow(
+            label: 'Km ult. cambio gomme',
+            value: draft.kmUltimoCambioGomme?.toString(),
+          ),
+          _DraftRow(
+            label: 'Intervallo cambio gomme',
+            value: draft.intervalloCambioGomme?.toString(),
+          ),
+          _DraftRow(
+            label: 'Km ult. inversione',
+            value: draft.kmUltimaInversioneGomme?.toString(),
+          ),
+          _DraftRow(
+            label: 'Intervallo inversione',
+            value: draft.intervalloInversioneGomme?.toString(),
+          ),
           const Divider(color: Color(0xFF1C1C1E), height: 24),
           _DraftRow(label: 'Foto path', value: draft.fotoFile?.path),
           _DraftRow(label: 'Codice meccanico', value: draft.codiceMeccanico),
@@ -171,7 +194,10 @@ class _WizardCompletedPage extends StatelessWidget {
           Center(
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Chiudi', style: TextStyle(color: Color(0xFF4A90E2))),
+              child: const Text(
+                'Chiudi',
+                style: TextStyle(color: Color(0xFF4A90E2)),
+              ),
             ),
           ),
         ],
@@ -207,7 +233,11 @@ class _DraftRow extends StatelessWidget {
           Expanded(
             child: Text(
               value == null || (value?.isEmpty ?? true) ? '—' : value!,
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -231,7 +261,11 @@ class _WizardErrorPage extends StatelessWidget {
           const SizedBox(height: 16),
           const Text(
             'Errore di salvataggio',
-            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -242,7 +276,10 @@ class _WizardErrorPage extends StatelessWidget {
           const SizedBox(height: 24),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Chiudi', style: TextStyle(color: Color(0xFF4A90E2))),
+            child: const Text(
+              'Chiudi',
+              style: TextStyle(color: Color(0xFF4A90E2)),
+            ),
           ),
         ],
       ),

@@ -1,4 +1,4 @@
-﻿import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/exceptions/exception.dart';
 import '../entities/vehicle_draft.dart';
@@ -9,7 +9,7 @@ class SaveVehicle {
 
   SaveVehicle(this.repository);
 
-  Future<Either<Failure, void>> call(VehicleDraft draft) async  {
-     return  repository.saveVehicle(draft);
+  Future<Either<Failure, void>> call(VehicleDraft draft) async {
+    return repository.saveVehicle(draft);
   }
 }

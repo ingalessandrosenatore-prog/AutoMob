@@ -25,11 +25,16 @@ void main() {
     usecase = SaveVehicle(repository);
   });
 
-  const tDraft = VehicleDraft(targa: 'AB123CD', marca: 'Fiat', modello: 'Panda');
+  const tDraft = VehicleDraft(
+    targa: 'AB123CD',
+    marca: 'Fiat',
+    modello: 'Panda',
+  );
 
   test('inoltra il draft completo al repository e ritorna Right', () async {
-    when(() => repository.saveVehicle(tDraft))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => repository.saveVehicle(tDraft),
+    ).thenAnswer((_) async => const Right(null));
 
     final result = await usecase(tDraft);
 
@@ -39,8 +44,9 @@ void main() {
   });
 
   test('propaga il Failure quando il repository fallisce (Left)', () async {
-    when(() => repository.saveVehicle(tDraft))
-        .thenAnswer((_) async => const Left(ServerFailure()));
+    when(
+      () => repository.saveVehicle(tDraft),
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
     final result = await usecase(tDraft);
 

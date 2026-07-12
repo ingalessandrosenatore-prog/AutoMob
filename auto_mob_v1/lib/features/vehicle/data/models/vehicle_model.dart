@@ -73,9 +73,18 @@ class VehicleModel extends Vehicle {
       powerCv: intOrNull(json['power_cv']),
       displacementCc: intOrNull(json['displacement_cc']),
       nextRevisionDate: dateOrNull(json['scadenza_revision_date']),
-      tagliandoIntervalKm: intValue(json['tagliando_interval_km'], fallback: 15000),
-      tireChangeIntervalKm: intValue(json['tire_change_interval_km'], fallback: 40000),
-      tireRotationIntervalKm: intValue(json['tire_rotation_interval_km'], fallback: 10000),
+      tagliandoIntervalKm: intValue(
+        json['tagliando_interval_km'],
+        fallback: 15000,
+      ),
+      tireChangeIntervalKm: intValue(
+        json['tire_change_interval_km'],
+        fallback: 40000,
+      ),
+      tireRotationIntervalKm: intValue(
+        json['tire_rotation_interval_km'],
+        fallback: 10000,
+      ),
       distribuzioneIntervalKm: intOrNull(json['distribution_intervall_km']),
       lastTagliandoKm: intOrNull(json['last_tagliando_km']),
       lastTagliandoDate: dateOrNull(json['last_tagliando_date']),

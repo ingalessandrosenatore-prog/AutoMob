@@ -4,9 +4,9 @@ import '../../../../core/services/haptic_service.dart';
 
 /// Formatta un intero in km con il punto delle migliaia (es. 40000 -> "40.000").
 String fmtKm(int v) => v.toString().replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (m) => '${m[1]}.',
-    );
+  RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+  (m) => '${m[1]}.',
+);
 
 /// Chip selezionabile per scegliere rapidamente un intervallo in km.
 /// Quando `selected` è true si colora di arancione; il tap è gestito da `onTap`.
@@ -39,7 +39,9 @@ class IntervalChoiceChip extends StatelessWidget {
                 : const Color(0xFF1C1C1E),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: selected ? arancione : Colors.white.withValues(alpha: 0.05),
+              color: selected
+                  ? arancione
+                  : Colors.white.withValues(alpha: 0.05),
             ),
           ),
           child: Center(

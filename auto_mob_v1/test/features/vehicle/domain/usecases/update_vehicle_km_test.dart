@@ -24,21 +24,27 @@ void main() {
     usecase = UpdateVehicleKm(repository);
   });
 
-  test('inoltra vehicleId e newKm al repository e ritorna i km salvati (Right)',
-      () async {
-    when(() => repository.updateKm(vehicleId: 'v1', newKm: 15000))
-        .thenAnswer((_) async => const Right(15000));
+  test(
+    'inoltra vehicleId e newKm al repository e ritorna i km salvati (Right)',
+    () async {
+      when(
+        () => repository.updateKm(vehicleId: 'v1', newKm: 15000),
+      ).thenAnswer((_) async => const Right(15000));
 
-    final result = await usecase(vehicleId: 'v1', newKm: 15000);
+      final result = await usecase(vehicleId: 'v1', newKm: 15000);
 
-    expect(result, const Right<Failure, int>(15000));
-    verify(() => repository.updateKm(vehicleId: 'v1', newKm: 15000)).called(1);
-    verifyNoMoreInteractions(repository);
-  });
+      expect(result, const Right<Failure, int>(15000));
+      verify(
+        () => repository.updateKm(vehicleId: 'v1', newKm: 15000),
+      ).called(1);
+      verifyNoMoreInteractions(repository);
+    },
+  );
 
   test('propaga il Failure quando il repository fallisce (Left)', () async {
-    when(() => repository.updateKm(vehicleId: 'v1', newKm: 15000))
-        .thenAnswer((_) async => const Left(ServerFailure()));
+    when(
+      () => repository.updateKm(vehicleId: 'v1', newKm: 15000),
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
     final result = await usecase(vehicleId: 'v1', newKm: 15000);
 

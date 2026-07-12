@@ -26,6 +26,16 @@ class AmTextField extends StatefulWidget {
   /// Colore del messaggio sotto il campo. Default: rosso acceso (errore).
   final Color errorColor;
 
+  /// Altezza fissa del box (testo centrato verticalmente). Null (default) =
+  /// dimensione naturale di sempre (padding verticale 20), per non toccare
+  /// l'aspetto dei campi gia' esistenti in app.
+  final double? height;
+
+  /// Colore applicato a [suffixIcon] (es. l'icona o l'unita' di misura "km"
+  /// passata dall'esterno), se questa non fissa gia' un colore proprio.
+  /// Null (default) = nessuna sovrascrittura.
+  final Color? suffixIconColor;
+
   const AmTextField({
     super.key,
     required this.label,
@@ -39,6 +49,8 @@ class AmTextField extends StatefulWidget {
     this.onEditingComplete,
     this.errorText,
     this.errorColor = const Color(0xFFFF453A),
+    this.height,
+    this.suffixIconColor,
   });
 
   @override
@@ -51,9 +63,20 @@ class _AmTextFieldState extends State<AmTextField> {
   late bool _obscured = widget.obscureText;
 
   /// Suffisso da mostrare nel campo. Per i campi password è l'occhietto
-  /// interattivo; altrimenti l'eventuale icona passata dall'esterno.
+  /// interattivo; altrimenti l'eventuale icona passata dall'esterno, colorata
+  /// con [AmTextField.suffixIconColor] se impostato.
   Widget? get _suffix {
-    if (!widget.obscureText) return widget.suffixIcon;
+    if (!widget.obscureText) {
+      final icon = widget.suffixIcon;
+      if (icon == null || widget.suffixIconColor == null) return icon;
+      return IconTheme.merge(
+        data: IconThemeData(color: widget.suffixIconColor),
+        child: DefaultTextStyle.merge(
+          style: TextStyle(color: widget.suffixIconColor),
+          child: icon,
+        ),
+      );
+    }
     return IconButton(
       onPressed: () => setState(() => _obscured = !_obscured),
       splashRadius: 20,
@@ -98,6 +121,7 @@ class _AmTextFieldState extends State<AmTextField> {
           const SizedBox(height: 10),
           // Box del TextField
           Container(
+            height: widget.height,
             decoration: BoxDecoration(
               color: boxColor,
               borderRadius: BorderRadius.circular(16),
@@ -110,21 +134,29 @@ class _AmTextFieldState extends State<AmTextField> {
               controller: widget.controller,
               obscureText: _obscured,
               keyboardType: widget.keyboardType,
+              expands: widget.height != null,
+              maxLines: widget.height != null ? null : 1,
+              textAlignVertical: TextAlignVertical.center,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 20),
+                contentPadding: widget.height != null
+                    ? const EdgeInsets.symmetric(horizontal: 16)
+                    : const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 hintText: widget.placeholder,
-                hintStyle: const TextStyle(
-                  color: hintColor,
-                  fontSize: 16,
-                ),
+                hintStyle: const TextStyle(color: hintColor, fontSize: 16),
                 border: InputBorder.none,
                 suffixIcon: _suffix,
+                // Di default Flutter riserva 48x48 al suffixIcon (tap target
+                // minimo): con un box di altezza fissa (compatto) questo
+                // spinge l'icona fuori centro rispetto al testo. Rimuoviamo
+                // il minimo cosi' l'icona resta centrata nel box.
+                suffixIconConstraints: widget.height != null
+                    ? const BoxConstraints()
+                    : null,
               ),
               onChanged: widget.onChanged,
               onEditingComplete: widget.onEditingComplete,
@@ -142,7 +174,6 @@ class _AmTextFieldState extends State<AmTextField> {
               ),
             ),
           ],
-
         ],
       ),
     );

@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,7 +6,6 @@ import '../../../../core/error/exceptions/exceptions.dart';
 
 import '../../domain/entities/vehicle_draft.dart';
 import '../models/vehicle_model.dart';
-
 
 abstract class VehicleRemoteDataSource {
   /// Salva il veicolo (anagrafica) + lavori iniziali in modo ATOMICO,
@@ -50,11 +49,10 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       throw const NetworkException();
     } catch (e) {
       throw const VehicleDataSourceException(
-          'Errore durante il salvataggio del veicolo');
+        'Errore durante il salvataggio del veicolo',
+      );
     }
   }
-
-
 
   @override
   Future<List<VehicleModel>> getVehicles() async {
@@ -75,7 +73,9 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
           .eq('owner_id', owner_id!);
 
       return (rows as List)
-          .map((r) => VehicleModel.fromJson(Map<String, dynamic>.from(r as Map)))
+          .map(
+            (r) => VehicleModel.fromJson(Map<String, dynamic>.from(r as Map)),
+          )
           .toList();
     } on PostgrestException catch (e) {
       throw VehicleDataSourceException(e.message, code: e.code);
@@ -83,10 +83,10 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       throw const NetworkException();
     } catch (e) {
       throw const VehicleDataSourceException(
-          'Errore durante il caricamento dei veicoli');
+        'Errore durante il caricamento dei veicoli',
+      );
     }
   }
-
 
   @override
   Future<int> updateKm({required String vehicleId, required int newKm}) async {
@@ -108,12 +108,12 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       throw const NetworkException();
     } catch (e) {
       throw const VehicleDataSourceException(
-          'Errore durante l\'aggiornamento dei km');
+        'Errore durante l\'aggiornamento dei km',
+      );
     }
   }
 
-
- /// Trasforma il draft nel payload JSON che si aspetta l'RPC
+  /// Trasforma il draft nel payload JSON che si aspetta l'RPC
   /// `crea_veicolo_con_storico`: { "veicolo": {...}, "lavori": [...] }.
   /// Niente owner_id qui: lo imposta l'RPC da auth.uid().
   Map<String, dynamic> toSupabasePayload(VehicleDraft draft) {
@@ -132,8 +132,9 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       'distribution_intervall_km': draft.intervalloUltimaDistribuzione,
       'tire_change_interval_km': draft.intervalloCambioGomme,
       'tire_rotation_interval_km': draft.intervalloInversioneGomme,
-      'scadenza_revision_date':
-          draft.prossimarevisione?.toIso8601String().split('T')[0],
+      'scadenza_revision_date': draft.prossimarevisione
+          ?.toIso8601String()
+          .split('T')[0],
     };
 
     // 2) Lavori iniziali: un item per ogni manutenzione di cui conosciamo il km.
@@ -145,7 +146,10 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       if (draft.kmUltimoCambioGomme != null)
         {'type': 'pneumatici_cambio', 'service_km': draft.kmUltimoCambioGomme},
       if (draft.kmUltimaInversioneGomme != null)
-        {'type': 'pneumatici_inversione', 'service_km': draft.kmUltimaInversioneGomme},
+        {
+          'type': 'pneumatici_inversione',
+          'service_km': draft.kmUltimaInversioneGomme,
+        },
     ];
 
     return {'veicolo': veicolo, 'lavori': lavori};

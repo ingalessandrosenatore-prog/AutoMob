@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
+import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -31,7 +31,9 @@ class _AddVehicleFormStep3State extends State<AddVehicleFormStep3> {
     // Pre-fill dal draft: tornando indietro ritrovo i dati gia' inseriti.
     final d = context.read<AddVehicleBloc>().state.draft;
     if (d.potenzaCv != null) potenzaController.text = d.potenzaCv.toString();
-    if (d.cilindrata != null) cilindrataController.text = d.cilindrata.toString();
+    if (d.cilindrata != null) {
+      cilindrataController.text = d.cilindrata.toString();
+    }
     if (d.kmAttuali != null) kmController.text = d.kmAttuali.toString();
   }
 
@@ -138,7 +140,10 @@ class _AddVehicleFormStep3State extends State<AddVehicleFormStep3> {
                         alignment: Alignment.centerLeft,
                         child: Text(
                           "Aggiornalo dal cruscotto della tua auto",
-                          style: TextStyle(color: Color(0xFF636366), fontSize: 12),
+                          style: TextStyle(
+                            color: Color(0xFF636366),
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 30),
@@ -190,12 +195,12 @@ class _AddVehicleFormStep3State extends State<AddVehicleFormStep3> {
                       // Km attuali obbligatori: senza, non avanzo.
                       if (kmController.text.trim().isEmpty) return;
                       context.read<AddVehicleBloc>().add(
-                            Step3Submitted(
-                              potenzaCv: int.tryParse(potenzaController.text),
-                              cilindrata: int.tryParse(cilindrataController.text),
-                              kmAttuali: int.tryParse(kmController.text),
-                            ),
-                          );
+                        Step3Submitted(
+                          potenzaCv: int.tryParse(potenzaController.text),
+                          cilindrata: int.tryParse(cilindrataController.text),
+                          kmAttuali: int.tryParse(kmController.text),
+                        ),
+                      );
                     },
                   ),
                 ),

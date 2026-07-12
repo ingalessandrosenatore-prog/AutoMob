@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
+import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,15 +47,16 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
       kmTagliandoController.text = d.kmUltimoTagliando.toString();
     }
     if (d.intervalloUltimoTagliando != null) {
-      intervalloTagliandoController.text = d.intervalloUltimoTagliando.toString();
+      intervalloTagliandoController.text = d.intervalloUltimoTagliando
+          .toString();
       _selTagliando = d.intervalloUltimoTagliando;
     }
     if (d.kmUltimaDistribuzione != null) {
       kmDistribuzioneController.text = d.kmUltimaDistribuzione.toString();
     }
     if (d.intervalloUltimaDistribuzione != null) {
-      intervalloDistribuzioneController.text =
-          d.intervalloUltimaDistribuzione.toString();
+      intervalloDistribuzioneController.text = d.intervalloUltimaDistribuzione
+          .toString();
       _selDistribuzione = d.intervalloUltimaDistribuzione;
     }
   }
@@ -87,7 +88,8 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
     final v = _i(c);
     if (v != null && v > km) {
       return (
-        text: 'Km attuali ${fmtKm(km)}: inserisci un numero inferiore o modificalo',
+        text:
+            'Km attuali ${fmtKm(km)}: inserisci un numero inferiore o modificalo',
         error: true,
       );
     }
@@ -97,7 +99,10 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
   /// Distribuzione: prima l'obbligatorieta', poi l'avviso km.
   ({String text, bool error})? _distribuzioneInfo() {
     if (_submitted && kmDistribuzioneController.text.trim().isEmpty) {
-      return (text: 'Campo obbligatorio: inserisci i km della distribuzione', error: true);
+      return (
+        text: 'Campo obbligatorio: inserisci i km della distribuzione',
+        error: true,
+      );
     }
     return _kmInfo(kmDistribuzioneController);
   }
@@ -106,8 +111,10 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
   Widget build(BuildContext context) {
     const kmSuffix = Padding(
       padding: EdgeInsets.only(top: 14),
-      child: Text("km",
-          style: TextStyle(color: Color(0xFF48484A), fontWeight: FontWeight.bold)),
+      child: Text(
+        "km",
+        style: TextStyle(color: Color(0xFF48484A), fontWeight: FontWeight.bold),
+      ),
     );
 
     // Avvisi km calcolati una volta per build.
@@ -161,11 +168,16 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          for (int i = 0; i < _tagliandoIntervalli.length; i++) ...[
+                          for (
+                            int i = 0;
+                            i < _tagliandoIntervalli.length;
+                            i++
+                          ) ...[
                             if (i > 0) const SizedBox(width: 8),
                             IntervalChoiceChip(
                               label: fmtKm(_tagliandoIntervalli[i]),
-                              selected: _selTagliando == _tagliandoIntervalli[i],
+                              selected:
+                                  _selTagliando == _tagliandoIntervalli[i],
                               onTap: () => setState(() {
                                 _selTagliando = _tagliandoIntervalli[i];
                                 intervalloTagliandoController.text =
@@ -186,7 +198,8 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                             obscureText: false,
                             keyboardType: TextInputType.number,
                             onChanged: (val) => setState(
-                                () => _selTagliando = int.tryParse(val)),
+                              () => _selTagliando = int.tryParse(val),
+                            ),
                             suffixIcon: kmSuffix,
                           ),
                         ],
@@ -198,7 +211,9 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                           "Prossima sostituzione prevista a: "
                           "${_prossima(kmTagliandoController, intervalloTagliandoController)}",
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.white),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -243,14 +258,17 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                       const SizedBox(height: 10),
                       Row(
                         children: [
-                          for (int i = 0;
-                              i < _distribuzioneIntervalli.length;
-                              i++) ...[
+                          for (
+                            int i = 0;
+                            i < _distribuzioneIntervalli.length;
+                            i++
+                          ) ...[
                             if (i > 0) const SizedBox(width: 8),
                             IntervalChoiceChip(
                               label: fmtKm(_distribuzioneIntervalli[i]),
                               selected:
-                                  _selDistribuzione == _distribuzioneIntervalli[i],
+                                  _selDistribuzione ==
+                                  _distribuzioneIntervalli[i],
                               onTap: () => setState(() {
                                 _selDistribuzione = _distribuzioneIntervalli[i];
                                 intervalloDistribuzioneController.text =
@@ -271,7 +289,8 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                             obscureText: false,
                             keyboardType: TextInputType.number,
                             onChanged: (val) => setState(
-                                () => _selDistribuzione = int.tryParse(val)),
+                              () => _selDistribuzione = int.tryParse(val),
+                            ),
                             suffixIcon: kmSuffix,
                           ),
                         ],
@@ -283,7 +302,9 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                           "Prossima sostituzione prevista a: "
                           "${_prossima(kmDistribuzioneController, intervalloDistribuzioneController)}",
                           style: const TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.white),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -332,21 +353,26 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                     onPressed: () {
                       setState(() => _submitted = true);
                       // Blocco se: km oltre attuali, oppure distribuzione vuota.
-                      final bloccato = (_kmInfo(kmTagliandoController)?.error ?? false) ||
+                      final bloccato =
+                          (_kmInfo(kmTagliandoController)?.error ?? false) ||
                           (_distribuzioneInfo()?.error ?? false);
                       if (bloccato) return;
                       context.read<AddVehicleBloc>().add(
-                            Step2Submitted(
-                              intervalloTagliando:
-                                  int.tryParse(intervalloTagliandoController.text),
-                              kmUltimoTagliando:
-                                  int.tryParse(kmTagliandoController.text),
-                              intervalloUltimaDistribuzione: int.tryParse(
-                                  intervalloDistribuzioneController.text),
-                              kmUltimaDistribuzione:
-                                  int.tryParse(kmDistribuzioneController.text),
-                            ),
-                          );
+                        Step2Submitted(
+                          intervalloTagliando: int.tryParse(
+                            intervalloTagliandoController.text,
+                          ),
+                          kmUltimoTagliando: int.tryParse(
+                            kmTagliandoController.text,
+                          ),
+                          intervalloUltimaDistribuzione: int.tryParse(
+                            intervalloDistribuzioneController.text,
+                          ),
+                          kmUltimaDistribuzione: int.tryParse(
+                            kmDistribuzioneController.text,
+                          ),
+                        ),
+                      );
                     },
                   ),
                 ),

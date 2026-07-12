@@ -31,7 +31,6 @@ class Step1Submitted extends AddVehicleEvent {
 
 /// Step 2 → 3
 class Step2Submitted extends AddVehicleEvent {
-
   final int? kmUltimoTagliando;
   final int? kmUltimaDistribuzione;
   final int? intervalloTagliando;
@@ -46,12 +45,11 @@ class Step2Submitted extends AddVehicleEvent {
 
   @override
   List<Object?> get props => [
-
-        kmUltimoTagliando,
-        kmUltimaDistribuzione,
-        intervalloTagliando,
-        intervalloUltimaDistribuzione,
-      ];
+    kmUltimoTagliando,
+    kmUltimaDistribuzione,
+    intervalloTagliando,
+    intervalloUltimaDistribuzione,
+  ];
 }
 
 /// Step 3 → 4
@@ -60,11 +58,7 @@ class Step3Submitted extends AddVehicleEvent {
   final int? cilindrata;
   final int? kmAttuali;
 
-  Step3Submitted({
-    this.potenzaCv,
-    this.cilindrata,
-    this.kmAttuali,
-  });
+  Step3Submitted({this.potenzaCv, this.cilindrata, this.kmAttuali});
 
   @override
   List<Object?> get props => [potenzaCv, cilindrata, kmAttuali];
@@ -88,12 +82,12 @@ class Step4Submitted extends AddVehicleEvent {
 
   @override
   List<Object?> get props => [
-        prossimarevisione,
-        kmUltimoCambioGomme,
-        intervalloCambioGomme,
-        kmUltimaInversioneGomme,
-        intervalloInversioneGomme,
-      ];
+    prossimarevisione,
+    kmUltimoCambioGomme,
+    intervalloCambioGomme,
+    kmUltimaInversioneGomme,
+    intervalloInversioneGomme,
+  ];
 }
 
 /// Step 5 — salva wizard completo. L'ownerId viene letto dalla sessione

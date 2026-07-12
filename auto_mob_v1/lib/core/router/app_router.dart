@@ -10,8 +10,8 @@ import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/pages/splash_screen.dart';
 import '../../features/auth/presentation/pages/login_view.dart';
 import '../../features/auth/presentation/pages/registration_view.dart';
+import '../../features/vehicle/presentation/pages/vehicle_registration_page.dart';
 import '../../features/vehicle/presentation/widgets/km_update_pop_up.dart';
-import '../../features/vehicle/presentation/widgets/pop_up_add_veicle.dart';
 import '../../features/work_log/presentation/widgets/functional_pop_up.dart';
 import '../di/injection_container.dart' as di;
 import '../types/enum_pop_up.dart';
@@ -69,7 +69,7 @@ class AppRouter {
       GoRoute(
         path: '/addVeichle',
         name: 'aggiungi_veicolo',
-        pageBuilder: (context, state) => const BottomSheetPage(),
+        builder: (context, state) => const VehicleRegistrationPage(),
       ),
 
       GoRoute(

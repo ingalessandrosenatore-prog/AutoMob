@@ -34,22 +34,27 @@ void main() {
 
   final tFile = File('veicolo_AB123CD.jpg');
 
-  test('inoltra targa e foto al repository e ritorna Right quando salva',
-      () async {
-    when(() => repository.updateVehiclePhoto(targa: 'AB123CD', foto: tFile))
-        .thenAnswer((_) async => const Right(null));
+  test(
+    'inoltra targa e foto al repository e ritorna Right quando salva',
+    () async {
+      when(
+        () => repository.updateVehiclePhoto(targa: 'AB123CD', foto: tFile),
+      ).thenAnswer((_) async => const Right(null));
 
-    final result = await usecase(targa: 'AB123CD', foto: tFile);
+      final result = await usecase(targa: 'AB123CD', foto: tFile);
 
-    expect(result, const Right<Failure, void>(null));
-    verify(() => repository.updateVehiclePhoto(targa: 'AB123CD', foto: tFile))
-        .called(1);
-    verifyNoMoreInteractions(repository);
-  });
+      expect(result, const Right<Failure, void>(null));
+      verify(
+        () => repository.updateVehiclePhoto(targa: 'AB123CD', foto: tFile),
+      ).called(1);
+      verifyNoMoreInteractions(repository);
+    },
+  );
 
   test('propaga il Failure quando il repository fallisce (Left)', () async {
-    when(() => repository.updateVehiclePhoto(targa: 'AB123CD', foto: tFile))
-        .thenAnswer((_) async => const Left(StorageFailure()));
+    when(
+      () => repository.updateVehiclePhoto(targa: 'AB123CD', foto: tFile),
+    ).thenAnswer((_) async => const Left(StorageFailure()));
 
     final result = await usecase(targa: 'AB123CD', foto: tFile);
 

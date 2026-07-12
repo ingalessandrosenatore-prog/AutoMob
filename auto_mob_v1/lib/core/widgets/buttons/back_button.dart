@@ -10,11 +10,16 @@ class AmOutlinedButton extends StatelessWidget {
   final Color color;
   final VoidCallback onPressed;
 
+  /// Colore di riempimento dello sfondo. Null (default) = trasparente,
+  /// comportamento invariato per gli usi gia' esistenti in app.
+  final Color? fillColor;
+
   const AmOutlinedButton({
     super.key,
     required this.label,
     required this.color,
     required this.onPressed,
+    this.fillColor,
   });
 
   @override
@@ -28,6 +33,7 @@ class AmOutlinedButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16),
         side: BorderSide(color: color, width: 1.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+        backgroundColor: fillColor,
         // Rimuoviamo il feedback splash standard per mantenere lo stile pulito
         foregroundColor: color,
       ),
@@ -36,15 +42,10 @@ class AmOutlinedButton extends StatelessWidget {
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.bold,
-          fontSize: 18,
-          shadows: [
+          fontSize: 16,
+
             // Effetto Glow sulla scritta
-            Shadow(
-              color: color.withValues(alpha: 0.5),
-              blurRadius: 8.0,
-              offset: const Offset(0, 0),
-            ),
-          ],
+
         ),
       ),
     );

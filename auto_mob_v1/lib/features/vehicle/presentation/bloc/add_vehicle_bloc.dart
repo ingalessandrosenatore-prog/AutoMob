@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -14,10 +14,8 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
   final SaveDraftStep saveDraftStep;
   final SaveVehicle saveVehicle;
 
-  AddVehicleBloc({
-    required this.saveDraftStep,
-    required this.saveVehicle,
-  }) : super(const AddVehicleState()) {
+  AddVehicleBloc({required this.saveDraftStep, required this.saveVehicle})
+    : super(const AddVehicleState()) {
     on<AddVehicleStarted>(_onStep0);
     on<Step1Submitted>(_onStep1);
     on<Step2Submitted>(_onStep2);
@@ -33,7 +31,10 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
     return result.fold((failure) => failure, (_) => null);
   }
 
-  Future<void> _onStep1(Step1Submitted event, Emitter<AddVehicleState> emit) async {
+  Future<void> _onStep1(
+    Step1Submitted event,
+    Emitter<AddVehicleState> emit,
+  ) async {
     final draft = state.draft.copyWith(
       marca: event.marca,
       modello: event.modello,
@@ -44,13 +45,26 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
     emit(state.copyWith(draft: draft, status: AddVehicleStatus.loading));
     final failure = await _persist(draft);
     if (failure == null) {
-      emit(state.copyWith(currentStep: state.currentStep + 1, status: AddVehicleStatus.idle));
+      emit(
+        state.copyWith(
+          currentStep: state.currentStep + 1,
+          status: AddVehicleStatus.idle,
+        ),
+      );
     } else {
-      emit(state.copyWith(status: AddVehicleStatus.error, errorMessage: failure.message));
+      emit(
+        state.copyWith(
+          status: AddVehicleStatus.error,
+          errorMessage: failure.message,
+        ),
+      );
     }
   }
 
-  Future<void> _onStep2(Step2Submitted event, Emitter<AddVehicleState> emit) async {
+  Future<void> _onStep2(
+    Step2Submitted event,
+    Emitter<AddVehicleState> emit,
+  ) async {
     final draft = state.draft.copyWith(
       intervalloUltimoTagliando: event.intervalloTagliando,
       kmUltimoTagliando: event.kmUltimoTagliando,
@@ -60,13 +74,26 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
     emit(state.copyWith(draft: draft, status: AddVehicleStatus.loading));
     final failure = await _persist(draft);
     if (failure == null) {
-      emit(state.copyWith(currentStep: state.currentStep + 1, status: AddVehicleStatus.idle));
+      emit(
+        state.copyWith(
+          currentStep: state.currentStep + 1,
+          status: AddVehicleStatus.idle,
+        ),
+      );
     } else {
-      emit(state.copyWith(status: AddVehicleStatus.error, errorMessage: failure.message));
+      emit(
+        state.copyWith(
+          status: AddVehicleStatus.error,
+          errorMessage: failure.message,
+        ),
+      );
     }
   }
 
-  Future<void> _onStep3(Step3Submitted event, Emitter<AddVehicleState> emit) async {
+  Future<void> _onStep3(
+    Step3Submitted event,
+    Emitter<AddVehicleState> emit,
+  ) async {
     final draft = state.draft.copyWith(
       potenzaCv: event.potenzaCv,
       cilindrata: event.cilindrata,
@@ -75,13 +102,26 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
     emit(state.copyWith(draft: draft, status: AddVehicleStatus.loading));
     final failure = await _persist(draft);
     if (failure == null) {
-      emit(state.copyWith(currentStep: state.currentStep + 1, status: AddVehicleStatus.idle));
+      emit(
+        state.copyWith(
+          currentStep: state.currentStep + 1,
+          status: AddVehicleStatus.idle,
+        ),
+      );
     } else {
-      emit(state.copyWith(status: AddVehicleStatus.error, errorMessage: failure.message));
+      emit(
+        state.copyWith(
+          status: AddVehicleStatus.error,
+          errorMessage: failure.message,
+        ),
+      );
     }
   }
 
-  Future<void> _onStep4(Step4Submitted event, Emitter<AddVehicleState> emit) async {
+  Future<void> _onStep4(
+    Step4Submitted event,
+    Emitter<AddVehicleState> emit,
+  ) async {
     final draft = state.draft.copyWith(
       prossimarevisione: event.prossimarevisione,
       kmUltimoCambioGomme: event.kmUltimoCambioGomme,
@@ -92,15 +132,28 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
     emit(state.copyWith(draft: draft, status: AddVehicleStatus.loading));
     final failure = await _persist(draft);
     if (failure == null) {
-      emit(state.copyWith(currentStep: state.currentStep + 1, status: AddVehicleStatus.idle));
+      emit(
+        state.copyWith(
+          currentStep: state.currentStep + 1,
+          status: AddVehicleStatus.idle,
+        ),
+      );
     } else {
-      emit(state.copyWith(status: AddVehicleStatus.error, errorMessage: failure.message));
+      emit(
+        state.copyWith(
+          status: AddVehicleStatus.error,
+          errorMessage: failure.message,
+        ),
+      );
     }
   }
 
-  Future<void> _onSaveWizard(SaveWizard event, Emitter<AddVehicleState> emit) async {
+  Future<void> _onSaveWizard(
+    SaveWizard event,
+    Emitter<AddVehicleState> emit,
+  ) async {
     final draft = state.draft.copyWith(
-      fotoFile: event.fotoFile ,
+      fotoFile: event.fotoFile,
       codiceMeccanico: event.codiceMeccanico,
     );
     emit(state.copyWith(draft: draft, status: AddVehicleStatus.loading));
@@ -108,7 +161,12 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
     // 1. Persisto il draft locale (così se la rete fallisce non si perde nulla allo step 5).
     final draftFailure = await _persist(draft);
     if (draftFailure != null) {
-      emit(state.copyWith(status: AddVehicleStatus.error, errorMessage: draftFailure.message));
+      emit(
+        state.copyWith(
+          status: AddVehicleStatus.error,
+          errorMessage: draftFailure.message,
+        ),
+      );
       return;
     }
 
@@ -116,16 +174,29 @@ class AddVehicleBloc extends Bloc<AddVehicleEvent, AddVehicleState> {
     //    L'ownerId viene letto dalla sessione corrente direttamente nel datasource remoto.
     final result = await saveVehicle(draft);
     result.fold(
-      (failure) => emit(state.copyWith(status: AddVehicleStatus.error, errorMessage: failure.message)),
+      (failure) => emit(
+        state.copyWith(
+          status: AddVehicleStatus.error,
+          errorMessage: failure.message,
+        ),
+      ),
       (_) => emit(state.copyWith(status: AddVehicleStatus.completed)),
     );
   }
 
   void _onStepBack(StepBackPressed event, Emitter<AddVehicleState> emit) {
-    emit(state.copyWith(currentStep: state.currentStep - 1, status: AddVehicleStatus.idle));
+    emit(
+      state.copyWith(
+        currentStep: state.currentStep - 1,
+        status: AddVehicleStatus.idle,
+      ),
+    );
   }
 
-  FutureOr<void> _onStep0(AddVehicleStarted event, Emitter<AddVehicleState> emit) {
+  FutureOr<void> _onStep0(
+    AddVehicleStarted event,
+    Emitter<AddVehicleState> emit,
+  ) {
     emit(state.copyWith(currentStep: 0));
   }
 }

@@ -18,6 +18,10 @@ class AmDatePickerField extends StatefulWidget {
   final DateTime? firstDate;
   final DateTime? lastDate;
 
+  /// Altezza fissa del box (contenuto centrato verticalmente). Null
+  /// (default) = dimensione naturale di sempre (padding verticale 20).
+  final double? height;
+
   const AmDatePickerField({
     super.key,
     required this.label,
@@ -27,6 +31,7 @@ class AmDatePickerField extends StatefulWidget {
     this.onDateSelected,
     this.firstDate,
     this.lastDate,
+    this.height,
   });
 
   @override
@@ -63,9 +68,8 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
     final first = widget.firstDate ?? DateTime(now.year - 30);
     final last = widget.lastDate ?? DateTime(now.year + 30);
     final current = _parse(widget.controller.text);
-    final initial = (current != null &&
-            !current.isBefore(first) &&
-            !current.isAfter(last))
+    final initial =
+        (current != null && !current.isBefore(first) && !current.isAfter(last))
         ? current
         : (now.isBefore(first) ? first : (now.isAfter(last) ? last : now));
 
@@ -85,7 +89,10 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(foregroundColor: accent),
-            ), dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF151517)),
+            ),
+            dialogTheme: const DialogThemeData(
+              backgroundColor: Color(0xFF151517),
+            ),
           ),
           child: child!,
         );
@@ -136,6 +143,7 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
               borderRadius: BorderRadius.circular(16),
               onTap: _pickDate,
               child: Container(
+                height: widget.height,
                 decoration: BoxDecoration(
                   color: boxColor,
                   borderRadius: BorderRadius.circular(16),
@@ -144,9 +152,9 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
                     width: 1,
                   ),
                 ),
-                padding: const EdgeInsets.symmetric(
+                padding: EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 20,
+                  vertical: widget.height != null ? 0 : 20,
                 ),
                 child: Row(
                   children: [

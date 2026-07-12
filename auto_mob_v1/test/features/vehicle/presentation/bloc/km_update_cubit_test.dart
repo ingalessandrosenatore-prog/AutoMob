@@ -25,8 +25,9 @@ void main() {
   blocTest<KmUpdateCubit, KmUpdateState>(
     'emette [loading, success] quando l\'aggiornamento riesce',
     build: () {
-      when(() => updateVehicleKm(vehicleId: 'v1', newKm: 15000))
-          .thenAnswer((_) async => const Right(15000));
+      when(
+        () => updateVehicleKm(vehicleId: 'v1', newKm: 15000),
+      ).thenAnswer((_) async => const Right(15000));
       return KmUpdateCubit(updateVehicleKm);
     },
     act: (cubit) => cubit.aggiorna(vehicleId: 'v1', newKm: 15000),
@@ -39,8 +40,9 @@ void main() {
   blocTest<KmUpdateCubit, KmUpdateState>(
     'emette [loading, failure] con un messaggio quando fallisce',
     build: () {
-      when(() => updateVehicleKm(vehicleId: 'v1', newKm: 15000))
-          .thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => updateVehicleKm(vehicleId: 'v1', newKm: 15000),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
       return KmUpdateCubit(updateVehicleKm);
     },
     act: (cubit) => cubit.aggiorna(vehicleId: 'v1', newKm: 15000),

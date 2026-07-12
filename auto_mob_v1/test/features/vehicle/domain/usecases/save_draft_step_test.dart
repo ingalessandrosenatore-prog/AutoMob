@@ -28,8 +28,9 @@ void main() {
   const tDraft = VehicleDraft(targa: 'AB123CD', marca: 'Fiat');
 
   test('inoltra il draft al repository e ritorna Right', () async {
-    when(() => repository.saveDraftStep(tDraft))
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => repository.saveDraftStep(tDraft),
+    ).thenAnswer((_) async => const Right(null));
 
     final result = await usecase(tDraft);
 
@@ -39,8 +40,9 @@ void main() {
   });
 
   test('propaga il Failure quando il repository fallisce (Left)', () async {
-    when(() => repository.saveDraftStep(tDraft))
-        .thenAnswer((_) async => const Left(StorageFailure()));
+    when(
+      () => repository.saveDraftStep(tDraft),
+    ).thenAnswer((_) async => const Left(StorageFailure()));
 
     final result = await usecase(tDraft);
 

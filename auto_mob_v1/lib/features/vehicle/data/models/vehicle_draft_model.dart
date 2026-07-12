@@ -76,7 +76,9 @@ class VehicleDraftModel extends VehicleDraft {
       kmUltimaInversioneGomme: json['km_ultima_inversione_gomme'],
       intervalloInversioneGomme: json['intervallo_inversione_gomme'],
       codiceMeccanico: json['codice_meccanico'],
-      fotoFile: json['foto_path'] != null ? File(json['foto_path'] as String) : null,
+      fotoFile: json['foto_path'] != null
+          ? File(json['foto_path'] as String)
+          : null,
     );
   }
 
@@ -105,5 +107,4 @@ class VehicleDraftModel extends VehicleDraft {
       'foto_path': fotoFile?.path,
     };
   }
-
 }

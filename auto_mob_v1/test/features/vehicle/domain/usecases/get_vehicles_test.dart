@@ -30,25 +30,29 @@ void main() {
 
   final tVehicles = <Vehicle>[vehicleFixture()];
 
-  test('inoltra la richiesta al repository e ritorna la lista (Right)',
-      () async {
-    // arrange
-    when(() => repository.getVehicles())
-        .thenAnswer((_) async => Right(tVehicles));
+  test(
+    'inoltra la richiesta al repository e ritorna la lista (Right)',
+    () async {
+      // arrange
+      when(
+        () => repository.getVehicles(),
+      ).thenAnswer((_) async => Right(tVehicles));
 
-    // act
-    final result = await usecase();
+      // act
+      final result = await usecase();
 
-    // assert
-    expect(result, Right<Failure, List<Vehicle>>(tVehicles));
-    verify(() => repository.getVehicles()).called(1);
-    verifyNoMoreInteractions(repository);
-  });
+      // assert
+      expect(result, Right<Failure, List<Vehicle>>(tVehicles));
+      verify(() => repository.getVehicles()).called(1);
+      verifyNoMoreInteractions(repository);
+    },
+  );
 
   test('propaga il Failure quando il repository fallisce (Left)', () async {
     // arrange
-    when(() => repository.getVehicles())
-        .thenAnswer((_) async => const Left(ServerFailure()));
+    when(
+      () => repository.getVehicles(),
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
     // act
     final result = await usecase();
