@@ -5,6 +5,7 @@ import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
+import 'package:auto_mob_v1/core/widgets/hero/am_fab_hero.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
@@ -93,6 +94,26 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   /// warning con scorciatoia quando non ci sono ancora veicoli registrati.
   void _onStateForDialogs(BuildContext context, DashboardState s) {
     _closeDialogIfOpen();
+
+    // Errore one-shot dell'aggiornamento foto: lo mostro senza toccare i dati.
+    if (s is DashboardLoaded && s.photoUpdateError != null) {
+      _dialogOpen = true;
+      showAmStatusDialog(
+        context,
+        icon: Icons.error_outline,
+        iconColor: const Color(0xFFFF453A),
+        title: 'Foto non aggiornata',
+        message: s.photoUpdateError,
+        actions: [
+          AmDialogAction(
+            label: 'Chiudi',
+            color: const Color(0xFF8E8E93),
+            onPressed: _closeDialogIfOpen,
+          ),
+        ],
+      );
+      return;
+    }
 
     if (s is DashboardLoading || s is DashboardInitial) {
       _dialogOpen = true;
@@ -225,14 +246,16 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
           Expanded(
             child: Align(
               alignment: AlignmentGeometry.centerRight,
-              child: AmSoftButton(
-                width: 45,
-                height: 45,
-                color: const Color(0xFFFF6B00),
-                icon: Icons.add,
-                onPressed: () {
-                   context.pushNamed('aggiungi_veicolo');
-                },
+              child: AmFabHero(
+                child: AmSoftButton(
+                  width: 45,
+                  height: 45,
+                  color: const Color(0xFFFF6B00),
+                  icon: Icons.add,
+                  onPressed: () {
+                    context.pushNamed('aggiungi_veicolo');
+                  },
+                ),
               ),
             ),
           ),
@@ -247,9 +270,12 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
 
     return BlocListener<DashboardBloc, DashboardState>(
       listenWhen: (previous, current) {
-        final pv = previous is DashboardLoaded ? previous.vehicles : null;
-        final cv = current is DashboardLoaded ? current.vehicles : null;
-        return previous.runtimeType != current.runtimeType || pv != cv;
+        if (previous.runtimeType != current.runtimeType) return true;
+        if (previous is DashboardLoaded && current is DashboardLoaded) {
+          return previous.vehicles != current.vehicles ||
+              previous.photoUpdateError != current.photoUpdateError;
+        }
+        return false;
       },
       listener: _onStateForDialogs,
       child: Scaffold(
@@ -297,18 +323,23 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                   height: topSafeArea + appBarContentHeight,
                   child: Padding(
                     padding: EdgeInsets.only(top: topSafeArea),
-                    child: OCLiquidGlassGroup(
-                      settings: const OCLiquidGlassSettings(
-                        refractStrength: -0.130,
-                        blurRadiusPx: 1.0,
-                        specStrength: 0,
-                        specWidth: 0.0,
-                        specAngle: 145,
-                        blendPx: 70,
-                        specPower: 10,
-                      ),
-                      child: appBarContent,
-                    ),
+                    // Gruppo glass solo sui top di gamma (come da commento
+                    // sopra): con flag off niente backdrop shader da
+                    // ricompilare/ridisegnare ad ogni frame.
+                    child: kHeavyEffects
+                        ? OCLiquidGlassGroup(
+                            settings: const OCLiquidGlassSettings(
+                              refractStrength: -0.130,
+                              blurRadiusPx: 1.0,
+                              specStrength: 0,
+                              specWidth: 0.0,
+                              specAngle: 145,
+                              blendPx: 70,
+                              specPower: 10,
+                            ),
+                            child: appBarContent,
+                          )
+                        : appBarContent,
                   ),
                 ),
               ),
@@ -340,15 +371,36 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                   }
                   if (state is DashboardLoaded) {
                     final vehicles = state.vehicles;
-                    return SizedBox(
-                      height: 420,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
-                            Expanded(
-
-                              child: PageView.builder(
+                    // Prima: SizedBox(height: 420) fisso -> il PageView stirava
+                    // la card fino a 420px lasciando una banda vuota sotto
+                    // (visibile su device reale). Ora l'altezza la detta il
+                    // CONTENUTO: una CardAuto invisibile (Opacity 0, nessun
+                    // decode immagine, nessuna interazione) fa da "righello" e
+                    // il PageView la riempie con Positioned.fill. Si adatta da
+                    // solo a textScale/dimensioni schermo, senza numeri magici.
+                    final measure = vehicles.first;
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        children: [
+                          Stack(
+                            children: [
+                              IgnorePointer(
+                                child: ExcludeSemantics(
+                                  child: Opacity(
+                                    opacity: 0,
+                                    child: CardAuto(
+                                      marca: measure.brand,
+                                      modello: measure.model,
+                                      kmTotali: '0 km',
+                                      anno: measure.year,
+                                      nextRevisionDate: measure.nextRevisionDate,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned.fill(
+                                child: PageView.builder(
                                 scrollDirection: Axis.horizontal,
                                 controller: _pageController,
                                 onPageChanged: (index) {
@@ -398,6 +450,14 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                               final picked = await picker
                                                   .pickImage(
                                                 source: ImageSource.gallery,
+                                                // Ridimensiona/ricomprime a
+                                                // monte (nativo): una foto card
+                                                // 2:1 non ha bisogno di 12MP,
+                                                // ed evita decode enormi sul
+                                                // main isolate.
+                                                maxWidth: 1280,
+                                                maxHeight: 1280,
+                                                imageQuality: 80,
                                               );
                                               if (picked == null) return;
                                               dashboardBloc.add(
@@ -412,21 +472,22 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                 },
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            AnimatedSmoothIndicator(
-                              activeIndex: state.index,
-                              count: vehicles.length,
-                              effect: const ExpandingDotsEffect(
-                                dotHeight: 8,
-                                dotWidth: 8,
-                                expansionFactor: 2,
-                                activeDotColor: Color(0xFFFF6B00),
-                                dotColor: Color(0xFF2C2C35),
-                                radius: 20,
-                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          AnimatedSmoothIndicator(
+                            activeIndex: state.index,
+                            count: vehicles.length,
+                            effect: const ExpandingDotsEffect(
+                              dotHeight: 8,
+                              dotWidth: 8,
+                              expansionFactor: 2,
+                              activeDotColor: Color(0xFFFF6B00),
+                              dotColor: Color(0xFF2C2C35),
+                              radius: 20,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     );
                   }

@@ -20,8 +20,10 @@ class _NavItem {
 }
 
 class ShellScaffold extends StatefulWidget {
-  final Widget child;
-  const ShellScaffold({super.key, required this.child});
+  /// Shell delle tab (indexedStack): tiene i 3 sottoalberi vivi e sa quale e'
+  /// attivo. Sostituisce il vecchio `child` di ShellRoute.
+  final StatefulNavigationShell navigationShell;
+  const ShellScaffold({super.key, required this.navigationShell});
 
   @override
   State<ShellScaffold> createState() => _ShellScaffoldState();
@@ -79,9 +81,8 @@ class _ShellScaffoldState extends State<ShellScaffold> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.path;
-    var selected = _items.indexWhere((it) => location.startsWith(it.route));
-    if (selected == -1) selected = 0;
+    // L'indice attivo lo dice direttamente la shell (non piu' il path).
+    final selected = widget.navigationShell.currentIndex;
 
     final larghezzaSchermo = MediaQuery.sizeOf(context).width;
     final margine = (larghezzaSchermo * 12) / 100;
@@ -90,13 +91,18 @@ class _ShellScaffoldState extends State<ShellScaffold> with TickerProviderStateM
 
     void goTo(int index) {
       if (index < 0 || index >= _items.length) return;
-      context.go(_items[index].route);
+      // initialLocation: true quando si ri-tocca la tab gia' attiva -> torna
+      // alla radice del branch (comportamento standard delle bottom bar).
+      widget.navigationShell.goBranch(
+        index,
+        initialLocation: index == widget.navigationShell.currentIndex,
+      );
     }
 
     return Scaffold(
       body: Stack(
         children: [
-          RepaintBoundary(child: widget.child),
+          RepaintBoundary(child: widget.navigationShell),
           Positioned(
             bottom: 30,
             left: 0,

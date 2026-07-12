@@ -25,7 +25,13 @@ class PhotoStepViewState extends State<PhotoStepView> {
   XFile? _image;
 
   Future<void> _pickImage() async {
-    final picked = await _picker.pickImage(source: ImageSource.gallery);
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      // Stessi vincoli della modifica foto in home: niente 12MP inutili.
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 80,
+    );
     if (picked != null) setState(() => _image = picked);
   }
 
@@ -104,6 +110,10 @@ class _PhotoUploadCard extends StatelessWidget {
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
+                  cacheWidth:
+                      (MediaQuery.sizeOf(context).width *
+                              MediaQuery.devicePixelRatioOf(context))
+                          .round(),
                 )
               : Column(
                   mainAxisAlignment: MainAxisAlignment.center,

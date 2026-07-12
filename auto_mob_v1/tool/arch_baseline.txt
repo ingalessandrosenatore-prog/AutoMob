@@ -12,5 +12,5 @@ core/widgets/card/am_spare_part_card.dart:1:R8
 core/widgets/card/am_spare_part_card.dart:194:R13
 core/widgets/card/am_spare_part_card.dart:215:R13
 core/widgets/card/am_spare_part_card.dart:258:R13
-features/dashboard/presentation/pages/home_view.dart:19:R9
 features/dashboard/presentation/pages/home_view.dart:20:R9
+features/dashboard/presentation/pages/home_view.dart:21:R9

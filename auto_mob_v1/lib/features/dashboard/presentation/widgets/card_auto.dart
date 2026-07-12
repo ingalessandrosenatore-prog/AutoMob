@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
+import '../../../../core/config/performance_flags.dart';
 import '../../../../core/widgets/Effects/pulsing_glow_border.dart';
 import '../../../../core/widgets/buttons/am_pull_down_lg.dart';
 
@@ -47,6 +48,32 @@ class CardAuto extends StatelessWidget {
   Widget build(BuildContext context) {
     final double cardWidth = MediaQuery.of(context).size.width * 0.90;
 
+    // Bottone matita con menu "MODIFICA FOTO". Lo shader di rifrazione
+    // (OCLiquidGlassGroup) campiona lo sfondo in coordinate schermo: mentre la
+    // card scorre, lo sfondo rifratto trasla e il vetro SEMBRA scivolare. Lo
+    // accendiamo solo sui top di gamma (kHeavyEffects), come il resto dell'app
+    // (pattern SmartGlass); con flag off resta la pillola scura piatta, ferma.
+    final Widget editPull = AmPullDownLG(
+      brand: '',
+      lable: '',
+      onTap: () {},
+      larghezza: 60,
+      buttonIcons: Icons.edit,
+      buttonIconsSize: 18,
+      buttonIconColor: Colors.white,
+      buttonLableStyle: const TextStyle(fontSize: 0),
+      arrow: false,
+      children: [
+        ItemMorphPopUp(
+          icon: Icons.photo_camera_outlined,
+          text: "MODIFICA FOTO",
+          onTap: onEditPhotoTap ?? () {},
+          iconColor: const Color(0xFFF48A37),
+          iconSize: 20,
+        ),
+      ],
+    );
+
     return Container(
       width: cardWidth,
 
@@ -74,37 +101,20 @@ class CardAuto extends StatelessWidget {
                 Positioned(
                   top: 12,
                   right: 12,
-                  child: OCLiquidGlassGroup(
-                    settings: const OCLiquidGlassSettings(
-                      refractStrength: -0.130,
-                      blurRadiusPx: 1.0,
-                      specStrength: 0,
-                      specWidth: 0.0,
-                      specAngle: 145,
-                      blendPx: 70,
-                      specPower: 10,
-                    ),
-                    child: AmPullDownLG(
-                      brand: '',
-                      lable: '',
-                      onTap: () {},
-                      larghezza: 60,
-                      buttonIcons: Icons.edit,
-                      buttonIconsSize: 18,
-                      buttonIconColor: Colors.white,
-                      buttonLableStyle: const TextStyle(fontSize: 0),
-                      arrow: false,
-                      children: [
-                        ItemMorphPopUp(
-                          icon: Icons.photo_camera_outlined,
-                          text: "MODIFICA FOTO",
-                          onTap: onEditPhotoTap ?? () {},
-                          iconColor: const Color(0xFFF48A37),
-                          iconSize: 20,
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: kHeavyEffects
+                      ? OCLiquidGlassGroup(
+                          settings: const OCLiquidGlassSettings(
+                            refractStrength: -0.130,
+                            blurRadiusPx: 1.0,
+                            specStrength: 0,
+                            specWidth: 0.0,
+                            specAngle: 145,
+                            blendPx: 70,
+                            specPower: 10,
+                          ),
+                          child: editPull,
+                        )
+                      : editPull,
                 ),
               ],
             ),
@@ -414,19 +424,41 @@ class _VehicleImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final path = immaginePath;
     if (path == null || path.isEmpty) {
-      return Container(
+      return _placeholder;
+    }
+    // Decodifica alla risoluzione DI VISUALIZZAZIONE, non a quella del file:
+    // la card e' larga ~90% schermo, decodificare a piena risoluzione sprecava
+    // RAM/CPU sul main isolate (concausa dei freeze). cacheWidth taglia il
+    // decode alla larghezza reale in pixel fisici.
+    final int cacheWidth =
+        (MediaQuery.sizeOf(context).width *
+                0.9 *
+                MediaQuery.devicePixelRatioOf(context))
+            .round();
+
+    if (path.startsWith('http')) {
+      return Image.network(
+        path,
+        fit: BoxFit.cover,
+        cacheWidth: cacheWidth,
+        errorBuilder: (_, _, _) => _placeholder,
+      );
+    }
+    if (path.startsWith('lib/') || path.startsWith('assets/')) {
+      return Image.asset(path, fit: BoxFit.cover, cacheWidth: cacheWidth);
+    }
+    return Image.file(
+      File(path),
+      fit: BoxFit.cover,
+      cacheWidth: cacheWidth,
+      errorBuilder: (_, _, _) => _placeholder,
+    );
+  }
+
+  Widget get _placeholder => Container(
         color: const Color(0xFF2C2C2E),
         child: const Center(
           child: Icon(Icons.directions_car, color: Colors.white10, size: 50),
         ),
       );
-    }
-    if (path.startsWith('http')) {
-      return Image.network(path, fit: BoxFit.cover);
-    }
-    if (path.startsWith('lib/') || path.startsWith('assets/')) {
-      return Image.asset(path, fit: BoxFit.cover);
-    }
-    return Image.file(File(path), fit: BoxFit.cover);
-  }
 }

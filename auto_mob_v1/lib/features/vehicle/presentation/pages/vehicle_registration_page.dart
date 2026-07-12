@@ -7,6 +7,7 @@ import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import '../../../../core/widgets/buttons/back_button.dart';
 import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
+import '../../../../core/widgets/hero/am_fab_hero.dart';
 import '../bloc/vehicle_registration_bloc.dart';
 import '../bloc/vehicle_registration_event.dart';
 import '../bloc/vehicle_registration_state.dart';
@@ -151,22 +152,27 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
                       ),
                     ),
                   ),
-                  OCLiquidGlassGroup(
-                    settings: const OCLiquidGlassSettings(
-                      refractStrength: -0.130,
-                      blurRadiusPx: 1.0,
-                      specStrength: 0,
-                      specWidth: 0.0,
-                      specAngle: 145,
-                      blendPx: 70,
-                      specPower: 10,
-                    ),
-                    child: AmSoftButton(
-                      width: 45,
-                      height: 45,
-                      color: const Color(0xFF232326).withValues(alpha: 0.3),
-                      icon: Icons.close,
-                      onPressed: () => context.pop(),
+                  // Stesso tag Hero del "+" in home: l'icona vola tra i due.
+                  // Il proxy statico (arancione, +) evita di far volare lo
+                  // shader del bottone.
+                  AmFabHero(
+                    child: OCLiquidGlassGroup(
+                      settings: const OCLiquidGlassSettings(
+                        refractStrength: -0.130,
+                        blurRadiusPx: 1.0,
+                        specStrength: 0,
+                        specWidth: 0.0,
+                        specAngle: 145,
+                        blendPx: 70,
+                        specPower: 10,
+                      ),
+                      child: AmSoftButton(
+                        width: 45,
+                        height: 45,
+                        color: const Color(0xFF232326).withValues(alpha: 0.3),
+                        icon: Icons.close,
+                        onPressed: () => context.pop(),
+                      ),
                     ),
                   ),
                 ],

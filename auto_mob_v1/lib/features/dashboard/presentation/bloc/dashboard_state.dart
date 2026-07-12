@@ -31,11 +31,17 @@ class DashboardLoaded extends DashboardState {
   /// visibili finche' non arrivano i nuovi dati, niente pop-up modale.
   final bool isRefreshing;
 
+  /// Messaggio d'errore "one-shot" del solo aggiornamento foto (menu MODIFICA
+  /// FOTO). Non e' preservato da [copyWith]: viene consumato dalla UI (dialog)
+  /// e sparisce alla emissione successiva. Null = nessun errore.
+  final String? photoUpdateError;
+
   DashboardLoaded({
     required this.vehicles,
     required this.index,
     required this.kpis,
     this.isRefreshing = false,
+    this.photoUpdateError,
   });
 
   DashboardLoaded copyWith({
@@ -49,11 +55,12 @@ class DashboardLoaded extends DashboardState {
       index: index ?? this.index,
       kpis: kpis ?? this.kpis,
       isRefreshing: isRefreshing ?? this.isRefreshing,
+      // photoUpdateError NON viene propagato: e' un errore one-shot.
     );
   }
 
   @override
-  List<Object?> get props => [vehicles, index, kpis, isRefreshing];
+  List<Object?> get props => [vehicles, index, kpis, isRefreshing, photoUpdateError];
 }
 
 class DashboardError extends DashboardState {

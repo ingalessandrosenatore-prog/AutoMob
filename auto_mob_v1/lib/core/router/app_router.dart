@@ -15,6 +15,7 @@ import '../../features/vehicle/presentation/widgets/km_update_pop_up.dart';
 import '../../features/work_log/presentation/widgets/functional_pop_up.dart';
 import '../di/injection_container.dart' as di;
 import '../types/enum_pop_up.dart';
+import 'am_transition_page.dart';
 import 'go_router_refresh_stream.dart';
 import 'shell_scaffold.dart';
 
@@ -45,23 +46,41 @@ class AppRouter {
         builder: (context, state) => const RegistrationView(),
       ),
 
-      ShellRoute(
-        builder: (context, state, child) => ShellScaffold(child: child),
-        routes: [
-          GoRoute(
-            path: '/home',
-            name: 'home',
-            builder: (context, state) => const HomeView(),
+      // indexedStack: tiene VIVE tutte e 3 le tab contemporaneamente (solo la
+      // corrente e' visibile, le altre restano montate). Cambiare tab non
+      // ricostruisce piu' la pagina da zero -> niente scatto entrando su
+      // "Lavori" (prima ogni tab veniva smontata e il suo header liquid-glass
+      // ricompilato), e lo scroll di ogni tab e' preservato.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            ShellScaffold(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                name: 'home',
+                builder: (context, state) => const HomeView(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/lavori',
-            name: 'lavori',
-            builder: (context, state) => const WorkLogHistoryPage(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/lavori',
+                name: 'lavori',
+                builder: (context, state) => const WorkLogHistoryPage(),
+              ),
+            ],
           ),
-          GoRoute(
-            path: '/servizi',
-            name: 'servizi',
-            builder: (context, state) => const ServiziPage(),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/servizi',
+                name: 'servizi',
+                builder: (context, state) => const ServiziPage(),
+              ),
+            ],
           ),
         ],
       ),
@@ -69,7 +88,10 @@ class AppRouter {
       GoRoute(
         path: '/addVeichle',
         name: 'aggiungi_veicolo',
-        builder: (context, state) => const VehicleRegistrationPage(),
+        pageBuilder: (context, state) => AmFadeThroughPage(
+          key: state.pageKey,
+          child: const VehicleRegistrationPage(),
+        ),
       ),
 
       GoRoute(
@@ -91,7 +113,10 @@ class AppRouter {
       GoRoute(
         path: '/parts',
         name: 'parts',
-        builder: (context, state) => const Midifyitem(),
+        pageBuilder: (context, state) => AmFadeThroughPage(
+          key: state.pageKey,
+          child: const Midifyitem(),
+        ),
       ),
 
       GoRoute(

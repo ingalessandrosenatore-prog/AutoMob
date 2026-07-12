@@ -80,17 +80,51 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     );
   }
 
+  /// Aggiornamento foto: NON passa da DashboardLoading (che mostrerebbe il
+  /// pop-up di caricamento a tutto schermo sopra la home e, smontando il
+  /// carosello, farebbe cadere il popup "MODIFICA FOTO"). Sul modello del
+  /// pull-to-refresh resta su DashboardLoaded, ricarica i veicoli e preserva
+  /// l'indice del veicolo che si stava guardando. In errore lo comunica alla
+  /// UI via photoUpdateError invece di ingoiarlo in silenzio.
   Future<void> _onVehiclePhotoUpdateRequested(
     VehiclePhotoUpdateRequested event,
     Emitter<DashboardState> emit,
   ) async {
+    final current = state;
+    if (current is! DashboardLoaded) return;
+
     final result = await updateVehiclePhoto(
       targa: event.targa,
       foto: event.foto,
     );
+
     await result.fold(
-      (failure) async {},
-      (_) => _onLoadDashboardData(LoadDashboardData(), emit),
+      (failure) async => emit(DashboardLoaded(
+        vehicles: current.vehicles,
+        index: current.index,
+        kpis: current.kpis,
+        photoUpdateError: failure.message,
+      )),
+      (_) async {
+        final reload = await getVehicles();
+        reload.fold(
+          (failure) => emit(DashboardLoaded(
+            vehicles: current.vehicles,
+            index: current.index,
+            kpis: current.kpis,
+            photoUpdateError: failure.message,
+          )),
+          (vehicles) {
+            final lista = vehicles.isEmpty ? [Vehicle.placeholder()] : vehicles;
+            final idx = current.index < lista.length ? current.index : 0;
+            emit(DashboardLoaded(
+              vehicles: lista,
+              index: idx,
+              kpis: computeKpis(lista[idx]),
+            ));
+          },
+        );
+      },
     );
   }
 

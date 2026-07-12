@@ -20,7 +20,7 @@ Regole di layering complete (chi può importare cosa) e i controlli automatici:
 lib/
 ├── core/                    trasversale, NON conosce le feature (eccetto di/ e router/)
 │   ├── di/                  injection_container.dart — composition root, monta tutto
-│   ├── router/              go_router + shell scaffold (bottom bar / nav)
+│   ├── router/              go_router (StatefulShellRoute.indexedStack: le 3 tab restano vive) + shell scaffold (bottom bar) + AmFadeThroughPage (transizione pagine pushate)
 │   ├── error/               Failure (sealed class) + Exception per il layer data
 │   ├── widgets/              widget DAVVERO riutilizzabili tra feature (buttons/ card/ input/ dialog/ smart/ blur/ effects/)
 │   ├── config/               feature flags (es. performance_flags.dart)

@@ -177,41 +177,78 @@ void main() {
 
   final tFoto = File('veicolo_v1.jpg');
 
+  // Dopo il cambio foto il veicolo torna dal reload con un fotoPath nuovo:
+  // la lista ricaricata differisce dal seed (altrimenti Bloc non riemette).
+  final tVehicle2Foto = tVehicle2.copyWith(fotoPath: 'foto_nuova.jpg');
+
   blocTest<DashboardBloc, DashboardState>(
-    'ricarica la dashboard quando la foto viene aggiornata con successo',
+    'foto ok: ricarica SENZA DashboardLoading e preserva l\'indice selezionato',
     build: () {
       when(() => updateVehiclePhoto(targa: 'v1', foto: tFoto))
           .thenAnswer((_) async => const Right(null));
       when(() => getVehicles())
-          .thenAnswer((_) async => Right([tVehicle1, tVehicle2]));
+          .thenAnswer((_) async => Right([tVehicle1, tVehicle2Foto]));
       when(() => computeKpis(any())).thenReturn(tKpis);
       return buildBloc();
     },
+    // Stavo guardando il 2o veicolo (index 1): dopo il cambio foto deve restare li'.
+    seed: () => DashboardLoaded(
+      vehicles: [tVehicle1, tVehicle2],
+      index: 1,
+      kpis: const [],
+    ),
     act: (bloc) => bloc.add(
       VehiclePhotoUpdateRequested(targa: 'v1', foto: tFoto),
     ),
     expect: () => [
-      DashboardLoading(),
-      DashboardLoaded(vehicles: [tVehicle1, tVehicle2], index: 0, kpis: tKpis),
+      // Niente DashboardLoading: il carosello non viene mai smontato.
+      DashboardLoaded(
+        vehicles: [tVehicle1, tVehicle2Foto],
+        index: 1,
+        kpis: tKpis,
+      ),
     ],
     verify: (_) {
       verify(() => updateVehiclePhoto(targa: 'v1', foto: tFoto)).called(1);
+      // KPI ricalcolati per il veicolo all'indice preservato (il 2o).
+      verify(() => computeKpis(tVehicle2Foto)).called(1);
     },
   );
 
   blocTest<DashboardBloc, DashboardState>(
-    'non ricarica la dashboard quando l\'aggiornamento foto fallisce',
+    'foto in errore: emette DashboardLoaded con photoUpdateError e NON ricarica',
     build: () {
       when(() => updateVehiclePhoto(targa: 'v1', foto: tFoto))
           .thenAnswer((_) async => const Left(StorageFailure()));
       return buildBloc();
     },
+    seed: () => DashboardLoaded(vehicles: [tVehicle1], index: 0, kpis: const []),
+    act: (bloc) => bloc.add(
+      VehiclePhotoUpdateRequested(targa: 'v1', foto: tFoto),
+    ),
+    expect: () => [
+      isA<DashboardLoaded>()
+          .having((s) => s.photoUpdateError, 'photoUpdateError',
+              const StorageFailure().message)
+          .having((s) => s.vehicles, 'vehicles', [tVehicle1]),
+    ],
+    verify: (_) {
+      verifyNever(() => getVehicles());
+    },
+  );
+
+  blocTest<DashboardBloc, DashboardState>(
+    'foto: ignora l\'evento se lo stato non e\' ancora DashboardLoaded',
+    build: buildBloc,
     act: (bloc) => bloc.add(
       VehiclePhotoUpdateRequested(targa: 'v1', foto: tFoto),
     ),
     expect: () => [],
     verify: (_) {
-      verifyNever(() => getVehicles());
+      verifyNever(() => updateVehiclePhoto(
+            targa: any(named: 'targa'),
+            foto: any(named: 'foto'),
+          ));
     },
   );
 }

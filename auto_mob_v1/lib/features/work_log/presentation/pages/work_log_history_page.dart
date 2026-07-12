@@ -289,18 +289,23 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
                       height: topSafeArea + appBarContentHeight,
                       child: Padding(
                         padding: EdgeInsets.only(top: topSafeArea),
-                        child: OCLiquidGlassGroup(
-                          settings: const OCLiquidGlassSettings(
-                            refractStrength: -0.130,
-                            blurRadiusPx: 1.0,
-                            specStrength: 0,
-                            specWidth: 0.0,
-                            specAngle: 145,
-                            blendPx: 20,
-                            specPower: 10,
-                          ),
-                          child: _AppBarContent(onAdd: _addWork),
-                        ),
+                        // Header glass solo sui top di gamma: era una causa
+                        // dello scatto entrando nel tab (ricompilazione shader
+                        // al primo disegno). Con flag off resta l'header piatto.
+                        child: kHeavyEffects
+                            ? OCLiquidGlassGroup(
+                                settings: const OCLiquidGlassSettings(
+                                  refractStrength: -0.130,
+                                  blurRadiusPx: 1.0,
+                                  specStrength: 0,
+                                  specWidth: 0.0,
+                                  specAngle: 145,
+                                  blendPx: 20,
+                                  specPower: 10,
+                                ),
+                                child: _AppBarContent(onAdd: _addWork),
+                              )
+                            : _AppBarContent(onAdd: _addWork),
                       ),
                     ),
                   ),

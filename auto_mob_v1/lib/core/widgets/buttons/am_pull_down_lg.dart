@@ -365,10 +365,19 @@ class _PopUpState extends State<MorphPopUp>
                       padding: const EdgeInsets.all(8),
                       itemCount: widget.children.length,
                       itemBuilder: (context, index) {
-                        // Applichiamo un'opacità basata sull'animazione per i figli
+                        final item = widget.children[index];
+                        // Il tap su una voce DEVE chiudere il pop-up: senza
+                        // questo la route (con barriera opaca full-screen)
+                        // resta montata mentre l'azione naviga/apre il picker.
+                        // Se nel frattempo la card che ospita il trigger viene
+                        // smontata, il controller `ctrlm` viene disposed e la
+                        // barriera orfana intercetta ogni tap -> UI "freezata".
                         return Opacity(
                           opacity: t.clamp(0.0, 1.0),
-                          child: widget.children[index],
+                          child: item.copyWithOnTap(() {
+                            _closePopUp();
+                            item.onTap();
+                          }),
                         );
                       },
                     ),
@@ -406,6 +415,20 @@ class ItemMorphPopUp extends StatelessWidget {
     required this.onTap,
     this.iconsWheight = FontWeight.w900,
   });
+
+  /// Copia identica con un [onTap] diverso: serve al pop-up per iniettare la
+  /// chiusura della route prima di eseguire l'azione originale della voce.
+  ItemMorphPopUp copyWithOnTap(VoidCallback onTap) => ItemMorphPopUp(
+        icon: icon,
+        text: text,
+        textSize: textSize,
+        textWeight: textWeight,
+        iconSize: iconSize,
+        iconColor: iconColor,
+        textColor: textColor,
+        iconsWheight: iconsWheight,
+        onTap: onTap,
+      );
 
   @override
   Widget build(BuildContext context) {
