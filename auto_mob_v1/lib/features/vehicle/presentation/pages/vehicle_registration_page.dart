@@ -8,7 +8,6 @@ import '../../../../core/widgets/buttons/back_button.dart';
 import '../../../../core/theme/am_theme_colors.dart';
 import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
-import '../../../../core/widgets/hero/am_fab_hero.dart';
 import '../../../../core/widgets/progress/am_wizard_progress.dart';
 import '../bloc/vehicle_registration_bloc.dart';
 import '../bloc/vehicle_registration_event.dart';
@@ -189,10 +188,9 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerRight,
-                        child: AmFabHero(
-                          child: SizedBox(
-                            width: 45,
-                            height: 45,
+                        child: SizedBox(
+                          width: 45,
+                          height: 45,
                           child: AmSoftButton(
                             width: 45,
                             height: 45,
@@ -200,7 +198,6 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
                             icon: HugeIcons.strokeRoundedAdd01,
                             iconTurns: 0.125,
                             onPressed: _chiudi,
-                          ),
                           ),
                         ),
                       ),
