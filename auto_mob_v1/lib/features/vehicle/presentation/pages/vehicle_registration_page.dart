@@ -26,7 +26,13 @@ const _arancione = Color(0xFFE85A1A);
 /// `AddVehicleWizard`). Solo front-end per ora: nessun salvataggio reale,
 /// la navigazione tra step e' gestita da VehicleRegistrationBloc.
 class VehicleRegistrationPage extends StatelessWidget {
-  const VehicleRegistrationPage({super.key});
+  /// Come chiudere la pagina. `null` → `context.pop()` (apertura via route
+  /// classica). Quando la pagina vive dentro una transizione custom (es.
+  /// LiquidZoom) il chiamante DEVE passare qui il suo `close`: un pop diretto
+  /// salterebbe l'animazione di chiusura lasciando il trigger nascosto.
+  final VoidCallback? onClose;
+
+  const VehicleRegistrationPage({super.key, this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -39,14 +45,16 @@ class VehicleRegistrationPage extends StatelessWidget {
         // I bottoni in basso restano fissi anche quando si apre la
         // tastiera (niente "salita" insieme ad essa).
         resizeToAvoidBottomInset: false,
-        body: const _RegistrationBody(),
+        body: _RegistrationBody(onClose: onClose),
       ),
     );
   }
 }
 
 class _RegistrationBody extends StatefulWidget {
-  const _RegistrationBody();
+  final VoidCallback? onClose;
+
+  const _RegistrationBody({this.onClose});
 
   @override
   State<_RegistrationBody> createState() => _RegistrationBodyState();
@@ -54,6 +62,15 @@ class _RegistrationBody extends StatefulWidget {
 
 class _RegistrationBodyState extends State<_RegistrationBody> {
   late final PageController _pageController;
+
+  void _chiudi() {
+    final onClose = widget.onClose;
+    if (onClose != null) {
+      onClose();
+    } else {
+      context.pop();
+    }
+  }
 
   // GlobalKey tipizzate sullo State pubblico di ogni step: permettono alla
   // barra pulsanti FISSA (vive qui, non dentro i singoli step) di invocarne
@@ -123,7 +140,7 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
       builder: (context, state) {
         final colors = AmThemeColors.of(context);
         if (state.status == RegistrationStatus.completed) {
-          return const _RegistrationCompletedView();
+          return _RegistrationCompletedView(onClose: _chiudi);
         }
         final topInset = MediaQuery.paddingOf(context).top;
         return Column(
@@ -182,7 +199,7 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
                             color: const Color(0xFFFF6B00),
                             icon: HugeIcons.strokeRoundedAdd01,
                             iconTurns: 0.125,
-                            onPressed: () => context.pop(),
+                            onPressed: _chiudi,
                           ),
                           ),
                         ),
@@ -311,7 +328,9 @@ class _RegistrationBottomBar extends StatelessWidget {
 }
 
 class _RegistrationCompletedView extends StatelessWidget {
-  const _RegistrationCompletedView();
+  final VoidCallback onClose;
+
+  const _RegistrationCompletedView({required this.onClose});
 
   @override
   Widget build(BuildContext context) {
@@ -349,7 +368,7 @@ class _RegistrationCompletedView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             TextButton(
-              onPressed: () => context.pop(),
+              onPressed: onClose,
               child: const Text(
                 'Chiudi',
                 style: TextStyle(color: Color(0xFF4A90E2)),

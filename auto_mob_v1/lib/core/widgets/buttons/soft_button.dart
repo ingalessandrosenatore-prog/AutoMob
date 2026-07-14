@@ -14,7 +14,11 @@ class AmSoftButton extends StatefulWidget {
   final Color? color;
   final List<List> icon;
   final double iconTurns;
-  final VoidCallback onPressed;
+
+  /// `null` → bottone puramente visuale: niente GestureDetector interno,
+  /// il tap (e le sue animazioni) li gestisce un wrapper esterno come
+  /// [LiquidZoom]. Con un callback, comportamento classico.
+  final VoidCallback? onPressed;
 
   const AmSoftButton({
     super.key,
@@ -24,7 +28,7 @@ class AmSoftButton extends StatefulWidget {
     this.color,
     required this.icon,
     this.iconTurns = 0,
-    required this.onPressed,
+    this.onPressed,
   });
 
   @override
@@ -137,38 +141,45 @@ class _AmSoftButtonState extends State<AmSoftButton>
       ],
     );
 
+    final Widget visual = AnimatedBuilder(
+      animation: bounceCtrl,
+      builder: (context, child) =>
+          Transform.scale(scale: bounceCtrl.value, child: child),
+      // Top di gamma: vetro reale. Altrimenti versione piatta (gradiente
+      // col colore che schiarisce verso i bordi + un filo di opacity).
+      child: kHeavyEffects
+          ? OCLiquidGlass(
+              height: widget.height,
+              width: widget.width,
+              borderRadius: 100,
+              enabled: true,
+              color: base,
+              child: content,
+            )
+          : AmFlatGlass(
+              height: widget.height,
+              width: widget.width,
+              borderRadius: 100,
+              color: base,
+              opacity: 0.9,
+              child: content,
+            ),
+    );
+
+    // Senza onPressed il bottone e' solo estetica: il gesto (e press/luce)
+    // appartengono al wrapper che lo avvolge (es. LiquidZoom).
+    final onPressed = widget.onPressed;
+    if (onPressed == null) return visual;
+
     return GestureDetector(
       onTap: () {
         AmHaptics.tap();
-        widget.onPressed();
+        onPressed();
       },
       onTapDown: (_) => _onPress(),
       onTapUp: (_) => _onRelese(),
       onTapCancel: () => _onCancel(),
-      child: AnimatedBuilder(
-        animation: bounceCtrl,
-        builder: (context, child) =>
-            Transform.scale(scale: bounceCtrl.value, child: child),
-        // Top di gamma: vetro reale. Altrimenti versione piatta (gradiente
-        // col colore che schiarisce verso i bordi + un filo di opacity).
-        child: kHeavyEffects
-            ? OCLiquidGlass(
-                height: widget.height,
-                width: widget.width,
-                borderRadius: 100,
-                enabled: true,
-                color: base,
-                child: content,
-              )
-            : AmFlatGlass(
-                height: widget.height,
-                width: widget.width,
-                borderRadius: 100,
-                color: base,
-                opacity: 0.9,
-                child: content,
-              ),
-      ),
+      child: visual,
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_add_button.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_item_card.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:flutter/material.dart';
@@ -18,8 +19,6 @@ import '../../domain/entities/work_log_row.dart';
 import '../bloc/work_log_history_bloc.dart';
 import '../bloc/work_log_history_event.dart';
 import '../bloc/work_log_history_state.dart';
-import '../../../../core/widgets/buttons/soft_button.dart';
-import '../../../../core/widgets/hero/am_fab_hero.dart';
 
 const Color _orange = Color(0xFFFF6B00);
 
@@ -148,7 +147,7 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
           _dialogOpen = true;
           showAmStatusDialog(
             context,
-          icon: HugeIcons.strokeRoundedGarage,
+            icon: HugeIcons.strokeRoundedGarage,
             iconColor: const Color(0xFFFFB4AB),
             title: 'Nessun veicolo trovato',
             message: 'Aggiungi un veicolo per iniziare a registrare i lavori.',
@@ -178,38 +177,6 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
       case HistoryStatus.initial:
         break;
     }
-  }
-
-  /// Apertura dell'aggiunta di un lavoro per il veicolo selezionato.
-  /// Al ritorno (true) ricarico SENZA perdere la selezione.
-  Future<void> _addWork() async {
-    final bloc = context.read<WorkLogHistoryBloc>();
-    final state = bloc.state;
-    VehicleOption? selected = _selectedVehicle(state);
-
-    if (selected == null) {
-      context.pushNamed('aggiungi_veicolo');
-      return;
-    }
-
-    final salvato = await context.pushNamed(
-      'aggiungi_lavoro',
-      extra: {
-        'vehicleId': selected.id,
-        'currentKm': selected.km,
-        'heroTag': 'fab-aggiungi-lavoro',
-      },
-    );
-    if (salvato == true) {
-      bloc.add(const ReloadCurrent());
-    }
-  }
-
-  VehicleOption? _selectedVehicle(WorkLogHistoryState s) {
-    for (final v in s.vehicles) {
-      if (v.id == s.selectedVehicleId) return v;
-    }
-    return null;
   }
 
   /// Dispaccia il pull-to-refresh e attende il completamento (isRefreshing
@@ -293,8 +260,8 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
                         // dello scatto entrando nel tab (ricompilazione shader
                         // al primo disegno). Con flag off resta l'header piatto.
                         child: kHeavyEffects
-                            ? OCLiquidGlassGroup(
-                                settings: const OCLiquidGlassSettings(
+                            ? const OCLiquidGlassGroup(
+                                settings: OCLiquidGlassSettings(
                                   refractStrength: -0.130,
                                   blurRadiusPx: 1.0,
                                   specStrength: 0,
@@ -303,9 +270,9 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
                                   blendPx: 20,
                                   specPower: 10,
                                 ),
-                                child: _AppBarContent(onAdd: _addWork),
+                                child: _AppBarContent(),
                               )
-                            : _AppBarContent(onAdd: _addWork),
+                            : const _AppBarContent(),
                       ),
                     ),
                   ),
@@ -324,8 +291,7 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
 
 /// Barra superiore: dropdown veicoli (dinamico) + pill "LAVORI" + bottone +.
 class _AppBarContent extends StatelessWidget {
-  final VoidCallback onAdd;
-  const _AppBarContent({required this.onAdd});
+  const _AppBarContent();
 
   @override
   Widget build(BuildContext context) {
@@ -373,15 +339,27 @@ class _AppBarContent extends StatelessWidget {
           Expanded(
             child: Align(
               alignment: Alignment.centerRight,
-              child: AmFabHero(
-                tag: 'fab-aggiungi-lavoro',
-                child: AmSoftButton(
-                  width: 45,
-                  height: 45,
-                  color: _orange,
-                  icon: HugeIcons.strokeRoundedAdd01,
-                  onPressed: onAdd,
-                ),
+              child: BlocBuilder<WorkLogHistoryBloc, WorkLogHistoryState>(
+                buildWhen: (previous, current) =>
+                    previous.vehicles != current.vehicles ||
+                    previous.selectedVehicleId != current.selectedVehicleId,
+                builder: (context, state) {
+                  VehicleOption? selected;
+                  for (final vehicle in state.vehicles) {
+                    if (vehicle.id == state.selectedVehicleId) {
+                      selected = vehicle;
+                      break;
+                    }
+                  }
+                  return WorkLogAddButton(
+                    vehicle: selected,
+                    onMissingVehicle: () =>
+                        context.pushNamed('aggiungi_veicolo'),
+                    onSaved: () => context.read<WorkLogHistoryBloc>().add(
+                      const ReloadCurrent(),
+                    ),
+                  );
+                },
               ),
             ),
           ),

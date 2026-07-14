@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:auto_mob_v1/core/ios_animation_claude/ios_animation_claude.dart';
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
+import 'package:auto_mob_v1/core/types/page_builders.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
@@ -240,14 +242,23 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
             child: Align(
               alignment: AlignmentGeometry.centerRight,
               child: AmFabHero(
-                child: AmSoftButton(
-                  width: 45,
-                  height: 45,
-                  color: const Color(0xFFFF6B00),
-                  icon: HugeIcons.strokeRoundedAdd01,
-                  onPressed: () {
-                    context.pushNamed('aggiungi_veicolo');
-                  },
+                // Zoom transition (LiquidZoom): il + morfa nella pagina di
+                // registrazione veicolo invece di pushare una route. La
+                // pagina arriva dal DI (regola cross-feature: dashboard non
+                // puo' importare la presentation di vehicle) e riceve il
+                // `close` animato del morph.
+                child: LiquidZoom(
+                  target: const LiquidZoomTarget.page(),
+                  config: LiquidZoomConfig(cardColor: colors.background),
+                  destinationBuilder: GetIt.I<VehicleRegistrationZoomBuilder>(),
+                  // Senza onPressed il bottone e' solo visuale: press, luce
+                  // e apertura li orchestra LiquidZoom.
+                  child: const AmSoftButton(
+                    width: 45,
+                    height: 45,
+                    color: Color(0xFFFF6B00),
+                    icon: HugeIcons.strokeRoundedAdd01,
+                  ),
                 ),
               ),
             ),
