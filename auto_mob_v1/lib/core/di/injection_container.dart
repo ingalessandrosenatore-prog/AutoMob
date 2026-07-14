@@ -7,7 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../theme/theme_cubit.dart';
 import '../theme/theme_preferences.dart';
-import '../types/page_builders.dart';
 
 // Auth
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -38,7 +37,6 @@ import '../../features/vehicle/domain/usecases/lookup_vehicle_by_plate.dart';
 import '../../features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import '../../features/vehicle/presentation/bloc/km_update_cubit.dart';
 import '../../features/vehicle/presentation/bloc/vehicle_registration_bloc.dart';
-import '../../features/vehicle/presentation/pages/vehicle_registration_page.dart';
 
 // Dashboard
 import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
@@ -158,13 +156,6 @@ Future<void> _initVehicle() async {
   );
   sl.registerLazySingleton<VehicleLookupRepository>(
     () => VehicleLookupRepositoryImpl(),
-  );
-
-  // Builder cross-feature per la home: apre la registrazione veicolo dentro
-  // la transizione LiquidZoom. La pagina riceve il `close` animato del morph
-  // (mai pop diretto, lascerebbe il trigger nascosto). Vedi page_builders.dart.
-  sl.registerLazySingleton<VehicleRegistrationZoomBuilder>(
-    () => (context, close) => VehicleRegistrationPage(onClose: close),
   );
 }
 
