@@ -1,13 +1,14 @@
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../services/haptic_service.dart';
 
 /// A class representing an action in the Glass FAB menu.
 class AmGlassAction {
   final Color color;
-  final IconData icon;
+  final List<List> icon;
   final String label;
   final VoidCallback onPressed;
 
@@ -342,14 +343,15 @@ class _AmGlassFabState extends State<AmGlassFab> with TickerProviderStateMixin {
                                   child: IconButton(
                                     padding: EdgeInsets.zero,
                                     constraints: const BoxConstraints(),
-                                    icon: Icon(
-                                      Icons.add,
+                                    icon: HugeIcon(
+                                      icon: HugeIcons.strokeRoundedAdd01,
                                       color: Color.lerp(
                                           widget.inactiveColor,
                                           widget.inactiveColor?.withValues(alpha: 0.5),
                                           safeExpand
                                       ),
                                       size:30,
+                                      strokeWidth: 2.4,
                                     ),
                                     onPressed: _isOpen ? _toggle : null,
                                   ),
@@ -430,8 +432,8 @@ class _AmGlassFabActionItem extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Icon(
-                        action.icon,
+                      child: HugeIcon(
+                        icon: action.icon,
                         color: action.color,
                         size: 20,
                       ),

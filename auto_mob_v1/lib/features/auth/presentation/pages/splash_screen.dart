@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../../../core/theme/am_theme_colors.dart';
 
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -57,11 +60,12 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    const Color orangeColor = Color(0xFFE85A1A);
-    const Color blueColor = Color(0xFF4A90E2);
+    final colors = AmThemeColors.of(context);
+    final orangeColor = colors.accent;
+    final blueColor = colors.info;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF000000),
+      backgroundColor: colors.background,
       body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -81,10 +85,11 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.directions_car_filled,
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedGarage,
                       color: orangeColor,
                       size: 100,
+                      strokeWidth: 2.0,
                     ),
                   ),
                 ),
@@ -97,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen>
                     Text(
                       'AutoMob',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textPrimary,
                         fontSize: 48,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2.0,
@@ -110,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'SMART MAINTENANCE',
                       style: TextStyle(
                         color: blueColor,

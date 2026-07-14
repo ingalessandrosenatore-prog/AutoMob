@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
-/// Card KPI tridimensionale per la manutenzione.
-/// Mostra lo stato, la valutazione di affidabilità e il pulsante per i dettagli.
+import '../../theme/am_theme_colors.dart';
+
 class AmMaintenanceKpiCard extends StatelessWidget {
   final Widget Function(double size, Color color) iconBuilder;
   final Color color;
   final String label;
   final int remainingKm;
-  final double percentage; // Valore da 0 a 100
+  final double percentage;
   final int offersCount;
   final int reviewCount;
   final VoidCallback? onTap;
@@ -26,35 +27,36 @@ class AmMaintenanceKpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Formattazione chilometri con separatore
-    String formatKm(int km) {
-      final sign = km < 0 ? "-" : "";
-      final absoluteKm = km.abs();
-      final formatted = absoluteKm.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.');
-      return "$sign$formatted";
-    }
+    final colors = AmThemeColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCritical = remainingKm <= 0;
+    final formattedKm = remainingKm.abs().toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]}.',
+    );
+    final kmLabel = remainingKm < 0 ? '-$formattedKm' : formattedKm;
 
     return Container(
+      key: const Key('am-maintenance-kpi-surface'),
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2C2C2E), // Grigio scuro leggermente più chiaro
-            Color(0xEF151414), // Grigio molto scuro
-          ],
+          colors: isDark
+              ? [colors.surfaceHighlight, colors.surfaceDeep]
+              : [colors.surfaceDeep, colors.surfaceHighlight],
         ),
+        border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: colors.shadow,
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.05),
+            color: colors.border,
             blurRadius: 0,
             offset: const Offset(0, -1),
           ),
@@ -64,25 +66,25 @@ class AmMaintenanceKpiCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         child: Stack(
           children: [
-            // Icona di Sfondo (Watermark)
             Positioned(
-              right: -10,
-              bottom: 0,
+              right: 0,
+              top: 55,
               child: Transform.rotate(
-                angle: -0.1, // Leggera rotazione stile design
+                angle: -0.2,
                 child: ShaderMask(
-                  shaderCallback: (Rect bounds) {
-                    return LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Colors.white.withValues(alpha: 0.2), color.withValues(alpha: 0.1)],
-                    ).createShader(bounds);
-                  },
-                  child: iconBuilder(100, Colors.white),
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (bounds) => LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colors.textSecondary.withValues(alpha: 0.06),
+                      color.withValues(alpha: 0.2),
+                    ],
+                  ).createShader(bounds),
+                  child: iconBuilder(84, colors.textPrimary),
                 ),
               ),
             ),
-            // Contenuto Interattivo
             Material(
               color: Colors.transparent,
               child: InkWell(
@@ -91,12 +93,10 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   child: Row(
                     children: [
-                      // Contenuto Principale
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Header: Icona + Label
                             Row(
                               children: [
                                 iconBuilder(20, color),
@@ -104,7 +104,9 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                                 Text(
                                   label.toUpperCase(),
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.9),
+                                    color: colors.textPrimary.withValues(
+                                      alpha: 0.9,
+                                    ),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 1.2,
@@ -113,44 +115,44 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                               ],
                             ),
                             const SizedBox(height: 10),
-                            // Chilometri Rimasti
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.baseline,
                               textBaseline: TextBaseline.alphabetic,
                               children: [
                                 Text(
-                                  '${formatKm(remainingKm)} ',
+                                  '$kmLabel ',
                                   style: TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 1.2,
-                                    color: remainingKm < 0
-                                        ? Colors.redAccent
-                                        : Colors.white,
+                                    color: isCritical
+                                        ? colors.danger
+                                        : colors.textPrimary,
                                   ),
                                 ),
                                 Text(
-                                  "KM Rimasti",
+                                  'KM Rimasti',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.white.withValues(alpha: 0.5),
+                                    color: colors.textSecondary,
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            // Segmented Rating Bar
                             _SegmentedProgressBar(
-                                percentage: percentage, color: color),
+                              percentage: percentage,
+                              color: color,
+                            ),
                           ],
                         ),
                       ),
-                      // Freccia di navigazione (Chevron)
-                      Icon(
-                        Icons.chevron_right,
-                        color: Colors.white.withValues(alpha: 0.2),
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowRight01,
+                        color: colors.textSecondary.withValues(alpha: 0.45),
                         size: 28,
+                        strokeWidth: 3,
                       ),
                     ],
                   ),
@@ -174,15 +176,15 @@ class _SegmentedProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: List.generate(4, (index) {
-        final segmentThreshold = (index + 1) * 25;
-        final isActive = percentage >= segmentThreshold - 12;
+        final threshold = (index + 1) * 25;
+        final isActive = percentage >= threshold - 12;
 
         return Expanded(
           child: Container(
             height: 10,
             margin: EdgeInsets.only(right: index == 3 ? 0 : 8),
             decoration: BoxDecoration(
-              color: isActive ? color : color.withValues(alpha: 0.1),
+              color: isActive ? color : color.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(6),
               boxShadow: isActive
                   ? [
@@ -190,7 +192,7 @@ class _SegmentedProgressBar extends StatelessWidget {
                         color: color.withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
-                      )
+                      ),
                     ]
                   : null,
             ),

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../theme/am_theme_colors.dart';
 
 class AmDropdown<T> extends StatelessWidget {
   final String label;
@@ -22,6 +25,7 @@ class AmDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -29,13 +33,13 @@ class AmDropdown<T> extends StatelessWidget {
         children: [
           RichText(
             text: TextSpan(
-              style: const TextStyle(color: Color(0xFF636366),
+              style: TextStyle(color: colors.textSecondary,
                   fontSize: 12,
                   fontWeight: FontWeight.bold),
               children: [
                 TextSpan(text: label.toUpperCase()),
-                if (isRequired) const TextSpan(
-                    text: ' *', style: TextStyle(color: Color(0xFF4A90E2))),
+                if (isRequired) TextSpan(
+                    text: ' *', style: TextStyle(color: colors.info)),
               ],
             ),
           ),
@@ -44,24 +48,27 @@ class AmDropdown<T> extends StatelessWidget {
             height: 60,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1C1C1E),
+              color: colors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              border: Border.all(color: colors.border),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<T>(
                 value: value,
-                hint: Text(placeholder, style: const TextStyle(
-                    color: Color(0xFF48484A), fontSize: 16)),
-                icon: const Icon(
-                    Icons.keyboard_arrow_down, color: Color(0xFF48484A)),
+                hint: Text(placeholder, style: TextStyle(
+                    color: colors.textSecondary, fontSize: 16)),
+                icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedArrowDown01,
+                    color: colors.textSecondary,
+                    size: 22,
+                    strokeWidth: 2.2),
                 isExpanded: true,
-                dropdownColor: const Color(0xFF1C1C1E),
+                dropdownColor: colors.surface,
                 items: items.map((T item) {
                   return DropdownMenuItem<T>(
                     value: item,
-                    child: Text(itemLabelBuilder(item), style: const TextStyle(
-                        color: Colors.white, fontSize: 16)),
+                    child: Text(itemLabelBuilder(item), style: TextStyle(
+                        color: colors.textPrimary, fontSize: 16)),
                   );
                 }).toList(),
                 onChanged: onChanged,

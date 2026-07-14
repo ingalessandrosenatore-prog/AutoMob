@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -125,8 +126,9 @@ class _PhotoUploadCard extends StatelessWidget {
                         color: _accent.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
-                        Icons.camera_alt,
+                      child: const HugeIcon(
+                    // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
+                        icon: HugeIcons.strokeRoundedAlbum02,
                         color: _accent,
                         size: 26,
                       ),

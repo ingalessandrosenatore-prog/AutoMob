@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../services/haptic_service.dart';
+import '../../theme/am_theme_colors.dart';
 
 class AmAnimatedNavButton extends StatefulWidget {
-  final IconData icon;
-  final IconData activeIcon;
+  final List<List> icon;
+  final List<List> activeIcon;
   final String label;
   final Color activeColor;
   final VoidCallback? onTap;
@@ -39,6 +41,7 @@ class _AmAnimatedNavButtonState extends State<AmAnimatedNavButton> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     // IMPORTANTE: qui NON c'è nessun OCLiquidGlassGroup.
     // La forma di vetro deve registrarsi nel gruppo condiviso della barra
     // (vedi ShellScaffold) per potersi fondere con la bolla mobile.
@@ -68,28 +71,29 @@ class _AmAnimatedNavButtonState extends State<AmAnimatedNavButton> {
           // scuro, dando luce integrata nel vetro senza patine.
           backgroundBlendMode: BlendMode.overlay,
           color: _isPressed
-              ? Colors.white.withValues(alpha: 0.4)
+              ? colors.textPrimary.withValues(alpha: 0.4)
               : Colors.transparent,
         ),
         child:  Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              _isClicked ? widget.activeIcon : widget.icon,
-              color: _isClicked ? widget.activeColor : Colors.white,
+            HugeIcon(
+              icon: _isClicked ? widget.activeIcon : widget.icon,
+              color: _isClicked ? widget.activeColor : colors.textPrimary,
               size: 24,
+              strokeWidth: 2.2,
             ),
             Text(
               widget.label,
               style: TextStyle(
-                color: _isClicked ? widget.activeColor : Colors.white,
+                color: _isClicked ? widget.activeColor : colors.textPrimary,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1,
-                shadows: const [
+                shadows: [
                   Shadow(
-                    color: Colors.black87,
-                    offset: Offset(0, 1),
+                    color: colors.shadow,
+                    offset: const Offset(0, 1),
                     blurRadius: 2,
                   ),
                 ],

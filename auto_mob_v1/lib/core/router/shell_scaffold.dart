@@ -2,13 +2,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 
-const Color _appOrange = Color(0xFFFF6B00);
+import '../theme/am_theme_colors.dart';
 
 class _NavItem {
   final String route;
-  final IconData icon;
-  final IconData activeIcon;
+  final List<List> icon;
+  final List<List> activeIcon;
   final String label;
 
   const _NavItem({
@@ -29,31 +30,38 @@ class ShellScaffold extends StatefulWidget {
   State<ShellScaffold> createState() => _ShellScaffoldState();
 }
 
-class _ShellScaffoldState extends State<ShellScaffold> with TickerProviderStateMixin {
+class _ShellScaffoldState extends State<ShellScaffold>
+    with TickerProviderStateMixin {
   late final AnimationController bounceCtrl;
-  final ValueNotifier<Offset?> _tapPositionNotifier = ValueNotifier<Offset?>(null);
-
-  static final SpringDescription _springDescription = SpringDescription.withDurationAndBounce(
-    duration: const Duration(milliseconds: 300),
-    bounce: 0.1,
+  final ValueNotifier<Offset?> _tapPositionNotifier = ValueNotifier<Offset?>(
+    null,
   );
+
+  static final SpringDescription _springDescription =
+      SpringDescription.withDurationAndBounce(
+        duration: const Duration(milliseconds: 300),
+        bounce: 0.1,
+      );
 
   static const List<_NavItem> _items = [
     _NavItem(
-        route: '/home',
-        icon: Icons.home_outlined,
-        activeIcon: Icons.home_outlined,
-        label: 'Garage'),
+      route: '/home',
+      icon: HugeIcons.strokeRoundedGarage,
+      activeIcon: HugeIcons.strokeRoundedGarage,
+      label: 'Garage',
+    ),
     _NavItem(
-        route: '/lavori',
-        icon: Icons.construction_outlined,
-        activeIcon: Icons.construction_outlined,
-        label: 'Lavori'),
+      route: '/lavori',
+      icon: HugeIcons.strokeRoundedTransactionHistory,
+      activeIcon: HugeIcons.strokeRoundedTransactionHistory,
+      label: 'Lavori',
+    ),
     _NavItem(
-        route: '/servizi',
-        icon: Icons.view_list_outlined,
-        activeIcon: Icons.view_list_outlined,
-        label: 'Servizi'),
+      route: '/servizi',
+      icon: HugeIcons.strokeRoundedOffice,
+      activeIcon: HugeIcons.strokeRoundedOffice,
+      label: 'Servizi',
+    ),
   ];
 
   @override
@@ -83,11 +91,15 @@ class _ShellScaffoldState extends State<ShellScaffold> with TickerProviderStateM
   Widget build(BuildContext context) {
     // L'indice attivo lo dice direttamente la shell (non piu' il path).
     final selected = widget.navigationShell.currentIndex;
+    final colors = AmThemeColors.of(context);
 
     final larghezzaSchermo = MediaQuery.sizeOf(context).width;
     final margine = (larghezzaSchermo * 12) / 100;
     const maxLarghezza = 500.0;
-    final larghezzaBarra = math.min(larghezzaSchermo - 3 * margine, maxLarghezza);
+    final larghezzaBarra = math.min(
+      larghezzaSchermo - 3 * margine,
+      maxLarghezza,
+    );
 
     void goTo(int index) {
       if (index < 0 || index >= _items.length) return;
@@ -110,10 +122,8 @@ class _ShellScaffoldState extends State<ShellScaffold> with TickerProviderStateM
             child: Center(
               child: AnimatedBuilder(
                 animation: bounceCtrl,
-                builder: (context, child) => Transform.scale(
-                  scale: bounceCtrl.value,
-                  child: child,
-                ),
+                builder: (context, child) =>
+                    Transform.scale(scale: bounceCtrl.value, child: child),
                 // Usiamo Listener per l'animazione di rimbalzo globale
                 // senza interferire o sballare i calcoli dei tap sui singoli pulsanti
                 child: Listener(
@@ -124,20 +134,17 @@ class _ShellScaffoldState extends State<ShellScaffold> with TickerProviderStateM
                     width: larghezzaBarra,
                     height: 66,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                         // Grigio chiaro con riflesso caldo/aranciato in alto allo spigolo
-                          Color(0xFF19191C), // Il tuo grigio base al centro
-                          Color(0xFF0D0E12), // Quasi nero profondo in basso per dare volume 3D
-                        ],
-                        stops: [0.2,  1.0],
+                        colors: [colors.surfaceHighlight, colors.surfaceRaised],
+                        stops: const [0.2, 1.0],
                       ),
+                      border: Border.all(color: colors.border),
                       borderRadius: BorderRadius.circular(100),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.5),
+                          color: colors.shadow,
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -203,8 +210,9 @@ class _ShellScaffoldState extends State<ShellScaffold> with TickerProviderStateM
 }*/
 
 class AmNavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData iconIsActive;
+  /// Accepts HugeIcons stroke data; IconData remains supported for legacy callers.
+  final Object icon;
+  final Object iconIsActive;
   final String lable;
   final bool isSelect;
   final VoidCallback onTap;
@@ -220,6 +228,7 @@ class AmNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -232,12 +241,14 @@ class AmNavItem extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           // Background arancione semitrasparente come richiesto
-          color: isSelect ? _appOrange.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelect
+              ? colors.accent.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(100),
           boxShadow: isSelect
               ? [
                   BoxShadow(
-                    color: _appOrange.withValues(alpha: 0.1),
+                    color: colors.accent.withValues(alpha: 0.12),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -252,27 +263,26 @@ class AmNavItem extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  isSelect ? iconIsActive : icon,
-                  size: 22,
-                  color: isSelect ? _appOrange : Colors.white.withValues(alpha: 0.5),
+                _NavIcon(
+                  value: isSelect ? iconIsActive : icon,
+                  color: isSelect ? colors.accent : colors.textSecondary,
                 ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOutCubic,
                   child: isSelect
                       ? Padding(
-                    padding: const EdgeInsets.only(left: 8.0),
-                    child: Text(
-                      lable,
-                      style: const TextStyle(
-                        color: _appOrange,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14.5,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  )
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Text(
+                            lable,
+                            style: TextStyle(
+                              color: colors.accent,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14.5,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        )
                       : const SizedBox.shrink(),
                 ),
               ],
@@ -285,12 +295,12 @@ class AmNavItem extends StatelessWidget {
               height: 2.0,
               width: isSelect ? 24 : 0,
               decoration: BoxDecoration(
-                color: _appOrange,
+                color: colors.accent,
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   if (isSelect)
                     BoxShadow(
-                      color: _appOrange.withValues(alpha: 0.5),
+                      color: colors.accent.withValues(alpha: 0.5),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -301,5 +311,26 @@ class AmNavItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+}
+
+class _NavIcon extends StatelessWidget {
+  final Object value;
+  final Color color;
+
+  const _NavIcon({required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    if (value is List) {
+      return HugeIcon(
+        icon: value as List<List>,
+        size: 22,
+        color: color,
+        strokeWidth: 2.2,
+      );
+    }
+    return Icon(value as IconData, size: 22, color: color);
   }
 }

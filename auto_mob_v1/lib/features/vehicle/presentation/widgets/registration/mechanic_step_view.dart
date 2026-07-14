@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 
 import '../../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../../core/widgets/input/textfield.dart';
@@ -52,34 +54,35 @@ class MechanicStepViewState extends State<MechanicStepView> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return AmEdgeBlur(
       child: SingleChildScrollView(
         padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
         child: Column(
           children: [
             const SizedBox(height: 40),
-            const Icon(
-              Icons.handshake_outlined,
+            const HugeIcon(
+              icon: HugeIcons.strokeRoundedAgreement01,
               color: Color(0xFFE85A1A),
               size: 56,
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Meccanico di fiducia',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Colors.white,
+                color: colors.textPrimary,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Inserisci il codice del tuo meccanico di fiducia per collegarlo '
               'al tuo veicolo.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF8E8E93),
+                color: colors.textSecondary,
                 fontSize: 14,
                 height: 1.4,
               ),
@@ -104,9 +107,9 @@ class MechanicStepViewState extends State<MechanicStepView> {
               child: IgnorePointer(
                 child: TextButton(
                   onPressed: () {},
-                  child: const Text(
+                  child: Text(
                     'Non ho un meccanico',
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: colors.textPrimary, fontSize: 14),
                   ),
                 ),
               ),

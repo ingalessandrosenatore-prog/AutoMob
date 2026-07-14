@@ -11,14 +11,15 @@ import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import 'package:auto_mob_v1/core/config/performance_flags.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
-import 'package:auto_mob_v1/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:auto_mob_v1/features/auth/presentation/bloc/auth_event.dart';
+import 'package:auto_mob_v1/features/auth/domain/repositories/auth_repository.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
@@ -100,7 +101,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       _dialogOpen = true;
       showAmStatusDialog(
         context,
-        icon: Icons.error_outline,
+        icon: HugeIcons.strokeRoundedAlert01,
         iconColor: const Color(0xFFFF453A),
         title: 'Foto non aggiornata',
         message: s.photoUpdateError,
@@ -133,10 +134,11 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       _dialogOpen = true;
       showAmStatusDialog(
         context,
-        icon: Icons.directions_car_outlined,
+        icon: HugeIcons.strokeRoundedGarage,
         iconColor: const Color(0xFFFFB4AB),
         title: 'Registra il tuo primo veicolo',
-        message: 'Non hai ancora nessun veicolo. Aggiungine uno per '
+        message:
+            'Non hai ancora nessun veicolo. Aggiungine uno per '
             'iniziare a usare AutoMob.',
         actions: [
           AmDialogAction(
@@ -160,6 +162,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     // Contenuto dell'app bar (pull-down + pill centrale + bottone +).
     // Il gruppo liquid glass lo avvolge SOLO sui top di gamma (kHeavyEffects):
     // un UNICO gruppo esterno così le forme vicine si fondono. Quando è false
@@ -177,36 +180,32 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 lable: '',
                 onTap: () {},
                 larghezza: 180,
-                buttonIcons: Icons.person,
+                buttonIcons: HugeIcons.strokeRoundedMoreHorizontalCircle02,
                 buttonIconsSize: 26,
-                buttonIconColor: Colors.white,
-                buttonLableStyle: const TextStyle(
+                buttonIconColor: colors.textPrimary,
+                buttonLableStyle: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
-                  color: Colors.white,
+                  color: colors.textPrimary,
                 ),
                 arrow: false,
                 children: [
                   ItemMorphPopUp(
-                    icon: Icons.logout,
+                    icon: HugeIcons.strokeRoundedLogout01,
                     text: "LOGOUT",
-                    // Sparo l'evento all'AuthBloc: la redirect del router
-                    // ci riporta a /login quando lo stato diventa non
-                    // autenticato. La dashboard non naviga a mano.
-                    onTap: () => context.read<AuthBloc>().add(LogoutEvent()),
-                    iconColor: const Color(
-                      0xFF3192F3,
-                    ),
+                    onTap: () async {
+                      await GetIt.I<AuthRepository>().logout();
+                      if (context.mounted) context.go('/login');
+                    },
+                    iconColor: const Color(0xFF3192F3),
                     iconSize: 22,
                     iconsWheight: FontWeight.w400,
                   ),
                   ItemMorphPopUp(
-                    icon: Icons.settings_outlined,
+                    icon: HugeIcons.strokeRoundedSettings01,
                     text: "SETTINGS",
-                    onTap: () {},
-                    iconColor: const Color(
-                      0xFF3192F3,
-                    ),
+                    onTap: () => context.push('/settings'),
+                    iconColor: const Color(0xFF3192F3),
                     iconSize: 22,
                     iconsWheight: FontWeight.w400,
                   ),
@@ -217,27 +216,21 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
           Expanded(
             child: Align(
               alignment: AlignmentGeometry.center,
-              child: OCLiquidGlass(
-
-                borderRadius: 100,
-                height: 45,
-                color: const Color(0xFF232326).withValues(alpha: 0.5),
-                child: const Center(
-                  child: Text(
-                    "VEICOLI",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black12,
-                          offset: Offset(1, 1),
-                          blurRadius: 2,
-                        ),
-                      ],
-                    ),
+              child: Center(
+                child: Text(
+                  "VEICOLI",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                    color: colors.textPrimary,
+                    shadows: [
+                      Shadow(
+                        color: colors.shadow,
+                        offset: const Offset(1, 1),
+                        blurRadius: 2,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -251,7 +244,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                   width: 45,
                   height: 45,
                   color: const Color(0xFFFF6B00),
-                  icon: Icons.add,
+                  icon: HugeIcons.strokeRoundedAdd01,
                   onPressed: () {
                     context.pushNamed('aggiungi_veicolo');
                   },
@@ -279,15 +272,16 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       },
       listener: _onStateForDialogs,
       child: Scaffold(
-        backgroundColor: const Color(0xFF1A1C23),
+        backgroundColor: colors.background,
         body: SmartEdge(
           blur: kHeavyEffects,
-          fallbackTint: const Color(0xFF1A1C23),
+          opacity: 0.96,
+          fallbackTint: colors.background,
           edges: [
             EdgeBlur(
               type: EdgeType.topEdge,
-              size: 100,
-              tintColor: const Color(0xFF000000),
+              size: 72,
+              tintColor: colors.background,
               sigma: 10,
               controlPoints: [
                 ControlPoint(position: 0.1, type: ControlPointType.visible),
@@ -297,8 +291,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
             ),
             EdgeBlur(
               type: EdgeType.bottomEdge,
-              size: 135,
-              tintColor: const Color(0xFF000000),
+              size: 92,
+              tintColor: colors.background,
               sigma: 10,
               controlPoints: [
                 ControlPoint(position: 0.5, type: ControlPointType.visible),
@@ -347,262 +341,292 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-              const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-              // lista auto
-              BlocBuilder<DashboardBloc, DashboardState>(
-                builder: (context, state) {
-                  if (state is DashboardLoading || state is DashboardInitial) {
-                    // Il caricamento e' comunicato dal pop-up di stato
-                    // (BlocListener sopra): il body resta vuoto dietro di esso.
-                    return const SizedBox.shrink();
-                  }
-                  if (state is DashboardError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(
-                          state.message,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Color(0xFFFF453A)),
-                        ),
-                      ),
-                    );
-                  }
-                  if (state is DashboardLoaded) {
-                    final vehicles = state.vehicles;
-                    // Prima: SizedBox(height: 420) fisso -> il PageView stirava
-                    // la card fino a 420px lasciando una banda vuota sotto
-                    // (visibile su device reale). Ora l'altezza la detta il
-                    // CONTENUTO: una CardAuto invisibile (Opacity 0, nessun
-                    // decode immagine, nessuna interazione) fa da "righello" e
-                    // il PageView la riempie con Positioned.fill. Si adatta da
-                    // solo a textScale/dimensioni schermo, senza numeri magici.
-                    final measure = vehicles.first;
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: [
-                          Stack(
-                            children: [
-                              IgnorePointer(
-                                child: ExcludeSemantics(
-                                  child: Opacity(
-                                    opacity: 0,
-                                    child: CardAuto(
-                                      marca: measure.brand,
-                                      modello: measure.model,
-                                      kmTotali: '0 km',
-                                      anno: measure.year,
-                                      nextRevisionDate: measure.nextRevisionDate,
-                                    ),
-                                  ),
+                    // lista auto
+                    BlocBuilder<DashboardBloc, DashboardState>(
+                      builder: (context, state) {
+                        if (state is DashboardLoading ||
+                            state is DashboardInitial) {
+                          // Il caricamento e' comunicato dal pop-up di stato
+                          // (BlocListener sopra): il body resta vuoto dietro di esso.
+                          return const SizedBox.shrink();
+                        }
+                        if (state is DashboardError) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Text(
+                                state.message,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFFFF453A),
                                 ),
                               ),
-                              Positioned.fill(
-                                child: PageView.builder(
-                                scrollDirection: Axis.horizontal,
-                                controller: _pageController,
-                                onPageChanged: (index) {
-                                  context.read<DashboardBloc>().add(
-                                    DashboardPageChanged(index),
-                                  );
-                                },
-                                itemCount: vehicles.length,
-                                itemBuilder: (context, index) {
-                                  final v = vehicles[index];
-                                  return RepaintBoundary(
-                                    child: CardAuto(
-                                      marca: v.brand,
-                                      modello: v.model,
-                                      kmTotali: v.isPlaceholder
-                                          ? '—'
-                                          : '${v.kmCurrent} km',
-                                      immaginePath: v.fotoPath,
-                                      anno: v.year,
-                                      nextRevisionDate: v.nextRevisionDate,
-                                      onKmTap: v.isPlaceholder
-                                          ? null
-                                          : () async {
-                                              final dashboardBloc =
-                                                  context.read<DashboardBloc>();
-                                              final aggiornato =
-                                                  await context.pushNamed(
-                                                'updateKm',
-                                                extra: {
-                                                  'id': v.id,
-                                                  'currentKm': '${v.kmCurrent}',
-                                                },
-                                              );
-                                              // Al ritorno, se i km sono stati
-                                              // aggiornati, ricarico la dashboard.
-                                              if (aggiornato == true) {
-                                                dashboardBloc
-                                                    .add(LoadDashboardData());
-                                              }
-                                            },
-                                      onEditPhotoTap: v.isPlaceholder
-                                          ? null
-                                          : () async {
-                                              final dashboardBloc =
-                                                  context.read<DashboardBloc>();
-                                              final picker = ImagePicker();
-                                              final picked = await picker
-                                                  .pickImage(
-                                                source: ImageSource.gallery,
-                                                // Ridimensiona/ricomprime a
-                                                // monte (nativo): una foto card
-                                                // 2:1 non ha bisogno di 12MP,
-                                                // ed evita decode enormi sul
-                                                // main isolate.
-                                                maxWidth: 1280,
-                                                maxHeight: 1280,
-                                                imageQuality: 80,
-                                              );
-                                              if (picked == null) return;
-                                              dashboardBloc.add(
-                                                VehiclePhotoUpdateRequested(
-                                                  targa: v.plate,
-                                                  foto: File(picked.path),
-                                                ),
-                                              );
-                                            },
+                            ),
+                          );
+                        }
+                        if (state is DashboardLoaded) {
+                          final vehicles = state.vehicles;
+                          // Prima: SizedBox(height: 420) fisso -> il PageView stirava
+                          // la card fino a 420px lasciando una banda vuota sotto
+                          // (visibile su device reale). Ora l'altezza la detta il
+                          // CONTENUTO: una CardAuto invisibile (Opacity 0, nessun
+                          // decode immagine, nessuna interazione) fa da "righello" e
+                          // il PageView la riempie con Positioned.fill. Si adatta da
+                          // solo a textScale/dimensioni schermo, senza numeri magici.
+                          final measure = vehicles.first;
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              children: [
+                                Stack(
+                                  children: [
+                                    IgnorePointer(
+                                      child: ExcludeSemantics(
+                                        child: Opacity(
+                                          opacity: 0,
+                                          child: CardAuto(
+                                            marca: measure.brand,
+                                            modello: measure.model,
+                                            kmTotali: '0 km',
+                                            anno: measure.year,
+                                            nextRevisionDate:
+                                                measure.nextRevisionDate,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  );
-                                },
-                              ),
+                                    Positioned.fill(
+                                      child: PageView.builder(
+                                        scrollDirection: Axis.horizontal,
+                                        controller: _pageController,
+                                        onPageChanged: (index) {
+                                          context.read<DashboardBloc>().add(
+                                            DashboardPageChanged(index),
+                                          );
+                                        },
+                                        itemCount: vehicles.length,
+                                        itemBuilder: (context, index) {
+                                          final v = vehicles[index];
+                                          return RepaintBoundary(
+                                            child: CardAuto(
+                                              marca: v.brand,
+                                              modello: v.model,
+                                              kmTotali: v.isPlaceholder
+                                                  ? '—'
+                                                  : '${v.kmCurrent} km',
+                                              immaginePath: v.fotoPath,
+                                              anno: v.year,
+                                              nextRevisionDate:
+                                                  v.nextRevisionDate,
+                                              onKmTap: v.isPlaceholder
+                                                  ? null
+                                                  : () async {
+                                                      final dashboardBloc =
+                                                          context
+                                                              .read<
+                                                                DashboardBloc
+                                                              >();
+                                                      final aggiornato =
+                                                          await context.pushNamed(
+                                                            'updateKm',
+                                                            extra: {
+                                                              'id': v.id,
+                                                              'currentKm':
+                                                                  '${v.kmCurrent}',
+                                                            },
+                                                          );
+                                                      // Al ritorno, se i km sono stati
+                                                      // aggiornati, ricarico la dashboard.
+                                                      if (aggiornato == true) {
+                                                        dashboardBloc.add(
+                                                          LoadDashboardData(),
+                                                        );
+                                                      }
+                                                    },
+                                              onEditPhotoTap: v.isPlaceholder
+                                                  ? null
+                                                  : () async {
+                                                      final dashboardBloc =
+                                                          context
+                                                              .read<
+                                                                DashboardBloc
+                                                              >();
+                                                      final picker =
+                                                          ImagePicker();
+                                                      final picked = await picker.pickImage(
+                                                        source:
+                                                            ImageSource.gallery,
+                                                        // Ridimensiona/ricomprime a
+                                                        // monte (nativo): una foto card
+                                                        // 2:1 non ha bisogno di 12MP,
+                                                        // ed evita decode enormi sul
+                                                        // main isolate.
+                                                        maxWidth: 1280,
+                                                        maxHeight: 1280,
+                                                        imageQuality: 80,
+                                                      );
+                                                      if (picked == null) {
+                                                        return;
+                                                      }
+                                                      dashboardBloc.add(
+                                                        VehiclePhotoUpdateRequested(
+                                                          targa: v.plate,
+                                                          foto: File(
+                                                            picked.path,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                AnimatedSmoothIndicator(
+                                  activeIndex: state.index,
+                                  count: vehicles.length,
+                                  effect: ExpandingDotsEffect(
+                                    dotHeight: 8,
+                                    dotWidth: 8,
+                                    expansionFactor: 2,
+                                    activeDotColor: colors.accent,
+                                    dotColor: colors.textSecondary.withValues(
+                                      alpha: 0.55,
+                                    ),
+                                    radius: 20,
+                                  ),
+                                ),
+                              ],
                             ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          AnimatedSmoothIndicator(
-                            activeIndex: state.index,
-                            count: vehicles.length,
-                            effect: const ExpandingDotsEffect(
-                              dotHeight: 8,
-                              dotWidth: 8,
-                              expansionFactor: 2,
-                              activeDotColor: Color(0xFFFF6B00),
-                              dotColor: Color(0xFF2C2C35),
-                              radius: 20,
-                            ),
-                          ),
-                        ],
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+
+                    // --- BANNERS ---
+                    AmBannerBig(
+                      title: 'Risparmia 215€/anno',
+                      subtitle: 'Assicura Facile',
+                      buttonLabel: 'Calcola preventivo',
+                      // imagePath: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=2073&auto=format&fit=crop',
+                      //  logoPath: 'https://images.unsplash.com/photo-1599305090748-36655bc6f571?q=80&w=2070&auto=format&fit=crop', // Placeholder logo
+                      onTap: () {},
+                    ),
+
+                    // lista kpi per il veicolo corrente
+                    const Padding(
+                      padding: EdgeInsets.all(9.0),
+                      child: RepaintBoundary(
+                        child: AmWorkshopCard(
+                          nomeOfficina: 'Nessuna officina ',
+                          codiceMeccanico: '—',
+                          stato: '—',
+                          colore: Color(0xFFFFB4AB),
+                        ),
                       ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
+                    ),
 
-              // --- BANNERS ---
-              AmBannerBig(
-                title: 'Risparmia 215€/anno',
-                subtitle: 'Assicura Facile',
-                buttonLabel: 'Calcola preventivo',
-               // imagePath: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=2073&auto=format&fit=crop',
-              //  logoPath: 'https://images.unsplash.com/photo-1599305090748-36655bc6f571?q=80&w=2070&auto=format&fit=crop', // Placeholder logo
-                onTap: () {},
-              ),
-
-
-
-              // lista kpi per il veicolo corrente
-              const Padding(
-                padding: EdgeInsets.all(9.0),
-                child: RepaintBoundary(
-                  child: AmWorkshopCard(
-                    nomeOfficina: 'Nessuna officina ',
-                    codiceMeccanico: '—',
-                    stato: '—',
-                    colore: Color(0xFFFFB4AB),
-                  ),
-                ),
-              ),
-
-              const Padding(
-                padding: EdgeInsets.all(9.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "STATO VEICOLO",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black12,
-                            offset: Offset(1, 1),
-                            blurRadius: 2,
+                    Padding(
+                      padding: const EdgeInsets.all(9.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "STATO VEICOLO",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                              color: colors.textPrimary,
+                              shadows: [
+                                Shadow(
+                                  color: colors.shadow,
+                                  offset: const Offset(1, 1),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedCarAlert,
+                            color: colors.accent,
+                            size: 24,
+                            strokeWidth: 2.2,
                           ),
                         ],
                       ),
                     ),
-                    Icon(Icons.car_crash_outlined, color: Color(0xFFFF6B00)),
-                  ],
-                ),
-              ),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: BlocBuilder<DashboardBloc, DashboardState>(
-                  builder: (BuildContext context, state) {
-                    // I KPI sono gia' pronti nello stato: il calcolo lo fa il
-                    // BLoC (use case ComputeMaintenanceKpis). Qui mi limito a
-                    // disegnarli, niente logica di business nella UI.
-                    if (state is! DashboardLoaded || state.kpis.isEmpty) {
-                      return const SizedBox.shrink();
-                    }
-
-                    final kpis = state.kpis;
-
-                    // ListView.builder: una card per ogni KPI calcolato.
-                    // shrinkWrap + NeverScrollable perche' siamo gia' dentro
-                    // un SingleChildScrollView (niente scroll annidato).
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.zero,
-                      itemCount: kpis.length,
-                      itemBuilder: (context, i) {
-                        final kpi = kpis[i];
-                        return RepaintBoundary(
-                          child: AmMaintenanceKpiCard(
-                            iconBuilder: kpi.type.kpiIconBuilder,
-                            color: choseColor(kpi.percentage),
-                            label: kpi.type.kpiLabel,
-                            remainingKm: kpi.remainingKm,
-                            percentage: kpi.percentage,
-                            onTap: () => _pushFunctional(context, kpi.type),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            //  const SizedBox(height: 110),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: BlocBuilder<DashboardBloc, DashboardState>(
+                        builder: (BuildContext context, state) {
+                          // I KPI sono gia' pronti nello stato: il calcolo lo fa il
+                          // BLoC (use case ComputeMaintenanceKpis). Qui mi limito a
+                          // disegnarli, niente logica di business nella UI.
+                          if (state is! DashboardLoaded || state.kpis.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+
+                          final kpis = state.kpis;
+
+                          // ListView.builder: una card per ogni KPI calcolato.
+                          // shrinkWrap + NeverScrollable perche' siamo gia' dentro
+                          // un SingleChildScrollView (niente scroll annidato).
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.zero,
+                            itemCount: kpis.length,
+                            itemBuilder: (context, i) {
+                              final kpi = kpis[i];
+                              return RepaintBoundary(
+                                child: AmMaintenanceKpiCard(
+                                  iconBuilder: kpi.type.kpiIconBuilder,
+                                  color: choseColor(kpi.percentage),
+                                  label: kpi.type.kpiLabel,
+                                  remainingKm: kpi.remainingKm,
+                                  percentage: kpi.percentage,
+                                  onTap: () =>
+                                      _pushFunctional(context, kpi.type),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    //  const SizedBox(height: 110),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14.0,
+                        vertical: 8,
+                      ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             "IN OFFERTA PER TE",
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
-                              color: Colors.white,
+                              color: colors.textPrimary,
                             ),
                           ),
                           TextButton(
                             onPressed: () {},
-                            child: const Text(
+                            child: Text(
                               "Vedi tutti >",
-                              style: TextStyle(color: Color(0xFFFF6B00), fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: colors.accent,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
@@ -625,8 +649,19 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                             brandLogo: Container(
                               width: 16,
                               height: 16,
-                              decoration: const BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
-                              child: const Center(child: Text('o', style: TextStyle(fontSize: 10, color: Colors.white))),
+                              decoration: const BoxDecoration(
+                                color: Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'o',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
                             onTap: () {},
                           ),
@@ -641,8 +676,19 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                             brandLogo: Container(
                               width: 16,
                               height: 16,
-                              decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
-                              child: const Center(child: Text('L', style: TextStyle(fontSize: 10, color: Colors.white))),
+                              decoration: const BoxDecoration(
+                                color: Colors.blue,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'L',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
                             onTap: () {},
                           ),
@@ -656,8 +702,19 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                             brandLogo: Container(
                               width: 16,
                               height: 16,
-                              decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
-                              child: const Center(child: Text('L', style: TextStyle(fontSize: 10, color: Colors.white))),
+                              decoration: const BoxDecoration(
+                                color: Colors.blue,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'L',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
                             onTap: () {},
                           ),
@@ -671,8 +728,19 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                             brandLogo: Container(
                               width: 16,
                               height: 16,
-                              decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
-                              child: const Center(child: Text('L', style: TextStyle(fontSize: 10, color: Colors.white))),
+                              decoration: const BoxDecoration(
+                                color: Colors.blue,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'L',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
                             ),
                             onTap: () {},
                           ),
@@ -718,45 +786,63 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   }
 
   Color choseColor(double perc) {
-    if (perc >= 75) {
-      return const Color(0xFF3192F3);
-    } else if (perc >= 50) {
-      return const Color(0xFF7361AC);
-    } else if (perc >= 25) {
-      return const Color(0xFFFFB4AB);
-    } else if (perc >= 5) {
-      return const Color(0xFFFF6B00);
-    } else if (perc >= 0) {
-      return const Color(0xFFFF0000);
-    } else {
-      return const Color(0xFF721C24);
+    if (perc <= 0) {
+      return const Color(0xFFFF453A);
     }
+    if (perc >= 50) {
+      return const Color(0xFF3192F3);
+    }
+    return const Color(0xFFFF6B00);
   }
 }
 
 /// Mapping di sola presentazione: dal tipo di manutenzione all'icona e
 /// all'etichetta mostrate nella card KPI. Sta qui (UI) e non nel dominio.
 extension _KpiPresentation on EnumPopUp {
-  Widget Function(double size, Color color) get kpiIconBuilder => switch (this) {
-        EnumPopUp.aggiornaTagliando => (s, c) =>
-            Icon(Icons.handyman_outlined, size: s, color: c),
-        EnumPopUp.aggiornaDistribuzione => (s, c) =>
-            AmEngineIcon(size: s, color: c),
-        EnumPopUp.aggiornaCambioGomme => (s, c) =>
-            Icon(Icons.tire_repair_outlined, size: s, color: c),
-        EnumPopUp.pneumaticiInversione => (s, c) =>
-            Icon(Icons.sync_outlined, size: s, color: c),
-        EnumPopUp.revisione => (s, c) =>
-            Icon(Icons.verified_outlined, size: s, color: c),
-        EnumPopUp.altro => (s, c) => Icon(Icons.build_outlined, size: s, color: c),
+  Widget Function(double size, Color color) get kpiIconBuilder =>
+      switch (this) {
+        EnumPopUp.aggiornaTagliando => (s, c) => HugeIcon(
+          icon: HugeIcons.strokeRoundedTools,
+          size: s,
+          color: c,
+          strokeWidth: 2.2,
+        ),
+        EnumPopUp.aggiornaDistribuzione => (s, c) => AmEngineIcon(
+          size: s,
+          color: c,
+        ),
+        EnumPopUp.aggiornaCambioGomme => (s, c) => HugeIcon(
+          icon: HugeIcons.strokeRoundedTire,
+          size: s,
+          color: c,
+          strokeWidth: 2.2,
+        ),
+        EnumPopUp.pneumaticiInversione => (s, c) => HugeIcon(
+          icon: HugeIcons.strokeRoundedRefresh,
+          size: s,
+          color: c,
+          strokeWidth: 2.2,
+        ),
+        EnumPopUp.revisione => (s, c) => HugeIcon(
+          icon: HugeIcons.strokeRoundedValidation,
+          size: s,
+          color: c,
+          strokeWidth: 2.2,
+        ),
+        EnumPopUp.altro => (s, c) => HugeIcon(
+          icon: HugeIcons.strokeRoundedTools,
+          size: s,
+          color: c,
+          strokeWidth: 2.2,
+        ),
       };
 
   String get kpiLabel => switch (this) {
-        EnumPopUp.aggiornaTagliando => 'tagliando',
-        EnumPopUp.aggiornaDistribuzione => 'distribuzione',
-        EnumPopUp.aggiornaCambioGomme => 'cambio gomme',
-        EnumPopUp.pneumaticiInversione => 'inversione gomme',
-        EnumPopUp.revisione => 'revisione',
-        EnumPopUp.altro => 'altro',
-      };
+    EnumPopUp.aggiornaTagliando => 'tagliando',
+    EnumPopUp.aggiornaDistribuzione => 'distribuzione',
+    EnumPopUp.aggiornaCambioGomme => 'cambio gomme',
+    EnumPopUp.pneumaticiInversione => 'inversione gomme',
+    EnumPopUp.revisione => 'revisione',
+    EnumPopUp.altro => 'altro',
+  };
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 
 /// Card per la visualizzazione di un intervento nello storico.
 /// Estetica: Dark, con badge "Officina" opzionale.
@@ -21,17 +22,16 @@ class WorkLogItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const Color orangeColor = Color(0xFFE85A1A);
-    const Color darkContainerColor = Color(0xFF1C1C1E);
-    const Color labelColor = Color(0xFF636366);
+    final colors = AmThemeColors.of(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: darkContainerColor,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: colors.border,
           width: 1,
         ),
       ),
@@ -43,8 +43,8 @@ class WorkLogItemCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -70,19 +70,19 @@ class WorkLogItemCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             "$date · $km",
-            style: const TextStyle(
-              color: labelColor,
+            style: TextStyle(
+              color: colors.textSecondary,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 16),
-          const Divider(color: Colors.white10, height: 1),
+          Divider(color: colors.border, height: 1),
           const SizedBox(height: 16),
           Text(
             description,
-            style: const TextStyle(
-              color: Color(0xFF8E8E93),
+            style: TextStyle(
+              color: colors.textSecondary,
               fontSize: 14,
               height: 1.4,
             ),

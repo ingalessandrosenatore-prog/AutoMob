@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 
 const String _wheelAsset = 'lib/assets/icons/car_red.svg';
 const double _stepDotDiameter = 26;
@@ -25,6 +27,7 @@ class RegistrationStepProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     final percent = steps.length <= 1 ? 1.0 : currentStep / (steps.length - 1);
 
     return Padding(
@@ -32,9 +35,9 @@ class RegistrationStepProgress extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF151517),
+          color: colors.surface,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.03)),
+          border: Border.all(color: colors.border),
         ),
         child: Column(
           children: [
@@ -278,10 +281,11 @@ class _StepDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     final bool highlighted = done || current;
     final Color borderColor = highlighted
         ? activeColor
-        : const Color(0xFF2C2C2E);
+        : colors.border;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -297,7 +301,12 @@ class _StepDot extends StatelessWidget {
           ),
           child: Center(
             child: done
-                ? const Icon(Icons.check, color: Colors.white, size: 14)
+          ? HugeIcon(
+              icon: HugeIcons.strokeRoundedValidationApproval,
+              color: colors.background,
+              size: 14,
+              strokeWidth: 2.2,
+            )
                 : current
                 ? Container(
                     width: 8,
@@ -317,7 +326,7 @@ class _StepDot extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            color: current ? Colors.white : const Color(0xFF8E8E93),
+            color: current ? colors.textPrimary : colors.textSecondary,
             fontSize: 12,
             fontWeight: current ? FontWeight.bold : FontWeight.normal,
           ),

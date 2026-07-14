@@ -5,6 +5,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../theme/theme_cubit.dart';
+import '../theme/theme_preferences.dart';
+
 // Auth
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -53,6 +56,7 @@ final sl = GetIt.instance;
 Future<void> init() async {
   await _initSupabase();
   await _initSharedPreferences();
+  _initTheme();
   await _initAuth();
   await _initVehicle();
   await _initDashboard();
@@ -70,6 +74,14 @@ Future<void> _initSupabase() async {
 Future<void> _initSharedPreferences() async {
   final sharedPreferences = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
+}
+
+void _initTheme() {
+  sl.registerLazySingleton<ThemePreferences>(() => ThemePreferences(sl()));
+  sl.registerLazySingleton<ThemeCubit>(
+    () => ThemeCubit(sl()),
+    dispose: (cubit) => cubit.close(),
+  );
 }
 
 Future<void> _initAuth() async {

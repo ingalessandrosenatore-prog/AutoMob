@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../../core/widgets/blur/am_edge_blur.dart';
+import '../../../../../core/theme/am_theme_colors.dart';
 import '../../../../../core/widgets/icons/am_engine_icon.dart';
 import '../../../../../core/widgets/input/date_picker_field.dart';
 import '../../../../../core/widgets/input/textfield.dart';
@@ -10,8 +12,6 @@ import '../../bloc/vehicle_registration_event.dart';
 import '../am_interval_chips.dart';
 import '../maintenance_section_card.dart';
 import 'step_info_banner.dart';
-
-const _lavoriIconColor = Color(0xFFE85A1A);
 
 DateTime? _parseData(String text) {
   if (text.isEmpty) return null;
@@ -122,6 +122,7 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     final tagInfo = _kmInfo(_kmTagliandoController);
     final distInfo = _kmInfo(_kmDistribuzioneController);
     final cambioInfo = _kmInfo(_kmCambioGommeController);
@@ -135,15 +136,15 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
             const SizedBox(height: 24),
             const StepInfoBanner(
               color: Color(0xFF4A90E2),
-              icon: Icons.build_circle_outlined,
+              icon: HugeIcons.strokeRoundedTools,
               text:
                   'Inserisci gli ultimi lavori svolti per calcolare le prossime scadenze.',
             ),
             const SizedBox(height: 20),
             MaintenanceSectionCard(
-              icon: Icons.speed,
+              icon: HugeIcons.strokeRoundedDashboardSpeed02,
               title: 'Km attuali',
-              iconColor: _lavoriIconColor,
+              iconColor: colors.accent,
               uppercaseTitle: true,
               children: [
                 Row(
@@ -164,9 +165,9 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
             ),
             const SizedBox(height: 20),
             MaintenanceSectionCard(
-              icon: Icons.handyman,
+              icon: HugeIcons.strokeRoundedTools,
               title: 'Ultimo tagliando',
-              iconColor: _lavoriIconColor,
+              iconColor: colors.accent,
               uppercaseTitle: true,
               children: [
                 Row(
@@ -208,11 +209,12 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
             ),
             const SizedBox(height: 20),
             MaintenanceSectionCard(
+              // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
               icon: Icons.link,
               title: 'Distribuzione / Cinghia',
-              iconColor: _lavoriIconColor,
+              iconColor: colors.accent,
               uppercaseTitle: true,
-              iconWidget: const AmEngineIcon(size: 18, color: _lavoriIconColor),
+              iconWidget: AmEngineIcon(size: 18, color: colors.accent),
               children: [
                 Row(
                   children: [
@@ -258,9 +260,9 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
             ),
             const SizedBox(height: 20),
             MaintenanceSectionCard(
-              icon: Icons.calendar_month,
+              icon: HugeIcons.strokeRoundedCalendar01,
               title: 'Revisione',
-              iconColor: _lavoriIconColor,
+              iconColor: colors.accent,
               uppercaseTitle: true,
               children: [
                 Row(
@@ -278,9 +280,9 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
             ),
             const SizedBox(height: 20),
             MaintenanceSectionCard(
-              icon: Icons.sync,
+              icon: HugeIcons.strokeRoundedTire,
               title: 'Cambio gomme',
-              iconColor: _lavoriIconColor,
+              iconColor: colors.accent,
               uppercaseTitle: true,
               children: [
                 Row(
@@ -322,9 +324,9 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
             ),
             const SizedBox(height: 20),
             MaintenanceSectionCard(
-              icon: Icons.swap_horiz,
+              icon: HugeIcons.strokeRoundedCurvyLeftRightDirection,
               title: 'Inversione gomme',
-              iconColor: _lavoriIconColor,
+              iconColor: colors.accent,
               uppercaseTitle: true,
               children: [
                 Row(

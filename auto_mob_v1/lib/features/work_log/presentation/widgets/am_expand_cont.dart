@@ -1,6 +1,7 @@
 ﻿import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 import '../../../../core/config/performance_flags.dart';
@@ -131,8 +132,12 @@ class _AmExpandableContainerState extends State<AmExpandableContainer>
                           // freccia che ruota: rotazione derivata da _t
                           Transform.rotate(
                             angle: t * 3.14159, // 0 -> 180°
-                            child: const Icon(Icons.keyboard_arrow_down,
-                                color: Color(0xFF636366)),
+                          child: const HugeIcon(
+                            icon: HugeIcons.strokeRoundedArrowDown01,
+                            color: Color(0xFF636366),
+                            size: 24,
+                            strokeWidth: 2.2,
+                          ),
                           ),
                         ],
                       ),

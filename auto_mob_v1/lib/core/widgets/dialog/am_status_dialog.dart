@@ -1,6 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../theme/am_theme_colors.dart';
 
 /// Una singola azione (bottone) di un [AmStatusDialog].
 /// [filled] true = bottone pieno (azione primaria, es. "Riprova"),
@@ -29,7 +32,7 @@ class AmDialogAction {
 ///
 /// Non si mostra da solo: usare [showAmStatusDialog].
 class AmStatusDialog extends StatelessWidget {
-  final IconData? icon;
+  final List<List>? icon;
   final Color iconColor;
   final String title;
   final String? message;
@@ -48,6 +51,7 @@ class AmStatusDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -59,9 +63,9 @@ class AmStatusDialog extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
             decoration: BoxDecoration(
-              color: const Color(0xFF1C1C1E).withValues(alpha: 0.85),
+              color: colors.surface.withValues(alpha: 0.88),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+              border: Border.all(color: colors.border),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -83,14 +87,19 @@ class AmStatusDialog extends StatelessWidget {
                       color: iconColor.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icon, color: iconColor, size: 34),
+                    child: HugeIcon(
+                      icon: icon!,
+                      color: iconColor,
+                      size: 34,
+                      strokeWidth: 2.2,
+                    ),
                   ),
                 const SizedBox(height: 18),
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
                   ),
@@ -100,8 +109,8 @@ class AmStatusDialog extends StatelessWidget {
                   Text(
                     message!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Color(0xFF9A9AA0),
+                  style: TextStyle(
+                    color: colors.textSecondary,
                       fontSize: 14,
                       height: 1.35,
                     ),
@@ -160,7 +169,7 @@ class _ActionButton extends StatelessWidget {
 /// (loading ed errori devono restare finche' non si sceglie un'azione).
 Future<T?> showAmStatusDialog<T>(
   BuildContext context, {
-  IconData? icon,
+  List<List>? icon,
   Color iconColor = const Color(0xFFFF6B00),
   required String title,
   String? message,

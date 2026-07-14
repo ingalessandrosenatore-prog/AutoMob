@@ -24,7 +24,8 @@ class IntervalChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const arancione = Color(0xFFE85A1A);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -35,23 +36,23 @@ class IntervalChoiceChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: selected
-                ? arancione.withValues(alpha: 0.15)
-                : const Color(0xFF1C1C1E),
+                ? colorScheme.primary.withValues(alpha: 0.15)
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: selected
-                  ? arancione
-                  : Colors.white.withValues(alpha: 0.05),
+                  ? colorScheme.primary
+                  : colorScheme.outlineVariant.withValues(alpha: 0.2),
             ),
           ),
           child: Center(
             child: Text(
               label,
-              style: TextStyle(
-                color: selected ? arancione : const Color(0xFF636366),
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-              ),
+              ) ?? TextStyle(color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant),
             ),
           ),
         ),

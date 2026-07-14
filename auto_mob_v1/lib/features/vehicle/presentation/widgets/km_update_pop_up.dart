@@ -1,7 +1,9 @@
 import 'package:auto_mob_v1/core/di/injection_container.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/theme/am_theme_colors.dart';
 import '../../../../core/widgets/input/textfield.dart';
 import '../bloc/km_update_cubit.dart';
 
@@ -92,8 +94,7 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
 
   @override
   Widget build(BuildContext context) {
-    const Color orangeColor = Color(0xFFE85A1A);
-    const Color darkContainerColor = Color(0xFF1C1C1E);
+    final colors = AmThemeColors.of(context);
 
     return BlocConsumer<KmUpdateCubit, KmUpdateState>(
       listenWhen: (p, c) => p.status != c.status,
@@ -117,7 +118,17 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
         return ClipRRect(
           borderRadius: const BorderRadius.vertical(top: Radius.circular(50)),
           child: Container(
-            color: const Color(0xFF0F0F11),
+            decoration: BoxDecoration(
+              color: colors.background,
+              border: Border(top: BorderSide(color: colors.border)),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow,
+                  blurRadius: 28,
+                  offset: const Offset(0, -8),
+                ),
+              ],
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -126,10 +137,10 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       "Aggiorna chilometri",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textPrimary,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -139,20 +150,19 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                       child: Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: darkContainerColor.withValues(alpha: 0.6),
+                          color: colors.surfaceRaised,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(
-                              0xFF4A90E2,
-                            ).withValues(alpha: 0.2),
+                            color: colors.info.withValues(alpha: 0.35),
                             width: 1,
                           ),
                         ),
-                        child: const Icon(
-                          Icons.close,
-                          color: Color(0xFF4A90E2),
-                          size: 20,
-                        ),
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedCancel01,
+                  color: colors.info,
+                  size: 20,
+                  strokeWidth: 2.2,
+                ),
                       ),
                     ),
                   ],
@@ -160,10 +170,10 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                 const SizedBox(height: 40),
 
                 // Chilometraggio attuale (sempre visibile)
-                const Text(
+                Text(
                   "Chilometraggio attuale   ",
                   style: TextStyle(
-                    color: Color(0xFF636366),
+                    color: colors.textSecondary,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -171,8 +181,8 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                 const SizedBox(height: 12),
                 RichText(
                   text: TextSpan(
-                    style: const TextStyle(
-                      color: orangeColor,
+                    style: TextStyle(
+                      color: colors.accent,
                       fontSize: 42,
                       fontWeight: FontWeight.w900,
                     ),
@@ -202,12 +212,12 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                       keyboardType: TextInputType.number,
                       onChanged: _onChanged,
                       errorText: _errore,
-                      suffixIcon: const Padding(
-                        padding: EdgeInsets.only(right: 16, top: 18),
+                      suffixIcon: Padding(
+                        padding: const EdgeInsets.only(right: 16, top: 18),
                         child: Text(
                           "km",
                           style: TextStyle(
-                            color: Color(0xFF48484A),
+                            color: colors.textSecondary,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -222,18 +232,20 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1C1C1E).withValues(alpha: 0.6),
+                    color: colors.surfaceRaised,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: colors.border),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.bolt, color: orangeColor, size: 20),
-                      SizedBox(width: 12),
+                        // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
+                        Icon(Icons.bolt, color: colors.accent, size: 20),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           "Il meccanico collegato riceverà una notifica dell'aggiornamento.",
                           style: TextStyle(
-                            color: Color(0xFF8E8E93),
+                            color: colors.textSecondary,
                             fontSize: 13,
                             height: 1.4,
                           ),
@@ -252,16 +264,18 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                     width: double.infinity,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: orangeColor.withValues(alpha: attivo ? 1.0 : 0.4),
+                      color: colors.accent.withValues(
+                        alpha: attivo ? 1.0 : 0.32,
+                      ),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     alignment: Alignment.center,
                     child: loading
-                        ? const SizedBox(
+                        ? SizedBox(
                             height: 24,
                             width: 24,
                             child: CircularProgressIndicator(
-                              color: Colors.white,
+                              color: colors.onMedia,
                               strokeWidth: 2.5,
                             ),
                           )
@@ -269,8 +283,8 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                             "Salva aggiornamento",
                             style: TextStyle(
                               color: attivo
-                                  ? Colors.white
-                                  : const Color(0xFF8E8E93),
+                                  ? colors.onMedia
+                                  : colors.textSecondary,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                             ),

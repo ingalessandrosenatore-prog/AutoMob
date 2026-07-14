@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 
 class AmBannerBig extends StatelessWidget {
   final String? imagePath;
@@ -12,10 +14,10 @@ class AmBannerBig extends StatelessWidget {
   final String subtitle;
   final String buttonLabel;
   final VoidCallback onTap;
-  final Color backgroundColor;
+  final Color? backgroundColor;
   final Color buttonColor;
-  final Color textColor;
-  final Color shadowColor;
+  final Color? textColor;
+  final Color? shadowColor;
 
   const AmBannerBig({
     super.key,
@@ -27,23 +29,27 @@ class AmBannerBig extends StatelessWidget {
     required this.subtitle,
     required this.buttonLabel,
     required this.onTap,
-    this.backgroundColor = const Color(0xFF2C2C2E),
+    this.backgroundColor,
     this.buttonColor = const Color(0xFF3192F3),
-    this.textColor = Colors.white,
-    this.shadowColor = Colors.black45,
+    this.textColor,
+    this.shadowColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    final resolvedBackground = backgroundColor ?? colors.surfaceRaised;
+    final resolvedText = textColor ?? colors.onMedia;
+    final resolvedShadow = shadowColor ?? colors.shadow;
     return Container(
       margin: const EdgeInsets.all(12),
       height: 180,
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: resolvedBackground,
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: shadowColor,
+            color: resolvedShadow,
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -55,7 +61,11 @@ class AmBannerBig extends StatelessWidget {
           children: [
             // Background Image
             Positioned.fill(
-              child: _BannerImage(path: imagePath, file: imageFile, fit: BoxFit.cover),
+              child: _BannerImage(
+                path: imagePath,
+                file: imageFile,
+                fit: BoxFit.cover,
+              ),
             ),
             // Blur / Grain / Bokeh effect overlay
             Positioned.fill(
@@ -76,11 +86,7 @@ class AmBannerBig extends StatelessWidget {
               ),
             ),
             // Particles / Bokeh Mockup (Visual decoration)
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _BokehPainter(),
-              ),
-            ),
+            Positioned.fill(child: CustomPaint(painter: _BokehPainter())),
             // Content
             Padding(
               padding: const EdgeInsets.all(20.0),
@@ -95,7 +101,7 @@ class AmBannerBig extends StatelessWidget {
                         Text(
                           subtitle.toUpperCase(),
                           style: TextStyle(
-                            color: textColor.withValues(alpha: 0.7),
+                            color: resolvedText.withValues(alpha: 0.7),
                             fontSize: 12,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.2,
@@ -105,7 +111,7 @@ class AmBannerBig extends StatelessWidget {
                         Text(
                           title,
                           style: TextStyle(
-                            color: textColor,
+                            color: resolvedText,
                             fontSize: 22,
                             fontWeight: FontWeight.w900,
                             height: 1.1,
@@ -116,11 +122,14 @@ class AmBannerBig extends StatelessWidget {
                           onPressed: onTap,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: buttonColor,
-                            foregroundColor: Colors.white,
+                            foregroundColor: colors.onMedia,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(100),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             elevation: 5,
                             shadowColor: buttonColor.withValues(alpha: 0.5),
                           ),
@@ -129,10 +138,16 @@ class AmBannerBig extends StatelessWidget {
                             children: [
                               Text(
                                 buttonLabel,
-                                style: const TextStyle(fontWeight: FontWeight.w900),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
                               const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward, size: 16),
+                              const HugeIcon(
+                                icon: HugeIcons.strokeRoundedArrowRight01,
+                                size: 16,
+                                strokeWidth: 2.2,
+                              ),
                             ],
                           ),
                         ),
@@ -142,7 +157,11 @@ class AmBannerBig extends StatelessWidget {
                   Expanded(
                     flex: 2,
                     child: Center(
-                      child: _BannerImage(path: logoPath, file: logoFile, fit: BoxFit.contain),
+                      child: _BannerImage(
+                        path: logoPath,
+                        file: logoFile,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ],
@@ -153,7 +172,6 @@ class AmBannerBig extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class AmBannerSmall extends StatelessWidget {
@@ -166,8 +184,8 @@ class AmBannerSmall extends StatelessWidget {
   final String? oldPrice;
   final Widget? brandLogo;
   final VoidCallback onTap;
-  final Color backgroundColor;
-  final Color textColor;
+  final Color? backgroundColor;
+  final Color? textColor;
   final Color priceColor;
 
   const AmBannerSmall({
@@ -181,25 +199,28 @@ class AmBannerSmall extends StatelessWidget {
     this.oldPrice,
     this.brandLogo,
     required this.onTap,
-    this.backgroundColor = const Color(0xFF1C1C1E),
-    this.textColor = Colors.white,
+    this.backgroundColor,
+    this.textColor,
     this.priceColor = const Color(0xFFFF6B00),
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    final resolvedBackground = backgroundColor ?? colors.surface;
+    final resolvedText = textColor ?? colors.textPrimary;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 170,
         decoration: BoxDecoration(
-          color: backgroundColor,
+          color: resolvedBackground,
           borderRadius: BorderRadius.circular(24),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Colors.black26,
+              color: colors.shadow.withValues(alpha: 0.2),
               blurRadius: 10,
-              offset: Offset(0, 5),
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -210,7 +231,9 @@ class AmBannerSmall extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
                   child: Container(
                     height: 140,
                     width: double.infinity,
@@ -219,7 +242,12 @@ class AmBannerSmall extends StatelessWidget {
                       path: imagePath,
                       file: imageFile,
                       fit: BoxFit.contain,
-                      fallback: const Icon(Icons.image, color: Colors.grey),
+                      fallback: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedImage01,
+                        color: Colors.grey,
+                        size: 28,
+                        strokeWidth: 2.2,
+                      ),
                     ),
                   ),
                 ),
@@ -228,7 +256,10 @@ class AmBannerSmall extends StatelessWidget {
                   top: 12,
                   left: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFF2D55),
                       borderRadius: BorderRadius.circular(12),
@@ -255,14 +286,21 @@ class AmBannerSmall extends StatelessWidget {
                   top: 12,
                   right: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black26,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text(
                       'AD',
-                      style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -286,7 +324,7 @@ class AmBannerSmall extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: textColor.withValues(alpha: 0.5),
+                            color: resolvedText.withValues(alpha: 0.5),
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -300,7 +338,7 @@ class AmBannerSmall extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: textColor,
+                      color: resolvedText,
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
                       height: 1.2,
@@ -323,7 +361,7 @@ class AmBannerSmall extends StatelessWidget {
                         Text(
                           oldPrice!,
                           style: TextStyle(
-                            color: textColor.withValues(alpha: 0.3),
+                            color: resolvedText.withValues(alpha: 0.3),
                             fontSize: 12,
                             decoration: TextDecoration.lineThrough,
                           ),
@@ -339,7 +377,6 @@ class AmBannerSmall extends StatelessWidget {
       ),
     );
   }
-
 }
 
 /// Immagine di banner da file locale, URL o asset, con fallback quando

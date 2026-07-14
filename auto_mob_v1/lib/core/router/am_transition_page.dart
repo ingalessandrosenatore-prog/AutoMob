@@ -14,8 +14,8 @@ class AmFadeThroughPage<T> extends CustomTransitionPage<T> {
     super.arguments,
     super.restorationId,
   }) : super(
-          transitionDuration: const Duration(milliseconds: 260),
-          reverseTransitionDuration: const Duration(milliseconds: 220),
+          transitionDuration: const Duration(milliseconds: 420),
+          reverseTransitionDuration: const Duration(milliseconds: 360),
           transitionsBuilder: (context, animation, secondaryAnimation, child) =>
               _FadeThroughTransition(animation: animation, child: child),
         );

@@ -1,28 +1,27 @@
-﻿import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_item_card.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import 'package:auto_mob_v1/core/config/performance_flags.dart';
 import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
-
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import '../../domain/entities/vehicle_option.dart';
 import '../../domain/entities/work_log_row.dart';
 import '../bloc/work_log_history_bloc.dart';
 import '../bloc/work_log_history_event.dart';
 import '../bloc/work_log_history_state.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
+import '../../../../core/widgets/hero/am_fab_hero.dart';
 
 const Color _orange = Color(0xFFFF6B00);
-const Color _background = Color(0xFF0F0F11);
 
 /// Pagina dello storico lavori (WorkLog).
 /// Veicoli selezionabili dal dropdown + cronologia interventi paginata.
@@ -84,8 +83,7 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
   /// Quando manco 300px alla fine, chiedo la fetta successiva. Le 3 guardie
   /// (sto caricando / ho finito / droppable) stanno nel bloc.
   void _onScroll() {
-    if (_scroll.position.pixels >=
-        _scroll.position.maxScrollExtent - 300) {
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 300) {
       context.read<WorkLogHistoryBloc>().add(const LoadMore());
     }
   }
@@ -118,7 +116,7 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
         _dialogOpen = true;
         showAmStatusDialog(
           context,
-          icon: Icons.error_outline_rounded,
+          icon: HugeIcons.strokeRoundedAlert01,
           iconColor: const Color(0xFFFF453A),
           title: 'Qualcosa è andato storto',
           message: s.errorMessage ?? 'Riprova tra qualche istante.',
@@ -150,7 +148,7 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
           _dialogOpen = true;
           showAmStatusDialog(
             context,
-            icon: Icons.directions_car_outlined,
+          icon: HugeIcons.strokeRoundedGarage,
             iconColor: const Color(0xFFFFB4AB),
             title: 'Nessun veicolo trovato',
             message: 'Aggiungi un veicolo per iniziare a registrare i lavori.',
@@ -194,12 +192,12 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
       return;
     }
 
-    final salvato = await context.push(
-      '/addFunctional',
+    final salvato = await context.pushNamed(
+      'aggiungi_lavoro',
       extra: {
-        'type': EnumPopUp.altro,
-        'id': selected.id,
+        'vehicleId': selected.id,
         'currentKm': selected.km,
+        'heroTag': 'fab-aggiungi-lavoro',
       },
     );
     if (salvato == true) {
@@ -230,18 +228,18 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
     // 45 (altezza di pillola/bottoni). Serve per dimensionare lo sliver.
     const appBarContentHeight = 69.0;
     final topSafeArea = MediaQuery.paddingOf(context).top;
+    final colors = AmThemeColors.of(context);
 
     return BlocListener<WorkLogHistoryBloc, WorkLogHistoryState>(
-      listenWhen: (p, c) =>
-          p.status != c.status || p.vehicles != c.vehicles,
+      listenWhen: (p, c) => p.status != c.status || p.vehicles != c.vehicles,
       listener: _onStateForDialogs,
       child: Scaffold(
-        backgroundColor: _background,
+        backgroundColor: colors.background,
         body: Stack(
           children: [
             SmartEdge(
               blur: kHeavyEffects,
-              fallbackTint: Colors.black54,
+              fallbackTint: colors.background,
               edges: [
                 EdgeBlur(
                   type: EdgeType.topEdge,
@@ -258,7 +256,7 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
                 EdgeBlur(
                   type: EdgeType.bottomEdge,
                   size: 150,
-                  tintColor: Colors.black54,
+                  tintColor: colors.background,
                   sigma: 10,
                   controlPoints: [
                     ControlPoint(position: 0.3, type: ControlPointType.visible),
@@ -282,7 +280,9 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
                   parent: BouncingScrollPhysics(),
                 ),
                 slivers: [
-                  AmRefreshControlSliver(onRefresh: () => _handleRefresh(context)),
+                  AmRefreshControlSliver(
+                    onRefresh: () => _handleRefresh(context),
+                  ),
                   SliverPersistentHeader(
                     pinned: true,
                     delegate: AmSliverAppBarDelegate(
@@ -329,6 +329,7 @@ class _AppBarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
       child: Row(
@@ -345,7 +346,7 @@ class _AppBarContent extends StatelessWidget {
               ),
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Align(
               alignment: Alignment.center,
               child: Center(
@@ -355,8 +356,8 @@ class _AppBarContent extends StatelessWidget {
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.2,
-                    color: Colors.white,
-                    shadows: [
+                    color: colors.textPrimary,
+                    shadows: const [
                       Shadow(
                         color: Colors.black12,
                         offset: Offset(1, 1),
@@ -365,18 +366,22 @@ class _AppBarContent extends StatelessWidget {
                     ],
                   ),
                 ),
-              )),
+              ),
             ),
+          ),
 
           Expanded(
             child: Align(
               alignment: Alignment.centerRight,
-              child: AmSoftButton(
-                width: 45,
-                height: 45,
-                color: _orange,
-                icon: Icons.add,
-                onPressed: onAdd,
+              child: AmFabHero(
+                tag: 'fab-aggiungi-lavoro',
+                child: AmSoftButton(
+                  width: 45,
+                  height: 45,
+                  color: _orange,
+                  icon: HugeIcons.strokeRoundedAdd01,
+                  onPressed: onAdd,
+                ),
               ),
             ),
           ),
@@ -405,7 +410,7 @@ class _VehicleDropdown extends StatelessWidget {
     final children = state.vehicles
         .map(
           (v) => ItemMorphPopUp(
-            icon: CupertinoIcons.car_detailed,
+            icon: HugeIcons.strokeRoundedCar05,
             text: v.nome.isEmpty ? v.targa : v.nome,
             iconSize: 22,
             iconColor: _orange,
@@ -423,8 +428,8 @@ class _VehicleDropdown extends StatelessWidget {
       onTap: () {},
       lable: selected?.nome ?? 'VEICOLO',
       larghezza: 200,
-      buttonIcons: Icons.directions_car,
-      buttonIconsSize: 26,
+      buttonIcons: HugeIcons.strokeRoundedCar05,
+      buttonIconsSize: 20,
       buttonIconColor: Colors.white,
       buttonLableStyle: const TextStyle(
         fontSize: 12,
@@ -480,10 +485,14 @@ class _WorkListView extends StatelessWidget {
               if (state.isLoadingMore) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 24),
-                  child: Center(child: CircularProgressIndicator(color: _orange)),
+                  child: Center(
+                    child: CircularProgressIndicator(color: _orange),
+                  ),
                 );
               }
-              return const SizedBox(height: 120); // spazio finale sotto la lista
+              return const SizedBox(
+                height: 120,
+              ); // spazio finale sotto la lista
             }
 
             final w = works[i];
@@ -516,8 +525,12 @@ class _EmptyWorks extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.build_circle_outlined,
-                size: 64, color: Colors.white.withValues(alpha: 0.25)),
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedTransactionHistory,
+              size: 64,
+              color: Colors.white.withValues(alpha: 0.25),
+              strokeWidth: 2.2,
+            ),
             const SizedBox(height: 16),
             const Text(
               'Nessun lavoro ancora inserito',
@@ -570,8 +583,18 @@ String _workTitle(WorkLogRow w) {
 /// Data in formato italiano breve: "16 Giu 2026".
 String _formatDate(DateTime d) {
   const mesi = [
-    'Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu',
-    'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic',
+    'Gen',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mag',
+    'Giu',
+    'Lug',
+    'Ago',
+    'Set',
+    'Ott',
+    'Nov',
+    'Dic',
   ];
   final giorno = d.day.toString().padLeft(2, '0');
   return '$giorno ${mesi[d.month - 1]} ${d.year}';

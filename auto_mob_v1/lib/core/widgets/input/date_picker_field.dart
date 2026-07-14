@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../theme/am_theme_colors.dart';
 
 /// Campo selettore data AutoMob.
 /// Stesso stile di [AmTextField]: invece di far digitare l'utente, apre un
@@ -39,11 +42,6 @@ class AmDatePickerField extends StatefulWidget {
 }
 
 class _AmDatePickerFieldState extends State<AmDatePickerField> {
-  static const Color labelColor = Color(0xFF636366);
-  static const Color asteriskColor = Color(0xFF4A90E2);
-  static const Color boxColor = Color(0xFF1C1C1E);
-  static const Color hintColor = Color(0xFF48484A);
-  static const Color accent = Color(0xFFE85A1A);
 
   DateTime? _parse(String text) {
     if (text.isEmpty) return null;
@@ -73,6 +71,7 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
         ? current
         : (now.isBefore(first) ? first : (now.isAfter(last) ? last : now));
 
+    final colors = AmThemeColors.of(context);
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
@@ -81,17 +80,16 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: accent,
-              onPrimary: Colors.white,
-              surface: Color(0xFF151517),
-              onSurface: Colors.white,
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: colors.accent,
+              surface: colors.surface,
+              onSurface: colors.textPrimary,
             ),
             textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(foregroundColor: accent),
+              style: TextButton.styleFrom(foregroundColor: colors.accent),
             ),
-            dialogTheme: const DialogThemeData(
-              backgroundColor: Color(0xFF151517),
+            dialogTheme: DialogThemeData(
+              backgroundColor: colors.surface,
             ),
           ),
           child: child!,
@@ -110,6 +108,7 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
   @override
   Widget build(BuildContext context) {
     final hasValue = widget.controller.text.isNotEmpty;
+    final colors = AmThemeColors.of(context);
 
     return Expanded(
       child: Column(
@@ -119,8 +118,8 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
           // Label superiore con asterisco condizionale
           RichText(
             text: TextSpan(
-              style: const TextStyle(
-                color: labelColor,
+              style: TextStyle(
+                color: colors.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.1,
@@ -128,9 +127,9 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
               children: [
                 TextSpan(text: widget.label.toUpperCase()),
                 if (widget.isRequired)
-                  const TextSpan(
+                  TextSpan(
                     text: ' *',
-                    style: TextStyle(color: asteriskColor),
+                    style: TextStyle(color: colors.info),
                   ),
               ],
             ),
@@ -145,10 +144,10 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
               child: Container(
                 height: widget.height,
                 decoration: BoxDecoration(
-                  color: boxColor,
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.05),
+                    color: colors.border,
                     width: 1,
                   ),
                 ),
@@ -162,16 +161,19 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
                       child: Text(
                         hasValue ? widget.controller.text : widget.placeholder,
                         style: TextStyle(
-                          color: hasValue ? Colors.white : hintColor,
+                          color: hasValue
+                              ? colors.textPrimary
+                              : colors.textSecondary,
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                     ),
-                    const Icon(
-                      Icons.calendar_today,
-                      color: hintColor,
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedCalendar01,
+                      color: colors.textSecondary,
                       size: 18,
+                      strokeWidth: 2.2,
                     ),
                   ],
                 ),

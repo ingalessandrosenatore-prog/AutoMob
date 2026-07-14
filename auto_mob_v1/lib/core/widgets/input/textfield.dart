@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../theme/am_theme_colors.dart';
 
 /// Campo di testo personalizzato AutoMob.
 /// Tutto è controllato dall'esterno: tipo, oscuramento, obbligatorietà.
@@ -80,19 +83,20 @@ class _AmTextFieldState extends State<AmTextField> {
     return IconButton(
       onPressed: () => setState(() => _obscured = !_obscured),
       splashRadius: 20,
-      icon: Icon(
-        _obscured ? Icons.visibility_off : Icons.visibility,
-        color: const Color(0xFF48484A),
+      icon: HugeIcon(
+        icon: _obscured
+            ? HugeIcons.strokeRoundedViewOffSlash
+            : HugeIcons.strokeRoundedEye,
+        color: AmThemeColors.of(context).textSecondary,
+        size: 22,
+        strokeWidth: 2.2,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color labelColor = Color(0xFF636366);
-    const Color asteriskColor = Color(0xFF4A90E2);
-    const Color boxColor = Color(0xFF1C1C1E);
-    const Color hintColor = Color(0xFF48484A);
+    final colors = AmThemeColors.of(context);
 
     return Expanded(
       child: Column(
@@ -102,8 +106,8 @@ class _AmTextFieldState extends State<AmTextField> {
           // Label superiore con asterisco condizionale
           RichText(
             text: TextSpan(
-              style: const TextStyle(
-                color: labelColor,
+              style: TextStyle(
+                color: colors.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.1,
@@ -111,9 +115,9 @@ class _AmTextFieldState extends State<AmTextField> {
               children: [
                 TextSpan(text: widget.label.toUpperCase()),
                 if (widget.isRequired)
-                  const TextSpan(
+                  TextSpan(
                     text: ' *',
-                    style: TextStyle(color: asteriskColor),
+                    style: TextStyle(color: colors.info),
                   ),
               ],
             ),
@@ -123,10 +127,10 @@ class _AmTextFieldState extends State<AmTextField> {
           Container(
             height: widget.height,
             decoration: BoxDecoration(
-              color: boxColor,
+              color: colors.surface,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: colors.border,
                 width: 1,
               ),
             ),
@@ -137,8 +141,8 @@ class _AmTextFieldState extends State<AmTextField> {
               expands: widget.height != null,
               maxLines: widget.height != null ? null : 1,
               textAlignVertical: TextAlignVertical.center,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: colors.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -147,7 +151,7 @@ class _AmTextFieldState extends State<AmTextField> {
                     ? const EdgeInsets.symmetric(horizontal: 16)
                     : const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
                 hintText: widget.placeholder,
-                hintStyle: const TextStyle(color: hintColor, fontSize: 16),
+                hintStyle: TextStyle(color: colors.textSecondary, fontSize: 16),
                 border: InputBorder.none,
                 suffixIcon: _suffix,
                 // Di default Flutter riserva 48x48 al suffixIcon (tap target

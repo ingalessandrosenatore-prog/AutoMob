@@ -1,8 +1,9 @@
-﻿import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
+import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
 import 'package:flutter/material.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 import '../../config/performance_flags.dart';
+import '../../theme/am_theme_colors.dart';
 
 /// Sfumatura morbida e uniforme ai bordi (alto + basso) usata in TUTTI i pop-up.
 ///
@@ -19,12 +20,13 @@ class AmEdgeBlur extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return RepaintBoundary(
       child: SmartEdge(
         edges: [
           EdgeBlur(
             type: EdgeType.topEdge,
-            size: 20,
+            size: 14,
             sigma: 10,
             controlPoints: [
               ControlPoint(position: 0.5, type: ControlPointType.visible),
@@ -33,7 +35,7 @@ class AmEdgeBlur extends StatelessWidget {
           ),
           EdgeBlur(
             type: EdgeType.bottomEdge,
-            size: 20,
+            size: 14,
             sigma: 10,
             controlPoints: [
               ControlPoint(position: 0.5, type: ControlPointType.visible),
@@ -42,7 +44,8 @@ class AmEdgeBlur extends StatelessWidget {
           ),
         ],
         blur: kHeavyEffects,
-        fallbackTint: Colors.black,
+        opacity: 0.96,
+        fallbackTint: colors.background,
         child: child,
       ),
     );

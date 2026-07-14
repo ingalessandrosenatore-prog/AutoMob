@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../theme/am_theme_colors.dart';
 
 /// Card veicolo selezionabile orizzontalmente.
 /// Estetica: Dark, con bordo blu animato quando selezionata.
@@ -22,9 +25,9 @@ class AmVehicleSelectableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color blueColor = Color(0xFF4A90E2);
-    const Color darkContainerColor = Color(0xFF1C1C1E);
-    const Color labelColor = Color(0xFF636366);
+    final colors = AmThemeColors.of(context);
+    final blueColor = colors.info;
+    final labelColor = colors.textSecondary;
 
     return GestureDetector(
       onTap: onTap,
@@ -34,10 +37,10 @@ class AmVehicleSelectableCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? blueColor.withValues(alpha: 0.05) : darkContainerColor,
+          color: isSelected ? blueColor.withValues(alpha: 0.08) : colors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? blueColor : Colors.white.withValues(alpha: 0.05),
+            color: isSelected ? blueColor : colors.border,
             width: 2,
           ),
           boxShadow: isSelected
@@ -56,10 +59,11 @@ class AmVehicleSelectableCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.directions_car_filled_outlined,
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedCar03,
                   size: 16,
                   color: isSelected ? blueColor : labelColor,
+                  strokeWidth: 2.2,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -78,8 +82,8 @@ class AmVehicleSelectableCard extends StatelessWidget {
               brand,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: colors.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w900,
               ),
@@ -87,7 +91,7 @@ class AmVehicleSelectableCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               plate.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 color: labelColor,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,

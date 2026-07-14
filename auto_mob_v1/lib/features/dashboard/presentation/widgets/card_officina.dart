@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 
 /// Card per visualizzare l'officina di riferimento.
 /// Include l'icona, il nome, il codice meccanico e lo stato (es. Attivo).
@@ -18,16 +20,24 @@ class AmWorkshopCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF232326),
+        color: colors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.05),
+          color: colors.border,
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow.withValues(alpha: 0.22),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -38,10 +48,11 @@ class AmWorkshopCard extends StatelessWidget {
               color: colore.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              Icons.build_outlined,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedWrench01,
               color: colore,
               size: 24,
+              strokeWidth: 2.2,
             ),
           ),
           const SizedBox(width: 16),
@@ -52,8 +63,8 @@ class AmWorkshopCard extends StatelessWidget {
               children: [
                 Text(
                   nomeOfficina,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colors.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
@@ -61,8 +72,8 @@ class AmWorkshopCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Meccanico · $codiceMeccanico',
-                  style: const TextStyle(
-                    color: Color(0xFF4E5D78),
+                  style: TextStyle(
+                    color: colors.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),

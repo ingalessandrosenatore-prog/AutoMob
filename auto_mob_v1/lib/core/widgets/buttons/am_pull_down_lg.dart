@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../config/performance_flags.dart';
 import '../../services/haptic_service.dart';
-import '../smart/am_flat_glass.dart';
 
 /// Un badge flottante che indica il veicolo selezionato.
 /// Estetica: Pillola blu con icona auto e freccia per dropdown,
@@ -14,7 +14,7 @@ class AmPullDownLG extends StatefulWidget {
   final String brand;
   final String lable;
   final Color? color;
-  final IconData buttonIcons;
+  final List<List> buttonIcons;
   final double buttonIconsSize;
   final Color buttonIconColor;
   final TextStyle buttonLableStyle;
@@ -172,10 +172,11 @@ class _AmPullDownLGState extends State<AmPullDownLG>
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(
-                            widget.buttonIcons,
+                        HugeIcon(
+                            icon: widget.buttonIcons,
                             size: widget.buttonIconsSize,
                             color: widget.buttonIconColor,
+                            strokeWidth: 2.2,
 
                         ),
                         if (widget.arrow) ...[const SizedBox(width: 4)],
@@ -191,10 +192,11 @@ class _AmPullDownLGState extends State<AmPullDownLG>
                           const SizedBox(width: 4),
                         ], // Un po' di margine prima della freccia per simmetria
                         if (widget.arrow) ...[
-                          Icon(
-                            Icons.keyboard_arrow_down,
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedArrowDown01,
                             color: widget.buttonIconColor,
                             size: widget.buttonIconsSize,
+                            strokeWidth: 2.2,
                           ),
                         ],
                       ],
@@ -215,7 +217,7 @@ class _AmPullDownLGState extends State<AmPullDownLG>
                     borderRadius: 100,
                     child: content,
                   )
-            // TODO: in caso di false il comtainer si deve adattare alla forma del contenuto come fa ocliquid glass e inoltre e scomaprso il bagliorequando si preme sul puslante 
+            // TODO: in caso di false il comtainer si deve adattare alla forma del contenuto come fa ocliquid glass e inoltre e scomaprso il bagliorequando si preme sul puslante
                 : Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -434,7 +436,7 @@ class _PopUpState extends State<MorphPopUp>
 }
 
 class ItemMorphPopUp extends StatelessWidget {
-  final IconData icon;
+  final List<List> icon;
   final String text;
   final double? textSize;
   final FontWeight? textWeight;
@@ -491,7 +493,12 @@ class ItemMorphPopUp extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: iconSize, color: iconColor,fontWeight:  iconsWheight,),
+              HugeIcon(
+                icon: icon,
+                size: iconSize,
+                color: iconColor,
+                strokeWidth: 2.2,
+              ),
               const SizedBox(width: 12),
               Flexible(
                 child: Text(

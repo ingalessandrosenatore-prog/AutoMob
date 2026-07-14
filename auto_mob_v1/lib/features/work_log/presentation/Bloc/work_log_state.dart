@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
+import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/features/work_log/domain/entities/selected_part.dart';
 import 'package:equatable/equatable.dart';
 
@@ -9,13 +9,15 @@ class WorkLogState extends Equatable {
   final String? customName;
   final List<SelectedPart> selectedParts;
   final int currentKm;
-  final int vehicleKm; // km attuali del veicolo: pavimento, il lavoro non può scendere sotto
+  final int
+  vehicleKm; // km attuali del veicolo: pavimento, il lavoro non può scendere sotto
   final int intervallKM;
   final int prosssimoRichiamo;
   final String note;
   final DateTime serviceDate;
   final WorkLogStatus status;
   final String? errorMessage;
+  final int currentStep;
 
   const WorkLogState({
     required this.type,
@@ -29,18 +31,19 @@ class WorkLogState extends Equatable {
     required this.serviceDate,
     this.status = WorkLogStatus.initial,
     this.errorMessage,
+    this.currentStep = 0,
   });
 
   factory WorkLogState.initial() => WorkLogState(
-        type: EnumPopUp.altro,
-        selectedParts: const [],
-        currentKm: 0,
-        vehicleKm: 0,
-        intervallKM: 0,
-        note: "",
-        prosssimoRichiamo: 0,
-        serviceDate: DateTime.now(),
-      );
+    type: EnumPopUp.altro,
+    selectedParts: const [],
+    currentKm: 0,
+    vehicleKm: 0,
+    intervallKM: 0,
+    note: "",
+    prosssimoRichiamo: 0,
+    serviceDate: DateTime.now(),
+  );
 
   WorkLogState copyWith({
     EnumPopUp? type,
@@ -54,6 +57,7 @@ class WorkLogState extends Equatable {
     DateTime? serviceDate,
     WorkLogStatus? status,
     String? errorMessage,
+    int? currentStep,
   }) {
     return WorkLogState(
       type: type ?? this.type,
@@ -67,21 +71,23 @@ class WorkLogState extends Equatable {
       serviceDate: serviceDate ?? this.serviceDate,
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
+      currentStep: currentStep ?? this.currentStep,
     );
   }
 
   @override
   List<Object?> get props => [
-        type,
-        customName,
-        selectedParts,
-        currentKm,
-        vehicleKm,
-        intervallKM,
-        note,
-        prosssimoRichiamo,
-        serviceDate,
-        status,
-        errorMessage,
-      ];
+    type,
+    customName,
+    selectedParts,
+    currentKm,
+    vehicleKm,
+    intervallKM,
+    note,
+    prosssimoRichiamo,
+    serviceDate,
+    status,
+    errorMessage,
+    currentStep,
+  ];
 }

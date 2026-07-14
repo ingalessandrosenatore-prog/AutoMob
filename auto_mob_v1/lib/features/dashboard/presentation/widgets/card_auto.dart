@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:oc_liquid_glass/oc_liquid_glass.dart';
+import 'package:hugeicons/hugeicons.dart';
 
-import '../../../../core/config/performance_flags.dart';
 import '../../../../core/widgets/Effects/pulsing_glow_border.dart';
 import '../../../../core/widgets/buttons/am_pull_down_lg.dart';
+import '../../../../core/theme/am_theme_colors.dart';
 
 /// Card del veicolo nel PageView della home.
 /// Card solida con ombra (3D), niente blur in tempo reale → swipe fluido.
@@ -47,6 +47,7 @@ class CardAuto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double cardWidth = MediaQuery.of(context).size.width * 0.90;
+    final colors = AmThemeColors.of(context);
 
     // Bottone matita con menu "MODIFICA FOTO". Lo shader di rifrazione
     // (OCLiquidGlassGroup) campiona lo sfondo in coordinate schermo: mentre la
@@ -61,14 +62,14 @@ class CardAuto extends StatelessWidget {
       // dimensiona sul contenuto). A 60 la voce "MODIFICA FOTO" andava in
       // overflow (~32px): serve spazio per icona + padding + testo.
       larghezza: 260,
-      buttonIcons: Icons.edit,
+      buttonIcons: HugeIcons.strokeRoundedEdit01,
       buttonIconsSize: 18,
-      buttonIconColor: Colors.white,
+      buttonIconColor: colors.textPrimary,
       buttonLableStyle: const TextStyle(fontSize: 0),
       arrow: false,
       children: [
         ItemMorphPopUp(
-          icon: Icons.photo_camera_outlined,
+          icon: HugeIcons.strokeRoundedAlbum02,
           text: "MODIFICA FOTO",
           onTap: onEditPhotoTap ?? () {},
           iconColor: const Color(0xFFF48A37),
@@ -79,11 +80,22 @@ class CardAuto extends StatelessWidget {
 
     return Container(
       width: cardWidth,
-
+      margin: const EdgeInsets.fromLTRB(4, 4, 4, 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF232326), // stesso base delle card KPI
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colors.surfaceHighlight, colors.surfaceRaised],
+        ),
         borderRadius: BorderRadius.circular(32),
-
+        border: Border.all(color: colors.border),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 18,
+            offset: const Offset(0, 9),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(8),
@@ -101,11 +113,7 @@ class CardAuto extends StatelessWidget {
                     child: _VehicleImage(immaginePath: immaginePath),
                   ),
                 ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: editPull,
-                ),
+                Positioned(top: 12, right: 12, child: editPull),
               ],
             ),
             const SizedBox(height: 8),
@@ -123,17 +131,20 @@ class CardAuto extends StatelessWidget {
                   Expanded(
                     child: _TapTile(
                       onTap: onRevisionTap,
-                      watermarkIcon: Icons.calendar_today,
-                      child:Column(
+                      watermarkIcon: HugeIcons.strokeRoundedCalendar01,
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         spacing: 3,
                         children: [
-                          const Text("REVISIONE", style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                          ),),
-                           const SizedBox(width: 6,),
+                          Text(
+                            "REVISIONE",
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
                           _RevisionStatusPill(status: _revisionStatus),
                         ],
                       ),
@@ -143,19 +154,23 @@ class CardAuto extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: PulsingGlowBorder(
-                      color: Colors.blueGrey.withValues(alpha: 0.5),
+                      color: colors.info.withValues(alpha: 0.5),
                       borderRadius: 20,
                       child: _TapTile(
                         onTap: onKmTap,
-                        watermarkIcon: Icons.speed_outlined,
+                        // Nessun equivalente convincente trovato in HugeIcons 1.1.7.
+                        // Mantengo il riferimento Material per il KPI km finché non
+                        // troviamo un'icona più aderente.
+                        watermarkIcon: HugeIcons.strokeRoundedDashboardSpeed02,
+                        watermarkColor: colors.info,
                         child: Column(
                           spacing: 3,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               kmTotali,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: colors.textPrimary,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -184,9 +199,6 @@ const TextStyle _kTileLabel = TextStyle(
   letterSpacing: 1.0,
 );
 
-/// Arancione accento dell'app (usato nella dashboard).
-const Color _kAppOrange = Color(0xFFFF6B00);
-
 /// Box info nome + anno (non cliccabile, stesso stile dei tile sotto).
 class _InfoTile extends StatelessWidget {
   final String marca;
@@ -201,14 +213,20 @@ class _InfoTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF2C2C30),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colors.surfaceHighlight, colors.surfaceRaised],
+        ),
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
+            color: colors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -216,10 +234,11 @@ class _InfoTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.directions_car_filled_outlined,
-            color: _kAppOrange,
+          HugeIcon(
+              icon: HugeIcons.strokeRoundedCar05,
+            color: colors.accent,
             size: 24,
+            strokeWidth: 2.2,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -235,8 +254,8 @@ class _InfoTile extends StatelessWidget {
                         marca.toUpperCase(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: colors.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
@@ -249,7 +268,7 @@ class _InfoTile extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.55),
+                          color: colors.textSecondary,
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           letterSpacing: 0.5,
@@ -265,7 +284,7 @@ class _InfoTile extends StatelessWidget {
                     child: Text(
                       "$anno",
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: colors.textSecondary.withValues(alpha: 0.75),
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
@@ -284,7 +303,7 @@ class _InfoTile extends StatelessWidget {
 class _TapTile extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
-  final IconData? watermarkIcon;
+  final List<List>? watermarkIcon;
   final Color? watermarkColor;
 
   const _TapTile({
@@ -297,20 +316,22 @@ class _TapTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2C2C2E),
-            Color(0xFF1C1C1E),
-          ],
+          colors: isDark
+              ? [colors.surfaceHighlight, colors.surfaceDeep]
+              : [colors.surfaceDeep, colors.surfaceHighlight],
         ),
+        border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
+            color: colors.shadow,
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -327,20 +348,24 @@ class _TapTile extends StatelessWidget {
                 child: Transform.rotate(
                   angle: -0,
                   child: ShaderMask(
+                    blendMode: BlendMode.srcIn,
                     shaderCallback: (Rect bounds) {
                       return LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withValues(alpha: 0.2),
-                          (watermarkColor ?? _kAppOrange).withValues(alpha: 0.1)
+                          colors.textSecondary.withValues(alpha: 0.46),
+                          (watermarkColor ?? colors.accent).withValues(
+                            alpha: 0.82,
+                          ),
                         ],
                       ).createShader(bounds);
                     },
-                    child: Icon(
-                      watermarkIcon,
+                    child: HugeIcon(
+                      icon: watermarkIcon!,
                       size: 90,
-                      color: Colors.white,
+                      color: colors.textPrimary,
+                      strokeWidth: 2.2,
                     ),
                   ),
                 ),
@@ -351,7 +376,10 @@ class _TapTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
                 onTap: onTap,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 24,
+                  ),
                   child: Center(child: child),
                 ),
               ),
@@ -371,12 +399,13 @@ class _RevisionStatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
+        color: colors.background.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: colors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -384,16 +413,16 @@ class _RevisionStatusPill extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: colors.textPrimary,
               shape: BoxShape.circle,
             ),
           ),
           const SizedBox(width: 6),
           Text(
             status,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colors.textPrimary,
               fontSize: 8,
               fontWeight: FontWeight.bold,
             ),
@@ -414,7 +443,7 @@ class _VehicleImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final path = immaginePath;
     if (path == null || path.isEmpty) {
-      return _placeholder;
+      return const _VehiclePlaceholder();
     }
     // Decodifica alla risoluzione DI VISUALIZZAZIONE, non a quella del file:
     // la card e' larga ~90% schermo, decodificare a piena risoluzione sprecava
@@ -431,7 +460,7 @@ class _VehicleImage extends StatelessWidget {
         path,
         fit: BoxFit.cover,
         cacheWidth: cacheWidth,
-        errorBuilder: (_, _, _) => _placeholder,
+        errorBuilder: (_, _, _) => const _VehiclePlaceholder(),
       );
     }
     if (path.startsWith('lib/') || path.startsWith('assets/')) {
@@ -441,14 +470,27 @@ class _VehicleImage extends StatelessWidget {
       File(path),
       fit: BoxFit.cover,
       cacheWidth: cacheWidth,
-      errorBuilder: (_, _, _) => _placeholder,
+      errorBuilder: (_, _, _) => const _VehiclePlaceholder(),
     );
   }
+}
 
-  Widget get _placeholder => Container(
-        color: const Color(0xFF2C2C2E),
-        child: const Center(
-          child: Icon(Icons.directions_car, color: Colors.white10, size: 50),
+class _VehiclePlaceholder extends StatelessWidget {
+  const _VehiclePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    return Container(
+      color: colors.surfaceRaised,
+      child: Center(
+        child: HugeIcon(
+              icon: HugeIcons.strokeRoundedCar05,
+          color: colors.textSecondary.withValues(alpha: 0.3),
+          size: 50,
+          strokeWidth: 2.2,
         ),
-      );
+      ),
+    );
+  }
 }

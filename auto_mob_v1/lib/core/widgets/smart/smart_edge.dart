@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
@@ -24,6 +23,10 @@ class SmartEdge extends StatelessWidget {
   /// (rilevante solo nel ramo [blur] == false).
   final Color fallbackTint;
 
+  /// Opacita' del bordo esterno. Un valore alto rende il bordo netto, mentre
+  /// la ridotta estensione dell'edge evita che il fade copra troppo contenuto.
+  final double opacity;
+
   final Widget child;
 
   const SmartEdge({
@@ -32,17 +35,21 @@ class SmartEdge extends StatelessWidget {
     required this.edges,
     required this.child,
     this.fallbackTint = Colors.transparent,
+    this.opacity = 0.92,
   });
 
   @override
   Widget build(BuildContext context) {
-
     return ClipRect(
       child: Stack(
         children: [
           child,
           for (final edge in edges)
-            _EdgeGradient(edge: edge, fallbackTint: fallbackTint),
+            _EdgeGradient(
+              edge: edge,
+              fallbackTint: fallbackTint,
+              opacity: opacity,
+            ),
         ],
       ),
     );
@@ -54,14 +61,22 @@ class SmartEdge extends StatelessWidget {
 class _EdgeGradient extends StatelessWidget {
   final EdgeBlur edge;
   final Color fallbackTint;
+  final double opacity;
 
-  const _EdgeGradient({required this.edge, required this.fallbackTint});
+  const _EdgeGradient({
+    required this.edge,
+    required this.fallbackTint,
+    required this.opacity,
+  });
 
   @override
   Widget build(BuildContext context) {
     final tint = edge.tintColor ?? fallbackTint;
     // Pieno al bordo esterno -> trasparente verso l'interno.
-    final colors = [tint, tint.withValues(alpha: 0.0)];
+    final colors = [
+      tint.withValues(alpha: opacity),
+      tint.withValues(alpha: 0.0),
+    ];
 
     switch (edge.type) {
       case EdgeType.topEdge:

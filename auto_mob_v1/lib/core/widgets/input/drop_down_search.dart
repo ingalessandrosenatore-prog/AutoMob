@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../theme/am_theme_colors.dart';
 
 class AmDropdownSearch<T> extends StatefulWidget {
   final String label;
@@ -116,6 +119,7 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     final selectedLabel = widget.value != null
         ? widget.itemLabelBuilder(widget.value as T)
         : null;
@@ -127,17 +131,17 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
         children: [
           RichText(
             text: TextSpan(
-              style: const TextStyle(
-                color: Color(0xFF636366),
+              style: TextStyle(
+                color: colors.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
               children: [
                 TextSpan(text: widget.label.toUpperCase()),
                 if (widget.isRequired)
-                  const TextSpan(
+                  TextSpan(
                     text: ' *',
-                    style: TextStyle(color: Color(0xFF4A90E2)),
+                    style: TextStyle(color: colors.info),
                   ),
               ],
             ),
@@ -151,12 +155,12 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
               height: widget.height,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1C1C1E),
+                color: colors.surface,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: _isOpen
-                      ? const Color(0xFFFF6B00).withValues(alpha: 0.5)
-                      : Colors.white.withValues(alpha: 0.05),
+                      ? colors.accent.withValues(alpha: 0.5)
+                      : colors.border,
                 ),
               ),
               child: Row(
@@ -166,21 +170,23 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
                       selectedLabel ?? widget.placeholder,
                       style: TextStyle(
                         color: selectedLabel != null
-                            ? Colors.white
-                            : const Color(0xFF48484A),
+                            ? colors.textPrimary
+                            : colors.textSecondary,
                         fontSize: 16,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  AnimatedRotation(
-                    turns: _isOpen ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: const Icon(
-                      Icons.keyboard_arrow_down,
-                      color: Color(0xFF48484A),
+                    AnimatedRotation(
+                      turns: _isOpen ? 0.5 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowDown01,
+                        color: colors.textSecondary,
+                        size: 22,
+                        strokeWidth: 2.2,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -219,6 +225,7 @@ class _DropdownOverlay<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Stack(
       children: [
         // Barrier — tap fuori chiude
@@ -239,12 +246,12 @@ class _DropdownOverlay<T> extends StatelessWidget {
             color: Colors.transparent,
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF252528),
+                color: colors.surfaceRaised,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                border: Border.all(color: colors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.45),
+                    color: colors.shadow.withValues(alpha: 0.45),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -260,20 +267,21 @@ class _DropdownOverlay<T> extends StatelessWidget {
                       controller: searchCtrl,
                       onChanged: onSearchChanged,
                       autofocus: true,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      style: TextStyle(color: colors.textPrimary, fontSize: 14),
                       decoration: InputDecoration(
                         hintText: 'Cerca...',
-                        hintStyle: const TextStyle(
-                          color: Color(0xFF636366),
+                        hintStyle: TextStyle(
+                          color: colors.textSecondary,
                           fontSize: 14,
                         ),
-                        prefixIcon: const Icon(
-                          Icons.search,
-                          color: Color(0xFF636366),
+                        prefixIcon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedSearch01,
+                          color: colors.textSecondary,
                           size: 18,
+                          strokeWidth: 2.2,
                         ),
                         filled: true,
-                        fillColor: const Color(0xFF1C1C1E),
+                        fillColor: colors.surface,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 10,
                         ),
@@ -288,7 +296,7 @@ class _DropdownOverlay<T> extends StatelessWidget {
 
                   Container(
                     height: 1,
-                    color: Colors.white.withValues(alpha: 0.06),
+                    color: colors.border,
                   ),
 
                   // Lista filtrata
@@ -296,13 +304,13 @@ class _DropdownOverlay<T> extends StatelessWidget {
                     valueListenable: filteredNotifier,
                     builder: (context, items, _) {
                       if (items.isEmpty) {
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
                           child: Center(
                             child: Text(
                               'Nessun risultato',
                               style: TextStyle(
-                                color: Color(0xFF636366),
+                                color: colors.textSecondary,
                                 fontSize: 14,
                               ),
                             ),
@@ -326,12 +334,10 @@ class _DropdownOverlay<T> extends StatelessWidget {
                             return InkWell(
                               onTap: () => onSelect(item),
                               borderRadius: BorderRadius.circular(8),
-                              highlightColor: const Color(
-                                0xFFFF6B00,
-                              ).withValues(alpha: 0.1),
-                              splashColor: const Color(
-                                0xFFFF6B00,
-                              ).withValues(alpha: 0.08),
+                                highlightColor:
+                                    colors.accent.withValues(alpha: 0.1),
+                                splashColor:
+                                    colors.accent.withValues(alpha: 0.08),
                               child: Container(
                                 height: _itemHeight,
                                 padding: const EdgeInsets.symmetric(
@@ -345,8 +351,8 @@ class _DropdownOverlay<T> extends StatelessWidget {
                                         itemLabelBuilder(item),
                                         style: TextStyle(
                                           color: isSelected
-                                              ? const Color(0xFFFF6B00)
-                                              : Colors.white,
+                                              ? colors.accent
+                                              : colors.textPrimary,
                                           fontSize: 15,
                                           fontWeight: isSelected
                                               ? FontWeight.w700
@@ -356,10 +362,11 @@ class _DropdownOverlay<T> extends StatelessWidget {
                                       ),
                                     ),
                                     if (isSelected)
-                                      const Icon(
-                                        Icons.check,
-                                        color: Color(0xFFFF6B00),
+                                      HugeIcon(
+                                        icon: HugeIcons.strokeRoundedValidation,
+                                        color: colors.accent,
                                         size: 16,
+                                        strokeWidth: 2.2,
                                       ),
                                   ],
                                 ),

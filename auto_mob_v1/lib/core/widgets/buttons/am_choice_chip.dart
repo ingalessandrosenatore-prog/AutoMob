@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../services/haptic_service.dart';
+import '../../theme/am_theme_colors.dart';
 
 /// ChoiceChip personalizzato AutoMob.
 /// Segue lo stile della foto: bordo colorato quando selezionato, sfondo scuro,
@@ -22,6 +24,7 @@ class AmChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return GestureDetector(
       onTap: () {
         AmHaptics.selection();
@@ -31,10 +34,10 @@ class AmChoiceChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.transparent : const Color(0xFF1C1C1E),
+          color: isSelected ? Colors.transparent : colors.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? activeColor : Colors.white.withValues(alpha: 0.05),
+            color: isSelected ? activeColor : colors.border,
             width: 1.5,
           ),
           boxShadow: isSelected
@@ -51,17 +54,18 @@ class AmChoiceChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (isSelected) ...[
-              const Icon(
-                Icons.check,
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedValidation,
                 size: 14,
-                color: Colors.white,
+                color: colors.textPrimary,
+                strokeWidth: 2.2,
               ),
               const SizedBox(width: 6),
             ],
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : const Color(0xFF8E8E93),
+                color: isSelected ? colors.textPrimary : colors.textSecondary,
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
               ),

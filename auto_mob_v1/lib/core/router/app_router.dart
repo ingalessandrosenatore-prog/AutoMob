@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/features/dashboard/presentation/pages/home_view.dart';
+import 'package:auto_mob_v1/features/dashboard/presentation/pages/home_view.dart';
 import 'package:auto_mob_v1/features/servizi/presentation/pages/servizi_page.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/midify_item.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/work_log_history_page.dart';
@@ -10,9 +10,11 @@ import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/pages/splash_screen.dart';
 import '../../features/auth/presentation/pages/login_view.dart';
 import '../../features/auth/presentation/pages/registration_view.dart';
+import '../../features/settings/presentation/pages/settings_view.dart';
 import '../../features/vehicle/presentation/pages/vehicle_registration_page.dart';
 import '../../features/vehicle/presentation/widgets/km_update_pop_up.dart';
 import '../../features/work_log/presentation/widgets/functional_pop_up.dart';
+import '../../features/work_log/presentation/pages/work_log_wizard_page.dart';
 import '../di/injection_container.dart' as di;
 import '../types/enum_pop_up.dart';
 import 'am_transition_page.dart';
@@ -86,6 +88,15 @@ class AppRouter {
       ),
 
       GoRoute(
+        path: '/settings',
+        name: 'settings',
+        pageBuilder: (context, state) => AmFadeThroughPage(
+          key: state.pageKey,
+          child: const SettingsView(),
+        ),
+      ),
+
+      GoRoute(
         path: '/addVeichle',
         name: 'aggiungi_veicolo',
         pageBuilder: (context, state) => AmFadeThroughPage(
@@ -111,12 +122,26 @@ class AppRouter {
       ),
 
       GoRoute(
+        path: '/work-log-wizard',
+        name: 'aggiungi_lavoro',
+        pageBuilder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>;
+          return AmFadeThroughPage(
+            key: state.pageKey,
+            child: WorkLogWizardPage(
+              vehicleId: extra['vehicleId'] as String,
+              currentKm: extra['currentKm'] as int,
+              heroTag: extra['heroTag'] as String,
+            ),
+          );
+        },
+      ),
+
+      GoRoute(
         path: '/parts',
         name: 'parts',
-        pageBuilder: (context, state) => AmFadeThroughPage(
-          key: state.pageKey,
-          child: const Midifyitem(),
-        ),
+        pageBuilder: (context, state) =>
+            AmFadeThroughPage(key: state.pageKey, child: const Midifyitem()),
       ),
 
       GoRoute(

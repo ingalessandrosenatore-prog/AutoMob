@@ -1,5 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../../../core/theme/am_theme_colors.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/buttons/fab_princ.dart';
@@ -44,9 +47,10 @@ class _RegistrationViewState extends State<RegistrationView> {
       builder: (context, state) {
         final isLoading = state is AuthLoading;
         final errorMessage = state is AuthError ? state.message : null;
+        final colors = AmThemeColors.of(context);
 
         return Scaffold(
-          backgroundColor: const Color(0xFF000000),
+          backgroundColor: colors.background,
           body: SafeArea(
             child: SingleChildScrollView(
               child: Padding(
@@ -55,18 +59,18 @@ class _RegistrationViewState extends State<RegistrationView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 60),
-                    const Text(
+                    Text(
                       'REGISTRATI',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textPrimary,
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Text(
+                    Text(
                       'Crea un account per iniziare',
                       style:
-                          TextStyle(color: Color(0xFF636366), fontSize: 16),
+                          TextStyle(color: colors.textSecondary, fontSize: 16),
                     ),
                     const SizedBox(height: 48),
                     Row(
@@ -111,14 +115,18 @@ class _RegistrationViewState extends State<RegistrationView> {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          const Icon(Icons.error_outline,
-                              color: Color(0xFFFF453A), size: 16),
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedAlert01,
+                            color: colors.danger,
+                            size: 16,
+                            strokeWidth: 2.2,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               errorMessage,
-                              style: const TextStyle(
-                                color: Color(0xFFFF453A),
+                              style: TextStyle(
+                                color: colors.danger,
                                 fontSize: 14,
                               ),
                             ),
@@ -130,8 +138,8 @@ class _RegistrationViewState extends State<RegistrationView> {
                     Center(
                       child: AmMainFab(
                         label: 'Registrati',
-                        color: const Color(0xFFE85A1A),
-                        icon: Icons.person_add,
+                        color: colors.accent,
+                        icon: HugeIcons.strokeRoundedUserAdd01,
                         isLoading: isLoading,
                         height: 60,
                         width: 180,
@@ -151,15 +159,15 @@ class _RegistrationViewState extends State<RegistrationView> {
                       child: TextButton(
                         onPressed: () => context.goNamed('login'),
                         child: RichText(
-                          text: const TextSpan(
+                          text: TextSpan(
                             style: TextStyle(
-                                color: Color(0xFF636366), fontSize: 14),
+                                color: colors.textSecondary, fontSize: 14),
                             children: [
-                              TextSpan(text: 'Hai già un account? '),
+                              const TextSpan(text: 'Hai già un account? '),
                               TextSpan(
                                 text: 'Accedi',
                                 style: TextStyle(
-                                  color: Color(0xFF4A90E2),
+                                  color: colors.info,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

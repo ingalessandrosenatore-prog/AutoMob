@@ -1,11 +1,14 @@
-﻿import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
+import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../theme/am_theme_colors.dart';
 
 /// Header per i Wizard dell'app AutoMob.
 /// Segue le specifiche: icona a sinistra, titolo centrale, pulsante chiusura a destra
 /// e indicatore di progresso a pallini in basso.
 class WizardHeader extends StatelessWidget {
-  final IconData stepIcon;
+  final Object? stepIcon;
   final int stepNumber;
   final int totalSteps;
   final String title;
@@ -22,6 +25,7 @@ class WizardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
 
     return Padding(
       padding: const EdgeInsets.all(20.0),
@@ -29,8 +33,6 @@ class WizardHeader extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
-
-            
             children: [
               // 1. Contenitore Icona (Sinistra)
               Expanded(child: Container()),
@@ -41,8 +43,8 @@ class WizardHeader extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: colors.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -56,8 +58,8 @@ class WizardHeader extends StatelessWidget {
                   child: AmSoftButton(
                     width: 45,
                     height: 45,
-                    color: const Color(0xFFFF6B00),
-                    icon: Icons.close,
+                    color: colors.accent,
+                    icon: HugeIcons.strokeRoundedCancel01,
                     onPressed: () {
                       onClose();
                     },
@@ -66,12 +68,12 @@ class WizardHeader extends StatelessWidget {
               ),
             ],
           ),
-         const SizedBox(height: 6,),
+          const SizedBox(height: 6),
           // 4. Indicatore di progresso a pallini
           WizardProgressIndicator(
             currentStep: stepNumber,
             totalSteps: totalSteps,
-            activeColor:  const Color(0xFFFF6B00),
+            activeColor: colors.accent,
           ),
         ],
       ),
@@ -95,6 +97,7 @@ class WizardProgressIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(totalSteps, (index) {
@@ -108,7 +111,7 @@ class WizardProgressIndicator extends StatelessWidget {
           // Se è lo step corrente, lo rendiamo una pillola lunga
           width: isCurrent ? 24 : 8,
           decoration: BoxDecoration(
-            color: isActive ? activeColor : Colors.grey.shade800,
+            color: isActive ? activeColor : colors.surfaceRaised,
             borderRadius: BorderRadius.circular(3),
           ),
         );

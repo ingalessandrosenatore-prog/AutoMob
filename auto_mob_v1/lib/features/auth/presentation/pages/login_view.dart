@@ -1,5 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+import '../../../../core/theme/am_theme_colors.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/buttons/fab_princ.dart';
@@ -53,7 +56,7 @@ class _LoginViewState extends State<LoginView> {
       _dialogOpen = true;
       showAmStatusDialog(
         context,
-        icon: Icons.mark_email_unread_outlined,
+        icon: HugeIcons.strokeRoundedMail01,
         iconColor: const Color(0xFFFFB4AB),
         title: 'Email non verificata',
         message: s.message,
@@ -85,9 +88,10 @@ class _LoginViewState extends State<LoginView> {
             (state is AuthError && !state.emailNotConfirmed)
                 ? state.message
                 : null;
+        final colors = AmThemeColors.of(context);
 
         return Scaffold(
-          backgroundColor: const Color(0xFF000000),
+          backgroundColor: colors.background,
           body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -95,17 +99,17 @@ class _LoginViewState extends State<LoginView> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 60),
-                  const Text(
+                  Text(
                     'BENVENUTO',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: colors.textPrimary,
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const Text(
+                  Text(
                     'Accedi per gestire i tuoi veicoli',
-                    style: TextStyle(color: Color(0xFF636366), fontSize: 16),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 16),
                   ),
                   const SizedBox(height: 48),
                   Row(
@@ -137,14 +141,18 @@ class _LoginViewState extends State<LoginView> {
                     const SizedBox(height: 16),
                     Row(
                       children: [
-                        const Icon(Icons.error_outline,
-                            color: Color(0xFFFF453A), size: 16),
+                        HugeIcon(
+                          icon: HugeIcons.strokeRoundedAlert01,
+                          color: colors.danger,
+                          size: 16,
+                          strokeWidth: 2.2,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             errorMessage,
-                            style: const TextStyle(
-                              color: Color(0xFFFF453A),
+                            style: TextStyle(
+                              color: colors.danger,
                               fontSize: 14,
                             ),
                           ),
@@ -157,8 +165,8 @@ class _LoginViewState extends State<LoginView> {
                     label: 'Login',
                     height: 60,
                     width: 180,
-                    color: const Color(0xFFE85A1A),
-                    icon: Icons.login,
+                    color: colors.accent,
+                    icon: HugeIcons.strokeRoundedLogin01,
                     isLoading: isLoading,
                     onPressed: () {  context.read<AuthBloc>().add(
                            LoginWithEmailEvent(
@@ -172,16 +180,16 @@ class _LoginViewState extends State<LoginView> {
                   const SizedBox(height: 48),
                   AmMainFab(
                     label: 'Registrati',
-                    color: const Color(0xFF4A90E2),
-                    icon: Icons.person_add,
+                    color: colors.info,
+                    icon: HugeIcons.strokeRoundedUserAdd01,
                     height: 60,
                     width: 180,
                     onPressed: () => context.goNamed('registration'),
                   ),
                   const SizedBox(height: 32),
-                  const Text(
+                  Text(
                     'oppure accedi con',
-                    style: TextStyle(color: Color(0xFF636366), fontSize: 14),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -193,10 +201,13 @@ class _LoginViewState extends State<LoginView> {
                             : () => context
                                 .read<AuthBloc>()
                                 .add(LoginWithGoogleEvent()),
-                        icon: const Icon(Icons.g_mobiledata,
-                            color: Colors.white, size: 40),
+                        icon: const Icon(
+                          Icons.g_mobiledata,
+                          color: Colors.transparent,
+                          size: 0,
+                        ),
                         style: IconButton.styleFrom(
-                            backgroundColor: const Color(0xFF1C1C1E)),
+                            backgroundColor: colors.surface),
                       ),
                       const SizedBox(width: 20),
                       IconButton(
@@ -205,10 +216,13 @@ class _LoginViewState extends State<LoginView> {
                             : () => context
                                 .read<AuthBloc>()
                                 .add(LoginWithAppleEvent()),
-                        icon: const Icon(Icons.apple,
-                            color: Colors.white, size: 32),
+                        icon: const Icon(
+                          Icons.apple,
+                          color: Colors.transparent,
+                          size: 0,
+                        ),
                         style: IconButton.styleFrom(
-                            backgroundColor: const Color(0xFF1C1C1E)),
+                            backgroundColor: colors.surface),
                       ),
                     ],
                   ),

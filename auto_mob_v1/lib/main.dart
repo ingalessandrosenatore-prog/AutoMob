@@ -5,6 +5,9 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 
 import 'core/di/injection_container.dart' as di;
 import 'core/router/app_router.dart';
+import 'core/theme/am_theme.dart';
+import 'core/theme/am_theme_mode.dart';
+import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
@@ -35,6 +38,7 @@ class AutoMobApp extends StatelessWidget {
         // Altri BLoC saranno aggiunti qui quando implementeremo le altre feature
         // BlocProvider<DashboardBloc>(...),
         BlocProvider<AddVehicleBloc>.value(value: di.sl<AddVehicleBloc>()),
+        BlocProvider<ThemeCubit>.value(value: di.sl<ThemeCubit>()),
         // BlocProvider<WorkLogBloc>(...),
       ],
       // DashboardBloc/WorkLogHistoryBloc sono lazySingleton (cache dati tra
@@ -54,16 +58,16 @@ class AutoMobApp extends StatelessWidget {
           di.sl.resetLazySingleton<DashboardBloc>();
           di.sl.resetLazySingleton<WorkLogHistoryBloc>();
         },
-        child: MaterialApp.router(
-          title: 'AutoMob',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.orange,
-              brightness: Brightness.dark,
-            ),
-            useMaterial3: true,
+        child: BlocBuilder<ThemeCubit, AmThemeMode>(
+          builder: (context, themeMode) => MaterialApp.router(
+            title: 'AutoMob',
+            theme: AmTheme.light,
+            darkTheme: AmTheme.dark,
+            themeMode: themeMode == AmThemeMode.dark
+                ? ThemeMode.dark
+                : ThemeMode.light,
+            routerConfig: AppRouter.router,
           ),
-          routerConfig: AppRouter.router,
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../services/haptic_service.dart';
 
@@ -7,7 +8,7 @@ import '../../services/haptic_service.dart';
 class AmMainFab extends StatelessWidget {
   final String label;
   final Color color;
-  final IconData? icon;
+  final List<List>? icon;
   final VoidCallback onPressed;
   final bool isLoading;
   final double width;
@@ -73,7 +74,12 @@ class AmMainFab extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (icon != null) ...[
-                      Icon(icon, color: Colors.white, size: 20),
+                      HugeIcon(
+                        icon: icon!,
+                        color: Colors.white,
+                        size: 20,
+                        strokeWidth: 2.2,
+                      ),
                       const SizedBox(width: 10),
                     ],
                     Text(

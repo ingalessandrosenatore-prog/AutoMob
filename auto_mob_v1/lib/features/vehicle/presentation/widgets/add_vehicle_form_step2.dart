@@ -1,6 +1,7 @@
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/blur/am_edge_blur.dart';
@@ -133,7 +134,7 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
 
                   // 1. Tagliando
                   MaintenanceSectionCard(
-                    icon: Icons.handyman,
+                icon: HugeIcons.strokeRoundedTools,
                     title: "Ultimo tagliando",
                     children: [
                       Row(
@@ -223,7 +224,8 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
 
                   // 2. Distribuzione
                   MaintenanceSectionCard(
-                    icon: Icons.link,
+                // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
+                icon: Icons.link,
                     title: "Distribuzione / Cinghia",
                     children: [
                       Row(
@@ -319,7 +321,7 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
           left: 0,
           right: 0,
           child: WizardHeader(
-            stepIcon: Icons.build,
+      stepIcon: HugeIcons.strokeRoundedTools,
             stepNumber: 3,
             totalSteps: 5,
             title: "Storico manutenzioni",
@@ -349,7 +351,7 @@ class _AddVehicleFormStep2State extends State<AddVehicleFormStep2> {
                     height: 60,
                     width: 180,
                     color: const Color(0xFFE85A1A),
-                    icon: Icons.chevron_right,
+              icon: HugeIcons.strokeRoundedArrowRight01,
                     onPressed: () {
                       setState(() => _submitted = true);
                       // Blocco se: km oltre attuali, oppure distribuzione vuota.

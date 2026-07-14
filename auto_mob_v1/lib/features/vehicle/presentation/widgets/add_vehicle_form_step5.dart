@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 
 import '../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../core/widgets/buttons/fab_princ.dart';
@@ -43,10 +45,12 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Column(
       children: [
         WizardHeader(
-          stepIcon: Icons.camera_alt_outlined,
+          // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
+  stepIcon: HugeIcons.strokeRoundedAlbum02,
           stepNumber: 5,
           totalSteps: 5,
           title: "Foto e Officina",
@@ -71,25 +75,25 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF1C1C1E),
+                              color: colors.surface,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.05),
+                                color: colors.border,
                                 width: 2,
                               ),
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.camera_alt,
-                              color: Colors.white.withValues(alpha: 0.5),
+                              color: Colors.white,
                               size: 40,
                             ),
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const Text(
+                        Text(
                           "Foto del veicolo",
                           style: TextStyle(
-                            color: Color(0xFF636366),
+                            color: colors.textSecondary,
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -101,13 +105,14 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                   const SizedBox(height: 40),
 
                   MaintenanceSectionCard(
-                    icon: Icons.link,
+                  // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
+                  icon: Icons.link,
                     title: "Connetti meccanico",
                     children: [
-                      const Text(
+                      Text(
                         "Inserisci il codice fornito dal tuo meccanico per permettergli di aggiornare i dati del veicolo.",
                         style: TextStyle(
-                          color: Color(0xFF636366),
+                          color: colors.textSecondary,
                           fontSize: 13,
                           height: 1.4,
                         ),
@@ -133,10 +138,10 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1C1412),
+                      color: colors.surfaceRaised,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.03),
+                        color: colors.border,
                       ),
                     ),
                     child: Row(
@@ -148,30 +153,31 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                             color: const Color(0xFF4A90E2),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: const Icon(
-                            Icons.info_outline,
+                          child: const HugeIcon(
+                            icon: HugeIcons.strokeRoundedAlertCircle,
                             color: Colors.white,
                             size: 16,
+                            strokeWidth: 2.2,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: RichText(
-                            text: const TextSpan(
+                            text: TextSpan(
                               style: TextStyle(
-                                color: Color(0xFF8E8E93),
+                                color: colors.textSecondary,
                                 fontSize: 13,
                                 height: 1.4,
                               ),
                               children: [
-                                TextSpan(
+                                const TextSpan(
                                   text:
                                       "Potrai collegare il meccanico in seguito dalla sezione ",
                                 ),
                                 TextSpan(
                                   text: "Servizi.",
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: colors.textPrimary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -203,7 +209,7 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                           height: 60,
                           width: 180,
                           color: const Color(0xFFE85A1A),
-                          icon: Icons.check,
+                  icon: HugeIcons.strokeRoundedValidationApproval,
                           onPressed: () {
                             context.read<AddVehicleBloc>().add(
                               SaveWizard(

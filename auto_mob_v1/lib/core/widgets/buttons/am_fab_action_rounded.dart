@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../services/haptic_service.dart';
 
@@ -6,7 +7,7 @@ import '../../services/haptic_service.dart';
 /// Segue lo stile: sfondo scuro trasparente, bordo colorato e effetto glow.
 class AmFabAction extends StatelessWidget {
   final Color color;
-  final IconData icon;
+  final List<List> icon;
   final String label;
   final VoidCallback onPressed;
 
@@ -77,10 +78,11 @@ class AmFabAction extends StatelessWidget {
                   ),
                 ],
               ),
-              child: Icon(
-                icon,
+              child: HugeIcon(
+                icon: icon,
                 color: color,
                 size: 25,
+                strokeWidth: 2.2,
               ),
             ),
           ),

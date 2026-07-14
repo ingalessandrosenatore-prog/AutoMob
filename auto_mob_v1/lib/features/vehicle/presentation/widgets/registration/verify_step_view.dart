@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 
 import '../../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../../core/widgets/input/drop_down_search.dart';
@@ -79,6 +81,7 @@ class VerifyStepViewState extends State<VerifyStepView> {
       buildWhen: (prev, curr) =>
           prev.draft != curr.draft || prev.lookupStatus != curr.lookupStatus,
       builder: (context, state) {
+        final colors = AmThemeColors.of(context);
         final notFound =
             state.lookupStatus == RegistrationLookupStatus.notFound;
         return AmEdgeBlur(
@@ -87,11 +90,11 @@ class VerifyStepViewState extends State<VerifyStepView> {
             child: Column(
               children: [
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'Verifica il tuo veicolo',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: colors.textPrimary,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
@@ -102,8 +105,8 @@ class VerifyStepViewState extends State<VerifyStepView> {
                       ? 'Non abbiamo trovato dati per questa targa: inseriscili a mano.'
                       : 'Controlla i dati trovati per la tua targa.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0xFF8E8E93),
+                  style: TextStyle(
+                    color: colors.textSecondary,
                     fontSize: 13,
                     height: 1.4,
                   ),
@@ -113,7 +116,9 @@ class VerifyStepViewState extends State<VerifyStepView> {
                   color: notFound
                       ? const Color(0xFFFF453A)
                       : const Color(0xFF4A90E2),
-                  icon: notFound ? Icons.warning_amber : Icons.info_outline,
+        icon: notFound
+            ? HugeIcons.strokeRoundedAlert01
+            : HugeIcons.strokeRoundedAlertCircle,
                   text: notFound
                       ? 'Non siamo riusciti a recuperare i dati per questa targa: compilali tu, potrai sempre correggerli in seguito.'
                       : 'Questi dati verranno utilizzati per ricordarti le scadenze e calcolare il punteggio di salute del veicolo.',
@@ -122,10 +127,10 @@ class VerifyStepViewState extends State<VerifyStepView> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF151517),
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.03),
+                      color: colors.border,
                     ),
                   ),
                   child: Column(
@@ -238,7 +243,13 @@ class VerifyStepViewState extends State<VerifyStepView> {
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
                     onPressed: () => setState(() => _editing = !_editing),
-                    icon: Icon(_editing ? Icons.check : Icons.edit, size: 18),
+                icon: HugeIcon(
+                  icon: _editing
+                      ? HugeIcons.strokeRoundedValidationApproval
+                      : HugeIcons.strokeRoundedEdit01,
+                  size: 18,
+                  strokeWidth: 2.2,
+                ),
                     label: Text(_editing ? 'Fatto' : 'Modifica'),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFFE85A1A),
@@ -261,6 +272,7 @@ class _DataRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Container(
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -269,8 +281,8 @@ class _DataRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFFAEAEB2),
+              style: TextStyle(
+                color: colors.textSecondary,
                 fontSize: 14,
                 fontWeight: FontWeight.normal,
               ),
@@ -278,8 +290,8 @@ class _DataRow extends StatelessWidget {
           ),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colors.textPrimary,
               fontSize: 16,
               fontWeight: FontWeight.w500,
             ),

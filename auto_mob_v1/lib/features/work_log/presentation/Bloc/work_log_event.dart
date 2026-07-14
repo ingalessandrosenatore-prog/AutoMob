@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/features/work_log/domain/entities/selected_part.dart';
+import 'package:auto_mob_v1/features/work_log/domain/entities/selected_part.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/types/enum_pop_up.dart';
@@ -6,6 +6,15 @@ import '../../../../core/types/enum_pop_up.dart';
 sealed class WorkLogEvent extends Equatable {
   @override
   List<Object?> get props => [];
+}
+
+class WorkLogWizardStepChanged extends WorkLogEvent {
+  final int step;
+
+  WorkLogWizardStepChanged(this.step);
+
+  @override
+  List<Object?> get props => [step];
 }
 
 class WorkLogEventCohiceTap extends WorkLogEvent {
@@ -60,7 +69,7 @@ class ServiceDateChange extends WorkLogEvent {
 }
 
 class OnSubmitEvent extends WorkLogEvent {
-  final String id ;
+  final String id;
   OnSubmitEvent({required this.id});
 
   @override

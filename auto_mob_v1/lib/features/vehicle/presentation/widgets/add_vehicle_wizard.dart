@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import '../../domain/entities/vehicle_draft.dart';
 import '../bloc/add_vehicle_bloc.dart';
 import '../bloc/add_vehicle_event.dart';
@@ -66,6 +68,7 @@ class _WizardBodyState extends State<WizardBody> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return BlocConsumer<AddVehicleBloc, AddVehicleState>(
       listenWhen: (prev, curr) =>
           prev.currentStep != curr.currentStep || prev.status != curr.status,
@@ -99,11 +102,11 @@ class _WizardBodyState extends State<WizardBody> {
               children: _steps,
             ),
             if (state.status == AddVehicleStatus.loading)
-              const Positioned.fill(
+              Positioned.fill(
                 child: ColoredBox(
-                  color: Color(0x66000000),
+                  color: colors.shadow.withValues(alpha: 0.4),
                   child: Center(
-                    child: CircularProgressIndicator(color: Color(0xFFE85A1A)),
+                    child: CircularProgressIndicator(color: colors.accent),
                   ),
                 ),
               ),
@@ -120,20 +123,26 @@ class _WizardCompletedPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.check_circle, color: Color(0xFF34C759), size: 28),
-              SizedBox(width: 12),
+            const HugeIcon(
+              icon: HugeIcons.strokeRoundedValidationApproval,
+              color: Color(0xFF34C759),
+              size: 28,
+              strokeWidth: 2.2,
+            ),
+              const SizedBox(width: 12),
               Text(
                 'Veicolo salvato',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: colors.textPrimary,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -141,9 +150,9 @@ class _WizardCompletedPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'Dati salvati in locale (SharedPreferences):',
-            style: TextStyle(color: Color(0xFF8E8E93), fontSize: 13),
+            style: TextStyle(color: colors.textSecondary, fontSize: 13),
           ),
           const SizedBox(height: 16),
           _DraftRow(label: 'Marca', value: draft.marca),
@@ -151,7 +160,7 @@ class _WizardCompletedPage extends StatelessWidget {
           _DraftRow(label: 'Anno', value: draft.anno?.toString()),
           _DraftRow(label: 'Carburante', value: draft.carburante),
           _DraftRow(label: 'Targa', value: draft.targa),
-          const Divider(color: Color(0xFF1C1C1E), height: 24),
+          Divider(color: colors.border, height: 24),
 
           _DraftRow(
             label: 'Km ult. tagliando',
@@ -162,11 +171,11 @@ class _WizardCompletedPage extends StatelessWidget {
             label: 'Km ult. distribuzione',
             value: draft.kmUltimaDistribuzione?.toString(),
           ),
-          const Divider(color: Color(0xFF1C1C1E), height: 24),
+          Divider(color: colors.border, height: 24),
           _DraftRow(label: 'Potenza (CV)', value: draft.potenzaCv?.toString()),
           _DraftRow(label: 'Cilindrata', value: draft.cilindrata?.toString()),
           _DraftRow(label: 'Km attuali', value: draft.kmAttuali?.toString()),
-          const Divider(color: Color(0xFF1C1C1E), height: 24),
+          Divider(color: colors.border, height: 24),
           _DraftRow(
             label: 'Prossima revisione',
             value: _fmtDate(draft.prossimarevisione),
@@ -187,7 +196,7 @@ class _WizardCompletedPage extends StatelessWidget {
             label: 'Intervallo inversione',
             value: draft.intervalloInversioneGomme?.toString(),
           ),
-          const Divider(color: Color(0xFF1C1C1E), height: 24),
+          Divider(color: colors.border, height: 24),
           _DraftRow(label: 'Foto path', value: draft.fotoFile?.path),
           _DraftRow(label: 'Codice meccanico', value: draft.codiceMeccanico),
           const SizedBox(height: 24),
@@ -218,6 +227,7 @@ class _DraftRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -227,14 +237,14 @@ class _DraftRow extends StatelessWidget {
             width: 160,
             child: Text(
               label,
-              style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 13),
+              style: TextStyle(color: colors.textSecondary, fontSize: 13),
             ),
           ),
           Expanded(
             child: Text(
               value == null || (value?.isEmpty ?? true) ? '—' : value!,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: colors.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -252,17 +262,23 @@ class _WizardErrorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.error_outline, color: Color(0xFFFF453A), size: 48),
+            const HugeIcon(
+              icon: HugeIcons.strokeRoundedAlert01,
+              color: Color(0xFFFF453A),
+              size: 48,
+              strokeWidth: 2.2,
+            ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Errore di salvataggio',
             style: TextStyle(
-              color: Colors.white,
+              color: colors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -271,7 +287,7 @@ class _WizardErrorPage extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Color(0xFF8E8E93), fontSize: 14),
+            style: TextStyle(color: colors.textSecondary, fontSize: 14),
           ),
           const SizedBox(height: 24),
           TextButton(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Banner informativo/di avviso condiviso tra gli step del wizard di
 /// registrazione: sfondo tenue colorato, icona in un badge quadrato
@@ -7,7 +9,7 @@ import 'package:flutter/material.dart';
 /// icona e testo passati dal chiamante.
 class StepInfoBanner extends StatelessWidget {
   final Color color;
-  final IconData icon;
+  final List<List> icon;
   final String text;
 
   const StepInfoBanner({
@@ -19,6 +21,7 @@ class StepInfoBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -34,14 +37,19 @@ class StepInfoBanner extends StatelessWidget {
               color: color,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: Icon(icon, color: Colors.white, size: 16),
+            child: HugeIcon(
+              icon: icon,
+              color: Colors.white,
+              size: 16,
+              strokeWidth: 2.2,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: Color(0xFF8E8E93),
+              style: TextStyle(
+                color: colors.textSecondary,
                 fontSize: 14,
                 fontWeight: FontWeight.normal,
                 height: 1.4,

@@ -1,6 +1,7 @@
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_event.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -159,7 +160,7 @@ class _AddVehicleFormStep3State extends State<AddVehicleFormStep3> {
           left: 0,
           right: 0,
           child: WizardHeader(
-            stepIcon: Icons.speed,
+    stepIcon: HugeIcons.strokeRoundedDashboardSpeed02,
             stepNumber: 2,
             totalSteps: 5,
             title: "Dettagli tecnici",
@@ -189,7 +190,7 @@ class _AddVehicleFormStep3State extends State<AddVehicleFormStep3> {
                     height: 60,
                     width: 180,
                     color: const Color(0xFFE85A1A),
-                    icon: Icons.chevron_right,
+              icon: HugeIcons.strokeRoundedArrowRight01,
                     onPressed: () {
                       setState(() => _submitted = true);
                       // Km attuali obbligatori: senza, non avanzo.

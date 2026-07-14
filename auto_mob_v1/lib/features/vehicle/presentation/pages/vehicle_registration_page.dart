@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import 'package:oc_liquid_glass/oc_liquid_glass.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../core/widgets/buttons/back_button.dart';
+import '../../../../core/theme/am_theme_colors.dart';
 import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
 import '../../../../core/widgets/hero/am_fab_hero.dart';
+import '../../../../core/widgets/progress/am_wizard_progress.dart';
 import '../bloc/vehicle_registration_bloc.dart';
 import '../bloc/vehicle_registration_event.dart';
 import '../bloc/vehicle_registration_state.dart';
 import '../widgets/registration/mechanic_step_view.dart';
 import '../widgets/registration/photo_step_view.dart';
 import '../widgets/registration/plate_step_view.dart';
-import '../widgets/registration/registration_step_progress.dart';
 import '../widgets/registration/verify_step_view.dart';
 import '../widgets/registration/work_log_step_view.dart';
 
@@ -29,15 +30,16 @@ class VehicleRegistrationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return BlocProvider(
       create: (_) =>
           GetIt.I<VehicleRegistrationBloc>()..add(RegistrationStarted()),
-      child: const Scaffold(
-        backgroundColor: Colors.black,
+      child: Scaffold(
+        backgroundColor: colors.background,
         // I bottoni in basso restano fissi anche quando si apre la
         // tastiera (niente "salita" insieme ad essa).
         resizeToAvoidBottomInset: false,
-        body: _RegistrationBody(),
+        body: const _RegistrationBody(),
       ),
     );
   }
@@ -119,6 +121,7 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
           prev.currentStep != curr.currentStep ||
           prev.lookupStatus != curr.lookupStatus,
       builder: (context, state) {
+        final colors = AmThemeColors.of(context);
         if (state.status == RegistrationStatus.completed) {
           return const _RegistrationCompletedView();
         }
@@ -126,62 +129,74 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
         return Column(
           children: [
             Padding(
-              padding: EdgeInsets.fromLTRB(20, topInset + 8, 20, 0),
-              child: Row(
-                children: [
-                  const Expanded(
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Center(
-                        child: Text(
-                          "REGISTRA VEICOLO",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black12,
-                                offset: Offset(1, 1),
-                                blurRadius: 2,
-                              ),
-                            ],
+              padding: EdgeInsets.only(top: topInset),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 4,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(width: 45, height: 45),
+                      ),
+                    ),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Text(
+                            "REGISTRA VEICOLO",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                              color: colors.textPrimary,
+                              shadows: [
+                                Shadow(
+                                  color: colors.shadow.withValues(alpha: 0.22),
+                                  offset: const Offset(1, 1),
+                                  blurRadius: 2,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  // Stesso tag Hero del "+" in home: l'icona vola tra i due.
-                  // Il proxy statico (arancione, +) evita di far volare lo
-                  // shader del bottone.
-                  AmFabHero(
-                    child: OCLiquidGlassGroup(
-                      settings: const OCLiquidGlassSettings(
-                        refractStrength: -0.130,
-                        blurRadiusPx: 1.0,
-                        specStrength: 0,
-                        specWidth: 0.0,
-                        specAngle: 145,
-                        blendPx: 70,
-                        specPower: 10,
-                      ),
-                      child: AmSoftButton(
-                        width: 45,
-                        height: 45,
-                        color: const  Color(0xFFFF6B00),
-                        icon: Icons.close,
-                        onPressed: () => context.pop(),
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: AmFabHero(
+                          child: SizedBox(
+                            width: 45,
+                            height: 45,
+                          child: AmSoftButton(
+                            width: 45,
+                            height: 45,
+                            color: const Color(0xFFFF6B00),
+                            icon: HugeIcons.strokeRoundedAdd01,
+                            iconTurns: 0.125,
+                            onPressed: () => context.pop(),
+                          ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            RegistrationStepProgress(
+            AmWizardProgress(
               steps: _stepLabels,
               currentStep: state.currentStep,
-              activeColor: _arancione,
+              color: _arancione,
+              indicatorAsset: 'lib/assets/icons/car_red.svg',
             ),
             Expanded(
               child: PageView(
@@ -265,8 +280,8 @@ class _RegistrationBottomBar extends StatelessWidget {
                   height: 52,
                   child: AmOutlinedButton(
                     label: 'INDIETRO',
-                    color: const Color(0xFFE85A1A).withValues(alpha: 0.5),
-                    fillColor: const Color(0xFF151517),
+                    color: const Color(0xFFE85A1A),
+                    fillColor: Colors.transparent,
                     onPressed: onBack,
                   ),
                 ),
@@ -300,28 +315,34 @@ class _RegistrationCompletedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle, color: Color(0xFF34C759), size: 64),
+            const HugeIcon(
+              icon: HugeIcons.strokeRoundedValidationApproval,
+              color: Color(0xFF34C759),
+              size: 64,
+              strokeWidth: 2.2,
+            ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Veicolo registrato',
               style: TextStyle(
-                color: Colors.white,
+                color: colors.textPrimary,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               'Solo anteprima front-end: nessun dato e\' stato ancora salvato.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF8E8E93),
+                color: colors.textSecondary,
                 fontSize: 14,
                 height: 1.4,
               ),

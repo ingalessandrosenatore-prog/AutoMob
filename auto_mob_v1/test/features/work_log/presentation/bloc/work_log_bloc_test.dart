@@ -219,4 +219,18 @@ void main() {
           .having((s) => s.errorMessage, 'errorMessage', const ServerFailure().message),
     ],
   );
+
+  blocTest<WorkLogBloc, WorkLogState>(
+    'WorkLogWizardStepChanged aggiorna lo step e lo mantiene tra 0 e 2',
+    build: buildBloc,
+    act: (bloc) {
+      bloc
+        ..add(WorkLogWizardStepChanged(1))
+        ..add(WorkLogWizardStepChanged(8));
+    },
+    expect: () => [
+      isA<WorkLogState>().having((state) => state.currentStep, 'currentStep', 1),
+      isA<WorkLogState>().having((state) => state.currentStep, 'currentStep', 2),
+    ],
+  );
 }

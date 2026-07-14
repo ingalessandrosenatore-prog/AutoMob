@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../../core/widgets/blur/am_edge_blur.dart';
@@ -70,8 +71,8 @@ class PlateStepViewState extends State<PlateStepView> {
               child: Image.asset(
                 _logoOfficinaDefault,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Icon(
-                  Icons.build_circle_outlined,
+                errorBuilder: (context, error, stackTrace) => const HugeIcon(
+                  icon: HugeIcons.strokeRoundedWrench01,
                   color: _accent,
                   size: 48,
                 ),

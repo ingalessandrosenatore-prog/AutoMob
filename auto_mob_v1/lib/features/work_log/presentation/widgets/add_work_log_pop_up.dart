@@ -11,6 +11,7 @@ import 'package:auto_mob_v1/features/work_log/presentation/widgets/am_expand_con
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../core/widgets/card/pup_up_head_card.dart';
 import '../../../../core/widgets/input/date_picker_field.dart';
@@ -128,7 +129,7 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                   child: Container(
                     color: Colors.transparent,
                     child: WizardHeader(
-                      stepIcon: Icons.add_circle_outline,
+                      stepIcon: HugeIcons.strokeRoundedAddCircle,
                       stepNumber: _currentPage + 1,
                       totalSteps: 2,
                       title: "Aggiungi intervento",
@@ -194,7 +195,9 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                                   : () {
                                       context.read<WorkLogBloc>().add(OnSubmitEvent(id: widget.id));
                                     },
-                              icon: _currentPage == 0 ? Icons.arrow_forward_ios_outlined : Icons.add_task,
+                              icon: _currentPage == 0
+                                  ? HugeIcons.strokeRoundedArrowRight01
+                                  : HugeIcons.strokeRoundedAddToList,
                               width: double.infinity,
                               height: 60,
                             ),

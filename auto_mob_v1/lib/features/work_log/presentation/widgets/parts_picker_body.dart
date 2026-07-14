@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../bloc/work_log_bloc.dart';
 import '../bloc/work_log_event.dart';
@@ -42,7 +43,12 @@ class _PartsPickerBodyState extends State<PartsPickerBody> {
             decoration: InputDecoration(
               hintText: 'Cerca pezzo...',
               hintStyle: const TextStyle(color: Color(0xFF636366)),
-              prefixIcon: const Icon(Icons.search, color: Color(0xFF636366)),
+              prefixIcon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedSearch01,
+                color: Color(0xFF636366),
+                size: 18,
+                strokeWidth: 2.2,
+              ),
               filled: true,
               fillColor: const Color(0xFF151517),
               contentPadding: const EdgeInsets.symmetric(vertical: 0),

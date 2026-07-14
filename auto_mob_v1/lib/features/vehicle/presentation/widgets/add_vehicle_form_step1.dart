@@ -1,5 +1,6 @@
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import 'package:flutter/material.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/blur/am_edge_blur.dart';
@@ -231,7 +232,7 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
           right: 0,
           left: 0,
           child: WizardHeader(
-            stepIcon: Icons.directions_car,
+      stepIcon: HugeIcons.strokeRoundedGarage,
             stepNumber: 1,
             totalSteps: 5,
             title: "Il tuo veicolo",
@@ -249,7 +250,7 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
               height: 60,
               width: 180,
               color: const Color(0xFFE85A1A),
-              icon: Icons.chevron_right,
+              icon: HugeIcons.strokeRoundedArrowRight01,
               onPressed: () {
                 setState(() => _submitted = true);
                 // Controllo i campi obbligatori; se ne manca uno, avviso e non avanzo.

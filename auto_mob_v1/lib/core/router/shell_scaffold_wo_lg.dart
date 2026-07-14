@@ -7,12 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Voce della barra di navigazione.
 class _NavItem {
   final String route;
-  final IconData icon;
-  final IconData activeIcon;
+  final List<List> icon;
+  final List<List> activeIcon;
   final String label;
 
   const _NavItem({
@@ -70,20 +71,20 @@ class _ShellScaffoldState extends State<ShellScaffold>
   static const List<_NavItem> _items = [
     _NavItem(
       route: '/home',
-      icon: Icons.home_outlined,
-      activeIcon: Icons.home_filled,
+      icon: HugeIcons.strokeRoundedGarage,
+      activeIcon: HugeIcons.strokeRoundedGarage,
       label: 'GARAGE',
     ),
     _NavItem(
       route: '/lavori',
-      icon: Icons.build_outlined,
-      activeIcon: Icons.build,
+      icon: HugeIcons.strokeRoundedTransactionHistory,
+      activeIcon: HugeIcons.strokeRoundedTransactionHistory,
       label: 'LAVORI',
     ),
     _NavItem(
       route: '/servizi',
-      icon: Icons.list_sharp,
-      activeIcon: Icons.list,
+      icon: HugeIcons.strokeRoundedOffice,
+      activeIcon: HugeIcons.strokeRoundedOffice,
       label: 'SERVIZ',
     ),
   ];
@@ -535,8 +536,8 @@ class GrainPainter extends CustomPainter {
 }
 
 class AmNavItem extends StatelessWidget {
-  final IconData icon;
-  final IconData iconIsActive;
+  final List<List> icon;
+  final List<List> iconIsActive;
   final Color iconColor;
   final double iconSize;
   final Color iconColoractive;
@@ -581,10 +582,11 @@ class AmNavItem extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                isSelect ? iconIsActive : icon,
+              HugeIcon(
+                icon: isSelect ? iconIsActive : icon,
                 size: iconSize,
                 color: isSelect ? iconColoractive : iconColor,
+                strokeWidth: 2.2,
               ),
               Text(
                 lable,
