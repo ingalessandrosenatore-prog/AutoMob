@@ -46,6 +46,7 @@ class AmPullDownLG extends StatefulWidget {
 class _AmPullDownLGState extends State<AmPullDownLG>
     with TickerProviderStateMixin {
   late final AnimationController bounceCtrl;
+  late final AnimationController transistionCtrl;
   late final AnimationController lightCtrl;
   late final AnimationController morpheCtrl;
   final GlobalKey _triggerKey = GlobalKey();
@@ -70,6 +71,7 @@ class _AmPullDownLGState extends State<AmPullDownLG>
   void initState() {
     super.initState();
     bounceCtrl = AnimationController.unbounded(vsync: this, value: 1.0);
+    transistionCtrl =   AnimationController.unbounded(vsync: this, value: 1.0);
     lightCtrl = AnimationController(vsync: this, value: 0.0);
     morpheCtrl = AnimationController.unbounded(vsync: this, value: 0);
     morpheCtrl.addListener(_onMorphChange);
@@ -81,6 +83,7 @@ class _AmPullDownLGState extends State<AmPullDownLG>
     bounceCtrl.dispose();
     lightCtrl.dispose();
     morpheCtrl.dispose();
+    transistionCtrl.dispose();
     super.dispose();
   }
 

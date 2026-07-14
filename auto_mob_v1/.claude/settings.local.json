@@ -16,7 +16,11 @@
       "PowerShell(./tool/ship.ps1 \"fix: AmPullDownLG chiusura senza rimbalzo residuo \\(pop appena invisibile, non a molla settata\\) + overflow testo item durante apertura\")",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Expand-Archive *)",
+      "PowerShell($sp = \"C:\\\\Users\\\\alexs\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-alexs-Documents-GitHub-AutoMob-auto-mob-v1\\\\2e59b1b4-0e64-4aa8-a11b-b9e13f23e3e4\\\\scratchpad\"; $ff = \"$sp\\\\ffmpeg\\\\ffmpeg-8.1.2-essentials_build\\\\bin\"; $vid = \"C:\\\\Users\\\\alexs\\\\AppData\\\\Local\\\\Packages\\\\Microsoft.ScreenSketch_8wekyb3d8bbwe\\\\TempState\\\\Recordings\\\\20260714-0936-08.9756730.mp4\"; & \"$ff\\\\ffprobe.exe\" -v error -select_streams v:0 -show_entries \"stream=width,height,r_frame_rate,duration,nb_frames\" -of default $vid)",
+      "PowerShell(New-Item *)"
     ]
   },
   "skillOverrides": {
