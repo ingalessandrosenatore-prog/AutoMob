@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+const _notProvided = Object();
+
 /// Una parte selezionata dentro un intervento.
 /// Corrisponde 1:1 a una riga di `maintenance_item_parts` sul DB.
 ///
@@ -22,14 +24,16 @@ class SelectedPart extends Equatable {
   SelectedPart copyWith({
     int? partId,
     double? quantity,
-    double? unitPrice,
-    String? note,
+    Object? unitPrice = _notProvided,
+    Object? note = _notProvided,
   }) {
     return SelectedPart(
       partId: partId ?? this.partId,
       quantity: quantity ?? this.quantity,
-      unitPrice: unitPrice ?? this.unitPrice,
-      note: note ?? this.note,
+      unitPrice: identical(unitPrice, _notProvided)
+          ? this.unitPrice
+          : unitPrice as double?,
+      note: identical(note, _notProvided) ? this.note : note as String?,
     );
   }
 

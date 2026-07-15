@@ -114,185 +114,212 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
       builder: (context, state) {
         final loading = state.status == KmUpdateStatus.loading;
         final attivo = _valido && !loading;
+        final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
+        final mediaSize = MediaQuery.sizeOf(context);
+        final topSafeArea = MediaQuery.paddingOf(context).top;
+        final maxModalHeight =
+            (mediaSize.height - keyboardHeight - topSafeArea - 12)
+                .clamp(0.0, mediaSize.height)
+                .toDouble();
 
-        return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(50)),
-          child: Container(
-            decoration: BoxDecoration(
-              color: colors.background,
-              border: Border(top: BorderSide(color: colors.border)),
-              boxShadow: [
-                BoxShadow(
-                  color: colors.shadow,
-                  blurRadius: 28,
-                  offset: const Offset(0, -8),
-                ),
-              ],
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Aggiorna chilometri",
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.pop(),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: colors.surfaceRaised,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: colors.info.withValues(alpha: 0.35),
-                            width: 1,
-                          ),
-                        ),
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedCancel01,
-                  color: colors.info,
-                  size: 20,
-                  strokeWidth: 2.2,
-                ),
-                      ),
+        return AnimatedPadding(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.only(bottom: keyboardHeight),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxModalHeight),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(50),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.background,
+                  border: Border(top: BorderSide(color: colors.border)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.shadow,
+                      blurRadius: 28,
+                      offset: const Offset(0, -8),
                     ),
                   ],
                 ),
-                const SizedBox(height: 40),
-
-                // Chilometraggio attuale (sempre visibile)
-                Text(
-                  "Chilometraggio attuale   ",
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
                   ),
-                ),
-                const SizedBox(height: 12),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      color: colors.accent,
-                      fontSize: 42,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      TextSpan(text: '$_kmAttuali'),
-                      const TextSpan(
-                        text: " km",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Campo nuovo chilometraggio (con validazione in tempo reale)
-                Row(
-                  children: [
-                    AmTextField(
-                      label: "NUOVO CHILOMETRAGGIO",
-                      placeholder: "${_kmAttuali + 100}",
-                      controller: _nuovoKmController,
-                      isRequired: true,
-                      obscureText: false,
-                      keyboardType: TextInputType.number,
-                      onChanged: _onChanged,
-                      errorText: _errore,
-                      suffixIcon: Padding(
-                        padding: const EdgeInsets.only(right: 16, top: 18),
-                        child: Text(
-                          "km",
-                          style: TextStyle(
-                            color: colors.textSecondary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Messaggio informativo
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceRaised,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Row(
-                    children: [
-                        // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
-                        Icon(Icons.bolt, color: colors.accent, size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          "Il meccanico collegato riceverà una notifica dell'aggiornamento.",
-                          style: TextStyle(
-                            color: colors.textSecondary,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 40),
-
-                // Bottone di azione (attivo solo se il nuovo km e' valido)
-                GestureDetector(
-                  onTap: attivo ? _salva : null,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: double.infinity,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: colors.accent.withValues(
-                        alpha: attivo ? 1.0 : 0.32,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    alignment: Alignment.center,
-                    child: loading
-                        ? SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              color: colors.onMedia,
-                              strokeWidth: 2.5,
-                            ),
-                          )
-                        : Text(
-                            "Salva aggiornamento",
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Aggiorna chilometri",
                             style: TextStyle(
-                              color: attivo
-                                  ? colors.onMedia
-                                  : colors.textSecondary,
-                              fontSize: 16,
+                              color: colors.textPrimary,
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          GestureDetector(
+                            onTap: () => context.pop(),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: colors.surfaceRaised,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: colors.info.withValues(alpha: 0.35),
+                                  width: 1,
+                                ),
+                              ),
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedCancel01,
+                                color: colors.info,
+                                size: 20,
+                                strokeWidth: 2.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 40),
+
+                      // Chilometraggio attuale (sempre visibile)
+                      Text(
+                        "Chilometraggio attuale   ",
+                        style: TextStyle(
+                          color: colors.textSecondary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            color: colors.accent,
+                            fontSize: 42,
+                            fontWeight: FontWeight.w900,
+                          ),
+                          children: [
+                            TextSpan(text: '$_kmAttuali'),
+                            const TextSpan(
+                              text: " km",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+
+                      // Campo nuovo chilometraggio (con validazione in tempo reale)
+                      Row(
+                        children: [
+                          AmTextField(
+                            label: "NUOVO CHILOMETRAGGIO",
+                            placeholder: "${_kmAttuali + 100}",
+                            controller: _nuovoKmController,
+                            isRequired: true,
+                            obscureText: false,
+                            keyboardType: TextInputType.number,
+                            onChanged: _onChanged,
+                            errorText: _errore,
+                            suffixIcon: Padding(
+                              padding: const EdgeInsets.only(
+                                right: 16,
+                                top: 18,
+                              ),
+                              child: Text(
+                                "km",
+                                style: TextStyle(
+                                  color: colors.textSecondary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Messaggio informativo
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceRaised,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: colors.border),
+                        ),
+                        child: Row(
+                          children: [
+                            // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
+                            Icon(Icons.bolt, color: colors.accent, size: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                "Il meccanico collegato riceverà una notifica dell'aggiornamento.",
+                                style: TextStyle(
+                                  color: colors.textSecondary,
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+
+                      // Bottone di azione (attivo solo se il nuovo km e' valido)
+                      GestureDetector(
+                        onTap: attivo ? _salva : null,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: double.infinity,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: colors.accent.withValues(
+                              alpha: attivo ? 1.0 : 0.32,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          alignment: Alignment.center,
+                          child: loading
+                              ? SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: colors.onMedia,
+                                    strokeWidth: 2.5,
+                                  ),
+                                )
+                              : Text(
+                                  "Salva aggiornamento",
+                                  style: TextStyle(
+                                    color: attivo
+                                        ? colors.onMedia
+                                        : colors.textSecondary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 10),
-              ],
+              ),
             ),
           ),
         );

@@ -68,13 +68,7 @@ class ServiceDateChange extends WorkLogEvent {
   List<Object?> get props => [date];
 }
 
-class OnSubmitEvent extends WorkLogEvent {
-  final String id;
-  OnSubmitEvent({required this.id});
-
-  @override
-  List<Object?> get props => [id];
-}
+class OnSubmitEvent extends WorkLogEvent {}
 
 class OnWorkTypeChange extends WorkLogEvent {
   final EnumPopUp type;
@@ -111,3 +105,14 @@ class UpdatePartItemEvent extends WorkLogEvent {
   @override
   List<Object?> get props => [item];
 }
+
+class PartsQueryChanged extends WorkLogEvent {
+  final String query;
+
+  PartsQueryChanged({required this.query});
+
+  @override
+  List<Object?> get props => [query];
+}
+
+class WorkLogValidationRequested extends WorkLogEvent {}

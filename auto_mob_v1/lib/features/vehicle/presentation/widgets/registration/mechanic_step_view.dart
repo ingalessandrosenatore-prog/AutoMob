@@ -7,6 +7,7 @@ import '../../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../../core/widgets/input/textfield.dart';
 import '../../bloc/vehicle_registration_bloc.dart';
 import '../../bloc/vehicle_registration_event.dart';
+import '../../bloc/vehicle_registration_state.dart';
 
 /// Step 1 — codice del meccanico di fiducia (opzionale). Per ora solo il
 /// percorso "ho un meccanico" e' abilitato: il bottone "Non ho meccanico"
@@ -57,6 +58,7 @@ class MechanicStepViewState extends State<MechanicStepView> {
     final colors = AmThemeColors.of(context);
     return AmEdgeBlur(
       child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
         child: Column(
           children: [
@@ -102,16 +104,22 @@ class MechanicStepViewState extends State<MechanicStepView> {
               ],
             ),
             const SizedBox(height: 16),
-            Opacity(
-              opacity: 0.4,
-              child: IgnorePointer(
-                child: TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'Non ho un meccanico',
-                    style: TextStyle(color: colors.textPrimary, fontSize: 14),
+            BlocBuilder<VehicleRegistrationBloc, VehicleRegistrationState>(
+              builder: (context, state) => Column(
+                children: [
+                  TextButton(
+                    onPressed:
+                        state.mechanicStatus == MechanicLookupStatus.loading
+                        ? null
+                        : () => context.read<VehicleRegistrationBloc>().add(
+                            RegistrationWithoutMechanicPressed(),
+                          ),
+                    child: Text(
+                      'Non ho un meccanico',
+                      style: TextStyle(color: colors.textPrimary, fontSize: 14),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ],

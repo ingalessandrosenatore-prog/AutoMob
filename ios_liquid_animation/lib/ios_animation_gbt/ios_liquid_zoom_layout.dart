@@ -106,6 +106,13 @@ final class IosLiquidPopupLayout extends IosLiquidZoomLayout {
     required EdgeInsets safeArea,
     required Rect sourceRect,
   }) {
+    if (size.width <= 0 || size.height <= 0) {
+      throw ArgumentError.value(
+        size,
+        'size',
+        'Deve avere dimensioni positive.',
+      );
+    }
     final sourcePoint =
         sourceRect.center +
         Offset(

@@ -1,7 +1,6 @@
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
-import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_add_button.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_item_card.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +13,7 @@ import 'package:auto_mob_v1/core/config/performance_flags.dart';
 import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
+import '../../../../core/widgets/buttons/soft_button.dart';
 import '../../domain/entities/vehicle_option.dart';
 import '../../domain/entities/work_log_row.dart';
 import '../bloc/work_log_history_bloc.dart';
@@ -210,10 +210,10 @@ class _WorkLogHistoryBodyState extends State<_WorkLogHistoryBody> {
               edges: [
                 EdgeBlur(
                   type: EdgeType.topEdge,
-                  size: 130,
+                  size: 60,
                   sigma: 10,
                   controlPoints: [
-                    ControlPoint(position: 0.3, type: ControlPointType.visible),
+                    ControlPoint(position: 0.6, type: ControlPointType.visible),
                     ControlPoint(
                       position: 1.0,
                       type: ControlPointType.transparent,
@@ -351,13 +351,29 @@ class _AppBarContent extends StatelessWidget {
                       break;
                     }
                   }
-                  return WorkLogAddButton(
-                    vehicle: selected,
-                    onMissingVehicle: () =>
-                        context.pushNamed('aggiungi_veicolo'),
-                    onSaved: () => context.read<WorkLogHistoryBloc>().add(
-                      const ReloadCurrent(),
-                    ),
+                  final selectedVehicle = selected;
+
+                  return AmSoftButton(
+                    width: 45,
+                    height: 45,
+                    color: const Color(0xFFFF6B00),
+                    icon: HugeIcons.strokeRoundedAdd01,
+                    onPressed: selectedVehicle == null
+                        ? null
+                        : () async {
+                            final created = await context.pushNamed<bool>(
+                              'aggiungi_lavoro',
+                              extra: {
+                                'vehicleId': selectedVehicle.id,
+                                'currentKm': selectedVehicle.km,
+                              },
+                            );
+                            if (created == true && context.mounted) {
+                              context.read<WorkLogHistoryBloc>().add(
+                                const ReloadCurrent(),
+                              );
+                            }
+                          },
                   );
                 },
               ),
@@ -377,6 +393,8 @@ class _VehicleDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+
     VehicleOption? selected;
     for (final v in state.vehicles) {
       if (v.id == state.selectedVehicleId) {
@@ -391,7 +409,8 @@ class _VehicleDropdown extends StatelessWidget {
             icon: HugeIcons.strokeRoundedCar05,
             text: v.nome.isEmpty ? v.targa : v.nome,
             iconSize: 22,
-            iconColor: _orange,
+            iconColor: colors.info,
+            textColor: colors.textPrimary,
             iconsWheight: FontWeight.w100,
             onTap: () {
               context.read<WorkLogHistoryBloc>().add(VehicleChanged(v.id));
@@ -405,14 +424,17 @@ class _VehicleDropdown extends StatelessWidget {
       brand: selected?.brand ?? '',
       onTap: () {},
       lable: selected?.nome ?? 'VEICOLO',
+      backgroundColor: colors.surfaceRaised,
+      popupBackgroundColor: colors.surfaceRaised,
       larghezza: 200,
       buttonIcons: HugeIcons.strokeRoundedCar05,
       buttonIconsSize: 20,
-      buttonIconColor: Colors.white,
-      buttonLableStyle: const TextStyle(
+      iconColor: colors.textPrimary,
+      textColor: colors.textPrimary,
+      buttonLableStyle: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w900,
-        color: Colors.white,
+        color: colors.textPrimary,
       ),
       arrow: true,
       children: children,

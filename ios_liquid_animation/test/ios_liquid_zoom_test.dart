@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:auto_mob_v1/core/ios_animation_gbt/ios_animation_gbt.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ios_liquid_animation/ios_liquid_animation.dart';
 
 void main() {
   group('IosLiquidZoom', () {

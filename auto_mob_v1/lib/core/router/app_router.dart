@@ -131,7 +131,6 @@ class AppRouter {
             child: WorkLogWizardPage(
               vehicleId: extra['vehicleId'] as String,
               currentKm: extra['currentKm'] as int,
-              heroTag: extra['heroTag'] as String,
             ),
           );
         },

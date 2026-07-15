@@ -12,7 +12,7 @@ abstract class VehicleRemoteDataSource {
   /// tramite l'RPC `crea_veicolo_con_storico` (una sola transazione: o si
   /// salva tutto o niente). L'ownerId NON viene inviato: lo imposta l'RPC
   /// da auth.uid() (l'utente loggato).
-  Future<void> saveVehicle(VehicleDraft draft);
+  Future<String> saveVehicle(VehicleDraft draft);
 
   /// Lista veicoli accessibili dall'utente corrente (RLS filtra per owner_id).
   Future<List<VehicleModel>> getVehicles();
@@ -30,8 +30,23 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
 
   VehicleRemoteDataSourceImpl({required this.supabaseClient});
 
+  /// Converte le etichette dettagliate della UI nei valori canonici ammessi
+  /// dal vincolo `vehicles.fuel_valid`.
+  static String? normalizeFuel(String? value) {
+    final fuel = value?.trim().toLowerCase();
+    if (fuel == null || fuel.isEmpty) return null;
+    if (fuel.contains('ibrido')) return 'ibrido';
+    if (fuel.contains('gpl')) return 'gpl';
+    if (fuel.contains('metano') || fuel.contains('cng')) return 'metano';
+    if (fuel.contains('idrogeno')) return 'idrogeno';
+    if (fuel.contains('elettrico')) return 'elettrico';
+    if (fuel.contains('diesel')) return 'diesel';
+    if (fuel.contains('benzina')) return 'benzina';
+    return fuel;
+  }
+
   @override
-  Future<void> saveVehicle(VehicleDraft draft) async {
+  Future<String> saveVehicle(VehicleDraft draft) async {
     if (owner_id == null) {
       throw const ServerException('Utente non autenticato');
     }
@@ -39,10 +54,11 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     try {
       // Una sola chiamata: l'RPC inserisce veicolo + record + item in
       // transazione. Se qualcosa fallisce, il DB fa rollback di tutto.
-      await supabaseClient.rpc(
+      final result = await supabaseClient.rpc(
         'crea_veicolo_con_storico',
         params: {'p_payload': toSupabasePayload(draft)},
       );
+      return result.toString();
     } on PostgrestException catch (e) {
       throw VehicleDataSourceException(e.message, code: e.code);
     } on SocketException {
@@ -124,7 +140,7 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       'brand': draft.marca?.toLowerCase(),
       'model': draft.modello?.toLowerCase(),
       'year': draft.anno,
-      'fuel': draft.carburante?.toLowerCase(),
+      'fuel': normalizeFuel(draft.carburante),
       'km_current': draft.kmAttuali ?? 0,
       'power_cv': draft.potenzaCv,
       'displacement_cc': draft.cilindrata,
@@ -152,6 +168,12 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
         },
     ];
 
-    return {'veicolo': veicolo, 'lavori': lavori};
+    return {
+      'veicolo': veicolo,
+      'lavori': lavori,
+      'mechanic_id': draft.meccanicoId,
+      'mechanic_code': draft.codiceMeccanico,
+      'lookup_id': draft.lookupId,
+    };
   }
 }

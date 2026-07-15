@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/features/work_log/domain/entities/selected_part.dart';
 import 'package:auto_mob_v1/features/work_log/domain/usecases/create_work_log.dart';
@@ -9,8 +10,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
   final CreateWorkLog createWorkLog;
+  final String vehicleId;
 
-  WorkLogBloc({required this.createWorkLog}) : super(WorkLogState.initial()) {
+  WorkLogBloc({required this.createWorkLog, required this.vehicleId})
+    : super(WorkLogState.initial()) {
     on<WorkLogEventCohiceTap>(_onTapOnChoice);
     on<OnSubmitEvent>(_onSubmitEvent);
     on<InitKm>(_onInitKm);
@@ -23,6 +26,8 @@ class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
     on<RemovePartEvent>(_onRemovePart);
     on<UpdatePartItemEvent>(_onUpdatePartItem);
     on<WorkLogWizardStepChanged>(_onWizardStepChanged);
+    on<PartsQueryChanged>(_onPartsQueryChanged);
+    on<WorkLogValidationRequested>(_onValidationRequested);
   }
 
   FutureOr<void> _onTapOnChoice(
@@ -50,6 +55,7 @@ class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
         state.copyWith(
           status: WorkLogStatus.failure,
           errorMessage: 'Inserisci un nome per l\'intervento "Altro"',
+          errorCode: 'validation_error',
         ),
       );
       return;
@@ -62,14 +68,21 @@ class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
           status: WorkLogStatus.failure,
           errorMessage:
               'I km del lavoro non possono essere inferiori agli attuali (${state.vehicleKm} km)',
+          errorCode: 'validation_error',
         ),
       );
       return;
     }
 
-    emit(state.copyWith(status: WorkLogStatus.loading, errorMessage: null));
+    emit(
+      state.copyWith(
+        status: WorkLogStatus.loading,
+        errorMessage: null,
+        errorCode: null,
+      ),
+    );
     final res = await createWorkLog(
-      vehicleId: event.id,
+      vehicleId: vehicleId,
       type: state.type.dbValue,
       customName: isAltro ? customNameTrimmed : null,
       serviceKm: state.currentKm,
@@ -80,9 +93,19 @@ class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
     );
     res.fold(
       (f) => emit(
-        state.copyWith(status: WorkLogStatus.failure, errorMessage: f.message),
+        state.copyWith(
+          status: WorkLogStatus.failure,
+          errorMessage: f.message,
+          errorCode: f is CodedServerFailure ? f.code : 'network_error',
+        ),
       ),
-      (_) => emit(state.copyWith(status: WorkLogStatus.success)),
+      (_) => emit(
+        state.copyWith(
+          status: WorkLogStatus.success,
+          errorMessage: null,
+          errorCode: null,
+        ),
+      ),
     );
   }
 
@@ -170,5 +193,19 @@ class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
     Emitter<WorkLogState> emit,
   ) {
     emit(state.copyWith(currentStep: event.step.clamp(0, 2).toInt()));
+  }
+
+  void _onPartsQueryChanged(
+    PartsQueryChanged event,
+    Emitter<WorkLogState> emit,
+  ) {
+    emit(state.copyWith(partsQuery: event.query));
+  }
+
+  void _onValidationRequested(
+    WorkLogValidationRequested event,
+    Emitter<WorkLogState> emit,
+  ) {
+    emit(state.copyWith(showValidationErrors: true));
   }
 }

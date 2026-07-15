@@ -58,6 +58,13 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   // chiudere prima di mostrarne un altro (evita pop-up sovrapposti).
   bool _dialogOpen = false;
 
+  Future<void> _openVehicleRegistration() async {
+    final saved = await context.pushNamed<bool>('aggiungi_veicolo');
+    if (saved == true && mounted) {
+      context.read<DashboardBloc>().add(DashboardRefreshRequested());
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -151,7 +158,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
             filled: true,
             onPressed: () {
               _closeDialogIfOpen();
-              context.pushNamed('aggiungi_veicolo');
+              _openVehicleRegistration();
             },
           ),
         ],
@@ -178,10 +185,15 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 brand: '',
                 lable: '',
                 onTap: () {},
+                backgroundColor: colors.surfaceRaised.withValues(alpha: 0.7),
+                popupBackgroundColor: colors.surfaceRaised.withValues(
+                  alpha: 0.7,
+                ),
                 larghezza: 180,
                 buttonIcons: HugeIcons.strokeRoundedMoreHorizontalCircle02,
                 buttonIconsSize: 26,
-                buttonIconColor: colors.textPrimary,
+                iconColor: colors.textPrimary,
+                textColor: colors.textPrimary,
                 buttonLableStyle: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w900,
@@ -196,7 +208,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                       await GetIt.I<AuthRepository>().logout();
                       if (context.mounted) context.go('/login');
                     },
-                    iconColor: const Color(0xFF3192F3),
+                    iconColor: colors.info,
+                    textColor: colors.textPrimary,
                     iconSize: 22,
                     iconsWheight: FontWeight.w400,
                   ),
@@ -204,7 +217,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                     icon: HugeIcons.strokeRoundedSettings01,
                     text: "SETTINGS",
                     onTap: () => context.push('/settings'),
-                    iconColor: const Color(0xFF3192F3),
+                    iconColor: colors.info,
+                    textColor: colors.textPrimary,
                     iconSize: 22,
                     iconsWheight: FontWeight.w400,
                   ),
@@ -243,9 +257,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 height: 45,
                 color: const Color(0xFFFF6B00),
                 icon: HugeIcons.strokeRoundedAdd01,
-                onPressed: () {
-                  context.pushNamed('aggiungi_veicolo');
-                },
+                onPressed: _openVehicleRegistration,
               ),
             ),
           ),
@@ -374,7 +386,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                           // solo a textScale/dimensioni schermo, senza numeri magici.
                           final measure = vehicles.first;
                           return Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: const EdgeInsets.all(9.0),
                             child: Column(
                               children: [
                                 Stack(
@@ -561,7 +573,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                     ),
 
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 9.0),
                       child: BlocBuilder<DashboardBloc, DashboardState>(
                         builder: (BuildContext context, state) {
                           // I KPI sono gia' pronti nello stato: il calcolo lo fa il
@@ -602,8 +614,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                     //  const SizedBox(height: 110),
                     Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 14.0,
-                        vertical: 8,
+                        horizontal: 9.0,
+                        vertical: 9.0,
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -632,7 +644,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
 
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 9.0),
                       child: Row(
                         spacing: 8,
                         children: [

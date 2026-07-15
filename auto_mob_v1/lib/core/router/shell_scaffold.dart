@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
+import '../config/performance_flags.dart';
 import '../theme/am_theme_colors.dart';
 
 class _NavItem {
@@ -56,12 +58,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
       activeIcon: HugeIcons.strokeRoundedTransactionHistory,
       label: 'Lavori',
     ),
-    _NavItem(
-      route: '/servizi',
-      icon: HugeIcons.strokeRoundedOffice,
-      activeIcon: HugeIcons.strokeRoundedOffice,
-      label: 'Servizi',
-    ),
+
   ];
 
   @override
@@ -93,12 +90,43 @@ class _ShellScaffoldState extends State<ShellScaffold>
     final selected = widget.navigationShell.currentIndex;
     final colors = AmThemeColors.of(context);
 
-    final larghezzaSchermo = MediaQuery.sizeOf(context).width;
-    final margine = (larghezzaSchermo * 12) / 100;
-    const maxLarghezza = 500.0;
+    const iconSize = 22.0;
+    const selectedHorizontalPadding = 16.0;
+    const unselectedHorizontalPadding = 12.0;
+    const labelGap = 8.0;
+    const itemGap = 8.0;
+    const barHorizontalPadding = 3.0;
+    const labelStyle = TextStyle(
+      fontWeight: FontWeight.w700,
+      fontSize: 14.5,
+      letterSpacing: 0.3,
+    );
+
+    final textDirection = Directionality.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final maxSelectedItemWidth = _items.fold<double>(0, (maxWidth, item) {
+      final painter = TextPainter(
+        text: TextSpan(text: item.label, style: labelStyle),
+        textDirection: textDirection,
+        textScaler: textScaler,
+      )..layout();
+      final itemWidth =
+          iconSize + labelGap + painter.width + selectedHorizontalPadding * 2;
+      return math.max(maxWidth, itemWidth);
+    });
+    const unselectedItemWidth = iconSize + unselectedHorizontalPadding * 2;
+    final gapsWidth = math.max(0, _items.length - 1) * itemGap;
+
+    // Riserva lo spazio per un solo elemento aperto e per gli altri compatti:
+    // la pillola dipende dal numero di tab, ma non cambia larghezza al tap.
+    final preferredBarWidth =
+        barHorizontalPadding * 2 +
+        maxSelectedItemWidth +
+        unselectedItemWidth * math.max(0, _items.length - 1) +
+        gapsWidth;
     final larghezzaBarra = math.min(
-      larghezzaSchermo - 3 * margine,
-      maxLarghezza,
+      preferredBarWidth,
+      MediaQuery.sizeOf(context).width - 32,
     );
 
     void goTo(int index) {
@@ -130,47 +158,75 @@ class _ShellScaffoldState extends State<ShellScaffold>
                   onPointerDown: (_) => _onPress(),
                   onPointerUp: (_) => _onRelese(),
                   onPointerCancel: (_) => _onRelese(),
-                  child: Container(
-                    width: larghezzaBarra,
-                    height: 66,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [colors.surfaceHighlight, colors.surfaceRaised],
-                        stops: const [0.2, 1.0],
-                      ),
-                      border: Border.all(color: colors.border),
-                      borderRadius: BorderRadius.circular(100),
-                      boxShadow: [
-                        BoxShadow(
-                          color: colors.shadow,
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+                  child: OCLiquidGlassGroup(
+                    settings: const OCLiquidGlassSettings(
+                      refractStrength: -0.08,
+                      blurRadiusPx: 5.0,
+                      specStrength: 0,
+                      specWidth: 0.0,
+                      specAngle: 145,
+                      blendPx: 70,
+                      specPower: 10,
                     ),
-                    child: CustomPaint(
-                      //painter: _GradientBorderPainter(),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(100),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: List.generate(_items.length, (i) {
-                              final item = _items[i];
-                              return AmNavItem(
-                                icon: item.icon,
-                                iconIsActive: item.activeIcon,
-                                lable: item.label,
-                                onTap: () => goTo(i),
-                                isSelect: selected == i,
-                              );
-                            }),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        kHeavyEffects
+                            ? OCLiquidGlass(
+                                width: larghezzaBarra,
+                                height: 66,
+                                borderRadius: 100,
+                                color: colors.surfaceHighlight.withValues(
+                                  alpha: 0.8,
+                                ),
+                              )
+                            : Container(
+                                width: larghezzaBarra,
+                                height: 66,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      colors.surfaceHighlight,
+                                      colors.surfaceRaised,
+                                    ],
+                                    stops: const [0.2, 1.0],
+                                  ),
+                                  border: Border.all(color: colors.border),
+                                  borderRadius: BorderRadius.circular(100),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: colors.shadow,
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        SizedBox(
+                          width: larghezzaBarra,
+                          height: 66,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: barHorizontalPadding,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: List.generate(_items.length, (i) {
+                                final item = _items[i];
+                                return AmNavItem(
+                                  icon: item.icon,
+                                  iconIsActive: item.activeIcon,
+                                  lable: item.label,
+                                  onTap: () => goTo(i),
+                                  isSelect: selected == i,
+                                );
+                              }),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -237,7 +293,7 @@ class AmNavItem extends StatelessWidget {
         curve: Curves.easeOutCubic,
         padding: EdgeInsets.symmetric(
           horizontal: isSelect ? 16.0 : 12.0,
-          vertical: 8.0,
+          vertical: 16.0,
         ),
         decoration: BoxDecoration(
           // Background arancione semitrasparente come richiesto
@@ -265,7 +321,7 @@ class AmNavItem extends StatelessWidget {
               children: [
                 _NavIcon(
                   value: isSelect ? iconIsActive : icon,
-                  color: isSelect ? colors.accent : colors.textSecondary,
+                  color: isSelect ? colors.accent : colors.textPrimary,
                 ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),
@@ -292,7 +348,7 @@ class AmNavItem extends StatelessWidget {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeOutCubic,
-              height: 2.0,
+              height: 3.0,
               width: isSelect ? 24 : 0,
               decoration: BoxDecoration(
                 color: colors.accent,
@@ -301,7 +357,7 @@ class AmNavItem extends StatelessWidget {
                   if (isSelect)
                     BoxShadow(
                       color: colors.accent.withValues(alpha: 0.5),
-                      blurRadius: 4,
+                      blurRadius: 0,
                       offset: const Offset(0, 1),
                     ),
                 ],
@@ -312,7 +368,6 @@ class AmNavItem extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _NavIcon extends StatelessWidget {
@@ -328,7 +383,7 @@ class _NavIcon extends StatelessWidget {
         icon: value as List<List>,
         size: 22,
         color: color,
-        strokeWidth: 2.2,
+        strokeWidth: 2,
       );
     }
     return Icon(value as IconData, size: 22, color: color);

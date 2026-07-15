@@ -1,4 +1,4 @@
-﻿import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/exceptions/exception.dart';
 import '../../../../core/error/exceptions/exceptions.dart';
@@ -36,8 +36,8 @@ class WorklogRepositoryImpl implements WorklogRepo {
         items: items,
       );
       return const Right(null);
-    } on WorkLogDataSourceException {
-      return const Left(ServerFailure());
+    } on WorkLogDataSourceException catch (error) {
+      return Left(CodedServerFailure(code: error.code));
     } on NetworkException {
       return const Left(NetworkFailure());
     } catch (_) {

@@ -216,7 +216,10 @@ class _IosLiquidZoomState<T> extends State<IosLiquidZoom<T>>
       _controller._setPhase(IosLiquidZoomPhase.lifting);
       unawaited(_liftController.animateTo(1, curve: Curves.easeOutBack));
       await Future<void>.delayed(widget.config.liftLeadDuration);
-      if (!mounted) return;
+      if (!mounted) {
+        completer.complete(null);
+        return;
+      }
 
       final sourceRect = _readSourceRect();
       final liftedRect = sourceRect.shift(Offset(0, -widget.config.sourceLift));
@@ -224,6 +227,7 @@ class _IosLiquidZoomState<T> extends State<IosLiquidZoom<T>>
       if (!mounted) {
         _sourceSnapshot?.dispose();
         _sourceSnapshot = null;
+        completer.complete(null);
         return;
       }
 
@@ -270,6 +274,8 @@ class _IosLiquidZoomState<T> extends State<IosLiquidZoom<T>>
       }
       completer.complete(result);
     } catch (error, stackTrace) {
+      _sourceSnapshot?.dispose();
+      _sourceSnapshot = null;
       if (!completer.isCompleted) completer.completeError(error, stackTrace);
       if (mounted) {
         setState(() => _sourceHidden = false);
@@ -572,6 +578,9 @@ class _IosLiquidZoomTransition extends StatelessWidget {
   }
 
   Alignment _originAlignment(Offset sourceCenter, Rect targetRect) {
+    if (targetRect.width <= 0 || targetRect.height <= 0) {
+      return Alignment.center;
+    }
     final relative = sourceCenter - targetRect.center;
     return Alignment(
       (relative.dx / (targetRect.width / 2)).clamp(-1.0, 1.0),

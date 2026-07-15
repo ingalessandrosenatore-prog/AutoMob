@@ -87,7 +87,9 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
           } else if (state.status == WorkLogStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Errore durante il salvataggio'),
+                content: Text(
+                  state.errorMessage ?? 'Errore durante il salvataggio',
+                ),
                 backgroundColor: Colors.red,
               ),
             );
@@ -102,25 +104,25 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
             ),
             child: Stack(
               children: [
-              Positioned.fill(
-                top: 0,
-                right: 0,
-                left: 0,
-                child: AmEdgeBlur(
-                  child: PageView(
-                  controller: _pageController,
-                  onPageChanged: (index) =>
-                      setState(() => _currentPage = index),
-                  children: [
-                    FirstPageAddWork(
-                      initialWorkType: widget.initialWorkType,
-                      currentKm: widget.currentKm,
+                Positioned.fill(
+                  top: 0,
+                  right: 0,
+                  left: 0,
+                  child: AmEdgeBlur(
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (index) =>
+                          setState(() => _currentPage = index),
+                      children: [
+                        FirstPageAddWork(
+                          initialWorkType: widget.initialWorkType,
+                          currentKm: widget.currentKm,
+                        ),
+                        const Midifyitem(),
+                      ],
                     ),
-                    const Midifyitem(),
-                  ],
+                  ),
                 ),
-                ),
-              ),
 
                 Positioned(
                   top: 0,
@@ -143,39 +145,42 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                   left: 0,
                   right: 0,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20.0,
+                      vertical: 30.0,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         // Bottone INDIETRO con animazione di comparsa/scomparsa laterale e opacità
 
-                           // Solo la larghezza è animata: altezza fissa + ClipRect,
-                           // così il bottone non viene forzato in un box 0×0
-                           // (overflow ad ogni frame, vedi ROADMAP #7).
-                           ClipRect(
-                             child: AnimatedContainer(
-                               duration: const Duration(milliseconds: 300,),
-                               curve: Curves.easeInOut,
-                               width: _currentPage > 0 ? 120 : 0,
-                               height: 60,
-                               child: OverflowBox(
-                                 alignment: Alignment.centerRight,
-                                 maxWidth: 120,
-                                 minWidth: 120,
-                                 child: AnimatedOpacity(
-                                  duration: const Duration(milliseconds: 300),
-                                   curve:  Curves.ease,
-                                  opacity: _currentPage > 0 ? 1.0 : 0.0,
-                                  child: AmOutlinedButton(
-                                    label: 'INDIETRO',
-                                    color: const Color(0xFFE85A1A),
-                                    onPressed: _goToPreviousPage,
-                                  ),
-                                 ),
-                               ),
-                             ),
-                           ),
+                        // Solo la larghezza è animata: altezza fissa + ClipRect,
+                        // così il bottone non viene forzato in un box 0×0
+                        // (overflow ad ogni frame, vedi ROADMAP #7).
+                        ClipRect(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            width: _currentPage > 0 ? 120 : 0,
+                            height: 60,
+                            child: OverflowBox(
+                              alignment: Alignment.centerRight,
+                              maxWidth: 120,
+                              minWidth: 120,
+                              child: AnimatedOpacity(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.ease,
+                                opacity: _currentPage > 0 ? 1.0 : 0.0,
+                                child: AmOutlinedButton(
+                                  label: 'INDIETRO',
+                                  color: const Color(0xFFE85A1A),
+                                  onPressed: _goToPreviousPage,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
 
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
@@ -189,11 +194,15 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
                             duration: const Duration(milliseconds: 300),
                             child: AmMainFab(
                               label: _currentPage == 0 ? 'CONTINUA' : 'SALVA',
-                              color: _currentPage == 0 ? const Color(0x7E90E2FF) : const Color(0x4A90E2FF),
+                              color: _currentPage == 0
+                                  ? const Color(0x7E90E2FF)
+                                  : const Color(0x4A90E2FF),
                               onPressed: _currentPage == 0
                                   ? _goToNextPage
                                   : () {
-                                      context.read<WorkLogBloc>().add(OnSubmitEvent(id: widget.id));
+                                      context.read<WorkLogBloc>().add(
+                                        OnSubmitEvent(),
+                                      );
                                     },
                               icon: _currentPage == 0
                                   ? HugeIcons.strokeRoundedArrowRight01
@@ -223,8 +232,7 @@ class _AddWorkLogPopUpState extends State<AddWorkLogPopUp> {
           );
         },
       ),
-        );
-
+    );
   }
 }
 
@@ -269,7 +277,8 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
       if (testo.isEmpty || n == null) {
         _erroreKm = 'Inserisci un numero valido';
       } else if (n < widget.currentKm) {
-        _erroreKm = 'Non possono essere meno degli attuali (${widget.currentKm} km)';
+        _erroreKm =
+            'Non possono essere meno degli attuali (${widget.currentKm} km)';
       } else {
         _erroreKm = null;
       }
@@ -291,201 +300,210 @@ class _FirstPageAddWorkState extends State<FirstPageAddWork> {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.only(
-        left: 20,
-        right: 20,
-        bottom: 300,
-      ),
+      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 300),
       children: [
-        const SizedBox(height: 150,),
+        const SizedBox(height: 150),
         Row(
-        children: [
-          BlocBuilder<WorkLogBloc, WorkLogState>(
-            builder: (context, state) {
-              return AmDropdown<EnumPopUp>(
-                label: "Tipo Intervento",
-                placeholder: "Seleziona...",
-                value: _selectedWorkType,
-                items: EnumPopUp.values,
-                itemLabelBuilder: (val) => val.name,
-                onChanged: (val) {
-                  if (val == null) return;
-                  setState(() => _selectedWorkType = val);
-                  context.read<WorkLogBloc>().add(OnWorkTypeChange(type: val));
-                },
-              );
-            },
-          ),
-        ],
-      ),
-      BlocBuilder<WorkLogBloc, WorkLogState>(
-        buildWhen: (prev, curr) => prev.type != curr.type,
-        builder: (context, state) {
-          if (state.type != EnumPopUp.altro) return const SizedBox.shrink();
-          return Padding(
-            padding: const EdgeInsets.only(top: 24),
-            // AmTextField ha un Expanded come root: serve un Flex come genitore
-            // diretto (vedi ROADMAP #7), altrimenti crash BoxParentData/FlexParentData.
-            child: Row(
-              children: [
-                AmTextField(
-                  label: "Nome intervento",
-                  placeholder: "Specifica il tipo di intervento...",
-                  controller: _customNameController,
-                  isRequired: true,
-                  obscureText: false,
-                  keyboardType: TextInputType.text,
-                  onChanged: (_) => context.read<WorkLogBloc>().add(
-                    CustomNameChange(customName: _customNameController.text),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-      const SizedBox(height: 24),
-
-      Row(
-        children: [
-          AmDatePickerField(
-            label: "Data",
-            placeholder: "gg/mm/aaaa",
-            controller: _dateController,
-            onDateSelected: (date) => context.read<WorkLogBloc>().add(
-              ServiceDateChange(date: date),
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 24),
-      Row(
-        children: [
-          AmTextField(
-            label: "Km al lavoro (attuali: ${widget.currentKm})",
-            placeholder: "${widget.currentKm}",
-            controller: _kmController,
-            isRequired: true,
-            obscureText: false,
-            onChanged: _onKmChanged,
-            errorText: _erroreKm,
-            keyboardType: TextInputType.number,
-            suffixIcon: const Padding(
-              padding: EdgeInsets.only(top: 14),
-              child: Text(
-                "km",
-                style: TextStyle(
-                  color: Color(0xFF48484A),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 24),
-
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1C1C1E).withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                BlocBuilder<WorkLogBloc, WorkLogState>(
-                  builder: (context, state) {
-                    return AmDropdown<int>(
-                      label: "Richiamo tra",
-                      placeholder: "Seleziona...",
-                      value: _valore,
-                      items: const [
-                        0, 1000, 2000, 5000, 10000, 15000, 20000, 25000,
-                        30000, 40000, 50000, 60000, 80000, 100000, 120000, 150000,
-                      ],
-                      itemLabelBuilder: (val) => val.toString(),
-                      onChanged: (v) {
-                        if (v == null) return;
-                        setState(() => _valore = v);
-                        context.read<WorkLogBloc>().add(
-                          RichiamoChange(intervallKM: v),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              "PROSSIMO RICHIAMO",
-              style: TextStyle(
-                color: Color(0xFF636366),
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
             BlocBuilder<WorkLogBloc, WorkLogState>(
               builder: (context, state) {
-                return Container(
-                  height: 60,
-                  width: double.infinity,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F0F11),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: const Color(0xFFE85A1A).withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: Text(
-                    "${state.prosssimoRichiamo}km",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
+                return AmDropdown<EnumPopUp>(
+                  label: "Tipo Intervento",
+                  placeholder: "Seleziona...",
+                  value: _selectedWorkType,
+                  items: EnumPopUp.values,
+                  itemLabelBuilder: (val) => val.name,
+                  onChanged: (val) {
+                    if (val == null) return;
+                    setState(() => _selectedWorkType = val);
+                    context.read<WorkLogBloc>().add(
+                      OnWorkTypeChange(type: val),
+                    );
+                  },
                 );
               },
             ),
           ],
         ),
-      ),
-      const SizedBox(height: 24),
+        BlocBuilder<WorkLogBloc, WorkLogState>(
+          buildWhen: (prev, curr) => prev.type != curr.type,
+          builder: (context, state) {
+            if (state.type != EnumPopUp.altro) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(top: 24),
+              // AmTextField ha un Expanded come root: serve un Flex come genitore
+              // diretto (vedi ROADMAP #7), altrimenti crash BoxParentData/FlexParentData.
+              child: Row(
+                children: [
+                  AmTextField(
+                    label: "Nome intervento",
+                    placeholder: "Specifica il tipo di intervento...",
+                    controller: _customNameController,
+                    isRequired: true,
+                    obscureText: false,
+                    keyboardType: TextInputType.text,
+                    onChanged: (_) => context.read<WorkLogBloc>().add(
+                      CustomNameChange(customName: _customNameController.text),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 24),
 
-
-
-        const AmExpandableContainer(title: "SEKEZIONA RICAMBI",
-            subtitle: "PARTI SELZIONATE ",
-            collapsedHeight: 72,   // <- l'altezza chiusa, decidi tu
-            expandedHeight: 400,   // <- l'altezza aperta, decidi tu
-            borderRadius: 16,
-            child: PartsPickerBody() ),
-      const SizedBox(height: 24),
-
-      Row(
-        children: [
-          AmTextField(
-            label: "Note",
-            placeholder: "Dettagli aggiuntivi...",
-            controller: _noteController,
-            isRequired: false,
-            obscureText: false,
-            keyboardType: TextInputType.multiline,
-            onChanged: (_) => context.read<WorkLogBloc>().add(
-              NoteChange(note: _noteController.text),
+        Row(
+          children: [
+            AmDatePickerField(
+              label: "Data",
+              placeholder: "gg/mm/aaaa",
+              controller: _dateController,
+              onDateSelected: (date) => context.read<WorkLogBloc>().add(
+                ServiceDateChange(date: date),
+              ),
             ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            AmTextField(
+              label: "Km al lavoro (attuali: ${widget.currentKm})",
+              placeholder: "${widget.currentKm}",
+              controller: _kmController,
+              isRequired: true,
+              obscureText: false,
+              onChanged: _onKmChanged,
+              errorText: _erroreKm,
+              keyboardType: TextInputType.number,
+              suffixIcon: const Padding(
+                padding: EdgeInsets.only(top: 14),
+                child: Text(
+                  "km",
+                  style: TextStyle(
+                    color: Color(0xFF48484A),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1E).withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(20),
           ),
-        ],
-      ),
-      const SizedBox(height: 24),
-    ]
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  BlocBuilder<WorkLogBloc, WorkLogState>(
+                    builder: (context, state) {
+                      return AmDropdown<int>(
+                        label: "Richiamo tra",
+                        placeholder: "Seleziona...",
+                        value: _valore,
+                        items: const [
+                          0,
+                          1000,
+                          2000,
+                          5000,
+                          10000,
+                          15000,
+                          20000,
+                          25000,
+                          30000,
+                          40000,
+                          50000,
+                          60000,
+                          80000,
+                          100000,
+                          120000,
+                          150000,
+                        ],
+                        itemLabelBuilder: (val) => val.toString(),
+                        onChanged: (v) {
+                          if (v == null) return;
+                          setState(() => _valore = v);
+                          context.read<WorkLogBloc>().add(
+                            RichiamoChange(intervallKM: v),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                "PROSSIMO RICHIAMO",
+                style: TextStyle(
+                  color: Color(0xFF636366),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              BlocBuilder<WorkLogBloc, WorkLogState>(
+                builder: (context, state) {
+                  return Container(
+                    height: 60,
+                    width: double.infinity,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F0F11),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFE85A1A).withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      "${state.prosssimoRichiamo}km",
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        const AmExpandableContainer(
+          title: "SEKEZIONA RICAMBI",
+          subtitle: "PARTI SELZIONATE ",
+          collapsedHeight: 72, // <- l'altezza chiusa, decidi tu
+          expandedHeight: 400, // <- l'altezza aperta, decidi tu
+          borderRadius: 16,
+          child: PartsPickerBody(),
+        ),
+        const SizedBox(height: 24),
+
+        Row(
+          children: [
+            AmTextField(
+              label: "Note",
+              placeholder: "Dettagli aggiuntivi...",
+              controller: _noteController,
+              isRequired: false,
+              obscureText: false,
+              keyboardType: TextInputType.multiline,
+              onChanged: (_) => context.read<WorkLogBloc>().add(
+                NoteChange(note: _noteController.text),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+      ],
     );
   }
 }

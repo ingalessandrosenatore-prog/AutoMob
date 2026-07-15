@@ -161,7 +161,7 @@ class _AmSoftButtonState extends State<AmSoftButton>
               width: widget.width,
               borderRadius: 100,
               color: base,
-              opacity: 0.9,
+              edgeLighten: 0.78,
               child: content,
             ),
     );

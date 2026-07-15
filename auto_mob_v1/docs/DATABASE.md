@@ -1,6 +1,6 @@
 # AutoMob — Database (fonte di verità: Supabase live)
 
-> Rigenerato dallo schema live il 2026-07-09. Se il codice o questo doc sembrano
+> Rigenerato dallo schema live il 2026-07-15. Se il codice o questo doc sembrano
 > in disaccordo con Supabase, **fidati di Supabase** e rigenera questo file
 > (query in fondo al documento). `docs/AutoMob_DB_Reference.md` è superato,
 > non usarlo.
@@ -9,15 +9,21 @@
 
 ---
 
-## ⚠️ Problema di sicurezza aperto
+## Sicurezza registrazione veicolo
 
-**`public.mechanics` ha Row Level Security DISABILITATO.** Le policy
-(`mechanics_select_active_public`, `mechanics_select_own`, `mechanics_update_own`)
-esistono ma **non vengono applicate**: chiunque abbia la anon key può leggere/scrivere
-ogni riga. Fix (da valutare con l'utente prima di applicare, manca una policy INSERT/DELETE):
-```sql
-ALTER TABLE public.mechanics ENABLE ROW LEVEL SECURITY;
-```
+`public.mechanics`, `vehicle_lookup_results` e `vehicle_external_snapshots`
+hanno RLS attiva. Il ruolo anon non ha grant su `mechanics`; un autenticato può
+leggere le officine attive o la propria riga. L'audit completo delle vecchie
+policy di manutenzione e dei grant GraphQL resta pianificato separatamente.
+
+---
+
+## Modifica registrazione veicolo live (15 luglio 2026)
+
+La migration `20260715130000_vehicle_registration_lookup.sql` aggiunge
+`vehicle_lookup_results`, `vehicle_external_snapshots`, le rispettive RLS e
+l'estensione atomica di `crea_veicolo_con_storico`. Lo schema è ora presente
+nel progetto live. Dettagli in `docs/VEHICLE_REGISTRATION.md`.
 
 ---
 
@@ -52,8 +58,20 @@ Policy: solo il proprio profilo (select/update `auth.uid() = id`).
 `id (PK)`, `owner_id (FK→auth.users)`, `plate`, `brand`, `model`, `year` (1900–2100), `fuel` (enum), `power_cv`, `displacement_cc`, `km_current` (aggiornato solo via RPC), `scadenza_revision_date`, `tagliando_interval_km` (default 15000), `tire_change_interval_km` (default 40000), `tire_rotation_interval_km` (default 10000), `distribution_intervall_km`, `created_at`, `updated_at`.
 Policy: CRUD solo `owner_id = auth.uid()`.
 
-### `mechanics` — ⚠️ RLS DISABILITATO (vedi sopra)
+### `mechanics` — RLS ✅
 `id (PK)`, `user_id (FK→auth.users, unique)`, `mechanic_code` (unique, inserito dal proprietario nel wizard veicolo), `business_name`, `vat_number`, `address`, `is_active` (default false, attivato manualmente dall'admin quando paga l'abbonamento), `created_at`, `updated_at`.
+Policy: select autenticato delle officine attive o della propria riga; update
+solo della propria riga. Nessun grant anon.
+
+### `vehicle_lookup_results` — RLS ✅
+Risposta InfoTarga temporanea per il salvataggio atomico. Contiene owner, targa,
+qualità, codice provider, campi normalizzati, payload grezzo, trace e scadenza a
+7 giorni. L'utente legge solo le proprie righe; scrive la Edge Function.
+
+### `vehicle_external_snapshots` — RLS ✅
+Snapshot permanente 1:1 col veicolo. Conserva payload InfoTarga e campi estratti
+di assicurazione, emissioni, neopatentati, revisione e furto. Leggibile soltanto
+dal proprietario del veicolo.
 
 ### `vehicle_mechanics` — RLS ✅
 Associazione N:N veicolo↔meccanico. `id (PK)`, `vehicle_id (FK)`, `mechanic_id (FK)`, `assigned_at`.

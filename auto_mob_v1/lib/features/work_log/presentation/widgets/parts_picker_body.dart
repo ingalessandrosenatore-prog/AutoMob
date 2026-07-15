@@ -1,4 +1,4 @@
-﻿import 'package:auto_mob_v1/core/constants/parts_catalog.dart';
+import 'package:auto_mob_v1/core/constants/parts_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -68,7 +68,13 @@ class _PartsPickerBodyState extends State<PartsPickerBody> {
               spacing: 8,
               runSpacing: 10,
               children: entries
-                  .map((e) => _ChipSelector(id: e.key, label: e.value))
+                  .map(
+                    (e) => _ChipSelector(
+                      key: ValueKey(e.key),
+                      id: e.key,
+                      label: e.value,
+                    ),
+                  )
                   .toList(),
             ),
           ),
@@ -82,7 +88,7 @@ class _PartsPickerBodyState extends State<PartsPickerBody> {
 class _ChipSelector extends StatelessWidget {
   final int id;
   final String label;
-  const _ChipSelector({required this.id, required this.label});
+  const _ChipSelector({super.key, required this.id, required this.label});
 
   @override
   Widget build(BuildContext context) {

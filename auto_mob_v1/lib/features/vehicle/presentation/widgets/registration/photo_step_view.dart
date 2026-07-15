@@ -5,12 +5,16 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../../core/theme/am_theme_colors.dart';
 import '../../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../bloc/vehicle_registration_bloc.dart';
 import '../../bloc/vehicle_registration_event.dart';
+import '../../bloc/vehicle_registration_state.dart';
 
-/// Step 5 — foto del veicolo, ultimo step del flusso (solo in-memory: nessun
-/// salvataggio reale su Supabase in questa fase, solo front-end).
+/// Step 5 - foto del veicolo, ultimo step del flusso.
+/// Il widget conserva il file selezionato nel draft; al termine il repository
+/// lo copia nella cartella persistente dell'app usando la targa come chiave
+/// canonica.
 ///
 /// Il bottone "Registra" vive nella barra fissa della pagina root; questo
 /// widget espone [submit] tramite `GlobalKey<PhotoStepViewState>`.
@@ -24,6 +28,17 @@ class PhotoStepView extends StatefulWidget {
 class PhotoStepViewState extends State<PhotoStepView> {
   final _picker = ImagePicker();
   XFile? _image;
+
+  void _syncFromDraft() {
+    final file = context.read<VehicleRegistrationBloc>().state.draft.fotoFile;
+    _image = file == null ? null : XFile(file.path);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _syncFromDraft();
+  }
 
   Future<void> _pickImage() async {
     final picked = await _picker.pickImage(
@@ -44,34 +59,42 @@ class PhotoStepViewState extends State<PhotoStepView> {
 
   @override
   Widget build(BuildContext context) {
-    return AmEdgeBlur(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            const Text(
-              'Foto del veicolo',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+    final colors = AmThemeColors.of(context);
+    return BlocListener<VehicleRegistrationBloc, VehicleRegistrationState>(
+      listenWhen: (previous, current) =>
+          previous.currentStep != current.currentStep &&
+          current.currentStep == 4,
+      listener: (context, state) => setState(_syncFromDraft),
+      child: AmEdgeBlur(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 24),
+              Text(
+                'Foto del veicolo',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Aggiungi una foto per riconoscere subito il tuo veicolo.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF8E8E93),
-                fontSize: 13,
-                height: 1.4,
+              const SizedBox(height: 8),
+              Text(
+                'Aggiungi una foto per riconoscere subito il tuo veicolo.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colors.textSecondary,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            _PhotoUploadCard(image: _image, onTap: _pickImage),
-          ],
+              const SizedBox(height: 32),
+              _PhotoUploadCard(image: _image, onTap: _pickImage),
+            ],
+          ),
         ),
       ),
     );
@@ -90,13 +113,12 @@ class _PhotoUploadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: CustomPaint(
-        foregroundPainter: _DashedBorderPainter(
-          color: _accent.withValues(alpha: 0.5),
-        ),
+        foregroundPainter: _DashedBorderPainter(color: colors.accent),
         child: Container(
           width: double.infinity,
           height: 180,
@@ -126,26 +148,29 @@ class _PhotoUploadCard extends StatelessWidget {
                         color: _accent.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: const HugeIcon(
-                    // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
+                      child: HugeIcon(
+                        // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
                         icon: HugeIcons.strokeRoundedAlbum02,
-                        color: _accent,
+                        color: colors.accent,
                         size: 26,
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'Tocca per caricare',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'JPG, PNG fino a 10MB',
-                      style: TextStyle(color: Color(0xFF8E8E93), fontSize: 12),
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),

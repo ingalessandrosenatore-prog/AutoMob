@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
@@ -8,6 +10,7 @@ import '../../../../core/widgets/buttons/back_button.dart';
 import '../../../../core/theme/am_theme_colors.dart';
 import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
+import '../../../../core/widgets/dialog/am_status_dialog.dart';
 import '../../../../core/widgets/progress/am_wizard_progress.dart';
 import '../bloc/vehicle_registration_bloc.dart';
 import '../bloc/vehicle_registration_event.dart';
@@ -16,6 +19,7 @@ import '../widgets/registration/mechanic_step_view.dart';
 import '../widgets/registration/photo_step_view.dart';
 import '../widgets/registration/plate_step_view.dart';
 import '../widgets/registration/verify_step_view.dart';
+import '../widgets/registration/vehicle_registration_close_dialog.dart';
 import '../widgets/registration/work_log_step_view.dart';
 
 const _stepLabels = ['Meccanico', 'Targa', 'Verifica', 'Lavori', 'Foto'];
@@ -41,9 +45,7 @@ class VehicleRegistrationPage extends StatelessWidget {
           GetIt.I<VehicleRegistrationBloc>()..add(RegistrationStarted()),
       child: Scaffold(
         backgroundColor: colors.background,
-        // I bottoni in basso restano fissi anche quando si apre la
-        // tastiera (niente "salita" insieme ad essa).
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         body: _RegistrationBody(onClose: onClose),
       ),
     );
@@ -62,12 +64,157 @@ class _RegistrationBody extends StatefulWidget {
 class _RegistrationBodyState extends State<_RegistrationBody> {
   late final PageController _pageController;
 
-  void _chiudi() {
+  void _closeNow({bool success = false}) {
     final onClose = widget.onClose;
     if (onClose != null) {
       onClose();
     } else {
-      context.pop();
+      context.pop(success);
+    }
+  }
+
+  Future<void> _chiudi() async {
+    final bloc = context.read<VehicleRegistrationBloc>();
+    if (bloc.state.status == RegistrationStatus.completed ||
+        (bloc.state.currentStep == 0 && bloc.state.draft.targa == null)) {
+      _closeNow();
+      return;
+    }
+    final action = await showVehicleRegistrationCloseDialog(context);
+    if (!mounted || action == null) return;
+    if (action == VehicleRegistrationCloseAction.discardDraft) {
+      bloc.add(RegistrationDraftDiscarded());
+    } else {
+      bloc.add(RegistrationDraftSaveRequested());
+    }
+    _closeNow();
+  }
+
+  Future<void> _showLookupDialog(VehicleRegistrationState state) async {
+    if (state.lookupStatus == RegistrationLookupStatus.partial) {
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          icon: const Icon(Icons.warning_amber_rounded, color: Colors.amber),
+          title: const Text('Dati recuperati parzialmente'),
+          content: const Text(
+            'Alcuni dati non sono disponibili. Controlla e completa i campi prima di continuare.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Visualizza dati'),
+            ),
+          ],
+        ),
+      );
+      if (mounted) {
+        context.read<VehicleRegistrationBloc>().add(LookupDialogAcknowledged());
+      }
+      return;
+    }
+    final failure = state.lookupFailure;
+    if (state.lookupStatus != RegistrationLookupStatus.failure ||
+        failure == null) {
+      return;
+    }
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.error_outline, color: Colors.redAccent),
+        title: const Text('Dati non recuperati'),
+        content: Text(failure.message),
+        actions: [
+          if (failure.isRetryable)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                context.read<VehicleRegistrationBloc>().add(
+                  PlateSubmitted(targa: state.draft.targa ?? ''),
+                );
+              },
+              child: const Text('Riprova'),
+            ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<VehicleRegistrationBloc>().add(
+                LookupClosedWithManualEntry(),
+              );
+            },
+            child: const Text('Chiudi'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showMechanicDialog(VehicleRegistrationState state) async {
+    if (state.mechanicStatus != MechanicLookupStatus.notFound &&
+        state.mechanicStatus != MechanicLookupStatus.failure) {
+      return;
+    }
+    await showAmStatusDialog<void>(
+      context,
+      icon: HugeIcons.strokeRoundedAlert02,
+      iconColor: const Color(0xFFFFB020),
+      title: 'Codice meccanico non valido',
+      message:
+          state.message ?? 'Controlla il codice inserito e prova nuovamente.',
+      actions: [
+        AmDialogAction(
+          label: 'Chiudi',
+          color: const Color(0xFFE85A1A),
+          filled: true,
+          onPressed: () => Navigator.pop(context),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showRegistrationResult(VehicleRegistrationState state) async {
+    if (state.status == RegistrationStatus.failure) {
+      await showAmStatusDialog<void>(
+        context,
+        icon: HugeIcons.strokeRoundedAlert02,
+        iconColor: const Color(0xFFFF453A),
+        title: 'Registrazione non riuscita',
+        message: state.message ?? 'Non e stato possibile salvare il veicolo.',
+        actions: [
+          AmDialogAction(
+            label: 'Chiudi',
+            color: const Color(0xFFFF453A),
+            filled: true,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      );
+      return;
+    }
+    if (state.status != RegistrationStatus.completed) return;
+    final closeRegistration = await showAmStatusDialog<bool>(
+      context,
+      icon: HugeIcons.strokeRoundedValidationApproval,
+      iconColor: const Color(0xFF34C759),
+      title: 'Veicolo registrato',
+      message: state.photoWarning
+          ? 'Il veicolo e stato salvato, ma la foto non e stata copiata. Potrai aggiungerla dalla dashboard.'
+          : 'Dati, lavori iniziali e collegamento al meccanico sono stati salvati.',
+      actions: [
+        AmDialogAction(
+          label: 'Chiudi',
+          color: const Color(0xFF34C759),
+          filled: true,
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+        ),
+      ],
+    );
+    if (mounted && closeRegistration == true) {
+      _closeNow(success: true);
     }
   }
 
@@ -122,8 +269,12 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<VehicleRegistrationBloc, VehicleRegistrationState>(
-      listenWhen: (prev, curr) => prev.currentStep != curr.currentStep,
-      listener: (context, state) {
+      listenWhen: (prev, curr) =>
+          prev.currentStep != curr.currentStep ||
+          prev.lookupStatus != curr.lookupStatus ||
+          prev.mechanicStatus != curr.mechanicStatus ||
+          prev.status != curr.status,
+      listener: (context, state) async {
         if (_pageController.hasClients) {
           _pageController.animateToPage(
             state.currentStep,
@@ -131,6 +282,11 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
             curve: Curves.easeInOutCubic,
           );
         }
+        await _showLookupDialog(state);
+        if (!context.mounted) return;
+        await _showMechanicDialog(state);
+        if (!context.mounted) return;
+        await _showRegistrationResult(state);
       },
       buildWhen: (prev, curr) =>
           prev.status != curr.status ||
@@ -139,7 +295,10 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
       builder: (context, state) {
         final colors = AmThemeColors.of(context);
         if (state.status == RegistrationStatus.completed) {
-          return _RegistrationCompletedView(onClose: _chiudi);
+          return _RegistrationCompletedView(
+            onClose: () => _closeNow(success: true),
+            photoWarning: state.photoWarning,
+          );
         }
         final topInset = MediaQuery.paddingOf(context).top;
         return Column(
@@ -157,7 +316,7 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
                     const Expanded(
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: SizedBox(width: 45, height: 45),
+                        child: SizedBox(width: 48, height: 48),
                       ),
                     ),
                     Expanded(
@@ -189,11 +348,11 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: SizedBox(
-                          width: 45,
-                          height: 45,
+                          width: 48,
+                          height: 48,
                           child: AmSoftButton(
-                            width: 45,
-                            height: 45,
+                            width: 48,
+                            height: 48,
                             color: const Color(0xFFFF6B00),
                             icon: HugeIcons.strokeRoundedAdd01,
                             iconTurns: 0.125,
@@ -222,8 +381,10 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
             _RegistrationBottomBar(
               currentStep: state.currentStep,
               loading:
-                  state.currentStep == 1 &&
-                  state.lookupStatus == RegistrationLookupStatus.loading,
+                  state.status == RegistrationStatus.loading ||
+                  state.mechanicStatus == MechanicLookupStatus.loading ||
+                  (state.currentStep == 1 &&
+                      state.lookupStatus == RegistrationLookupStatus.loading),
               onBack: () => context.read<VehicleRegistrationBloc>().add(
                 RegistrationStepBackPressed(),
               ),
@@ -257,20 +418,24 @@ class _RegistrationBottomBar extends StatelessWidget {
   });
 
   static const _labels = [
-    'CONTINUA',
     'TROVA VEICOLO',
     'CONTINUA',
     'CONTINUA',
     'CONTINUA',
+    'REGISTRA',
   ];
 
   @override
   Widget build(BuildContext context) {
     final showBack = currentStep >= 2;
     final label = _labels[currentStep.clamp(0, _labels.length - 1)];
+    final bottomPadding = math.max(
+      20.0,
+      MediaQuery.paddingOf(context).bottom + 8,
+    );
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPadding),
       // Altezza fissa e identica su tutti gli step: senza questo vincolo
       // "Indietro" (un OutlinedButton con padding proprio, leggermente piu'
       // alto di AmMainFab) puo' far variare l'altezza della riga anche
@@ -326,8 +491,12 @@ class _RegistrationBottomBar extends StatelessWidget {
 
 class _RegistrationCompletedView extends StatelessWidget {
   final VoidCallback onClose;
+  final bool photoWarning;
 
-  const _RegistrationCompletedView({required this.onClose});
+  const _RegistrationCompletedView({
+    required this.onClose,
+    required this.photoWarning,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -355,7 +524,9 @@ class _RegistrationCompletedView extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Solo anteprima front-end: nessun dato e\' stato ancora salvato.',
+              photoWarning
+                  ? 'Il veicolo è salvato. Non è stato possibile copiare la foto: potrai aggiungerla dalla dashboard.'
+                  : 'Dati, storico iniziale e collegamento al meccanico sono stati salvati.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: colors.textSecondary,

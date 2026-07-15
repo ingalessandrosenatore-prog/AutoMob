@@ -8,6 +8,7 @@
 
 import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle_draft.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle_save_outcome.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/repositories/vehicle_repository.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/save_vehicle.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,13 +33,20 @@ void main() {
   );
 
   test('inoltra il draft completo al repository e ritorna Right', () async {
-    when(
-      () => repository.saveVehicle(tDraft),
-    ).thenAnswer((_) async => const Right(null));
+    when(() => repository.saveVehicle(tDraft)).thenAnswer(
+      (_) async => const Right(
+        VehicleSaveOutcome(vehicleId: 'vehicle-1', photoSaved: true),
+      ),
+    );
 
     final result = await usecase(tDraft);
 
-    expect(result, const Right<Failure, void>(null));
+    expect(
+      result,
+      const Right<Failure, VehicleSaveOutcome>(
+        VehicleSaveOutcome(vehicleId: 'vehicle-1', photoSaved: true),
+      ),
+    );
     verify(() => repository.saveVehicle(tDraft)).called(1);
     verifyNoMoreInteractions(repository);
   });
@@ -50,6 +58,6 @@ void main() {
 
     final result = await usecase(tDraft);
 
-    expect(result, const Left<Failure, void>(ServerFailure()));
+    expect(result, const Left<Failure, VehicleSaveOutcome>(ServerFailure()));
   });
 }

@@ -1,13 +1,13 @@
-// =====================================================================
-//  GOLDEN TEST — BLoC (layer presentation)
-// ---------------------------------------------------------------------
-//  Pattern per testare un BLoC: si mocka lo use case (con mocktail)
-//  e con blocTest si dichiara la SEQUENZA di stati attesa dopo un'azione.
-// =====================================================================
-
-import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle_draft.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle_lookup_result.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle_save_outcome.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/failures/vehicle_lookup_failure.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/usecases/clear_vehicle_draft.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/usecases/load_vehicle_draft.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/usecases/lookup_mechanic_by_code.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/lookup_vehicle_by_plate.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/usecases/save_draft_step.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/usecases/save_vehicle.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/vehicle_registration_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/vehicle_registration_event.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/vehicle_registration_state.dart';
@@ -16,168 +16,254 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockLookupVehicleByPlate extends Mock implements LookupVehicleByPlate {}
+class MockLookupVehicle extends Mock implements LookupVehicleByPlate {}
+
+class MockLookupMechanic extends Mock implements LookupMechanicByCode {}
+
+class MockSaveDraft extends Mock implements SaveDraftStep {}
+
+class MockLoadDraft extends Mock implements LoadVehicleDraft {}
+
+class MockClearDraft extends Mock implements ClearVehicleDraft {}
+
+class MockSaveVehicle extends Mock implements SaveVehicle {}
 
 void main() {
-  late MockLookupVehicleByPlate lookupVehicleByPlate;
+  late MockLookupVehicle lookupVehicle;
+  late MockLookupMechanic lookupMechanic;
+  late MockSaveDraft saveDraft;
+  late MockLoadDraft loadDraft;
+  late MockClearDraft clearDraft;
+  late MockSaveVehicle saveVehicle;
+
+  setUpAll(() => registerFallbackValue(const VehicleDraft()));
 
   setUp(() {
-    lookupVehicleByPlate = MockLookupVehicleByPlate();
+    lookupVehicle = MockLookupVehicle();
+    lookupMechanic = MockLookupMechanic();
+    saveDraft = MockSaveDraft();
+    loadDraft = MockLoadDraft();
+    clearDraft = MockClearDraft();
+    saveVehicle = MockSaveVehicle();
+    when(() => saveDraft(any())).thenAnswer((_) async => const Right(null));
+    when(() => loadDraft()).thenAnswer((_) async => const Right(null));
+    when(() => clearDraft()).thenAnswer((_) async => const Right(null));
   });
 
-  VehicleRegistrationBloc buildBloc() =>
-      VehicleRegistrationBloc(lookupVehicleByPlate: lookupVehicleByPlate);
+  VehicleRegistrationBloc buildBloc() => VehicleRegistrationBloc(
+    lookupVehicleByPlate: lookupVehicle,
+    lookupMechanicByCode: lookupMechanic,
+    saveDraftStep: saveDraft,
+    loadVehicleDraft: loadDraft,
+    clearVehicleDraft: clearDraft,
+    saveVehicle: saveVehicle,
+  );
 
   blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
-    'MechanicStepSubmitted: salva il codice meccanico e avanza allo step 1',
+    'ripristina una bozza consumata direttamente al terzo step',
+    setUp: () => when(() => loadDraft()).thenAnswer(
+      (_) async => const Right(
+        VehicleDraft(targa: 'AB123CD', lookupAttemptConsumed: true),
+      ),
+    ),
     build: buildBloc,
-    act: (bloc) => bloc.add(MechanicStepSubmitted(codiceMeccanico: 'MEC001')),
+    act: (bloc) => bloc.add(RegistrationStarted()),
     expect: () => [
       isA<VehicleRegistrationState>()
-          .having((s) => s.currentStep, 'currentStep', 1)
-          .having((s) => s.draft.codiceMeccanico, 'codiceMeccanico', 'MEC001'),
+          .having((s) => s.currentStep, 'step', 2)
+          .having((s) => s.draft.lookupAttemptConsumed, 'consumed', true),
     ],
   );
 
   blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
-    'PlateSubmitted: veicolo trovato -> merge dati e lookupStatus success',
-    build: () {
-      when(() => lookupVehicleByPlate('AB123CD')).thenAnswer(
-        (_) async => const Right(
-          VehicleLookupResult(
-            marca: 'Fiat',
-            modello: 'Panda',
-            anno: 2019,
-            carburante: 'Benzina',
-            cilindrata: 1242,
-          ),
-        ),
-      );
-      return buildBloc();
-    },
-    act: (bloc) => bloc.add(PlateSubmitted(targa: 'AB123CD')),
-    expect: () => [
-      isA<VehicleRegistrationState>()
-          .having(
-            (s) => s.lookupStatus,
-            'lookupStatus',
-            RegistrationLookupStatus.loading,
-          )
-          .having((s) => s.draft.targa, 'targa', 'AB123CD'),
-      isA<VehicleRegistrationState>()
-          .having(
-            (s) => s.lookupStatus,
-            'lookupStatus',
-            RegistrationLookupStatus.success,
-          )
-          .having((s) => s.currentStep, 'currentStep', 1)
-          .having((s) => s.draft.marca, 'marca', 'Fiat')
-          .having((s) => s.draft.modello, 'modello', 'Panda')
-          .having((s) => s.draft.cilindrata, 'cilindrata', 1242),
-    ],
-  );
-
-  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
-    'PlateSubmitted: veicolo non trovato -> lookupStatus notFound ma avanza comunque',
-    build: () {
-      when(
-        () => lookupVehicleByPlate('FAIL123'),
-      ).thenAnswer((_) async => const Left(NotFoundFailure()));
-      return buildBloc();
-    },
-    act: (bloc) => bloc.add(PlateSubmitted(targa: 'FAIL123')),
+    'targa non valida non consuma il tentativo e resta allo step targa',
+    setUp: () => when(
+      () => lookupVehicle('ABC'),
+    ).thenAnswer((_) async => const Left(InvalidPlateLookupFailure())),
+    build: buildBloc,
+    seed: () => const VehicleRegistrationState(currentStep: 1),
+    act: (bloc) => bloc.add(PlateSubmitted(targa: 'ABC')),
     expect: () => [
       isA<VehicleRegistrationState>().having(
         (s) => s.lookupStatus,
-        'lookupStatus',
+        'status',
         RegistrationLookupStatus.loading,
       ),
       isA<VehicleRegistrationState>()
+          .having((s) => s.currentStep, 'step', 1)
+          .having((s) => s.draft.lookupAttemptConsumed, 'consumed', false),
+    ],
+  );
+
+  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
+    'inserimento manuale salva la targa e apre Verifica senza chiamare API',
+    build: buildBloc,
+    seed: () => const VehicleRegistrationState(currentStep: 1),
+    act: (bloc) => bloc.add(ManualPlateSubmitted(targa: 'ab 123 cd')),
+    expect: () => [
+      isA<VehicleRegistrationState>()
+          .having((s) => s.currentStep, 'step', 2)
+          .having((s) => s.draft.targa, 'targa', 'AB123CD')
+          .having((s) => s.draft.datiInModifica, 'edit', true)
+          .having((s) => s.draft.lookupId, 'lookup', isNull)
           .having(
             (s) => s.lookupStatus,
-            'lookupStatus',
-            RegistrationLookupStatus.notFound,
+            'status',
+            RegistrationLookupStatus.idle,
+          ),
+    ],
+    verify: (_) {
+      verifyNever(() => lookupVehicle(any()));
+      verify(() => saveDraft(any())).called(1);
+    },
+  );
+
+  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
+    'una bozza manuale con targa riparte da Verifica',
+    setUp: () => when(() => loadDraft()).thenAnswer(
+      (_) async => const Right(
+        VehicleDraft(targa: 'AB123CD', marca: 'Fiat', datiInModifica: true),
+      ),
+    ),
+    build: buildBloc,
+    act: (bloc) => bloc.add(RegistrationStarted()),
+    expect: () => [
+      isA<VehicleRegistrationState>()
+          .having((s) => s.currentStep, 'step', 2)
+          .having((s) => s.draft.marca, 'marca', 'Fiat'),
+    ],
+  );
+
+  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
+    'timeout è riprovabile e non consuma il tentativo',
+    setUp: () => when(
+      () => lookupVehicle('AB123CD'),
+    ).thenAnswer((_) async => const Left(TimeoutLookupFailure())),
+    build: buildBloc,
+    seed: () => const VehicleRegistrationState(currentStep: 1),
+    act: (bloc) => bloc.add(PlateSubmitted(targa: 'AB123CD')),
+    expect: () => [
+      isA<VehicleRegistrationState>(),
+      isA<VehicleRegistrationState>()
+          .having((s) => s.lookupFailure?.isRetryable, 'retryable', true)
+          .having((s) => s.draft.lookupAttemptConsumed, 'consumed', false),
+    ],
+  );
+
+  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
+    'risposta parziale consuma il tentativo e apre il terzo step in edit',
+    setUp: () => when(() => lookupVehicle('CC000CC')).thenAnswer(
+      (_) async => const Right(
+        VehicleLookupResult(
+          lookupId: 'lookup-cc',
+          quality: VehicleLookupQuality.partial,
+          plate: 'CC000CC',
+          marca: 'Fiat',
+        ),
+      ),
+    ),
+    build: buildBloc,
+    seed: () => const VehicleRegistrationState(currentStep: 1),
+    act: (bloc) => bloc.add(PlateSubmitted(targa: 'CC000CC')),
+    expect: () => [
+      isA<VehicleRegistrationState>(),
+      isA<VehicleRegistrationState>()
+          .having((s) => s.currentStep, 'step', 2)
+          .having(
+            (s) => s.lookupStatus,
+            'status',
+            RegistrationLookupStatus.partial,
           )
-          .having((s) => s.currentStep, 'currentStep', 1)
-          .having((s) => s.draft.marca, 'marca', isNull),
+          .having((s) => s.draft.datiInModifica, 'edit', true)
+          .having((s) => s.draft.lookupAttemptConsumed, 'consumed', true),
     ],
   );
 
   blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
-    'VerifyStepSubmitted: aggiorna i dati corretti a mano e avanza',
+    'chiudere un errore abilita i dati manuali e azzera il popup',
     build: buildBloc,
-    seed: () => const VehicleRegistrationState(currentStep: 2),
-    act: (bloc) => bloc.add(
-      VerifyStepSubmitted(
-        marca: 'Toyota',
-        modello: 'Yaris',
-        anno: 2021,
-        carburante: 'Ibrida',
-        cilindrata: 1490,
+    seed: () => const VehicleRegistrationState(
+      currentStep: 2,
+      lookupStatus: RegistrationLookupStatus.failure,
+      lookupFailure: BadRequestLookupFailure(),
+      draft: VehicleDraft(targa: 'ER400ER', lookupAttemptConsumed: true),
+    ),
+    act: (bloc) => bloc.add(LookupClosedWithManualEntry()),
+    expect: () => [
+      isA<VehicleRegistrationState>()
+          .having((s) => s.currentStep, 'step', 2)
+          .having((s) => s.lookupStatus, 'popup', RegistrationLookupStatus.idle)
+          .having((s) => s.lookupFailure, 'errore', isNull)
+          .having((s) => s.draft.datiInModifica, 'edit', true),
+    ],
+  );
+
+  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
+    'dopo la chiusura del popup il salvataggio manuale avanza senza riaprirlo',
+    build: buildBloc,
+    seed: () => const VehicleRegistrationState(
+      currentStep: 2,
+      lookupStatus: RegistrationLookupStatus.idle,
+      draft: VehicleDraft(
+        targa: 'AB123CD',
+        lookupAttemptConsumed: true,
+        datiInModifica: true,
       ),
+    ),
+    act: (bloc) => bloc.add(
+      VerifyStepSubmitted(targa: 'AB123CD', marca: 'Fiat', modello: 'Panda'),
     ),
     expect: () => [
       isA<VehicleRegistrationState>()
-          .having((s) => s.currentStep, 'currentStep', 3)
-          .having((s) => s.draft.marca, 'marca', 'Toyota')
-          .having((s) => s.draft.cilindrata, 'cilindrata', 1490),
+          .having((s) => s.currentStep, 'step', 3)
+          .having((s) => s.lookupStatus, 'popup', RegistrationLookupStatus.idle)
+          .having((s) => s.lookupFailure, 'errore', isNull),
     ],
   );
 
   blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
-    'WorkLogStepSubmitted: salva gli ultimi lavori e avanza',
+    'visualizzare i dati parziali azzera il popup senza cambiare step',
     build: buildBloc,
-    seed: () => const VehicleRegistrationState(currentStep: 3),
-    act: (bloc) => bloc.add(
-      WorkLogStepSubmitted(
-        kmAttuali: 80000,
-        kmUltimoTagliando: 75000,
-        intervalloTagliando: 15000,
-      ),
+    seed: () => const VehicleRegistrationState(
+      currentStep: 2,
+      lookupStatus: RegistrationLookupStatus.partial,
+      draft: VehicleDraft(targa: 'CC000CC', datiInModifica: true),
     ),
+    act: (bloc) => bloc.add(LookupDialogAcknowledged()),
     expect: () => [
       isA<VehicleRegistrationState>()
-          .having((s) => s.currentStep, 'currentStep', 4)
-          .having((s) => s.draft.kmAttuali, 'kmAttuali', 80000)
-          .having((s) => s.draft.kmUltimoTagliando, 'kmUltimoTagliando', 75000),
+          .having((s) => s.currentStep, 'step', 2)
+          .having(
+            (s) => s.lookupStatus,
+            'popup',
+            RegistrationLookupStatus.idle,
+          ),
     ],
   );
 
   blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
-    'PhotoStepSubmitted: ultimo step -> status completed',
+    'salvataggio finale completa anche se la copia foto fallisce',
+    setUp: () => when(() => saveVehicle(any())).thenAnswer(
+      (_) async => const Right(
+        VehicleSaveOutcome(vehicleId: 'vehicle-1', photoSaved: false),
+      ),
+    ),
     build: buildBloc,
-    seed: () => const VehicleRegistrationState(currentStep: 4),
+    seed: () => const VehicleRegistrationState(
+      currentStep: 4,
+      draft: VehicleDraft(targa: 'AB123CD'),
+    ),
     act: (bloc) => bloc.add(PhotoStepSubmitted()),
     expect: () => [
       isA<VehicleRegistrationState>().having(
         (s) => s.status,
         'status',
-        RegistrationStatus.completed,
+        RegistrationStatus.loading,
       ),
+      isA<VehicleRegistrationState>()
+          .having((s) => s.status, 'status', RegistrationStatus.completed)
+          .having((s) => s.photoWarning, 'warning foto', true),
     ],
-  );
-
-  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
-    'RegistrationStepBackPressed: torna allo step precedente',
-    build: buildBloc,
-    seed: () => const VehicleRegistrationState(currentStep: 2),
-    act: (bloc) => bloc.add(RegistrationStepBackPressed()),
-    expect: () => [const VehicleRegistrationState(currentStep: 1)],
-  );
-
-  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
-    'RegistrationStepBackPressed: non va sotto lo step 0 (nessun nuovo stato, gia\' clampato)',
-    build: buildBloc,
-    seed: () => const VehicleRegistrationState(currentStep: 0),
-    act: (bloc) => bloc.add(RegistrationStepBackPressed()),
-    expect: () => [],
-  );
-
-  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
-    'RegistrationStarted: resetta lo stato allo step 0',
-    build: buildBloc,
-    seed: () => const VehicleRegistrationState(currentStep: 3),
-    act: (bloc) => bloc.add(RegistrationStarted()),
-    expect: () => [const VehicleRegistrationState()],
+    verify: (_) => verify(() => clearDraft()).called(1),
   );
 }

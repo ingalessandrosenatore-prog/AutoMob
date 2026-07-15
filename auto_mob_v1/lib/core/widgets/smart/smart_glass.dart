@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
+import 'am_flat_glass.dart';
+
 /// Versione "smart" della singola **forma** di vetro: sostituisce SOLO
 /// l'[OCLiquidGlass], non il gruppo.
 ///
@@ -54,14 +56,12 @@ class SmartGlass extends StatelessWidget {
       );
     }
 
-    return Container(
+    return AmFlatGlass(
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: shadow != null ? [shadow!] : null,
-      ),
+      color: color,
+      borderRadius: borderRadius,
+      shadow: shadow,
       child: child,
     );
   }

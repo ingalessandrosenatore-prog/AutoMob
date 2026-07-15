@@ -62,6 +62,13 @@ features/<nome>/
 - `tool/ship.ps1 "messaggio"` — commit + push, ma solo se `verify.ps1` passa
 - `tool/arch_baseline.txt` + `tool/test_baseline.txt` + `docs/TECH_DEBT.md` — debito tecnico tracciato (violazioni note, non nascoste)
 
+## Registrazione veicolo nuova
+
+`VehicleRegistrationBloc` orchestra meccanico, lookup targa, bozza locale e
+salvataggio finale rispettando UI -> BLoC -> use case -> repository -> data
+source. Flutter invoca una Edge Function Supabase e non parla direttamente con
+InfoTarga. Vedi `docs/VEHICLE_REGISTRATION.md` per flusso, failure, tabelle e RLS.
+
 ## Documenti collegati
 
 - `docs/DATABASE.md` — schema Supabase, RPC, RLS (fonte di verità: DB live, non questo file)

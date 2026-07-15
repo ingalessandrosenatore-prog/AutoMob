@@ -20,7 +20,15 @@
       "PowerShell(Get-ChildItem *)",
       "PowerShell(Expand-Archive *)",
       "PowerShell($sp = \"C:\\\\Users\\\\alexs\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-alexs-Documents-GitHub-AutoMob-auto-mob-v1\\\\2e59b1b4-0e64-4aa8-a11b-b9e13f23e3e4\\\\scratchpad\"; $ff = \"$sp\\\\ffmpeg\\\\ffmpeg-8.1.2-essentials_build\\\\bin\"; $vid = \"C:\\\\Users\\\\alexs\\\\AppData\\\\Local\\\\Packages\\\\Microsoft.ScreenSketch_8wekyb3d8bbwe\\\\TempState\\\\Recordings\\\\20260714-0936-08.9756730.mp4\"; & \"$ff\\\\ffprobe.exe\" -v error -select_streams v:0 -show_entries \"stream=width,height,r_frame_rate,duration,nb_frames\" -of default $vid)",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "mcp__b0cb2f2e-787e-4d27-a322-1f79f68c1bcf__list_projects",
+      "Bash(awk '/^diff --git/{f=$3} /^\\\\+import/{if \\(f ~ /lib\\\\/core\\\\// && $0 ~ /features\\\\//\\) print f\": \"$0}' review_diff.patch)",
+      "Bash(ls supabase/functions)",
+      "Bash(ls supabase/functions/vehicle-lookup)",
+      "mcp__b0cb2f2e-787e-4d27-a322-1f79f68c1bcf__list_edge_functions",
+      "mcp__b0cb2f2e-787e-4d27-a322-1f79f68c1bcf__get_logs",
+      "mcp__b0cb2f2e-787e-4d27-a322-1f79f68c1bcf__execute_sql",
+      "Bash(awk '/^diff --git/{f=$3} /^new file mode/{print f} /^deleted file mode/{print \"DEL \"f}' review_diff.patch)"
     ]
   },
   "skillOverrides": {

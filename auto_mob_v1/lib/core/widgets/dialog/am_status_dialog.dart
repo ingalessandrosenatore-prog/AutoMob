@@ -3,7 +3,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
+import '../../config/performance_flags.dart';
 import '../../theme/am_theme_colors.dart';
+import '../smart/am_flat_glass.dart';
 
 /// Una singola azione (bottone) di un [AmStatusDialog].
 /// [filled] true = bottone pieno (azione primaria, es. "Riprova"),
@@ -56,79 +58,71 @@ class AmStatusDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 40),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-            decoration: BoxDecoration(
-              color: colors.surface.withValues(alpha: 0.88),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: colors.border),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showSpinner)
-                  SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation(iconColor),
-                    ),
-                  )
-                else if (icon != null)
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: iconColor.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: HugeIcon(
-                      icon: icon!,
-                      color: iconColor,
-                      size: 34,
-                      strokeWidth: 2.2,
-                    ),
+      child: _DialogSurface(
+        color: colors.surface,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showSpinner)
+                SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation(iconColor),
                   ),
-                const SizedBox(height: 18),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
+                )
+              else if (icon != null)
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: HugeIcon(
+                    icon: icon!,
+                    color: iconColor,
+                    size: 34,
+                    strokeWidth: 2.2,
                   ),
                 ),
-                if (message != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    message!,
-                    textAlign: TextAlign.center,
+              const SizedBox(height: 18),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (message != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  message!,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color: colors.textSecondary,
-                      fontSize: 14,
-                      height: 1.35,
-                    ),
+                    fontSize: 14,
+                    height: 1.35,
                   ),
-                ],
-                if (actions.isNotEmpty) ...[
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      for (var i = 0; i < actions.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 12),
-                        Expanded(child: _ActionButton(action: actions[i])),
-                      ],
-                    ],
-                  ),
-                ],
+                ),
               ],
-            ),
+              if (actions.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    for (var i = 0; i < actions.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 12),
+                      Expanded(child: _ActionButton(action: actions[i])),
+                    ],
+                  ],
+                ),
+              ],
+            ],
           ),
         ),
       ),
@@ -143,7 +137,9 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: action.filled ? action.color : action.color.withValues(alpha: 0.12),
+      color: action.filled
+          ? action.color
+          : action.color.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -153,12 +149,45 @@ class _ActionButton extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             action.label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: action.filled ? Colors.white : action.color,
               fontSize: 15,
               fontWeight: FontWeight.w700,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Quando il liquid glass è disattivo non monta il [BackdropFilter]: al suo
+/// posto mantiene il bordo luminoso con la sfumatura della tinta del tema.
+class _DialogSurface extends StatelessWidget {
+  final Color color;
+  final Widget child;
+
+  const _DialogSurface({required this.color, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    const radius = BorderRadius.all(Radius.circular(28));
+    final surface = color.withValues(alpha: 0.88);
+
+    if (!kHeavyEffects) {
+      return AmFlatPopUp(color: surface, borderRadius: radius, child: child);
+    }
+
+    return ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+        child: Container(
+          decoration: BoxDecoration(color: surface, borderRadius: radius),
+          child: child,
         ),
       ),
     );

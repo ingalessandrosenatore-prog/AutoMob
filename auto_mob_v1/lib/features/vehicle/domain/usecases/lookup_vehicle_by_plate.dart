@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/error/exceptions/exception.dart';
 import '../entities/vehicle_lookup_result.dart';
+import '../failures/vehicle_lookup_failure.dart';
 import '../repositories/vehicle_lookup_repository.dart';
 
 class LookupVehicleByPlate {
@@ -9,7 +9,7 @@ class LookupVehicleByPlate {
 
   LookupVehicleByPlate(this.repository);
 
-  Future<Either<Failure, VehicleLookupResult>> call(String targa) {
+  Future<Either<VehicleLookupFailure, VehicleLookupResult>> call(String targa) {
     return repository.lookupByPlate(targa);
   }
 }

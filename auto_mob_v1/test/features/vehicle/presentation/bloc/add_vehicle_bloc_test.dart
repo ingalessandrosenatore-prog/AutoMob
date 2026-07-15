@@ -7,6 +7,7 @@
 
 import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle_draft.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle_save_outcome.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/save_draft_step.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/save_vehicle.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
@@ -102,7 +103,11 @@ void main() {
       when(
         () => saveDraftStep(any()),
       ).thenAnswer((_) async => const Right(null));
-      when(() => saveVehicle(any())).thenAnswer((_) async => const Right(null));
+      when(() => saveVehicle(any())).thenAnswer(
+        (_) async => const Right(
+          VehicleSaveOutcome(vehicleId: 'vehicle-1', photoSaved: true),
+        ),
+      );
       return buildBloc();
     },
     act: (bloc) => bloc.add(SaveWizard()),

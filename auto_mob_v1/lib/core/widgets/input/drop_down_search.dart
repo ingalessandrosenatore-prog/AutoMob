@@ -52,7 +52,12 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
 
   @override
   void dispose() {
-    _closeOverlay();
+    // Durante dispose `mounted` e' ancora true fino a super.dispose(): usare
+    // _closeOverlay chiamerebbe quindi setState mentre l'elemento e' in fase
+    // di smontaggio.
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    _isOpen = false;
     _searchCtrl.dispose();
     _filteredNotifier.dispose();
     super.dispose();
@@ -177,16 +182,16 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                    AnimatedRotation(
-                      turns: _isOpen ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowDown01,
-                        color: colors.textSecondary,
-                        size: 22,
-                        strokeWidth: 2.2,
-                      ),
+                  AnimatedRotation(
+                    turns: _isOpen ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedArrowDown01,
+                      color: colors.textSecondary,
+                      size: 22,
+                      strokeWidth: 2.2,
                     ),
+                  ),
                 ],
               ),
             ),
@@ -294,10 +299,7 @@ class _DropdownOverlay<T> extends StatelessWidget {
                     ),
                   ),
 
-                  Container(
-                    height: 1,
-                    color: colors.border,
-                  ),
+                  Container(height: 1, color: colors.border),
 
                   // Lista filtrata
                   ValueListenableBuilder<List<T>>(
@@ -334,10 +336,12 @@ class _DropdownOverlay<T> extends StatelessWidget {
                             return InkWell(
                               onTap: () => onSelect(item),
                               borderRadius: BorderRadius.circular(8),
-                                highlightColor:
-                                    colors.accent.withValues(alpha: 0.1),
-                                splashColor:
-                                    colors.accent.withValues(alpha: 0.08),
+                              highlightColor: colors.accent.withValues(
+                                alpha: 0.1,
+                              ),
+                              splashColor: colors.accent.withValues(
+                                alpha: 0.08,
+                              ),
                               child: Container(
                                 height: _itemHeight,
                                 padding: const EdgeInsets.symmetric(

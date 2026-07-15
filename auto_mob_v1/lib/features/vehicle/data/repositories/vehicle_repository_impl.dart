@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:fpdart/fpdart.dart';
 
@@ -6,6 +6,7 @@ import '../../../../core/error/exceptions/exception.dart';
 import '../../../../core/error/exceptions/exceptions.dart';
 import '../../domain/entities/vehicle.dart';
 import '../../domain/entities/vehicle_draft.dart';
+import '../../domain/entities/vehicle_save_outcome.dart';
 import '../../domain/repositories/vehicle_repository.dart';
 import '../datasources/vehicle_draft_local_data_source.dart';
 import '../datasources/vehicle_remote_data_source.dart';
@@ -32,18 +33,44 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
-  Future<Either<Failure, void>> saveVehicle(VehicleDraft draft) async {
+  Future<Either<Failure, VehicleDraft?>> loadDraft() async {
     try {
-      // Ora aspettiamo un booleano (o un'eccezione se fallisce)
-      await remoteDataSource.saveVehicle(draft);
+      return Right(await localDataSource.loadDraft());
+    } on CacheException {
+      return const Left(StorageFailure());
+    }
+  }
 
-      if (draft.fotoFile != null && draft.targa!.isNotEmpty) {
-        await localDataSource.saveFoto(draft.fotoFile!, draft.targa!);
-      }
-
+  @override
+  Future<Either<Failure, void>> clearDraft() async {
+    try {
+      await localDataSource.clearDraft();
       return const Right(null);
     } on CacheException {
       return const Left(StorageFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, VehicleSaveOutcome>> saveVehicle(
+    VehicleDraft draft,
+  ) async {
+    try {
+      final vehicleId = await remoteDataSource.saveVehicle(draft);
+
+      var photoSaved = true;
+      if (draft.fotoFile != null && draft.targa!.isNotEmpty) {
+        try {
+          await localDataSource.saveFoto(draft.fotoFile!, draft.targa!);
+        } on CacheException {
+          // Il record remoto è già stato creato: non restituiamo un errore che
+          // indurrebbe il BLoC a rilanciare l'RPC e creare un duplicato.
+          photoSaved = false;
+        }
+      }
+      return Right(
+        VehicleSaveOutcome(vehicleId: vehicleId, photoSaved: photoSaved),
+      );
     } on VehicleDataSourceException {
       return const Left(ServerFailure());
     } catch (_) {

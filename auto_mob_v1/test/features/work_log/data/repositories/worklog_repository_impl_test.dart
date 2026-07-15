@@ -19,7 +19,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockWorklogRemoteDataSource extends Mock implements WorklogRemoteDataSource {}
+class MockWorklogRemoteDataSource extends Mock
+    implements WorklogRemoteDataSource {}
 
 void main() {
   late WorklogRepositoryImpl repository;
@@ -35,16 +36,18 @@ void main() {
 
   group('createWorkLog', () {
     test('ritorna Right(null) quando il datasource risponde', () async {
-      when(() => remote.createWorkLog(
-            vehicleId: 'v1',
-            type: 'tagliando',
-            customName: null,
-            serviceKm: 50000,
-            serviceDate: tServiceDate,
-            notes: null,
-            intervallKm: 15000,
-            items: tItems,
-          )).thenAnswer((_) async {});
+      when(
+        () => remote.createWorkLog(
+          vehicleId: 'v1',
+          type: 'tagliando',
+          customName: null,
+          serviceKm: 50000,
+          serviceDate: tServiceDate,
+          notes: null,
+          intervallKm: 15000,
+          items: tItems,
+        ),
+      ).thenAnswer((_) async {});
 
       final result = await repository.createWorkLog(
         vehicleId: 'v1',
@@ -59,16 +62,18 @@ void main() {
     });
 
     test('mappa WorkLogDataSourceException in ServerFailure', () async {
-      when(() => remote.createWorkLog(
-            vehicleId: 'v1',
-            type: 'tagliando',
-            customName: null,
-            serviceKm: 50000,
-            serviceDate: tServiceDate,
-            notes: null,
-            intervallKm: 15000,
-            items: tItems,
-          )).thenThrow(const WorkLogDataSourceException('boom'));
+      when(
+        () => remote.createWorkLog(
+          vehicleId: 'v1',
+          type: 'tagliando',
+          customName: null,
+          serviceKm: 50000,
+          serviceDate: tServiceDate,
+          notes: null,
+          intervallKm: 15000,
+          items: tItems,
+        ),
+      ).thenThrow(const WorkLogDataSourceException('boom'));
 
       final result = await repository.createWorkLog(
         vehicleId: 'v1',
@@ -79,20 +84,22 @@ void main() {
         items: tItems,
       );
 
-      expect(result, const Left<Failure, void>(ServerFailure()));
+      expect(result, const Left<Failure, void>(CodedServerFailure()));
     });
 
     test('mappa NetworkException in NetworkFailure', () async {
-      when(() => remote.createWorkLog(
-            vehicleId: 'v1',
-            type: 'tagliando',
-            customName: null,
-            serviceKm: 50000,
-            serviceDate: tServiceDate,
-            notes: null,
-            intervallKm: 15000,
-            items: tItems,
-          )).thenThrow(const NetworkException());
+      when(
+        () => remote.createWorkLog(
+          vehicleId: 'v1',
+          type: 'tagliando',
+          customName: null,
+          serviceKm: 50000,
+          serviceDate: tServiceDate,
+          notes: null,
+          intervallKm: 15000,
+          items: tItems,
+        ),
+      ).thenThrow(const NetworkException());
 
       final result = await repository.createWorkLog(
         vehicleId: 'v1',
@@ -109,7 +116,13 @@ void main() {
 
   group('getVehicleOptions', () {
     final tOptions = [
-      const VehicleOptionModel(id: 'v1', targa: 'AB123CD', nome: 'Panda', brand: 'Fiat', km: 10000),
+      const VehicleOptionModel(
+        id: 'v1',
+        targa: 'AB123CD',
+        nome: 'Panda',
+        brand: 'Fiat',
+        km: 10000,
+      ),
     ];
 
     test('ritorna Right con la lista quando il datasource risponde', () async {
@@ -121,8 +134,9 @@ void main() {
     });
 
     test('mappa WorkLogDataSourceException in ServerFailure', () async {
-      when(() => remote.getVehicleOptions())
-          .thenThrow(const WorkLogDataSourceException('boom'));
+      when(
+        () => remote.getVehicleOptions(),
+      ).thenThrow(const WorkLogDataSourceException('boom'));
 
       final result = await repository.getVehicleOptions();
 
@@ -141,21 +155,30 @@ void main() {
       ),
     ];
 
-    test('ritorna Right con la pagina quando il datasource risponde',
-        () async {
-      when(() => remote.getWorks(vehicleId: 'v1', from: 0, to: 19))
-          .thenAnswer((_) async => tWorks);
+    test('ritorna Right con la pagina quando il datasource risponde', () async {
+      when(
+        () => remote.getWorks(vehicleId: 'v1', from: 0, to: 19),
+      ).thenAnswer((_) async => tWorks);
 
-      final result = await repository.getWorks(vehicleId: 'v1', from: 0, to: 19);
+      final result = await repository.getWorks(
+        vehicleId: 'v1',
+        from: 0,
+        to: 19,
+      );
 
       expect(result, Right<Failure, List<WorkLogRow>>(tWorks));
     });
 
     test('mappa NetworkException in NetworkFailure', () async {
-      when(() => remote.getWorks(vehicleId: 'v1', from: 0, to: 19))
-          .thenThrow(const NetworkException());
+      when(
+        () => remote.getWorks(vehicleId: 'v1', from: 0, to: 19),
+      ).thenThrow(const NetworkException());
 
-      final result = await repository.getWorks(vehicleId: 'v1', from: 0, to: 19);
+      final result = await repository.getWorks(
+        vehicleId: 'v1',
+        from: 0,
+        to: 19,
+      );
 
       expect(result, const Left<Failure, List<WorkLogRow>>(NetworkFailure()));
     });

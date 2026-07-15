@@ -1,4 +1,4 @@
-# iOS Liquid Zoom
+# iOS Liquid Animation
 
 Transizione modulare ispirata alla `NavigationTransition.zoom` di SwiftUI. Non
 dipende dai widget liquid-glass del progetto: anima geometria, luce, blur,
@@ -8,7 +8,7 @@ Flutter dentro una route del `Navigator`.
 Import unico:
 
 ```dart
-import 'package:auto_mob_v1/core/ios_animation_gbt/ios_animation_gbt.dart';
+import 'package:ios_liquid_animation/ios_liquid_animation.dart';
 ```
 
 ## Bottone verso una pagina

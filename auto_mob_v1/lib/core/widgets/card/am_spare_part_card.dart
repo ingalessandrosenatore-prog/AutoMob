@@ -180,7 +180,9 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
                               isRequired: false,
                               obscureText: false,
                               keyboardType:
-                                  const TextInputType.numberWithOptions(decimal: true),
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               suffixIcon: Text(
                                 'EUR',
                                 style: TextStyle(
@@ -189,10 +191,10 @@ class _AmSparePartCardState extends State<AmSparePartCard> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              onEditingComplete: () => widget.onItemChanged(
+                              onChanged: (value) => widget.onItemChanged(
                                 item.copyWith(
                                   unitPrice: double.tryParse(
-                                    _priceController.text.replaceAll(',', '.'),
+                                    value.toString().replaceAll(',', '.'),
                                   ),
                                 ),
                               ),
@@ -225,9 +227,9 @@ class _PartDeleteBackground extends StatelessWidget {
       color: color,
       borderRadius: BorderRadius.circular(20),
     ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
+    child: const Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
         Text(
           'Elimina',
           style: TextStyle(

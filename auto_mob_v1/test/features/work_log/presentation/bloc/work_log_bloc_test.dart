@@ -28,27 +28,46 @@ void main() {
     createWorkLog = MockCreateWorkLog();
   });
 
-  WorkLogBloc buildBloc() => WorkLogBloc(createWorkLog: createWorkLog);
+  WorkLogBloc buildBloc() =>
+      WorkLogBloc(createWorkLog: createWorkLog, vehicleId: 'v1');
 
   blocTest<WorkLogBloc, WorkLogState>(
     'WorkLogEventCohiceTap: aggiunge una parte non ancora selezionata',
     build: buildBloc,
     act: (bloc) => bloc.add(WorkLogEventCohiceTap(isSelected: false, id: 15)),
     expect: () => [
-      isA<WorkLogState>()
-          .having((s) => s.selectedParts.map((p) => p.partId), 'partIds', [15]),
+      isA<WorkLogState>().having(
+        (s) => s.selectedParts.map((p) => p.partId),
+        'partIds',
+        [15],
+      ),
     ],
   );
+
+  test('partsTotal somma quantità per prezzo unitario di ogni ricambio', () {
+    final state = WorkLogState.initial().copyWith(
+      selectedParts: const [
+        SelectedPart(partId: 15, quantity: 2, unitPrice: 12.5),
+        SelectedPart(partId: 20, quantity: 3, unitPrice: 8),
+      ],
+    );
+
+    expect(state.partsTotal, 49);
+  });
 
   blocTest<WorkLogBloc, WorkLogState>(
     'WorkLogEventCohiceTap: rimuove una parte gia\' selezionata',
     build: buildBloc,
-    seed: () => WorkLogState.initial()
-        .copyWith(selectedParts: const [SelectedPart(partId: 15)]),
+    seed: () => WorkLogState.initial().copyWith(
+      selectedParts: const [SelectedPart(partId: 15)],
+    ),
     act: (bloc) => bloc.add(WorkLogEventCohiceTap(isSelected: true, id: 15)),
     expect: () => [
-      isA<WorkLogState>()
-          .having((s) => s.selectedParts, 'selectedParts', isEmpty),
+      isA<WorkLogState>().having(
+        (s) => s.selectedParts,
+        'selectedParts',
+        isEmpty,
+      ),
     ],
   );
 
@@ -97,20 +116,28 @@ void main() {
     act: (bloc) => bloc.add(RemovePartEvent(partId: 15)),
     expect: () => [
       isA<WorkLogState>().having(
-          (s) => s.selectedParts.map((p) => p.partId), 'partIds', [20]),
+        (s) => s.selectedParts.map((p) => p.partId),
+        'partIds',
+        [20],
+      ),
     ],
   );
 
   blocTest<WorkLogBloc, WorkLogState>(
     'UpdatePartItemEvent: sostituisce la parte con lo stesso partId',
     build: buildBloc,
-    seed: () => WorkLogState.initial()
-        .copyWith(selectedParts: const [SelectedPart(partId: 15, quantity: 1)]),
-    act: (bloc) => bloc
-        .add(UpdatePartItemEvent(item: const SelectedPart(partId: 15, quantity: 3))),
+    seed: () => WorkLogState.initial().copyWith(
+      selectedParts: const [SelectedPart(partId: 15, quantity: 1)],
+    ),
+    act: (bloc) => bloc.add(
+      UpdatePartItemEvent(item: const SelectedPart(partId: 15, quantity: 3)),
+    ),
     expect: () => [
       isA<WorkLogState>().having(
-          (s) => s.selectedParts.single.quantity, 'quantity', 3),
+        (s) => s.selectedParts.single.quantity,
+        'quantity',
+        3,
+      ),
     ],
   );
 
@@ -123,20 +150,25 @@ void main() {
       vehicleKm: 10000,
       currentKm: 10000,
     ),
-    act: (bloc) => bloc.add(OnSubmitEvent(id: 'v1')),
+    act: (bloc) => bloc.add(OnSubmitEvent()),
     expect: () => [
-      isA<WorkLogState>()
-          .having((s) => s.status, 'status', WorkLogStatus.failure),
+      isA<WorkLogState>().having(
+        (s) => s.status,
+        'status',
+        WorkLogStatus.failure,
+      ),
     ],
     verify: (_) {
-      verifyNever(() => createWorkLog(
-            vehicleId: any(named: 'vehicleId'),
-            type: any(named: 'type'),
-            serviceKm: any(named: 'serviceKm'),
-            serviceDate: any(named: 'serviceDate'),
-            intervallKm: any(named: 'intervallKm'),
-            items: any(named: 'items'),
-          ));
+      verifyNever(
+        () => createWorkLog(
+          vehicleId: any(named: 'vehicleId'),
+          type: any(named: 'type'),
+          serviceKm: any(named: 'serviceKm'),
+          serviceDate: any(named: 'serviceDate'),
+          intervallKm: any(named: 'intervallKm'),
+          items: any(named: 'items'),
+        ),
+      );
     },
   );
 
@@ -148,26 +180,31 @@ void main() {
       vehicleKm: 10000,
       currentKm: 9000,
     ),
-    act: (bloc) => bloc.add(OnSubmitEvent(id: 'v1')),
+    act: (bloc) => bloc.add(OnSubmitEvent()),
     expect: () => [
-      isA<WorkLogState>()
-          .having((s) => s.status, 'status', WorkLogStatus.failure),
+      isA<WorkLogState>().having(
+        (s) => s.status,
+        'status',
+        WorkLogStatus.failure,
+      ),
     ],
   );
 
   blocTest<WorkLogBloc, WorkLogState>(
     'OnSubmitEvent: salva il lavoro e emette [loading, success]',
     build: () {
-      when(() => createWorkLog(
-            vehicleId: 'v1',
-            type: 'tagliando',
-            customName: null,
-            serviceKm: 12000,
-            serviceDate: tServiceDate,
-            notes: null,
-            intervallKm: 15000,
-            items: const [SelectedPart(partId: 15, quantity: 1)],
-          )).thenAnswer((_) async => const Right(null));
+      when(
+        () => createWorkLog(
+          vehicleId: 'v1',
+          type: 'tagliando',
+          customName: null,
+          serviceKm: 12000,
+          serviceDate: tServiceDate,
+          notes: null,
+          intervallKm: 15000,
+          items: const [SelectedPart(partId: 15, quantity: 1)],
+        ),
+      ).thenAnswer((_) async => const Right(null));
       return buildBloc();
     },
     seed: () => WorkLogState.initial().copyWith(
@@ -178,28 +215,36 @@ void main() {
       serviceDate: tServiceDate,
       selectedParts: const [SelectedPart(partId: 15, quantity: 1)],
     ),
-    act: (bloc) => bloc.add(OnSubmitEvent(id: 'v1')),
+    act: (bloc) => bloc.add(OnSubmitEvent()),
     expect: () => [
-      isA<WorkLogState>()
-          .having((s) => s.status, 'status', WorkLogStatus.loading),
-      isA<WorkLogState>()
-          .having((s) => s.status, 'status', WorkLogStatus.success),
+      isA<WorkLogState>().having(
+        (s) => s.status,
+        'status',
+        WorkLogStatus.loading,
+      ),
+      isA<WorkLogState>().having(
+        (s) => s.status,
+        'status',
+        WorkLogStatus.success,
+      ),
     ],
   );
 
   blocTest<WorkLogBloc, WorkLogState>(
     'OnSubmitEvent: emette [loading, failure] quando il salvataggio fallisce',
     build: () {
-      when(() => createWorkLog(
-            vehicleId: 'v1',
-            type: 'tagliando',
-            customName: null,
-            serviceKm: 12000,
-            serviceDate: tServiceDate,
-            notes: null,
-            intervallKm: 15000,
-            items: const [SelectedPart(partId: 15, quantity: 1)],
-          )).thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => createWorkLog(
+          vehicleId: 'v1',
+          type: 'tagliando',
+          customName: null,
+          serviceKm: 12000,
+          serviceDate: tServiceDate,
+          notes: null,
+          intervallKm: 15000,
+          items: const [SelectedPart(partId: 15, quantity: 1)],
+        ),
+      ).thenAnswer((_) async => const Left(CodedServerFailure(code: '23503')));
       return buildBloc();
     },
     seed: () => WorkLogState.initial().copyWith(
@@ -210,13 +255,21 @@ void main() {
       serviceDate: tServiceDate,
       selectedParts: const [SelectedPart(partId: 15, quantity: 1)],
     ),
-    act: (bloc) => bloc.add(OnSubmitEvent(id: 'v1')),
+    act: (bloc) => bloc.add(OnSubmitEvent()),
     expect: () => [
-      isA<WorkLogState>()
-          .having((s) => s.status, 'status', WorkLogStatus.loading),
+      isA<WorkLogState>().having(
+        (s) => s.status,
+        'status',
+        WorkLogStatus.loading,
+      ),
       isA<WorkLogState>()
           .having((s) => s.status, 'status', WorkLogStatus.failure)
-          .having((s) => s.errorMessage, 'errorMessage', const ServerFailure().message),
+          .having(
+            (s) => s.errorMessage,
+            'errorMessage',
+            const ServerFailure().message,
+          )
+          .having((s) => s.errorCode, 'errorCode', '23503'),
     ],
   );
 
@@ -229,8 +282,16 @@ void main() {
         ..add(WorkLogWizardStepChanged(8));
     },
     expect: () => [
-      isA<WorkLogState>().having((state) => state.currentStep, 'currentStep', 1),
-      isA<WorkLogState>().having((state) => state.currentStep, 'currentStep', 2),
+      isA<WorkLogState>().having(
+        (state) => state.currentStep,
+        'currentStep',
+        1,
+      ),
+      isA<WorkLogState>().having(
+        (state) => state.currentStep,
+        'currentStep',
+        2,
+      ),
     ],
   );
 }

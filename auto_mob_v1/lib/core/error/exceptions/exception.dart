@@ -10,12 +10,23 @@ sealed class Failure extends Equatable {
 
 // Errori di rete/connessione
 class NetworkFailure extends Failure {
-  const NetworkFailure() : super("Connessione assente. Controlla la rete e riprova.");
+  const NetworkFailure()
+    : super("Connessione assente. Controlla la rete e riprova.");
 }
 
 // Errori server generici
 class ServerFailure extends Failure {
-  const ServerFailure() : super("Si � verificato un errore. Riprova tra qualche istante.");
+  const ServerFailure()
+    : super("Si � verificato un errore. Riprova tra qualche istante.");
+}
+
+class CodedServerFailure extends ServerFailure {
+  final String? code;
+
+  const CodedServerFailure({this.code});
+
+  @override
+  List<Object> get props => [message, ?code];
 }
 
 // Risorsa non trovata
@@ -39,20 +50,23 @@ class AuthCancelledFailure extends Failure {
 
 class EmailNotConfirmedFailure extends Failure {
   const EmailNotConfirmedFailure()
-      : super("Non hai verificato la tua email. Verifica e riprova.");
+    : super("Non hai verificato la tua email. Verifica e riprova.");
 }
 
 class EmailAlreadyInUseFailure extends Failure {
-  const EmailAlreadyInUseFailure() : super("Questa email � gi� registrata. Effettua il login.");
+  const EmailAlreadyInUseFailure()
+    : super("Questa email � gi� registrata. Effettua il login.");
 }
 
 class WeakPasswordFailure extends Failure {
-  const WeakPasswordFailure() : super("La password � troppo debole. Usa almeno 8 caratteri.");
+  const WeakPasswordFailure()
+    : super("La password � troppo debole. Usa almeno 8 caratteri.");
 }
 
 // Permessi
 class PermissionFailure extends Failure {
-  const PermissionFailure() : super("Non hai il permesso di accedere a questa risorsa.");
+  const PermissionFailure()
+    : super("Non hai il permesso di accedere a questa risorsa.");
 }
 
 // Duplicati
@@ -62,7 +76,8 @@ class DuplicateFailure extends Failure {
 
 // Storage locale
 class StorageFailure extends Failure {
-  const StorageFailure() : super("Impossibile salvare il file sul dispositivo.");
+  const StorageFailure()
+    : super("Impossibile salvare il file sul dispositivo.");
 }
 
 // Regole di business

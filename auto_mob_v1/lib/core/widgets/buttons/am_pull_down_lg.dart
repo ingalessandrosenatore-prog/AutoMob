@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
@@ -6,6 +5,7 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../config/performance_flags.dart';
 import '../../services/haptic_service.dart';
+import '../smart/am_flat_glass.dart';
 
 /// Un badge flottante che indica il veicolo selezionato.
 /// Estetica: Pillola blu con icona auto e freccia per dropdown,
@@ -13,10 +13,12 @@ import '../../services/haptic_service.dart';
 class AmPullDownLG extends StatefulWidget {
   final String brand;
   final String lable;
-  final Color? color;
+  final Color backgroundColor;
+  final Color popupBackgroundColor;
   final List<List> buttonIcons;
   final double buttonIconsSize;
-  final Color buttonIconColor;
+  final Color iconColor;
+  final Color textColor;
   final TextStyle buttonLableStyle;
   final double larghezza;
   final List<ItemMorphPopUp>
@@ -28,13 +30,15 @@ class AmPullDownLG extends StatefulWidget {
     super.key,
     required this.brand,
     required this.lable,
-    this.color, // Parametro opzionale
+    required this.backgroundColor,
+    required this.popupBackgroundColor,
     required this.onTap,
     required this.children,
     this.larghezza = 250.0,
     required this.buttonIcons,
     required this.buttonIconsSize,
-    required this.buttonIconColor,
+    required this.iconColor,
+    required this.textColor,
     required this.buttonLableStyle,
     required this.arrow,
   });
@@ -71,7 +75,7 @@ class _AmPullDownLGState extends State<AmPullDownLG>
   void initState() {
     super.initState();
     bounceCtrl = AnimationController.unbounded(vsync: this, value: 1.0);
-    transistionCtrl =   AnimationController.unbounded(vsync: this, value: 1.0);
+    transistionCtrl = AnimationController.unbounded(vsync: this, value: 1.0);
     lightCtrl = AnimationController(vsync: this, value: 0.0);
     morpheCtrl = AnimationController.unbounded(vsync: this, value: 0);
     morpheCtrl.addListener(_onMorphChange);
@@ -138,75 +142,77 @@ class _AmPullDownLGState extends State<AmPullDownLG>
           final apertura = (1 - morpheCtrl.value).clamp(0.0, 1.0);
           final scala = bounceCtrl.value * apertura;
 
-          final Color base = widget.color?.withValues(alpha: 0.2) ??
-              const Color(0xFF232326).withValues(alpha: 0.2);
+          final base = widget.backgroundColor;
 
           final Widget content = Stack(
-                alignment: Alignment.center,
-                children: [
-                  // 2. LIVELLO BASE E OMBRA
-                  // Positioned.fill si adatta dinamicamente alle dimensioni della Row sottostante
+            alignment: Alignment.center,
+            children: [
+              // 2. LIVELLO BASE E OMBRA
+              // Positioned.fill si adatta dinamicamente alle dimensioni della Row sottostante
 
-                  // 3. LIVELLO LUCE APPLE (Vibrancy)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: AnimatedBuilder(
-                        animation: lightCtrl,
-                        builder: (context, child) => CustomPaint(
-                          painter: GlowPainter(
-                            intensity: morpheCtrl.value <= 0
-                                ? lightCtrl.value
-                                : morpheCtrl.value,
-                            color: Colors.white,
-                          ),
-                        ),
+              // 3. LIVELLO LUCE APPLE (Vibrancy)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedBuilder(
+                    animation: lightCtrl,
+                    builder: (context, child) => CustomPaint(
+                      painter: GlowPainter(
+                        intensity: morpheCtrl.value <= 0
+                            ? lightCtrl.value
+                            : morpheCtrl.value,
+                        color: Colors.white,
                       ),
                     ),
                   ),
+                ),
+              ),
 
-                  // 4. CONTENUTI (Icone e Testo) in primo piano
-                  // Qui applichiamo il padding che prima era nel Container genitore
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        HugeIcon(
-                            icon: widget.buttonIcons,
-                            size: widget.buttonIconsSize,
-                            color: widget.buttonIconColor,
-                            strokeWidth: 2.2,
-
+              // 4. CONTENUTI (Icone e Testo) in primo piano
+              // Qui applichiamo il padding che prima era nel Container genitore
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    if (!widget.arrow) ...[
+                      HugeIcon(
+                        icon: widget.buttonIcons,
+                        size: widget.buttonIconsSize,
+                        color: widget.iconColor,
+                        strokeWidth: 2.2,
+                      ),
+                    ],
+                    if (widget.arrow) ...[const SizedBox(width: 4)],
+                    Flexible(
+                      child: Text(
+                        widget.lable.toUpperCase(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: widget.buttonLableStyle.copyWith(
+                          color: widget.textColor,
                         ),
-                        if (widget.arrow) ...[const SizedBox(width: 4)],
-                        Flexible(
-                          child: Text(
-                            widget.lable.toUpperCase(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: widget.buttonLableStyle,
-                          ),
-                        ),
-                        if (widget.arrow) ...[
-                          const SizedBox(width: 4),
-                        ], // Un po' di margine prima della freccia per simmetria
-                        if (widget.arrow) ...[
-                          HugeIcon(
-                            icon: HugeIcons.strokeRoundedArrowDown01,
-                            color: widget.buttonIconColor,
-                            size: widget.buttonIconsSize,
-                            strokeWidth: 2.2,
-                          ),
-                        ],
-                      ],
+                      ),
                     ),
-                  ),
-                ],
-              );
+                    if (widget.arrow) ...[
+                      const SizedBox(width: 4),
+                    ], // Un po' di margine prima della freccia per simmetria
+                    if (widget.arrow) ...[
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedArrowDown01,
+                        color: widget.iconColor,
+                        size: widget.buttonIconsSize,
+                        strokeWidth: 2.2,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          );
 
           return Transform.scale(
             scale: scala,
@@ -220,22 +226,15 @@ class _AmPullDownLGState extends State<AmPullDownLG>
                     borderRadius: 100,
                     child: content,
                   )
-            // TODO: in caso di false il comtainer si deve adattare alla forma del contenuto come fa ocliquid glass e inoltre e scomaprso il bagliorequando si preme sul puslante
-                : Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF232326).withValues(alpha: 0.7),
-                    Colors.white.withValues(alpha: 0.1),
-                    Colors.white.withValues(alpha: 0.1),// Sfumatura intermedia
-                    Colors.white.withValues(alpha: 0.2), // Bordo diametro bianco lieve
-                  ],
-                  stops: const [0.8, 0.95,0.99, 1.0],
-                ),
-              ),
-              child: content,
-            )
+                : AmFlatGlass(
+                    // Le dimensioni arrivano dal contenuto: icona singola =
+                    // cerchio, label = pillola. Il gradiente segue la stessa
+                    // forma senza introdurre un bordo reale.
+                    color: widget.backgroundColor,
+                    borderRadius: 100,
+                    edgeLighten: 0.78,
+                    child: content,
+                  ),
           );
         },
       ),
@@ -270,6 +269,7 @@ class _AmPullDownLGState extends State<AmPullDownLG>
               rectButton: r,
               larghezza: widget.larghezza,
               ctrlm: m,
+              backgroundColor: widget.popupBackgroundColor,
               children: widget.children,
             );
           },
@@ -282,12 +282,14 @@ class MorphPopUp extends StatefulWidget {
   final List<ItemMorphPopUp> children;
   final double larghezza;
   final AnimationController ctrlm;
+  final Color backgroundColor;
   const MorphPopUp({
     super.key,
     required this.rectButton,
     required this.children,
     required this.larghezza,
     required this.ctrlm,
+    required this.backgroundColor,
   });
 
   @override
@@ -329,12 +331,18 @@ class _PopUpState extends State<MorphPopUp>
     const altezzaRiga = 48.0;
     const margine = 8.0;
 
-    final altezzaFinale = widget.children.length * altezzaRiga + 16;
+    final altezzaContenuto = widget.children.length * altezzaRiga + 16;
 
     // Direzione dinamica: se non c'è spazio a sufficienza a destra del
     // bottone, il popup si apre verso sinistra (allineando il bordo destro
     // al bordo destro del bottone) invece di uscire dallo schermo.
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenSize = MediaQuery.sizeOf(context);
+    final screenWidth = screenSize.width;
+    // Un menu lungo resta interamente nella viewport: la ListView interna
+    // diventa scrollabile anziché essere tagliata dal ClipRRect della route.
+    final altezzaFinale = altezzaContenuto
+        .clamp(altezzaRiga + 16, screenSize.height - margine * 2)
+        .toDouble();
     final apreVersoSinistra =
         widget.rectButton.left + widget.larghezza > screenWidth - margine;
     final double leftFinale;
@@ -348,9 +356,11 @@ class _PopUpState extends State<MorphPopUp>
       leftFinale = leftNaturale.clamp(margine, maxLeft).toDouble();
     }
 
+    final maxTop = screenSize.height - altezzaFinale - margine;
+    final topFinale = widget.rectButton.top.clamp(margine, maxTop).toDouble();
     final reactFine = Rect.fromLTWH(
       leftFinale,
-      widget.rectButton.top,
+      topFinale,
       widget.larghezza,
       altezzaFinale,
     );
@@ -393,47 +403,71 @@ class _PopUpState extends State<MorphPopUp>
                   maxHeight: altezzaFinale,
                   child: Opacity(
                     opacity: opac,
-                    child: OCLiquidGlassGroup(
-                      settings: const OCLiquidGlassSettings(
-                        blurRadiusPx: 10,
-                        refractStrength: 0.15,
-                        specStrength: 0,
-                        specWidth: 0,
+                    child: _PopUpSurface(
+                      color: widget.backgroundColor,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(8),
+                        itemCount: widget.children.length,
+                        itemBuilder: (context, index) {
+                          final item = widget.children[index];
+                          // Il tap su una voce deve chiudere la route prima di
+                          // eseguire l'azione, altrimenti la barriera rimane.
+                          return Opacity(
+                            opacity: t.clamp(0.0, 1.0),
+                            child: item.copyWithOnTap(() {
+                              _closePopUp();
+                              item.onTap();
+                            }),
+                          );
+                        },
                       ),
-                      child: OCLiquidGlass(
-                        enabled: true,
-                        borderRadius:
-                            30, // Ridotto da 100 per adattarsi meglio alla forma rettangolare
-                        color: const Color(0xFF232326).withValues(alpha: 0.7),
-                        child: ListView.builder(
-                      padding: const EdgeInsets.all(8),
-                      itemCount: widget.children.length,
-                      itemBuilder: (context, index) {
-                        final item = widget.children[index];
-                        // Il tap su una voce DEVE chiudere il pop-up: senza
-                        // questo la route (con barriera opaca full-screen)
-                        // resta montata mentre l'azione naviga/apre il picker.
-                        // Se nel frattempo la card che ospita il trigger viene
-                        // smontata, il controller `ctrlm` viene disposed e la
-                        // barriera orfana intercetta ogni tap -> UI "freezata".
-                        return Opacity(
-                          opacity: t.clamp(0.0, 1.0),
-                          child: item.copyWithOnTap(() {
-                            _closePopUp();
-                            item.onTap();
-                          }),
-                        );
-                      },
                     ),
                   ),
-                ),
-              ),
                 ),
               ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+/// Superficie del menu: quando si disattiva il liquid glass, il bordo chiaro
+/// è ottenuto dalla sfumatura del colore ricevuto, senza blur né [Border].
+class _PopUpSurface extends StatelessWidget {
+  final Color color;
+  final Widget child;
+
+  const _PopUpSurface({required this.color, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    // Più leggero del vetro reale: il bordo viene percepito dalla sfumatura,
+    // non da un riempimento opaco.
+    final surface = color;
+    if (!kHeavyEffects) {
+      return AmFlatPopUp(
+        color: surface,
+        //borderRadius: 1,
+
+        child: child,
+      );
+    }
+
+    return OCLiquidGlassGroup(
+      settings: const OCLiquidGlassSettings(
+        blurRadiusPx: 5,
+        refractStrength: -0.10,
+        specStrength: 0,
+        specWidth: 0,
+      ),
+      child: OCLiquidGlass(
+        enabled: true,
+        borderRadius: 30,
+        color: surface,
+        child: child,
+      ),
     );
   }
 }
@@ -453,31 +487,40 @@ class ItemMorphPopUp extends StatelessWidget {
     super.key,
     required this.icon,
     required this.text,
-    this.textSize = 16.0,
-    this.textWeight = FontWeight.w700,
-    this.iconSize = 24.0,
-    this.iconColor = const Color(0xFFF48A37), // arancione
-    this.textColor = Colors.white,
+    this.textSize,
+    this.textWeight,
+    this.iconSize,
+    this.iconColor,
+    this.textColor,
     required this.onTap,
-    this.iconsWheight = FontWeight.w900,
+    this.iconsWheight,
   });
 
   /// Copia identica con un [onTap] diverso: serve al pop-up per iniettare la
   /// chiusura della route prima di eseguire l'azione originale della voce.
   ItemMorphPopUp copyWithOnTap(VoidCallback onTap) => ItemMorphPopUp(
-        icon: icon,
-        text: text,
-        textSize: textSize,
-        textWeight: textWeight,
-        iconSize: iconSize,
-        iconColor: iconColor,
-        textColor: textColor,
-        iconsWheight: iconsWheight,
-        onTap: onTap,
-      );
+    icon: icon,
+    text: text,
+    textSize: textSize,
+    textWeight: textWeight,
+    iconSize: iconSize,
+    iconColor: iconColor,
+    textColor: textColor,
+    iconsWheight: iconsWheight,
+    onTap: onTap,
+  );
 
   @override
   Widget build(BuildContext context) {
+    // Default fallback values
+    final effectiveTextSize = textSize ?? 16.0;
+    final effectiveTextWeight = textWeight ?? FontWeight.w700;
+    final effectiveIconSize = iconSize ?? 24.0;
+    final effectiveIconColor = iconColor ?? const Color(0xFFF48A37);
+    final effectiveTextColor = textColor ?? Colors.white;
+    // ignore: unused_local_variable
+    final effectiveIconsWeight = iconsWheight ?? FontWeight.w900;
+
     return Material(
       color: Colors.transparent, // riposo: invisibile, si fonde col pop-up
       child: InkWell(
@@ -498,9 +541,9 @@ class ItemMorphPopUp extends StatelessWidget {
             children: [
               HugeIcon(
                 icon: icon,
-                size: iconSize,
-                color: iconColor,
-                strokeWidth: 2.2,
+                size: effectiveIconSize,
+                color: effectiveIconColor,
+                strokeWidth: 1.5,
               ),
               const SizedBox(width: 12),
               Flexible(
@@ -509,9 +552,9 @@ class ItemMorphPopUp extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: textColor,
-                    fontSize: textSize,
-                    fontWeight: textWeight,
+                    color: effectiveTextColor,
+                    fontSize: effectiveTextSize,
+                    fontWeight: effectiveTextWeight,
                     letterSpacing: 1.2,
                   ),
                 ),

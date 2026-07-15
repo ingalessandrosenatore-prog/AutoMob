@@ -1,8 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
+import '../../../../core/config/performance_flags.dart';
 import '../../../../core/constants/parts_catalog.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/am_theme_colors.dart';
@@ -12,7 +14,7 @@ import '../../../../core/widgets/buttons/back_button.dart';
 import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
 import '../../../../core/widgets/card/am_spare_part_card.dart';
-import '../../../../core/widgets/hero/am_fab_hero.dart';
+import '../../../../core/widgets/dialog/am_status_dialog.dart';
 import '../../../../core/widgets/progress/am_wizard_progress.dart';
 import '../bloc/work_log_bloc.dart';
 import '../bloc/work_log_event.dart';
@@ -26,13 +28,11 @@ const _steps = ['Dati', 'Ricambi', 'Costi'];
 class WorkLogWizardPage extends StatelessWidget {
   final String vehicleId;
   final int currentKm;
-  final String heroTag;
 
   const WorkLogWizardPage({
     super.key,
     required this.vehicleId,
     required this.currentKm,
-    required this.heroTag,
   });
 
   @override
@@ -48,8 +48,8 @@ class WorkLogWizardPage extends StatelessWidget {
         canPop: true,
         child: Scaffold(
           backgroundColor: colors.background,
-          resizeToAvoidBottomInset: false,
-          body: _WorkLogWizardBody(heroTag: heroTag),
+          resizeToAvoidBottomInset: true,
+          body: _WorkLogWizardBody(currentKm: currentKm),
         ),
       ),
     );
@@ -57,8 +57,9 @@ class WorkLogWizardPage extends StatelessWidget {
 }
 
 class _WorkLogWizardBody extends StatefulWidget {
-  final String heroTag;
-  const _WorkLogWizardBody({required this.heroTag});
+  final int currentKm;
+
+  const _WorkLogWizardBody({required this.currentKm});
 
   @override
   State<_WorkLogWizardBody> createState() => _WorkLogWizardBodyState();
@@ -66,17 +67,16 @@ class _WorkLogWizardBody extends StatefulWidget {
 
 class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
   late final PageController _pages;
-  final _km = TextEditingController();
+  late final TextEditingController _km;
   final _customName = TextEditingController();
   final _notes = TextEditingController();
-  String _query = '';
-  String? _kmError;
 
   @override
   void initState() {
     super.initState();
     final state = context.read<WorkLogBloc>().state;
     _pages = PageController(initialPage: state.currentStep);
+    _km = TextEditingController(text: widget.currentKm.toString());
   }
 
   @override
@@ -91,7 +91,7 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
   bool _validateData(WorkLogState state) {
     final km = int.tryParse(_km.text.trim());
     if (km == null || km < state.vehicleKm) {
-      setState(() => _kmError = 'Inserisci almeno ${state.vehicleKm} km');
+      context.read<WorkLogBloc>().add(WorkLogValidationRequested());
       return false;
     }
     if (state.type == EnumPopUp.altro && _customName.text.trim().isEmpty) {
@@ -106,9 +106,9 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
   void _next(WorkLogState state) {
     if (state.currentStep == 0 && !_validateData(state)) return;
     if (state.currentStep == 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Draft lavoro pronto per il salvataggio')),
-      );
+      if (state.status != WorkLogStatus.loading) {
+        context.read<WorkLogBloc>().add(OnSubmitEvent());
+      }
       return;
     }
     context.read<WorkLogBloc>().add(
@@ -120,13 +120,20 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
   Widget build(BuildContext context) {
     return BlocConsumer<WorkLogBloc, WorkLogState>(
       listenWhen: (previous, current) =>
-          previous.currentStep != current.currentStep,
-      listener: (_, state) => _pages.animateToPage(
-        state.currentStep,
-        duration: const Duration(milliseconds: 380),
-        curve: Curves.easeInOutCubic,
-      ),
+          previous.currentStep != current.currentStep ||
+          previous.status != current.status,
+      listener: _onStateChanged,
       builder: (context, state) {
+        final addButton = AmSoftButton(
+          width: 48,
+          height: 48,
+          color: _orange,
+          icon: HugeIcons.strokeRoundedAdd01,
+          iconTurns: 0.125,
+          onPressed: state.status == WorkLogStatus.loading
+              ? () {}
+              : () => Navigator.of(context).pop(),
+        );
         return SafeArea(
           bottom: false,
           child: Column(
@@ -142,7 +149,7 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
                     const Expanded(
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: SizedBox(width: 45, height: 45),
+                        child: SizedBox(width: 48, height: 48),
                       ),
                     ),
                     const Expanded(
@@ -173,28 +180,20 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerRight,
-                        child: AmFabHero(
-                          tag: widget.heroTag,
-                          child: OCLiquidGlassGroup(
-                            settings: const OCLiquidGlassSettings(
-                              refractStrength: -0.130,
-                              blurRadiusPx: 1.0,
-                              specStrength: 0,
-                              specWidth: 0.0,
-                              specAngle: 145,
-                              blendPx: 20,
-                              specPower: 10,
-                            ),
-                            child: AmSoftButton(
-                              width: 45,
-                              height: 45,
-                              color: _orange,
-                              icon: HugeIcons.strokeRoundedAdd01,
-                              iconTurns: 0.125,
-                              onPressed: () => context.pop(),
-                            ),
-                          ),
-                        ),
+                        child: kHeavyEffects
+                            ? OCLiquidGlassGroup(
+                                settings: const OCLiquidGlassSettings(
+                                  refractStrength: -0.130,
+                                  blurRadiusPx: 1.0,
+                                  specStrength: 0,
+                                  specWidth: 0,
+                                  specAngle: 145,
+                                  blendPx: 20,
+                                  specPower: 10,
+                                ),
+                                child: addButton,
+                              )
+                            : addButton,
                       ),
                     ),
                   ],
@@ -211,23 +210,18 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
                   controller: _pages,
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
-                    _DataStep(
-                      km: _km,
-                      customName: _customName,
-                      notes: _notes,
-                      kmError: _kmError,
-                    ),
-                    _PartsStep(
-                      query: _query,
-                      onQueryChanged: (value) => setState(() => _query = value),
-                    ),
+                    _DataStep(km: _km, customName: _customName, notes: _notes),
+                    const _PartsStep(),
                     const _CostsStep(),
                   ],
                 ),
               ),
               _BottomBar(
                 step: state.currentStep,
-                onBack: state.currentStep == 0
+                isLoading: state.status == WorkLogStatus.loading,
+                onBack:
+                    state.currentStep == 0 ||
+                        state.status == WorkLogStatus.loading
                     ? null
                     : () => context.read<WorkLogBloc>().add(
                         WorkLogWizardStepChanged(state.currentStep - 1),
@@ -240,154 +234,262 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
       },
     );
   }
+
+  void _onStateChanged(BuildContext context, WorkLogState state) {
+    if (_pages.hasClients && _pages.page?.round() != state.currentStep) {
+      _pages.animateToPage(
+        state.currentStep,
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+
+    switch (state.status) {
+      case WorkLogStatus.initial:
+      case WorkLogStatus.loading:
+        break;
+      case WorkLogStatus.success:
+        showAmStatusDialog<void>(
+          context,
+          icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+          iconColor: const Color(0xFF30D158),
+          title: 'Lavoro registrato',
+          message: 'Hai registrato correttamente il lavoro.',
+          actions: [
+            AmDialogAction(
+              label: 'Chiudi',
+              color: const Color(0xFF0A84FF),
+              filled: true,
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+        break;
+      case WorkLogStatus.failure:
+        showAmStatusDialog<void>(
+          context,
+          icon: HugeIcons.strokeRoundedAlert01,
+          iconColor: const Color(0xFFFF453A),
+          title: 'Non è stato possibile inserire il valore',
+          message: 'Codice errore: ${state.errorCode ?? 'sconosciuto'}',
+          actions: [
+            AmDialogAction(
+              label: 'Chiudi',
+              color: const Color(0xFF0A84FF),
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                Navigator.of(context).pop(false);
+              },
+            ),
+            AmDialogAction(
+              label: 'Riprova',
+              color: _orange,
+              filled: true,
+              onPressed: () {
+                Navigator.of(context, rootNavigator: true).pop();
+                context.read<WorkLogBloc>().add(OnSubmitEvent());
+              },
+            ),
+          ],
+        );
+        break;
+    }
+  }
 }
 
 class _DataStep extends StatelessWidget {
   final TextEditingController km;
   final TextEditingController customName;
   final TextEditingController notes;
-  final String? kmError;
   const _DataStep({
     required this.km,
     required this.customName,
     required this.notes,
-    required this.kmError,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 120),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colors.info.withValues(alpha: .08),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.info.withValues(alpha: .2)),
-          ),
-          child: Row(
-            children: [
-              HugeIcon(
-                icon: HugeIcons.strokeRoundedAlertCircle,
-                color: colors.info,
-                strokeWidth: 2.2,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Inserisci i dati principali dell\'intervento.',
-                  style: TextStyle(color: colors.textSecondary),
+    return AmEdgeBlur(
+      child: ListView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 120),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.info.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colors.info.withValues(alpha: .2)),
+            ),
+            child: Row(
+              children: [
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedAlertCircle,
+                  color: colors.info,
+                  strokeWidth: 2.2,
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Inserisci i dati principali dell\'intervento.',
+                    style: TextStyle(color: colors.textSecondary),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          BlocBuilder<WorkLogBloc, WorkLogState>(
+            buildWhen: (previous, current) =>
+                previous.kmValidationMessage != current.kmValidationMessage,
+            builder: (context, state) => _Field(
+              label: 'CHILOMETRI ATTUALI',
+              controller: km,
+              keyboardType: TextInputType.number,
+              suffix: 'km',
+              error: state.kmValidationMessage,
+              onChanged: (value) => context.read<WorkLogBloc>().add(
+                CurrentKmChange(currentKm: int.tryParse(value) ?? 0),
               ),
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: 24),
-        _Field(
-          label: 'CHILOMETRI ATTUALI',
-          controller: km,
-          keyboardType: TextInputType.number,
-          suffix: 'km',
-          error: kmError,
-          onChanged: (value) => context.read<WorkLogBloc>().add(
-            CurrentKmChange(currentKm: int.tryParse(value) ?? 0),
+          const SizedBox(height: 20),
+          BlocBuilder<WorkLogBloc, WorkLogState>(
+            builder: (context, state) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _FieldLabel(label: 'Tipo lavoro', isRequired: true),
+                const SizedBox(height: 10),
+                DropdownButtonFormField<EnumPopUp>(
+                  initialValue: state.type,
+                  dropdownColor: colors.surface,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  decoration: _decoration(context),
+                  items: EnumPopUp.values
+                      .map(
+                        (type) => DropdownMenuItem(
+                          value: type,
+                          child: Text(_label(type)),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (type) {
+                    if (type != null) {
+                      context.read<WorkLogBloc>().add(
+                        OnWorkTypeChange(type: type),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        BlocBuilder<WorkLogBloc, WorkLogState>(
-          builder: (context, state) => DropdownButtonFormField<EnumPopUp>(
-            initialValue: state.type,
-            dropdownColor: colors.surface,
-            style: TextStyle(color: colors.textPrimary),
-            decoration: _decoration(context, 'TIPO LAVORO'),
-            items: EnumPopUp.values
-                .map(
-                  (type) =>
-                      DropdownMenuItem(value: type, child: Text(_label(type))),
-                )
-                .toList(),
-            onChanged: (type) {
-              if (type != null) {
-                context.read<WorkLogBloc>().add(OnWorkTypeChange(type: type));
-              }
+          BlocBuilder<WorkLogBloc, WorkLogState>(
+            builder: (context, state) {
+              if (state.type != EnumPopUp.altro) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: _Field(
+                  label: 'NOME INTERVENTO',
+                  controller: customName,
+                  onChanged: (value) => context.read<WorkLogBloc>().add(
+                    CustomNameChange(customName: value),
+                  ),
+                ),
+              );
             },
           ),
-        ),
-        BlocBuilder<WorkLogBloc, WorkLogState>(
-          builder: (context, state) {
-            if (state.type != EnumPopUp.altro) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: _Field(
-                label: 'NOME INTERVENTO',
-                controller: customName,
-                onChanged: (value) => context.read<WorkLogBloc>().add(
-                  CustomNameChange(customName: value),
-                ),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 20),
-        _Field(
-          label: 'NOTE',
-          controller: notes,
-          maxLines: 4,
-          onChanged: (value) =>
-              context.read<WorkLogBloc>().add(NoteChange(note: value)),
-        ),
-      ],
+          const SizedBox(height: 20),
+          _Field(
+            label: 'NOTE',
+            controller: notes,
+            maxLines: 4,
+            onChanged: (value) =>
+                context.read<WorkLogBloc>().add(NoteChange(note: value)),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _PartsStep extends StatelessWidget {
-  final String query;
-  final ValueChanged<String> onQueryChanged;
-  const _PartsStep({required this.query, required this.onQueryChanged});
+  const _PartsStep();
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    final parts = kPartsCatalog.entries
-        .where((part) => part.value.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
-          child: TextField(
-            onChanged: onQueryChanged,
-            style: TextStyle(color: colors.textPrimary),
-            decoration: _decoration(context, 'CERCA RICAMBIO').copyWith(
-              prefixIcon: HugeIcon(
-                icon: HugeIcons.strokeRoundedSearch01,
-                color: colors.textSecondary,
-                size: 18,
-                strokeWidth: 2.2,
+    return BlocBuilder<WorkLogBloc, WorkLogState>(
+      buildWhen: (previous, current) =>
+          previous.partsQuery != current.partsQuery,
+      builder: (context, state) {
+        final query = state.partsQuery.toLowerCase();
+        final parts = kPartsCatalog.entries
+            .where((part) => part.value.toLowerCase().contains(query))
+            .toList();
+        return AmEdgeBlur(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _FieldLabel(label: 'Cerca ricambio'),
+                    const SizedBox(height: 10),
+                    TextField(
+                      onChanged: (value) => context.read<WorkLogBloc>().add(
+                        PartsQueryChanged(query: value),
+                      ),
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      decoration: _decoration(context).copyWith(
+                        prefixIcon: HugeIcon(
+                          icon: HugeIcons.strokeRoundedSearch01,
+                          color: colors.textSecondary,
+                          size: 20,
+                          strokeWidth: 2.2,
+                        ),
+                        hintText: 'Nome del ricambio',
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: AmEdgeBlur(
-            child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(24, 4, 24, 120),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: .82,
+              Expanded(
+                child: GridView.builder(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 120),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: .9,
+                  ),
+                  itemCount: parts.length,
+                  itemBuilder: (_, index) => _PartTile(
+                    key: ValueKey(parts[index].key),
+                    id: parts[index].key,
+                    label: parts[index].value,
+                  ),
+                ),
               ),
-              itemCount: parts.length,
-              itemBuilder: (_, index) =>
-                  _PartTile(id: parts[index].key, label: parts[index].value),
-            ),
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -395,7 +497,7 @@ class _PartsStep extends StatelessWidget {
 class _PartTile extends StatelessWidget {
   final int id;
   final String label;
-  const _PartTile({required this.id, required this.label});
+  const _PartTile({super.key, required this.id, required this.label});
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
@@ -453,18 +555,14 @@ class _CostsStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocBuilder<WorkLogBloc, WorkLogState>(
     builder: (context, state) {
-      final total = state.selectedParts.fold<double>(
-        0,
-        (sum, part) => sum + part.quantity * (part.unitPrice ?? 0),
-      );
-      return Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-            child: _TotalBar(total: total),
-          ),
-          Expanded(
-            child: AmEdgeBlur(
+      return AmEdgeBlur(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
+              child: _TotalBar(total: state.partsTotal),
+            ),
+            Expanded(
               child: state.selectedParts.isEmpty
                   ? Center(
                       child: Text(
@@ -475,6 +573,8 @@ class _CostsStep extends StatelessWidget {
                       ),
                     )
                   : ListView.builder(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       padding: const EdgeInsets.fromLTRB(24, 4, 24, 120),
                       itemCount: state.selectedParts.length,
                       itemBuilder: (_, index) {
@@ -492,8 +592,8 @@ class _CostsStep extends StatelessWidget {
                       },
                     ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     },
   );
@@ -544,10 +644,12 @@ class _TotalBar extends StatelessWidget {
 
 class _BottomBar extends StatelessWidget {
   final int step;
+  final bool isLoading;
   final VoidCallback? onBack;
   final VoidCallback onNext;
   const _BottomBar({
     required this.step,
+    required this.isLoading,
     required this.onBack,
     required this.onNext,
   });
@@ -556,8 +658,12 @@ class _BottomBar extends StatelessWidget {
     final colors = AmThemeColors.of(context);
     final showBack = onBack != null;
     final label = step == 2 ? 'COMPLETA' : 'CONTINUA';
+    final bottomPadding = math.max(
+      20.0,
+      MediaQuery.paddingOf(context).bottom + 8,
+    );
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPadding),
       child: SizedBox(
         height: 52,
         child: Row(
@@ -595,7 +701,8 @@ class _BottomBar extends StatelessWidget {
                   color: colors.accent,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  onPressed: onNext,
+                  isLoading: isLoading,
+                  onPressed: isLoading ? () {} : onNext,
                 ),
               ),
             ),
@@ -626,31 +733,68 @@ class _Field extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return TextField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      onChanged: onChanged,
-      style: TextStyle(color: colors.textPrimary),
-      decoration: _decoration(
-        context,
-        label,
-      ).copyWith(suffixText: suffix, errorText: error),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _FieldLabel(label: label, isRequired: label != 'NOTE'),
+        const SizedBox(height: 10),
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
+          onChanged: onChanged,
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: _decoration(
+            context,
+            multiline: maxLines > 1,
+          ).copyWith(suffixText: suffix, errorText: error),
+        ),
+      ],
     );
   }
 }
 
-InputDecoration _decoration(BuildContext context, String label) {
+class _FieldLabel extends StatelessWidget {
+  final String label;
+  final bool isRequired;
+
+  const _FieldLabel({required this.label, this.isRequired = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    return RichText(
+      text: TextSpan(
+        style: TextStyle(
+          color: colors.textSecondary,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.1,
+        ),
+        children: [
+          TextSpan(text: label.toUpperCase()),
+          if (isRequired)
+            TextSpan(
+              text: ' *',
+              style: TextStyle(color: colors.info),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+InputDecoration _decoration(BuildContext context, {bool multiline = false}) {
   final colors = AmThemeColors.of(context);
   return InputDecoration(
-    labelText: label,
-    labelStyle: TextStyle(
-      color: colors.textSecondary,
-      fontSize: 12,
-      fontWeight: FontWeight.w700,
-    ),
     filled: true,
     fillColor: colors.surface,
+    constraints: multiline ? null : const BoxConstraints(minHeight: 52),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
       borderSide: BorderSide.none,

@@ -12,6 +12,7 @@ import 'dart:io';
 
 import 'package:auto_mob_v1/core/error/exceptions/exceptions.dart';
 import 'package:auto_mob_v1/features/vehicle/data/datasources/vehicle_draft_local_data_source.dart';
+import 'package:auto_mob_v1/features/vehicle/data/models/vehicle_draft_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -55,35 +56,72 @@ void main() {
       expect(await File(path).readAsString(), 'foto-1');
     });
 
-    test('un secondo salvataggio cambia il path (cache-busting) e cancella il vecchio file',
-        () async {
-      await dataSource.saveFoto(await sorgente('foto-1'), targa);
-      final primoPath = dataSource.getFotoPath(targa);
+    test(
+      'ritrova la stessa foto quando Supabase restituisce la targa minuscola',
+      () async {
+        await dataSource.saveFoto(await sorgente('foto-db'), targa);
 
-      // Il timestamp e' al millisecondo: garantiamo un istante diverso.
-      await Future<void>.delayed(const Duration(milliseconds: 5));
+        final pathMaiuscolo = dataSource.getFotoPath(targa);
+        final pathMinuscolo = dataSource.getFotoPath(targa.toLowerCase());
 
-      await dataSource.saveFoto(await sorgente('foto-2'), targa);
-      final secondoPath = dataSource.getFotoPath(targa);
+        expect(pathMinuscolo, pathMaiuscolo);
+        expect(File(pathMinuscolo).existsSync(), isTrue);
+        expect(await File(pathMinuscolo).readAsString(), 'foto-db');
+      },
+    );
 
-      expect(secondoPath, isNot(primoPath)); // path nuovo -> chiave cache nuova
-      expect(File(secondoPath).existsSync(), isTrue);
-      expect(await File(secondoPath).readAsString(), 'foto-2');
-      // Il file precedente e' stato rimosso (niente accumulo di copie).
-      expect(File(primoPath).existsSync(), isFalse);
-    });
+    test(
+      'recupera anche una chiave minuscola creata dalla vecchia versione',
+      () async {
+        const nome = 'veicolo_ab123cd_legacy.jpg';
+        final file = File('${tempDir.path}/$nome');
+        await file.writeAsString('foto-legacy');
+        await prefs.setString('vehicle_photo_ab123cd', nome);
 
-    test('getFotoPath ritorna stringa vuota quando non c\'e\' nessuna foto', () {
-      expect(dataSource.getFotoPath('MAI_SALVATA'), '');
-    });
+        expect(dataSource.getFotoPath(targa), file.path);
+      },
+    );
 
-    test('fallback legacy: trova la vecchia foto non versionata su disco', () async {
-      // Simula un utente pre-esistente: file col vecchio schema, nessuna prefs.
-      final legacy = File('${tempDir.path}/veicolo_$targa.jpg');
-      await legacy.writeAsString('vecchia');
+    test(
+      'un secondo salvataggio cambia il path (cache-busting) e cancella il vecchio file',
+      () async {
+        await dataSource.saveFoto(await sorgente('foto-1'), targa);
+        final primoPath = dataSource.getFotoPath(targa);
 
-      expect(dataSource.getFotoPath(targa), legacy.path);
-    });
+        // Il timestamp e' al millisecondo: garantiamo un istante diverso.
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+
+        await dataSource.saveFoto(await sorgente('foto-2'), targa);
+        final secondoPath = dataSource.getFotoPath(targa);
+
+        expect(
+          secondoPath,
+          isNot(primoPath),
+        ); // path nuovo -> chiave cache nuova
+        expect(File(secondoPath).existsSync(), isTrue);
+        expect(await File(secondoPath).readAsString(), 'foto-2');
+        // Il file precedente e' stato rimosso (niente accumulo di copie).
+        expect(File(primoPath).existsSync(), isFalse);
+      },
+    );
+
+    test(
+      'getFotoPath ritorna stringa vuota quando non c\'e\' nessuna foto',
+      () {
+        expect(dataSource.getFotoPath('MAI_SALVATA'), '');
+      },
+    );
+
+    test(
+      'fallback legacy: trova la vecchia foto non versionata su disco',
+      () async {
+        // Simula un utente pre-esistente: file col vecchio schema, nessuna prefs.
+        final legacy = File('${tempDir.path}/veicolo_$targa.jpg');
+        await legacy.writeAsString('vecchia');
+
+        expect(dataSource.getFotoPath(targa), legacy.path);
+      },
+    );
 
     test('cambiando foto, lo schema legacy viene cancellato', () async {
       final legacy = File('${tempDir.path}/veicolo_$targa.jpg');
@@ -117,6 +155,28 @@ void main() {
 
     test('ritorna null se non c\'e\' nessuna foto', () async {
       expect(await dataSource.readFoto('MAI_SALVATA'), isNull);
+    });
+  });
+
+  group('draft registrazione', () {
+    test('salva e ripristina lookup, modalità edit e meccanico', () async {
+      const draft = VehicleDraftModel(
+        targa: 'CC000CC',
+        lookupId: 'lookup-1',
+        lookupAttemptConsumed: true,
+        datiInModifica: true,
+        meccanicoId: 'mechanic-1',
+        codiceMeccanico: 'xxxxxx',
+      );
+      await dataSource.saveDraft(draft);
+
+      expect(await dataSource.loadDraft(), draft);
+    });
+
+    test('clearDraft elimina la bozza', () async {
+      await dataSource.saveDraft(const VehicleDraftModel(targa: 'AB123CD'));
+      await dataSource.clearDraft();
+      expect(await dataSource.loadDraft(), isNull);
     });
   });
 }

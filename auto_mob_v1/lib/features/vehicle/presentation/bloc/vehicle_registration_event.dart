@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:equatable/equatable.dart';
 
 sealed class VehicleRegistrationEvent extends Equatable {
@@ -7,50 +6,67 @@ sealed class VehicleRegistrationEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Reset completo del flusso (apertura pagina).
 class RegistrationStarted extends VehicleRegistrationEvent {}
 
-/// Step 0 → 1 — codice meccanico (opzionale).
 class MechanicStepSubmitted extends VehicleRegistrationEvent {
   final String? codiceMeccanico;
-
   MechanicStepSubmitted({this.codiceMeccanico});
-
   @override
   List<Object?> get props => [codiceMeccanico];
 }
 
-/// Step 1 → 2 — targa inserita, avvia il lookup (mock).
+class RegistrationWithoutMechanicPressed extends VehicleRegistrationEvent {}
+
 class PlateSubmitted extends VehicleRegistrationEvent {
   final String targa;
-
   PlateSubmitted({required this.targa});
-
   @override
   List<Object?> get props => [targa];
 }
 
-/// Step 2 → 3 — conferma (o correzione manuale) dei dati veicolo.
+/// Prosegue senza interrogare servizi esterni e apre la compilazione manuale.
+class ManualPlateSubmitted extends VehicleRegistrationEvent {
+  final String targa;
+  ManualPlateSubmitted({required this.targa});
+  @override
+  List<Object?> get props => [targa];
+}
+
+class LookupClosedWithManualEntry extends VehicleRegistrationEvent {}
+
+/// Il popup informativo e' stato letto: evita che venga mostrato di nuovo
+/// quando l'utente passa allo step successivo.
+class LookupDialogAcknowledged extends VehicleRegistrationEvent {}
+
 class VerifyStepSubmitted extends VehicleRegistrationEvent {
+  final String? targa;
   final String? marca;
   final String? modello;
   final int? anno;
   final String? carburante;
   final int? cilindrata;
-
+  final int? potenzaCv;
   VerifyStepSubmitted({
+    this.targa,
     this.marca,
     this.modello,
     this.anno,
     this.carburante,
     this.cilindrata,
+    this.potenzaCv,
   });
-
   @override
-  List<Object?> get props => [marca, modello, anno, carburante, cilindrata];
+  List<Object?> get props => [
+    targa,
+    marca,
+    modello,
+    anno,
+    carburante,
+    cilindrata,
+    potenzaCv,
+  ];
 }
 
-/// Step 3 → 4 — ultimi lavori svolti (tagliando/distribuzione/gomme/revisione).
 class WorkLogStepSubmitted extends VehicleRegistrationEvent {
   final int? kmAttuali;
   final int? intervalloTagliando;
@@ -62,7 +78,6 @@ class WorkLogStepSubmitted extends VehicleRegistrationEvent {
   final int? intervalloCambioGomme;
   final int? kmUltimaInversioneGomme;
   final int? intervalloInversioneGomme;
-
   WorkLogStepSubmitted({
     this.kmAttuali,
     this.intervalloTagliando,
@@ -75,7 +90,6 @@ class WorkLogStepSubmitted extends VehicleRegistrationEvent {
     this.kmUltimaInversioneGomme,
     this.intervalloInversioneGomme,
   });
-
   @override
   List<Object?> get props => [
     kmAttuali,
@@ -91,15 +105,15 @@ class WorkLogStepSubmitted extends VehicleRegistrationEvent {
   ];
 }
 
-/// Step 4 — foto veicolo, ultimo step del flusso (solo in-memory per ora).
 class PhotoStepSubmitted extends VehicleRegistrationEvent {
   final File? fotoFile;
-
   PhotoStepSubmitted({this.fotoFile});
-
   @override
   List<Object?> get props => [fotoFile];
 }
 
-/// Indietro (currentStep - 1, clamp a 0).
 class RegistrationStepBackPressed extends VehicleRegistrationEvent {}
+
+class RegistrationDraftDiscarded extends VehicleRegistrationEvent {}
+
+class RegistrationDraftSaveRequested extends VehicleRegistrationEvent {}

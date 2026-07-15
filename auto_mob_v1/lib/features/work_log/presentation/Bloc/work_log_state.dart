@@ -4,6 +4,8 @@ import 'package:equatable/equatable.dart';
 
 enum WorkLogStatus { initial, loading, success, failure }
 
+const _notProvided = Object();
+
 class WorkLogState extends Equatable {
   final EnumPopUp type;
   final String? customName;
@@ -17,7 +19,10 @@ class WorkLogState extends Equatable {
   final DateTime serviceDate;
   final WorkLogStatus status;
   final String? errorMessage;
+  final String? errorCode;
   final int currentStep;
+  final String partsQuery;
+  final bool showValidationErrors;
 
   const WorkLogState({
     required this.type,
@@ -31,7 +36,10 @@ class WorkLogState extends Equatable {
     required this.serviceDate,
     this.status = WorkLogStatus.initial,
     this.errorMessage,
+    this.errorCode,
     this.currentStep = 0,
+    this.partsQuery = '',
+    this.showValidationErrors = false,
   });
 
   factory WorkLogState.initial() => WorkLogState(
@@ -45,9 +53,19 @@ class WorkLogState extends Equatable {
     serviceDate: DateTime.now(),
   );
 
+  double get partsTotal => selectedParts.fold<double>(
+    0,
+    (total, part) => total + part.quantity * (part.unitPrice ?? 0),
+  );
+
+  String? get kmValidationMessage =>
+      showValidationErrors && currentKm < vehicleKm
+      ? 'Inserisci almeno $vehicleKm km'
+      : null;
+
   WorkLogState copyWith({
     EnumPopUp? type,
-    String? customName,
+    Object? customName = _notProvided,
     List<SelectedPart>? selectedParts,
     int? currentKm,
     int? vehicleKm,
@@ -56,12 +74,17 @@ class WorkLogState extends Equatable {
     int? prosssimoRichiamo,
     DateTime? serviceDate,
     WorkLogStatus? status,
-    String? errorMessage,
+    Object? errorMessage = _notProvided,
+    Object? errorCode = _notProvided,
     int? currentStep,
+    String? partsQuery,
+    bool? showValidationErrors,
   }) {
     return WorkLogState(
       type: type ?? this.type,
-      customName: customName ?? this.customName,
+      customName: identical(customName, _notProvided)
+          ? this.customName
+          : customName as String?,
       selectedParts: selectedParts ?? this.selectedParts,
       currentKm: currentKm ?? this.currentKm,
       vehicleKm: vehicleKm ?? this.vehicleKm,
@@ -70,8 +93,15 @@ class WorkLogState extends Equatable {
       prosssimoRichiamo: prosssimoRichiamo ?? this.prosssimoRichiamo,
       serviceDate: serviceDate ?? this.serviceDate,
       status: status ?? this.status,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: identical(errorMessage, _notProvided)
+          ? this.errorMessage
+          : errorMessage as String?,
+      errorCode: identical(errorCode, _notProvided)
+          ? this.errorCode
+          : errorCode as String?,
       currentStep: currentStep ?? this.currentStep,
+      partsQuery: partsQuery ?? this.partsQuery,
+      showValidationErrors: showValidationErrors ?? this.showValidationErrors,
     );
   }
 
@@ -88,6 +118,9 @@ class WorkLogState extends Equatable {
     serviceDate,
     status,
     errorMessage,
+    errorCode,
     currentStep,
+    partsQuery,
+    showValidationErrors,
   ];
 }

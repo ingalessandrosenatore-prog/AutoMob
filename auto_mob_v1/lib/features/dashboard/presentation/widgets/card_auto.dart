@@ -58,13 +58,16 @@ class CardAuto extends StatelessWidget {
       brand: '',
       lable: '',
       onTap: () {},
+      backgroundColor: colors.background,
+      popupBackgroundColor: colors.surfaceRaised,
       // larghezza = larghezza del MENU che si apre (non della matita, che si
       // dimensiona sul contenuto). A 60 la voce "MODIFICA FOTO" andava in
       // overflow (~32px): serve spazio per icona + padding + testo.
-      larghezza: 260,
+      larghezza: 230,
       buttonIcons: HugeIcons.strokeRoundedEdit01,
       buttonIconsSize: 18,
-      buttonIconColor: colors.textPrimary,
+      iconColor: colors.textPrimary,
+      textColor: colors.textPrimary,
       buttonLableStyle: const TextStyle(fontSize: 0),
       arrow: false,
       children: [
@@ -72,33 +75,17 @@ class CardAuto extends StatelessWidget {
           icon: HugeIcons.strokeRoundedAlbum02,
           text: "MODIFICA FOTO",
           onTap: onEditPhotoTap ?? () {},
-          iconColor: const Color(0xFFF48A37),
-          iconSize: 20,
+          iconColor: colors.accent,
+          iconSize: 22,
+          textColor: colors.textPrimary,
         ),
       ],
     );
 
-    return Container(
+    return SizedBox(
       width: cardWidth,
-      margin: const EdgeInsets.fromLTRB(4, 4, 4, 14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [colors.surfaceHighlight, colors.surfaceRaised],
-        ),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 18,
-            offset: const Offset(0, 9),
-          ),
-        ],
-      ),
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(9),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

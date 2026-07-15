@@ -24,6 +24,12 @@ class VehicleDraftModel extends VehicleDraft {
     super.intervalloInversioneGomme,
     super.fotoFile,
     super.codiceMeccanico,
+    super.meccanicoId,
+    super.meccanicoNome,
+    super.meccanicoIndirizzo,
+    super.lookupId,
+    super.lookupAttemptConsumed,
+    super.datiInModifica,
   });
 
   factory VehicleDraftModel.fromDraft(VehicleDraft draft) {
@@ -49,6 +55,12 @@ class VehicleDraftModel extends VehicleDraft {
       intervalloInversioneGomme: draft.intervalloInversioneGomme,
       fotoFile: draft.fotoFile,
       codiceMeccanico: draft.codiceMeccanico,
+      meccanicoId: draft.meccanicoId,
+      meccanicoNome: draft.meccanicoNome,
+      meccanicoIndirizzo: draft.meccanicoIndirizzo,
+      lookupId: draft.lookupId,
+      lookupAttemptConsumed: draft.lookupAttemptConsumed,
+      datiInModifica: draft.datiInModifica,
     );
   }
 
@@ -76,6 +88,12 @@ class VehicleDraftModel extends VehicleDraft {
       kmUltimaInversioneGomme: json['km_ultima_inversione_gomme'],
       intervalloInversioneGomme: json['intervallo_inversione_gomme'],
       codiceMeccanico: json['codice_meccanico'],
+      meccanicoId: json['meccanico_id'],
+      meccanicoNome: json['meccanico_nome'],
+      meccanicoIndirizzo: json['meccanico_indirizzo'],
+      lookupId: json['lookup_id'],
+      lookupAttemptConsumed: json['lookup_attempt_consumed'] == true,
+      datiInModifica: json['dati_in_modifica'] == true,
       fotoFile: json['foto_path'] != null
           ? File(json['foto_path'] as String)
           : null,
@@ -104,6 +122,12 @@ class VehicleDraftModel extends VehicleDraft {
       'km_ultima_inversione_gomme': kmUltimaInversioneGomme,
       'intervallo_inversione_gomme': intervalloInversioneGomme,
       'codice_meccanico': codiceMeccanico,
+      'meccanico_id': meccanicoId,
+      'meccanico_nome': meccanicoNome,
+      'meccanico_indirizzo': meccanicoIndirizzo,
+      'lookup_id': lookupId,
+      'lookup_attempt_consumed': lookupAttemptConsumed,
+      'dati_in_modifica': datiInModifica,
       'foto_path': fotoFile?.path,
     };
   }

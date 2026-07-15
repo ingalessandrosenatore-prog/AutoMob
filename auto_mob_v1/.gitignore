@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Configurazione locale. I segreti del provider targa NON vanno mai qui:
+# vivono esclusivamente nei secrets della Supabase Edge Function.
+.env
+.env.*
+!.env.example

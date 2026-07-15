@@ -6,6 +6,7 @@ import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import '../../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../../core/widgets/input/drop_down_search.dart';
 import '../../../../../core/widgets/input/textfield.dart';
+import '../../../../../core/widgets/dialog/am_status_dialog.dart';
 import '../../bloc/vehicle_registration_bloc.dart';
 import '../../bloc/vehicle_registration_event.dart';
 import '../../bloc/vehicle_registration_state.dart';
@@ -30,15 +31,28 @@ class VerifyStepView extends StatefulWidget {
 class VerifyStepViewState extends State<VerifyStepView> {
   final _modelloController = TextEditingController();
   final _cilindrataController = TextEditingController();
+  final _potenzaController = TextEditingController();
+  final _targaController = TextEditingController();
   String? _marca;
   String? _anno;
   String? _carburante;
   bool _editing = false;
 
   @override
+  void initState() {
+    super.initState();
+    // PageView puo' montare questo step sia prima sia dopo il passaggio a
+    // Verifica. Inizializziamo quindi i controller anche dallo stato corrente,
+    // senza affidarci soltanto al listener del cambio pagina.
+    _syncFromDraft(context.read<VehicleRegistrationBloc>().state);
+  }
+
+  @override
   void dispose() {
     _modelloController.dispose();
     _cilindrataController.dispose();
+    _potenzaController.dispose();
+    _targaController.dispose();
     super.dispose();
   }
 
@@ -55,12 +69,48 @@ class VerifyStepViewState extends State<VerifyStepView> {
     _carburante = draft.carburante;
     _modelloController.text = draft.modello ?? '';
     _cilindrataController.text = draft.cilindrata?.toString() ?? '';
-    _editing = state.lookupStatus == RegistrationLookupStatus.notFound;
+    _potenzaController.text = draft.potenzaCv?.toString() ?? '';
+    _targaController.text = draft.targa ?? '';
+    _editing = draft.datiInModifica;
   }
 
   void submit() {
-    context.read<VehicleRegistrationBloc>().add(
+    final bloc = context.read<VehicleRegistrationBloc>();
+    final plateSource = _targaController.text.trim().isEmpty
+        ? bloc.state.draft.targa ?? ''
+        : _targaController.text;
+    final plate = plateSource
+        .replaceAll(RegExp(r'[^A-Za-z0-9]'), '')
+        .toUpperCase();
+    final valid =
+        RegExp(r'^[A-Z]{2}[0-9]{3}[A-Z]{2}$').hasMatch(plate) &&
+        (_marca?.isNotEmpty ?? false) &&
+        _modelloController.text.trim().isNotEmpty &&
+        _anno != null &&
+        _carburante != null &&
+        int.tryParse(_cilindrataController.text) != null &&
+        int.tryParse(_potenzaController.text) != null;
+    if (!valid) {
+      showAmStatusDialog<void>(
+        context,
+        icon: HugeIcons.strokeRoundedAlert02,
+        iconColor: const Color(0xFFFFB020),
+        title: 'Campi obbligatori mancanti',
+        message: 'Completa tutti i dati obbligatori del veicolo.',
+        actions: [
+          AmDialogAction(
+            label: 'Chiudi',
+            color: const Color(0xFFE85A1A),
+            filled: true,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      );
+      return;
+    }
+    bloc.add(
       VerifyStepSubmitted(
+        targa: plate,
         marca: _marca,
         modello: _modelloController.text.trim().isEmpty
             ? null
@@ -68,6 +118,7 @@ class VerifyStepViewState extends State<VerifyStepView> {
         anno: _anno != null ? int.tryParse(_anno!) : null,
         carburante: _carburante,
         cilindrata: int.tryParse(_cilindrataController.text),
+        potenzaCv: int.tryParse(_potenzaController.text),
       ),
     );
   }
@@ -82,10 +133,10 @@ class VerifyStepViewState extends State<VerifyStepView> {
           prev.draft != curr.draft || prev.lookupStatus != curr.lookupStatus,
       builder: (context, state) {
         final colors = AmThemeColors.of(context);
-        final notFound =
-            state.lookupStatus == RegistrationLookupStatus.notFound;
+        final notFound = state.draft.datiInModifica;
         return AmEdgeBlur(
           child: SingleChildScrollView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
             child: Column(
               children: [
@@ -102,8 +153,8 @@ class VerifyStepViewState extends State<VerifyStepView> {
                 const SizedBox(height: 8),
                 Text(
                   notFound
-                      ? 'Non abbiamo trovato dati per questa targa: inseriscili a mano.'
-                      : 'Controlla i dati trovati per la tua targa.',
+                      ? 'Inserisci i dati del tuo veicolo.'
+                      : 'Controlla i dati del tuo veicolo.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: colors.textSecondary,
@@ -112,16 +163,11 @@ class VerifyStepViewState extends State<VerifyStepView> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                StepInfoBanner(
-                  color: notFound
-                      ? const Color(0xFFFF453A)
-                      : const Color(0xFF4A90E2),
-        icon: notFound
-            ? HugeIcons.strokeRoundedAlert01
-            : HugeIcons.strokeRoundedAlertCircle,
-                  text: notFound
-                      ? 'Non siamo riusciti a recuperare i dati per questa targa: compilali tu, potrai sempre correggerli in seguito.'
-                      : 'Questi dati verranno utilizzati per ricordarti le scadenze e calcolare il punteggio di salute del veicolo.',
+                const StepInfoBanner(
+                  color: Color(0xFF4A90E2),
+                  icon: HugeIcons.strokeRoundedAlertCircle,
+                  text:
+                      'Questi dati verranno salvati nella bozza e potrai correggerli tornando indietro.',
                 ),
                 const SizedBox(height: 20),
                 Container(
@@ -129,13 +175,29 @@ class VerifyStepViewState extends State<VerifyStepView> {
                   decoration: BoxDecoration(
                     color: colors.surface,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: colors.border,
-                    ),
+                    border: Border.all(color: colors.border),
                   ),
                   child: Column(
                     children: [
-                      _DataRow(label: 'Targa', value: state.draft.targa ?? '—'),
+                      if (_editing)
+                        Row(
+                          children: [
+                            AmTextField(
+                              label: 'Targa',
+                              placeholder: 'AA123AA',
+                              controller: _targaController,
+                              isRequired: true,
+                              obscureText: false,
+                              keyboardType: TextInputType.text,
+                              height: 52,
+                            ),
+                          ],
+                        )
+                      else
+                        _DataRow(
+                          label: 'Targa',
+                          value: state.draft.targa ?? '—',
+                        ),
                       const SizedBox(height: 8),
                       if (_editing) ...[
                         Row(
@@ -162,6 +224,20 @@ class VerifyStepViewState extends State<VerifyStepView> {
                               isRequired: true,
                               obscureText: false,
                               keyboardType: TextInputType.text,
+                              height: 52,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            AmTextField(
+                              label: 'Potenza (CV)',
+                              placeholder: 'es. 110',
+                              controller: _potenzaController,
+                              isRequired: true,
+                              obscureText: false,
+                              keyboardType: TextInputType.number,
                               height: 52,
                             ),
                           ],
@@ -234,6 +310,13 @@ class VerifyStepViewState extends State<VerifyStepView> {
                               ? '—'
                               : '${_cilindrataController.text} cc',
                         ),
+                        const SizedBox(height: 8),
+                        _DataRow(
+                          label: 'Potenza',
+                          value: _potenzaController.text.isEmpty
+                              ? '—'
+                              : '${_potenzaController.text} CV',
+                        ),
                       ],
                     ],
                   ),
@@ -243,13 +326,13 @@ class VerifyStepViewState extends State<VerifyStepView> {
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
                     onPressed: () => setState(() => _editing = !_editing),
-                icon: HugeIcon(
-                  icon: _editing
-                      ? HugeIcons.strokeRoundedValidationApproval
-                      : HugeIcons.strokeRoundedEdit01,
-                  size: 18,
-                  strokeWidth: 2.2,
-                ),
+                    icon: HugeIcon(
+                      icon: _editing
+                          ? HugeIcons.strokeRoundedValidationApproval
+                          : HugeIcons.strokeRoundedEdit01,
+                      size: 18,
+                      strokeWidth: 2.2,
+                    ),
                     label: Text(_editing ? 'Fatto' : 'Modifica'),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFFE85A1A),

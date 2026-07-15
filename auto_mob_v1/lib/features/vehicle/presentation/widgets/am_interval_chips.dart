@@ -27,32 +27,49 @@ class IntervalChoiceChip extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          AmHaptics.selection();
-          onTap();
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: selected
-                ? colorScheme.primary.withValues(alpha: 0.15)
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
+      child: Semantics(
+        button: true,
+        selected: selected,
+        label: '$label chilometri',
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () {
+            AmHaptics.selection();
+            onTap();
+          },
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+            decoration: BoxDecoration(
               color: selected
-                  ? colorScheme.primary
-                  : colorScheme.outlineVariant.withValues(alpha: 0.2),
+                  ? colorScheme.primary.withValues(alpha: 0.15)
+                  : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: selected
+                    ? colorScheme.primary
+                    : colorScheme.outlineVariant.withValues(alpha: 0.2),
+              ),
             ),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ) ?? TextStyle(color: selected ? colorScheme.primary : colorScheme.onSurfaceVariant),
+            child: Center(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    theme.textTheme.labelMedium?.copyWith(
+                      color: selected
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ) ??
+                    TextStyle(
+                      color: selected
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
+                    ),
+              ),
             ),
           ),
         ),

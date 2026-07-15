@@ -23,6 +23,7 @@ import '../../features/auth/presentation/bloc/auth_bloc.dart';
 // Vehicle
 import '../../features/vehicle/data/datasources/vehicle_draft_local_data_source.dart';
 import '../../features/vehicle/data/datasources/vehicle_remote_data_source.dart';
+import '../../features/vehicle/data/datasources/vehicle_lookup_remote_data_source.dart';
 import '../../features/vehicle/data/repositories/vehicle_repository_impl.dart';
 import '../../features/vehicle/data/repositories/vehicle_lookup_repository_impl.dart';
 import '../../features/vehicle/domain/repositories/vehicle_repository.dart';
@@ -34,6 +35,9 @@ import '../../features/vehicle/domain/usecases/update_vehicle_km.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_photo.dart';
 import '../../features/vehicle/domain/usecases/compute_maintenance_kpis.dart';
 import '../../features/vehicle/domain/usecases/lookup_vehicle_by_plate.dart';
+import '../../features/vehicle/domain/usecases/lookup_mechanic_by_code.dart';
+import '../../features/vehicle/domain/usecases/load_vehicle_draft.dart';
+import '../../features/vehicle/domain/usecases/clear_vehicle_draft.dart';
 import '../../features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import '../../features/vehicle/presentation/bloc/km_update_cubit.dart';
 import '../../features/vehicle/presentation/bloc/vehicle_registration_bloc.dart';
@@ -64,10 +68,15 @@ Future<void> init() async {
 }
 
 Future<void> _initSupabase() async {
-  await Supabase.initialize(
-    url: 'https://tvxcyjqaiyxmmhktwhdb.supabase.co',
-    publishableKey: 'sb_publishable_3lGoL7YRneTfCS5z-LIWiQ_ilPxOklI',
-  );
+  const url = String.fromEnvironment('SUPABASE_URL');
+  const publishableKey = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  if (url.isEmpty || publishableKey.isEmpty) {
+    throw StateError(
+      'Configurazione Supabase assente. Avvia con '
+      '--dart-define-from-file=.env (vedi .env.example).',
+    );
+  }
+  await Supabase.initialize(url: url, publishableKey: publishableKey);
   sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
 }
 
@@ -126,6 +135,8 @@ Future<void> _initVehicle() async {
   // Use Cases
   sl.registerLazySingleton<SaveDraftStep>(() => SaveDraftStep(sl()));
   sl.registerLazySingleton<SaveVehicle>(() => SaveVehicle(sl()));
+  sl.registerLazySingleton<LoadVehicleDraft>(() => LoadVehicleDraft(sl()));
+  sl.registerLazySingleton<ClearVehicleDraft>(() => ClearVehicleDraft(sl()));
   sl.registerLazySingleton<GetVehicles>(() => GetVehicles(sl()));
   sl.registerLazySingleton<UpdateVehicleKm>(() => UpdateVehicleKm(sl()));
   sl.registerLazySingleton<UpdateVehiclePhoto>(() => UpdateVehiclePhoto(sl()));
@@ -149,13 +160,26 @@ Future<void> _initVehicle() async {
   // Registrazione veicolo — pagina full-screen (rework da pop-up), solo
   // front-end per ora: lookup targa mock, nessun salvataggio reale.
   sl.registerFactory<VehicleRegistrationBloc>(
-    () => VehicleRegistrationBloc(lookupVehicleByPlate: sl()),
+    () => VehicleRegistrationBloc(
+      lookupVehicleByPlate: sl(),
+      lookupMechanicByCode: sl(),
+      saveDraftStep: sl(),
+      loadVehicleDraft: sl(),
+      clearVehicleDraft: sl(),
+      saveVehicle: sl(),
+    ),
   );
   sl.registerLazySingleton<LookupVehicleByPlate>(
     () => LookupVehicleByPlate(sl()),
   );
+  sl.registerLazySingleton<LookupMechanicByCode>(
+    () => LookupMechanicByCode(sl()),
+  );
   sl.registerLazySingleton<VehicleLookupRepository>(
-    () => VehicleLookupRepositoryImpl(),
+    () => VehicleLookupRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<VehicleLookupRemoteDataSource>(
+    () => VehicleLookupRemoteDataSourceImpl(sl()),
   );
 }
 
@@ -198,7 +222,7 @@ void _initWorkLog() {
 
   // BLoC — factory con param (vehicleId passato dal popup all'apertura)
   sl.registerFactoryParam<WorkLogBloc, String, void>(
-    (vehicleId, _) => WorkLogBloc(createWorkLog: sl()),
+    (vehicleId, _) => WorkLogBloc(createWorkLog: sl(), vehicleId: vehicleId),
   );
 
   // BLoC storico — lazySingleton: stessa logica di DashboardBloc sopra,
