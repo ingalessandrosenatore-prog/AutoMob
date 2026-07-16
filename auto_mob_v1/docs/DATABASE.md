@@ -29,6 +29,10 @@ nel progetto live. Dettagli in `docs/VEHICLE_REGISTRATION.md`.
 
 ## 1. Concetto in 30 secondi
 
+Il sistema di notifiche push (token dispositivo, outbox, consegne, regole e
+Cron) e documentato in `docs/NOTIFICATIONS.md`. Firebase e stato verificato con
+invii reali e i job sono attivi.
+
 Due tipi di utenti: **proprietari** (registrano veicoli, tengono lo storico manutenzione)
 e **meccanici** (attivati manualmente dall'admin, associabili a veicoli via `vehicle_mechanics`).
 Tutta la sicurezza di riga è in Postgres (RLS): il client Flutter non la può bypassare.

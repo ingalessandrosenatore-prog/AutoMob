@@ -1,4 +1,4 @@
-﻿import 'package:fpdart/fpdart.dart';
+import 'package:fpdart/fpdart.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -7,11 +7,15 @@ import '../../../../core/error/exceptions/exceptions.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
+  final Future<void> Function()? beforeLogout;
 
-  AuthRepositoryImpl({required this.remoteDataSource});
+  AuthRepositoryImpl({required this.remoteDataSource, this.beforeLogout});
 
   @override
-  Future<Either<Failure, AppAuthUser>> loginWithEmail(String email, String password) async {
+  Future<Either<Failure, AppAuthUser>> loginWithEmail(
+    String email,
+    String password,
+  ) async {
     try {
       final authUser = await remoteDataSource.loginWithEmail(email, password);
       return Right(authUser);
@@ -71,7 +75,6 @@ class AuthRepositoryImpl implements AuthRepository {
         name,
         email,
         password,
-
       );
       return Right(authUser);
     } on AuthDataSourceException catch (e) {
@@ -86,6 +89,11 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
+      // Un errore FCM non deve impedire il logout. La funzione e' opzionale
+      // per mantenere il repository facilmente testabile.
+      try {
+        await beforeLogout?.call();
+      } catch (_) {}
       await remoteDataSource.logout();
       return const Right(null);
     } on NetworkException {
@@ -130,7 +138,7 @@ class AuthRepositoryImpl implements AuthRepository {
     if (e.message.contains('già registrata')) {
       return const EmailAlreadyInUseFailure();
     }
-    
+
     if (e.message.contains('password')) {
       return const WeakPasswordFailure();
     }

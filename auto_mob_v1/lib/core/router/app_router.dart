@@ -2,7 +2,7 @@ import 'package:auto_mob_v1/features/dashboard/presentation/pages/home_view.dart
 import 'package:auto_mob_v1/features/servizi/presentation/pages/servizi_page.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/midify_item.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/work_log_history_page.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -22,11 +22,14 @@ import 'go_router_refresh_stream.dart';
 import 'shell_scaffold.dart';
 
 class AppRouter {
+  static final rootNavigatorKey = GlobalKey<NavigatorState>();
+
   // Istanza unica dell'AuthBloc (registrato come lazy singleton nel DI):
   // e' la sorgente di verita' per capire dove mandare l'utente.
   static final AuthBloc _auth = di.sl<AuthBloc>();
 
   static final GoRouter router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     // Ogni cambio di stato dell'auth fa rivalutare la `redirect`.
     refreshListenable: GoRouterRefreshStream(_auth.stream),
@@ -62,7 +65,9 @@ class AppRouter {
               GoRoute(
                 path: '/home',
                 name: 'home',
-                builder: (context, state) => const HomeView(),
+                builder: (context, state) => HomeView(
+                  initialVehicleId: state.uri.queryParameters['vehicleId'],
+                ),
               ),
             ],
           ),
@@ -90,10 +95,8 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         name: 'settings',
-        pageBuilder: (context, state) => AmFadeThroughPage(
-          key: state.pageKey,
-          child: const SettingsView(),
-        ),
+        pageBuilder: (context, state) =>
+            AmFadeThroughPage(key: state.pageKey, child: const SettingsView()),
       ),
 
       GoRoute(
@@ -155,6 +158,45 @@ class AppRouter {
       ),
     ],
   );
+
+  /// Apre la dashboard dal tap su una notifica ricevuta.
+  static Future<void> openNotification(Map<String, dynamic> data) async {
+    // A cold start il messaggio FCM puo' arrivare mentre AuthBloc e GoRouter
+    // stanno ancora mostrando lo splash. Aspettiamo la sessione e il primo
+    // frame stabile: cosi' non proviamo ad aprire una route troppo presto.
+    if (_auth.state is! AuthAuthenticated) {
+      await _auth.stream.firstWhere((state) => state is AuthAuthenticated);
+    }
+    await WidgetsBinding.instance.endOfFrame;
+
+    final category = data['type']?.toString();
+    if (category == 'maintenance_kpi') {
+      router.go('/lavori');
+      return;
+    }
+
+    final vehicleId = data['vehicle_id']?.toString();
+    if (vehicleId == null || vehicleId.isEmpty) {
+      router.go('/home');
+      return;
+    }
+    router.go(
+      Uri(path: '/home', queryParameters: {'vehicleId': vehicleId}).toString(),
+    );
+  }
+
+  /// In foreground FCM non mostra automaticamente il banner su Android.
+  /// Mostriamo quindi uno SnackBar usando il navigator principale.
+  static void showForegroundNotification({
+    required String title,
+    required String body,
+  }) {
+    final context = rootNavigatorKey.currentContext;
+    if (context == null) return;
+    ScaffoldMessenger.maybeOf(
+      context,
+    )?.showSnackBar(SnackBar(content: Text('$title\n$body')));
+  }
 
   /// Unico punto che decide la navigazione legata all'auth.
   /// Ritorna la rotta verso cui reindirizzare, oppure `null` per restare

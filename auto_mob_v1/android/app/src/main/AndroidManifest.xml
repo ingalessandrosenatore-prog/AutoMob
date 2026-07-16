@@ -4,6 +4,8 @@
          In debug e profile Flutter aggiunge il permesso in automatico (vedi i
          manifest in src/debug e src/profile), ecco perche' "in debug funziona". -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Da Android 13 il sistema chiede questo permesso a runtime. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="auto_mob_v1"
         android:name="${applicationName}"
@@ -35,6 +37,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="automob_reminders" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

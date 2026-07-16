@@ -20,6 +20,19 @@ import '../../features/auth/domain/usecases/signup_with_email.dart';
 import '../../features/auth/domain/usecases/logout.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
+// Notifications
+import '../../features/notifications/data/datasources/firebase_messaging_data_source.dart';
+import '../../features/notifications/data/datasources/notification_local_data_source.dart';
+import '../../features/notifications/data/datasources/notification_remote_data_source.dart';
+import '../../features/notifications/data/repositories/notification_repository_impl.dart';
+import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/notifications/domain/usecases/postpone_notification_permission.dart';
+import '../../features/notifications/domain/usecases/register_device_token.dart';
+import '../../features/notifications/domain/usecases/request_notification_permission.dart';
+import '../../features/notifications/domain/usecases/should_offer_notification_permission.dart';
+import '../../features/notifications/domain/usecases/unregister_device_token.dart';
+import '../../features/notifications/presentation/services/notification_message_coordinator.dart';
+
 // Vehicle
 import '../../features/vehicle/data/datasources/vehicle_draft_local_data_source.dart';
 import '../../features/vehicle/data/datasources/vehicle_remote_data_source.dart';
@@ -44,6 +57,7 @@ import '../../features/vehicle/presentation/bloc/vehicle_registration_bloc.dart'
 
 // Dashboard
 import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
 
 // WorkLog
 import '../../features/work_log/data/datasources/worklog_remote_data_source.dart';
@@ -57,14 +71,54 @@ import '../../features/work_log/presentation/bloc/work_log_history_bloc.dart';
 
 final sl = GetIt.instance;
 
-Future<void> init() async {
+Future<void> init({bool firebaseAvailable = false}) async {
   await _initSupabase();
   await _initSharedPreferences();
   _initTheme();
+  _initNotifications(firebaseAvailable: firebaseAvailable);
   await _initAuth();
   await _initVehicle();
   await _initDashboard();
   _initWorkLog();
+}
+
+void _initNotifications({required bool firebaseAvailable}) {
+  sl.registerLazySingleton<FirebaseMessagingDataSource>(
+    () => FirebaseMessagingDataSourceImpl(firebaseAvailable: firebaseAvailable),
+  );
+  sl.registerLazySingleton<NotificationLocalDataSource>(
+    () => NotificationLocalDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(sl()),
+  );
+  sl.registerLazySingleton<NotificationRepository>(
+    () =>
+        NotificationRepositoryImpl(messaging: sl(), local: sl(), remote: sl()),
+  );
+
+  sl.registerLazySingleton<ShouldOfferNotificationPermission>(
+    () => ShouldOfferNotificationPermission(sl()),
+  );
+  sl.registerLazySingleton<RequestNotificationPermission>(
+    () => RequestNotificationPermission(sl()),
+  );
+  sl.registerLazySingleton<PostponeNotificationPermission>(
+    () => PostponeNotificationPermission(sl()),
+  );
+  sl.registerLazySingleton<RegisterDeviceToken>(
+    () => RegisterDeviceToken(sl()),
+  );
+  sl.registerLazySingleton<UnregisterDeviceToken>(
+    () => UnregisterDeviceToken(sl()),
+  );
+  sl.registerLazySingleton<NotificationMessageCoordinator>(
+    () => NotificationMessageCoordinator(
+      messaging: sl(),
+      registerDeviceToken: sl(),
+    ),
+    dispose: (coordinator) => coordinator.dispose(),
+  );
 }
 
 Future<void> _initSupabase() async {
@@ -113,7 +167,13 @@ Future<void> _initAuth() async {
   sl.registerLazySingleton<Logout>(() => Logout(sl()));
 
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(remoteDataSource: sl()),
+    () => AuthRepositoryImpl(
+      remoteDataSource: sl(),
+      beforeLogout: () async {
+        // Il token va disattivato mentre il JWT dell'utente e' ancora valido.
+        await sl<UnregisterDeviceToken>()();
+      },
+    ),
   );
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(supabaseClient: sl()),
@@ -201,6 +261,17 @@ Future<void> _initDashboard() async {
       updateVehiclePhoto: sl(),
     ),
     dispose: (b) => b.close(),
+  );
+
+  // Coordinatore presentation locale alla Home: nuova istanza ad ogni mount.
+  // Usa soltanto i use case pubblici della feature notifications.
+  sl.registerFactory<NotificationPromptBloc>(
+    () => NotificationPromptBloc(
+      shouldOfferPermission: sl(),
+      requestPermission: sl(),
+      postponePermission: sl(),
+      registerDeviceToken: sl(),
+    ),
   );
 }
 

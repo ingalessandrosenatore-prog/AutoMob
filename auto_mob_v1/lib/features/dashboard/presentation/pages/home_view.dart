@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
@@ -5,6 +6,7 @@ import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
+import 'package:auto_mob_v1/core/widgets/dialog/notification_permission_dialog.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
@@ -25,12 +27,17 @@ import 'package:soft_edge_blur/soft_edge_blur.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../bloc/dashboard_state.dart';
+import '../bloc/notification_prompt_bloc.dart';
+import '../bloc/notification_prompt_event.dart';
+import '../bloc/notification_prompt_state.dart';
 import '../widgets/card_auto.dart';
 import '../widgets/card_officina.dart';
 import '../widgets/am_banners.dart';
 
 class HomeView extends StatelessWidget {
-  const HomeView({super.key});
+  const HomeView({super.key, this.initialVehicleId});
+
+  final String? initialVehicleId;
 
   @override
   Widget build(BuildContext context) {
@@ -38,15 +45,22 @@ class HomeView extends StatelessWidget {
     // Con `create:` flutter_bloc lo chiuderebbe ogni volta che si esce da
     // questa pagina, e al rientro GetIt restituirebbe la stessa istanza
     // ormai chiusa -> crash al primo evento.
-    return BlocProvider<DashboardBloc>.value(
-      value: GetIt.I<DashboardBloc>(),
-      child: const _HomeViewBody(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<DashboardBloc>.value(value: GetIt.I<DashboardBloc>()),
+        BlocProvider<NotificationPromptBloc>(
+          create: (_) => GetIt.I<NotificationPromptBloc>(),
+        ),
+      ],
+      child: _HomeViewBody(initialVehicleId: initialVehicleId),
     );
   }
 }
 
 class _HomeViewBody extends StatefulWidget {
-  const _HomeViewBody();
+  const _HomeViewBody({this.initialVehicleId});
+
+  final String? initialVehicleId;
   @override
   State<_HomeViewBody> createState() => _HomeViewBodyState();
 }
@@ -57,6 +71,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   // Tiene traccia se un pop-up di stato e' attualmente aperto, per poterlo
   // chiudere prima di mostrarne un altro (evita pop-up sovrapposti).
   bool _dialogOpen = false;
+  bool _initialVehicleHandled = false;
 
   Future<void> _openVehicleRegistration() async {
     final saved = await context.pushNamed<bool>('aggiungi_veicolo');
@@ -79,6 +94,16 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       final s = bloc.state;
       if (s is DashboardInitial || s is DashboardError) {
         bloc.add(LoadDashboardData());
+        return;
+      }
+
+      // BlocListener ascolta solo i cambiamenti successivi al mount. Il bloc
+      // e' un singleton e puo quindi essere gia' Loaded quando torniamo nella
+      // Home: in quel caso eseguiamo qui gli effetti iniziali, compresa la
+      // richiesta del permesso notifiche.
+      if (s is DashboardLoaded) {
+        _selectInitialVehicle(s);
+        _checkNotificationPrompt(s);
       }
     });
   }
@@ -100,6 +125,13 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   /// Stesso pattern della pagina lavori: spinner durante il caricamento,
   /// warning con scorciatoia quando non ci sono ancora veicoli registrati.
   void _onStateForDialogs(BuildContext context, DashboardState s) {
+    if (_dialogOpen &&
+        context.read<NotificationPromptBloc>().state
+            is NotificationPromptOfferRequired) {
+      context.read<NotificationPromptBloc>().add(
+        const NotificationPromptOfferInterrupted(),
+      );
+    }
     _closeDialogIfOpen();
 
     // Errore one-shot dell'aggiornamento foto: lo mostro senza toccare i dati.
@@ -163,6 +195,79 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
           ),
         ],
       );
+      return;
+    }
+
+    if (s is DashboardLoaded) {
+      _selectInitialVehicle(s);
+      _checkNotificationPrompt(s);
+    }
+  }
+
+  void _selectInitialVehicle(DashboardLoaded state) {
+    final vehicleId = widget.initialVehicleId;
+    if (_initialVehicleHandled || vehicleId == null) return;
+    _initialVehicleHandled = true;
+
+    final index = state.vehicles.indexWhere(
+      (vehicle) => vehicle.id == vehicleId,
+    );
+    if (index < 0) return;
+    context.read<DashboardBloc>().add(DashboardPageChanged(index));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _pageController.hasClients) {
+        _pageController.jumpToPage(index);
+      }
+    });
+  }
+
+  void _checkNotificationPrompt(DashboardLoaded state) {
+    context.read<NotificationPromptBloc>().add(
+      NotificationPromptCheckRequested(
+        hasRealVehicles:
+            state.vehicles.isNotEmpty &&
+            state.vehicles.any((vehicle) => !vehicle.isPlaceholder),
+      ),
+    );
+  }
+
+  void _onNotificationPromptState(
+    BuildContext context,
+    NotificationPromptState state,
+  ) {
+    switch (state) {
+      case NotificationPromptOfferRequired():
+        if (_dialogOpen) return;
+        _dialogOpen = true;
+        unawaited(
+          showNotificationPermissionDialog(
+            context,
+            onPostpone: () {
+              _closeDialogIfOpen();
+              context.read<NotificationPromptBloc>().add(
+                const NotificationPromptPostponeRequested(),
+              );
+            },
+            onEnable: () {
+              _closeDialogIfOpen();
+              context.read<NotificationPromptBloc>().add(
+                const NotificationPromptEnableRequested(),
+              );
+            },
+          ).whenComplete(() => _dialogOpen = false),
+        );
+      case NotificationPromptFailure(:final message):
+        ScaffoldMessenger.maybeOf(
+          context,
+        )?.showSnackBar(SnackBar(content: Text(message)));
+      case NotificationPromptInitial():
+      case NotificationPromptChecking():
+      case NotificationPromptNotRequired():
+      case NotificationPromptPostponing():
+      case NotificationPromptRequesting():
+      case NotificationPromptEnabled():
+      case NotificationPromptDenied():
+        break;
     }
   }
 
@@ -270,16 +375,23 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     const appBarContentHeight = 69.0;
     final topSafeArea = MediaQuery.paddingOf(context).top;
 
-    return BlocListener<DashboardBloc, DashboardState>(
-      listenWhen: (previous, current) {
-        if (previous.runtimeType != current.runtimeType) return true;
-        if (previous is DashboardLoaded && current is DashboardLoaded) {
-          return previous.vehicles != current.vehicles ||
-              previous.photoUpdateError != current.photoUpdateError;
-        }
-        return false;
-      },
-      listener: _onStateForDialogs,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<DashboardBloc, DashboardState>(
+          listenWhen: (previous, current) {
+            if (previous.runtimeType != current.runtimeType) return true;
+            if (previous is DashboardLoaded && current is DashboardLoaded) {
+              return previous.vehicles != current.vehicles ||
+                  previous.photoUpdateError != current.photoUpdateError;
+            }
+            return false;
+          },
+          listener: _onStateForDialogs,
+        ),
+        BlocListener<NotificationPromptBloc, NotificationPromptState>(
+          listener: _onNotificationPromptState,
+        ),
+      ],
       child: Scaffold(
         backgroundColor: colors.background,
         body: SmartEdge(

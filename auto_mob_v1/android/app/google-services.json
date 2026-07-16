@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "638928224046",
+    "firebase_url": "https://carhealth-3ffe1-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "carhealth-3ffe1",
+    "storage_bucket": "carhealth-3ffe1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:638928224046:android:1fb0b70c88833bd90f44bf",
+        "android_client_info": {
+          "package_name": "com.example.car_health"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmQjzSLYMnzg_bY6Evf8xvbuZc9UX5msw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:638928224046:android:a2192fcc9cd037c60f44bf",
+        "android_client_info": {
+          "package_name": "com.infinty.auto_mob_v1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmQjzSLYMnzg_bY6Evf8xvbuZc9UX5msw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
