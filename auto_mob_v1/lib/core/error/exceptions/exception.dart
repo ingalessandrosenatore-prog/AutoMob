@@ -29,6 +29,15 @@ class CodedServerFailure extends ServerFailure {
   List<Object> get props => [message, ?code];
 }
 
+class RemoteFailure extends Failure {
+  final String? code;
+
+  const RemoteFailure(super.message, {this.code});
+
+  @override
+  List<Object> get props => [message, ?code];
+}
+
 // Risorsa non trovata
 class NotFoundFailure extends Failure {
   const NotFoundFailure() : super("Risorsa non trovata.");

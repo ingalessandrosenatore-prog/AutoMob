@@ -6,8 +6,8 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import '../../../../core/widgets/buttons/back_button.dart';
 import '../../../../core/theme/am_theme_colors.dart';
+import '../../../../core/widgets/buttons/am_icon_button.dart';
 import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
 import '../../../../core/widgets/dialog/am_status_dialog.dart';
@@ -418,8 +418,8 @@ class _RegistrationBottomBar extends StatelessWidget {
   });
 
   static const _labels = [
+    'COLLEGA MECCANICO',
     'TROVA VEICOLO',
-    'CONTINUA',
     'CONTINUA',
     'CONTINUA',
     'REGISTRA',
@@ -427,7 +427,8 @@ class _RegistrationBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showBack = currentStep >= 2;
+    final colors = AmThemeColors.of(context);
+    final showBack = currentStep >= 1;
     final label = _labels[currentStep.clamp(0, _labels.length - 1)];
     final bottomPadding = math.max(
       20.0,
@@ -437,9 +438,8 @@ class _RegistrationBottomBar extends StatelessWidget {
     return Container(
       padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPadding),
       // Altezza fissa e identica su tutti gli step: senza questo vincolo
-      // "Indietro" (un OutlinedButton con padding proprio, leggermente piu'
-      // alto di AmMainFab) puo' far variare l'altezza della riga anche
-      // quando e' nascosto a larghezza zero.
+      // il pulsante circolare e quello principale restano sempre allineati
+      // anche durante l'animazione di comparsa di "Indietro".
       child: SizedBox(
         height: 52,
         child: Row(
@@ -447,20 +447,29 @@ class _RegistrationBottomBar extends StatelessWidget {
             AnimatedContainer(
               duration: const Duration(milliseconds: 320),
               curve: Curves.easeInOutCubic,
-              width: showBack ? 130 : 0,
+              width: showBack ? 52 : 0,
               margin: EdgeInsets.only(right: showBack ? 16 : 0),
-              clipBehavior: Clip.hardEdge,
-              decoration: const BoxDecoration(),
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 200),
                 opacity: showBack ? 1 : 0,
                 child: SizedBox(
-                  width: 130,
+                  width: 52,
                   height: 52,
-                  child: AmOutlinedButton(
-                    label: 'INDIETRO',
-                    color: const Color(0xFFE85A1A),
-                    fillColor: Colors.transparent,
+                  child: AmIconButton(
+                    width: 52,
+                    height: 52,
+                    radius: 26,
+                    showShadow: true,
+                    shadowColor: colors.shadow.withValues(alpha: 0.18),
+                    shadowBlurRadius: 8,
+                    shadowOffset: const Offset(0, 3),
+                    backgroundColor: colors.surface,
+                    iconColor: colors.accent,
+                    icon: HugeIcons.strokeRoundedArrowRight01,
+                    iconTurns: 0.5,
+                    iconSize: 28,
+                    strokeWidth: 2.2,
+                    tooltip: 'Indietro',
                     onPressed: onBack,
                   ),
                 ),

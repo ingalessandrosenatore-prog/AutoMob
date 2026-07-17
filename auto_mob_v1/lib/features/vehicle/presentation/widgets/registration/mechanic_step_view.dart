@@ -116,7 +116,7 @@ class MechanicStepViewState extends State<MechanicStepView> {
                           ),
                     child: Text(
                       'Non ho un meccanico',
-                      style: TextStyle(color: colors.textPrimary, fontSize: 14),
+                      style: TextStyle(color: colors.accent, fontSize: 14),
                     ),
                   ),
                 ],

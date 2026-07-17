@@ -19,7 +19,7 @@ class CardAuto extends StatelessWidget {
   /// Tap sul box KM → apre il pop-up di aggiornamento km.
   final VoidCallback? onKmTap;
 
-  /// Tap sul box Revisione (azione futura).
+  /// Tap sul box Revisione apre il pop-up di aggiornamento scadenza.
   final VoidCallback? onRevisionTap;
 
   /// Voce "MODIFICA FOTO" del pull-down sulla matita -> apre il picker e
@@ -222,7 +222,7 @@ class _InfoTile extends StatelessWidget {
       child: Row(
         children: [
           HugeIcon(
-              icon: HugeIcons.strokeRoundedCar05,
+            icon: HugeIcons.strokeRoundedCar05,
             color: colors.accent,
             size: 24,
             strokeWidth: 2.2,
@@ -472,7 +472,7 @@ class _VehiclePlaceholder extends StatelessWidget {
       color: colors.surfaceRaised,
       child: Center(
         child: HugeIcon(
-              icon: HugeIcons.strokeRoundedCar05,
+          icon: HugeIcons.strokeRoundedCar05,
           color: colors.textSecondary.withValues(alpha: 0.3),
           size: 50,
           strokeWidth: 2.2,

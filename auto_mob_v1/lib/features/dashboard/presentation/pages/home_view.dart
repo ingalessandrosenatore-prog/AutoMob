@@ -10,17 +10,16 @@ import 'package:auto_mob_v1/core/widgets/dialog/notification_permission_dialog.d
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
+import 'package:auto_mob_v1/core/router/app_session_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import 'package:auto_mob_v1/core/config/performance_flags.dart';
 import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
-import 'package:auto_mob_v1/features/auth/domain/repositories/auth_repository.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
@@ -40,21 +39,8 @@ class HomeView extends StatelessWidget {
   final String? initialVehicleId;
 
   @override
-  Widget build(BuildContext context) {
-    // .value: il bloc e' un lazySingleton che sopravvive ai cambi di tab.
-    // Con `create:` flutter_bloc lo chiuderebbe ogni volta che si esce da
-    // questa pagina, e al rientro GetIt restituirebbe la stessa istanza
-    // ormai chiusa -> crash al primo evento.
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<DashboardBloc>.value(value: GetIt.I<DashboardBloc>()),
-        BlocProvider<NotificationPromptBloc>(
-          create: (_) => GetIt.I<NotificationPromptBloc>(),
-        ),
-      ],
-      child: _HomeViewBody(initialVehicleId: initialVehicleId),
-    );
-  }
+  Widget build(BuildContext context) =>
+      _HomeViewBody(initialVehicleId: initialVehicleId);
 }
 
 class _HomeViewBody extends StatefulWidget {
@@ -290,11 +276,12 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 brand: '',
                 lable: '',
                 onTap: () {},
-                backgroundColor: colors.surfaceRaised.withValues(alpha: 0.7),
-                popupBackgroundColor: colors.surfaceRaised.withValues(
-                  alpha: 0.7,
-                ),
-                larghezza: 180,
+                backgroundColor: kHeavyEffects
+                    ? colors.surfaceRaised.withValues(alpha: 0.5)
+                    : colors.surfaceRaised,
+                popupBackgroundColor: kHeavyEffects
+                    ? colors.surfaceRaised.withValues(alpha: 0.5)
+                    : colors.surfaceRaised,
                 buttonIcons: HugeIcons.strokeRoundedMoreHorizontalCircle02,
                 buttonIconsSize: 26,
                 iconColor: colors.textPrimary,
@@ -309,10 +296,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                   ItemMorphPopUp(
                     icon: HugeIcons.strokeRoundedLogout01,
                     text: "LOGOUT",
-                    onTap: () async {
-                      await GetIt.I<AuthRepository>().logout();
-                      if (context.mounted) context.go('/login');
-                    },
+                    onTap: AppSessionActions.logout,
                     iconColor: colors.info,
                     textColor: colors.textPrimary,
                     iconSize: 22,
@@ -444,7 +428,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                     child: kHeavyEffects
                         ? OCLiquidGlassGroup(
                             settings: const OCLiquidGlassSettings(
-                              refractStrength: -0.130,
+                              refractStrength: -0.08,
                               blurRadiusPx: 1.0,
                               specStrength: 0,
                               specWidth: 0.0,
@@ -541,6 +525,29 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                               anno: v.year,
                                               nextRevisionDate:
                                                   v.nextRevisionDate,
+                                              onRevisionTap: v.isPlaceholder
+                                                  ? null
+                                                  : () async {
+                                                      final dashboardBloc =
+                                                          context
+                                                              .read<
+                                                                DashboardBloc
+                                                              >();
+                                                      final aggiornato =
+                                                          await context.pushNamed(
+                                                            'updateRevision',
+                                                            extra: {
+                                                              'id': v.id,
+                                                              'currentRevisionDate':
+                                                                  v.nextRevisionDate,
+                                                            },
+                                                          );
+                                                      if (aggiornato == true) {
+                                                        dashboardBloc.add(
+                                                          LoadDashboardData(),
+                                                        );
+                                                      }
+                                                    },
                                               onKmTap: v.isPlaceholder
                                                   ? null
                                                   : () async {
@@ -641,16 +648,44 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                     ),
 
                     // lista kpi per il veicolo corrente
-                    const Padding(
-                      padding: EdgeInsets.all(9.0),
-                      child: RepaintBoundary(
-                        child: AmWorkshopCard(
-                          nomeOfficina: 'Nessuna officina ',
-                          codiceMeccanico: '—',
-                          stato: '—',
-                          colore: Color(0xFFFFB4AB),
-                        ),
-                      ),
+                    BlocBuilder<DashboardBloc, DashboardState>(
+                      buildWhen: (previous, current) =>
+                          previous is! DashboardLoaded ||
+                          current is! DashboardLoaded ||
+                          previous.index != current.index ||
+                          previous.vehicles != current.vehicles,
+                      builder: (context, state) {
+                        final vehicle = state is DashboardLoaded
+                            ? state.vehicles[state.index]
+                            : null;
+                        final mechanic = vehicle?.mechanic;
+                        return Padding(
+                          padding: const EdgeInsets.all(9),
+                          child: RepaintBoundary(
+                            child: AmWorkshopCard(
+                              mechanic: mechanic,
+                              onTap: vehicle == null || vehicle.isPlaceholder
+                                  ? null
+                                  : () async {
+                                      final dashboardBloc = context
+                                          .read<DashboardBloc>();
+                                      final connected = await context.pushNamed(
+                                        'mechanicDetails',
+                                        extra: <String, dynamic>{
+                                          'vehicleId': vehicle.id,
+                                          'mechanic': mechanic,
+                                        },
+                                      );
+                                      if (connected == true) {
+                                        dashboardBloc.add(
+                                          DashboardRefreshRequested(),
+                                        );
+                                      }
+                                    },
+                            ),
+                          ),
+                        );
+                      },
                     ),
 
                     Padding(

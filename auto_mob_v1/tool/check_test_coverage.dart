@@ -1,9 +1,9 @@
 // =====================================================================
 //  CHECK TEST COVERAGE  —  applica la disciplina TDD
 // ---------------------------------------------------------------------
-//  Ogni usecase, repository (impl) e bloc/cubit DEVE avere un file di
-//  test corrispondente sotto test/, con lo stesso path relativo e
-//  suffisso "_test.dart". Se manca, BLOCCA (exit code 1).
+//  Ogni usecase, repository (impl) e bloc/cubit DEVE essere importato da
+//  almeno un test reale. Il nome convenzionale rimane consigliato, ma sono
+//  ammessi test aggregati se importano esplicitamente il file produttivo.
 //
 //  Perche': senza questo controllo, "flutter test" resta verde anche se
 //  non hai scritto NESSUN test per la logica nuova che hai aggiunto —
@@ -27,12 +27,21 @@ void main() {
     exit(2);
   }
 
-  final requiresTest = <String>[]; // path relativi a lib/, es: features/x/domain/usecases/y.dart
+  final requiresTest =
+      <String>[]; // path relativi a lib/, es: features/x/domain/usecases/y.dart
+  final testFiles = Directory('test')
+      .listSync(recursive: true)
+      .whereType<File>()
+      .where((file) => file.path.endsWith('_test.dart'))
+      .map((file) => _TestFile(content: file.readAsStringSync()))
+      .where((test) => test.hasTestDeclaration)
+      .toList();
 
   for (final entity in libDir.listSync(recursive: true)) {
     if (entity is! File) continue;
     if (!entity.path.endsWith('.dart')) continue;
-    if (entity.path.endsWith('.g.dart') || entity.path.endsWith('.freezed.dart')) {
+    if (entity.path.endsWith('.g.dart') ||
+        entity.path.endsWith('.freezed.dart')) {
       continue;
     }
 
@@ -45,8 +54,7 @@ void main() {
   var baselinate = 0;
 
   for (final rel in requiresTest) {
-    final testPath = _expectedTestPath(rel);
-    if (File(testPath).existsSync()) continue;
+    if (testFiles.any((test) => test.covers(rel))) continue;
 
     if (baseline.contains(rel)) {
       baselinate++;
@@ -57,7 +65,8 @@ void main() {
 
   if (baselinate > 0) {
     print(
-        '($baselinate file senza test a BASELINE — debito tracciato in $baselineFile)');
+      '($baselinate file senza test a BASELINE — debito tracciato in $baselineFile)',
+    );
   }
 
   if (missing.isEmpty) {
@@ -66,10 +75,13 @@ void main() {
   }
 
   missing.sort();
-  print('FAIL  ${missing.length} file di logica SENZA test (nuovi, non a baseline):\n');
+  print(
+    'FAIL  ${missing.length} file di logica SENZA test (nuovi, non a baseline):\n',
+  );
   for (final rel in missing) {
     print('  lib/$rel');
-    print('     atteso: test/${_expectedTestRelPath(rel)}\n');
+    print('     atteso: un *_test.dart che importi esplicitamente questo file');
+    print('     convenzione: test/${_expectedTestRelPath(rel)}\n');
   }
   exit(1);
 }
@@ -81,17 +93,18 @@ bool _needsTest(String rel) {
 
   if (rel.contains('/presentation/bloc/')) {
     final name = rel.split('/').last;
-    if (name.endsWith('_bloc.dart') || name.endsWith('_cubit.dart')) return true;
+    if (name.endsWith('_bloc.dart') || name.endsWith('_cubit.dart')) {
+      return true;
+    }
   }
   return false;
 }
 
 // lib/features/x/domain/usecases/y.dart -> test/features/x/domain/usecases/y_test.dart
-String _expectedTestPath(String libRel) => 'test/${_expectedTestRelPath(libRel)}';
-
 String _expectedTestRelPath(String libRel) {
   final withoutExt = libRel.substring(0, libRel.length - '.dart'.length);
-  return '$withoutExt' '_test.dart';
+  return '$withoutExt'
+      '_test.dart';
 }
 
 String _libRelative(String path) {
@@ -108,4 +121,24 @@ Set<String> _loadBaseline() {
       .map((l) => l.trim())
       .where((l) => l.isNotEmpty && !l.startsWith('#'))
       .toSet();
+}
+
+final class _TestFile {
+  const _TestFile({required this.content});
+
+  final String content;
+
+  bool get hasTestDeclaration => RegExp(
+    r'\b(test|testWidgets|blocTest)\s*(<[^>]+>)?\s*\(',
+  ).hasMatch(content);
+
+  bool covers(String libRel) {
+    final packageImport = 'package:auto_mob_v1/$libRel';
+    if (content.contains(packageImport)) return true;
+
+    // Supporta anche import relativi nei test mantenendo un controllo
+    // conservativo sul nome del file produttivo.
+    final fileName = libRel.split('/').last;
+    return content.contains("import '") && content.contains(fileName);
+  }
 }

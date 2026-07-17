@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:firebase_messaging/firebase_messaging.dart';
-
-import '../../data/datasources/firebase_messaging_data_source.dart';
+import '../../domain/entities/notification_message.dart';
+import '../../domain/usecases/observe_notification_messages.dart';
 import '../../domain/usecases/register_device_token.dart';
 
 typedef NotificationMessageCallback =
@@ -12,11 +11,11 @@ typedef NotificationMessageCallback =
 /// rimane su Supabase anche quando AutoMob e' chiusa.
 class NotificationMessageCoordinator {
   NotificationMessageCoordinator({
-    required this.messaging,
+    required this.messages,
     required this.registerDeviceToken,
   });
 
-  final FirebaseMessagingDataSource messaging;
+  final ObserveNotificationMessages messages;
   final RegisterDeviceToken registerDeviceToken;
   final List<StreamSubscription<Object?>> _subscriptions = [];
 
@@ -24,33 +23,32 @@ class NotificationMessageCoordinator {
     required NotificationMessageCallback onOpened,
     required NotificationMessageCallback onForeground,
   }) async {
-    if (!messaging.isAvailable) return;
+    if (!messages.isAvailable) return;
 
     // Se la sessione Supabase e il permesso esistono gia', rinnova last_seen.
     await registerDeviceToken();
 
     _subscriptions.add(
-      messaging.tokenRefreshes.listen((_) => registerDeviceToken()),
+      messages.tokenRefreshes.listen((_) => registerDeviceToken()),
     );
     _subscriptions.add(
-      messaging.foregroundMessages.listen(
+      messages.foregroundMessages.listen(
         (message) => _notify(onForeground, message),
       ),
     );
     _subscriptions.add(
-      messaging.openedMessages.listen((message) => _notify(onOpened, message)),
+      messages.openedMessages.listen((message) => _notify(onOpened, message)),
     );
 
-    final initial = await messaging.getInitialMessage();
+    final initial = await messages.initialMessage();
     if (initial != null) _notify(onOpened, initial);
   }
 
-  void _notify(NotificationMessageCallback callback, RemoteMessage message) {
-    callback(
-      Map<String, dynamic>.from(message.data),
-      message.notification?.title,
-      message.notification?.body,
-    );
+  void _notify(
+    NotificationMessageCallback callback,
+    NotificationMessage message,
+  ) {
+    callback(message.data, message.title, message.body);
   }
 
   Future<void> dispose() async {

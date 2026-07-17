@@ -58,7 +58,6 @@ class _ShellScaffoldState extends State<ShellScaffold>
       activeIcon: HugeIcons.strokeRoundedTransactionHistory,
       label: 'Lavori',
     ),
-
   ];
 
   @override
@@ -161,7 +160,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
                   child: OCLiquidGlassGroup(
                     settings: const OCLiquidGlassSettings(
                       refractStrength: -0.08,
-                      blurRadiusPx: 5.0,
+                      blurRadiusPx: 1.0,
                       specStrength: 0,
                       specWidth: 0.0,
                       specAngle: 145,
@@ -321,7 +320,7 @@ class AmNavItem extends StatelessWidget {
               children: [
                 _NavIcon(
                   value: isSelect ? iconIsActive : icon,
-                  color: isSelect ? colors.accent : colors.textPrimary,
+                  color: isSelect ? colors.accent : colors.textSecondary,
                 ),
                 AnimatedSize(
                   duration: const Duration(milliseconds: 300),

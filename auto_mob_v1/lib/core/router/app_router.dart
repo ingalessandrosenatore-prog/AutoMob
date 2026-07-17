@@ -3,6 +3,7 @@ import 'package:auto_mob_v1/features/servizi/presentation/pages/servizi_page.dar
 import 'package:auto_mob_v1/features/work_log/presentation/pages/midify_item.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/work_log_history_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -10,9 +11,15 @@ import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/pages/splash_screen.dart';
 import '../../features/auth/presentation/pages/login_view.dart';
 import '../../features/auth/presentation/pages/registration_view.dart';
+import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import '../../features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
+import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
+import '../../features/dashboard/presentation/widgets/mechanic_details_sheet.dart';
 import '../../features/settings/presentation/pages/settings_view.dart';
+import '../../features/vehicle/domain/entities/mechanic_summary.dart';
 import '../../features/vehicle/presentation/pages/vehicle_registration_page.dart';
 import '../../features/vehicle/presentation/widgets/km_update_pop_up.dart';
+import '../../features/vehicle/presentation/widgets/revision_update_pop_up.dart';
 import '../../features/work_log/presentation/widgets/functional_pop_up.dart';
 import '../../features/work_log/presentation/pages/work_log_wizard_page.dart';
 import '../di/injection_container.dart' as di;
@@ -65,8 +72,18 @@ class AppRouter {
               GoRoute(
                 path: '/home',
                 name: 'home',
-                builder: (context, state) => HomeView(
-                  initialVehicleId: state.uri.queryParameters['vehicleId'],
+                builder: (context, state) => MultiBlocProvider(
+                  providers: [
+                    BlocProvider<DashboardBloc>.value(
+                      value: di.sl<DashboardBloc>(),
+                    ),
+                    BlocProvider<NotificationPromptBloc>(
+                      create: (_) => di.sl<NotificationPromptBloc>(),
+                    ),
+                  ],
+                  child: HomeView(
+                    initialVehicleId: state.uri.queryParameters['vehicleId'],
+                  ),
                 ),
               ),
             ],
@@ -154,6 +171,30 @@ class AppRouter {
           final currentKm = (extra?['currentKm'] as String?) ?? '0';
           final id = (extra?['id'] as String?) ?? '';
           return KmUpdatePopUp(vehicleId: id, currentKm: currentKm);
+        },
+      ),
+      GoRoute(
+        path: '/updateRevision',
+        name: 'updateRevision',
+        pageBuilder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return RevisionUpdatePopUp(
+            vehicleId: (extra?['id'] as String?) ?? '',
+            currentRevisionDate: extra?['currentRevisionDate'] as DateTime?,
+            createCubit: () => di.sl(),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/mechanicDetails',
+        name: 'mechanicDetails',
+        pageBuilder: (context, state) {
+          final extra = state.extra! as Map<String, dynamic>;
+          return MechanicDetailsPopUp(
+            vehicleId: extra['vehicleId'] as String,
+            mechanic: extra['mechanic'] as MechanicSummary?,
+            createCubit: () => di.sl<ConnectMechanicCubit>(),
+          );
         },
       ),
     ],

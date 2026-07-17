@@ -7,6 +7,7 @@ import '../../../../core/error/exceptions/exceptions.dart';
 import '../../domain/entities/vehicle.dart';
 import '../../domain/entities/vehicle_draft.dart';
 import '../../domain/entities/vehicle_save_outcome.dart';
+import '../../domain/entities/mechanic_summary.dart';
 import '../../domain/repositories/vehicle_repository.dart';
 import '../datasources/vehicle_draft_local_data_source.dart';
 import '../datasources/vehicle_remote_data_source.dart';
@@ -29,6 +30,37 @@ class VehicleRepositoryImpl implements VehicleRepository {
       return const Right(null);
     } on CacheException {
       return const Left(StorageFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, MechanicSummary>> connectMechanic({
+    required String vehicleId,
+    required String mechanicCode,
+  }) async {
+    try {
+      final mechanic = await remoteDataSource.connectMechanic(
+        vehicleId: vehicleId,
+        mechanicCode: mechanicCode,
+      );
+      return Right(mechanic);
+    } on VehicleDataSourceException catch (error) {
+      return switch (error.code) {
+        'mechanic_not_found' => const Left(
+          ValidationFailure(
+            'Codice meccanico non valido o officina non attiva.',
+          ),
+        ),
+        '23505' => const Left(
+          DuplicateFailure('Questo meccanico e gia collegato al veicolo.'),
+        ),
+        '42501' => const Left(PermissionFailure()),
+        _ => const Left(ServerFailure()),
+      };
+    } on NetworkException {
+      return const Left(NetworkFailure());
+    } catch (_) {
+      return const Left(ServerFailure());
     }
   }
 
@@ -91,6 +123,29 @@ class VehicleRepositoryImpl implements VehicleRepository {
       return Right(kmSalvati);
     } on VehicleDataSourceException {
       return const Left(ServerFailure());
+    } on NetworkException {
+      return const Left(NetworkFailure());
+    } catch (_) {
+      return const Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, DateTime>> updateRevisionDate({
+    required String vehicleId,
+    required DateTime nextRevisionDate,
+  }) async {
+    try {
+      final savedDate = await remoteDataSource.updateRevisionDate(
+        vehicleId: vehicleId,
+        nextRevisionDate: nextRevisionDate,
+      );
+      return Right(savedDate);
+    } on VehicleDataSourceException catch (error) {
+      final message = error.code == null
+          ? error.message
+          : '${error.message}\nCodice: ${error.code}';
+      return Left(RemoteFailure(message, code: error.code));
     } on NetworkException {
       return const Left(NetworkFailure());
     } catch (_) {

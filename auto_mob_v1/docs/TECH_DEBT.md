@@ -7,6 +7,25 @@ baseline: da quel momento il check la considererà di nuovo un errore da evitare
 
 Il gate resta severo sulle violazioni **nuove**: il debito non può crescere.
 
+Le baseline architetturali ora usano firme stabili, indipendenti dal numero di
+linea:
+
+```text
+REGOLA|file|messaggio normalizzato
+```
+
+Il gate blocca inoltre:
+
+- `R14`: pagine/widget che importano use case o repository;
+- `R15`: `GetIt` fuori da `main.dart`, `core/di` e `core/router`;
+- `R16`: BLoC/Cubit che dipendono direttamente da repository;
+- `R17`: Firebase, Supabase e SharedPreferences nella presentation;
+- `R18`: nuovi `setState` senza eccezione locale motivata;
+- `R19`: uso del service locator fuori dal composition root.
+
+Il debito R18/R19 preesistente e' nel baseline. Non e' consentito aggiungervi
+codice introdotto da una nuova feature.
+
 ---
 
 ## 1. `AmSparePartCard` è in `core/` ma dipende da `work_log`

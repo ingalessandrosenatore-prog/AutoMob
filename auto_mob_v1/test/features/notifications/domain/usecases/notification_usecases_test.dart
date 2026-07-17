@@ -1,5 +1,7 @@
 import 'package:auto_mob_v1/features/notifications/domain/entities/notification_permission_status.dart';
+import 'package:auto_mob_v1/features/notifications/domain/entities/notification_message.dart';
 import 'package:auto_mob_v1/features/notifications/domain/repositories/notification_repository.dart';
+import 'package:auto_mob_v1/features/notifications/domain/usecases/observe_notification_messages.dart';
 import 'package:auto_mob_v1/features/notifications/domain/usecases/postpone_notification_permission.dart';
 import 'package:auto_mob_v1/features/notifications/domain/usecases/register_device_token.dart';
 import 'package:auto_mob_v1/features/notifications/domain/usecases/request_notification_permission.dart';
@@ -66,5 +68,24 @@ void main() {
     await PostponeNotificationPermission(repository)();
 
     verify(repository.postponePermissionPrompt).called(1);
+  });
+
+  test('ObserveNotificationMessages espone gli stream del repository', () {
+    const message = NotificationMessage(data: {'type': 'km'});
+    when(() => repository.messagingAvailable).thenReturn(true);
+    when(
+      () => repository.tokenRefreshes,
+    ).thenAnswer((_) => const Stream<void>.empty());
+    when(
+      () => repository.foregroundMessages,
+    ).thenAnswer((_) => Stream.value(message));
+    when(
+      () => repository.openedMessages,
+    ).thenAnswer((_) => const Stream<NotificationMessage>.empty());
+
+    final usecase = ObserveNotificationMessages(repository);
+
+    expect(usecase.isAvailable, isTrue);
+    expect(usecase.foregroundMessages, emits(message));
   });
 }

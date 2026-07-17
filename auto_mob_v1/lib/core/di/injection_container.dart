@@ -26,6 +26,7 @@ import '../../features/notifications/data/datasources/notification_local_data_so
 import '../../features/notifications/data/datasources/notification_remote_data_source.dart';
 import '../../features/notifications/data/repositories/notification_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/notifications/domain/usecases/observe_notification_messages.dart';
 import '../../features/notifications/domain/usecases/postpone_notification_permission.dart';
 import '../../features/notifications/domain/usecases/register_device_token.dart';
 import '../../features/notifications/domain/usecases/request_notification_permission.dart';
@@ -45,18 +46,22 @@ import '../../features/vehicle/domain/usecases/save_draft_step.dart';
 import '../../features/vehicle/domain/usecases/save_vehicle.dart';
 import '../../features/vehicle/domain/usecases/get_vehicles.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_km.dart';
+import '../../features/vehicle/domain/usecases/update_vehicle_revision.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_photo.dart';
 import '../../features/vehicle/domain/usecases/compute_maintenance_kpis.dart';
 import '../../features/vehicle/domain/usecases/lookup_vehicle_by_plate.dart';
 import '../../features/vehicle/domain/usecases/lookup_mechanic_by_code.dart';
 import '../../features/vehicle/domain/usecases/load_vehicle_draft.dart';
 import '../../features/vehicle/domain/usecases/clear_vehicle_draft.dart';
+import '../../features/vehicle/domain/usecases/connect_mechanic.dart';
 import '../../features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import '../../features/vehicle/presentation/bloc/km_update_cubit.dart';
+import '../../features/vehicle/presentation/bloc/revision_update_cubit.dart';
 import '../../features/vehicle/presentation/bloc/vehicle_registration_bloc.dart';
 
 // Dashboard
 import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import '../../features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
 
 // WorkLog
@@ -112,9 +117,12 @@ void _initNotifications({required bool firebaseAvailable}) {
   sl.registerLazySingleton<UnregisterDeviceToken>(
     () => UnregisterDeviceToken(sl()),
   );
+  sl.registerLazySingleton<ObserveNotificationMessages>(
+    () => ObserveNotificationMessages(sl()),
+  );
   sl.registerLazySingleton<NotificationMessageCoordinator>(
     () => NotificationMessageCoordinator(
-      messaging: sl(),
+      messages: sl(),
       registerDeviceToken: sl(),
     ),
     dispose: (coordinator) => coordinator.dispose(),
@@ -199,10 +207,16 @@ Future<void> _initVehicle() async {
   sl.registerLazySingleton<ClearVehicleDraft>(() => ClearVehicleDraft(sl()));
   sl.registerLazySingleton<GetVehicles>(() => GetVehicles(sl()));
   sl.registerLazySingleton<UpdateVehicleKm>(() => UpdateVehicleKm(sl()));
+  sl.registerLazySingleton<UpdateVehicleRevision>(
+    () => UpdateVehicleRevision(sl()),
+  );
   sl.registerLazySingleton<UpdateVehiclePhoto>(() => UpdateVehiclePhoto(sl()));
+  sl.registerLazySingleton<ConnectMechanic>(() => ConnectMechanic(sl()));
 
   // Cubit modale "Aggiorna KM" — factory: nuova istanza ad ogni apertura.
   sl.registerFactory<KmUpdateCubit>(() => KmUpdateCubit(sl()));
+  sl.registerFactory<RevisionUpdateCubit>(() => RevisionUpdateCubit(sl()));
+  sl.registerFactory<ConnectMechanicCubit>(() => ConnectMechanicCubit(sl()));
 
   // Repository
   sl.registerLazySingleton<VehicleRepository>(

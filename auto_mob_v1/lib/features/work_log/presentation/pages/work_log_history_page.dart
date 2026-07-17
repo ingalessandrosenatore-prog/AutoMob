@@ -424,8 +424,12 @@ class _VehicleDropdown extends StatelessWidget {
       brand: selected?.brand ?? '',
       onTap: () {},
       lable: selected?.nome ?? 'VEICOLO',
-      backgroundColor: colors.surfaceRaised,
-      popupBackgroundColor: colors.surfaceRaised,
+      backgroundColor: kHeavyEffects
+          ? colors.surfaceRaised.withValues(alpha: 0.5)
+          : colors.surfaceRaised,
+      popupBackgroundColor: kHeavyEffects
+          ? colors.surfaceRaised.withValues(alpha: 0.5)
+          : colors.surfaceRaised,
       larghezza: 200,
       buttonIcons: HugeIcons.strokeRoundedCar05,
       buttonIconsSize: 20,

@@ -1,110 +1,103 @@
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 
-/// Card per visualizzare l'officina di riferimento.
-/// Include l'icona, il nome, il codice meccanico e lo stato (es. Attivo).
+/// Card dell'officina collegata al veicolo attualmente selezionato.
 class AmWorkshopCard extends StatelessWidget {
-  final String nomeOfficina;
-  final String codiceMeccanico;
-  final String stato;
-  final Color colore;
+  final MechanicSummary? mechanic;
+  final VoidCallback? onTap;
 
-  const AmWorkshopCard({
-    super.key,
-    required this.nomeOfficina,
-    required this.codiceMeccanico,
-    required this.stato,
-    required this.colore,
-  });
+  const AmWorkshopCard({super.key, required this.mechanic, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colors.border,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.22),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Icona Officina (Chiave inglese in box arrotondato)
-          Container(
-            padding: const EdgeInsets.all(12),
+    final currentMechanic = mechanic;
+    final connected = currentMechanic != null;
+    final accent = connected ? colors.info : colors.danger;
+
+    return Semantics(
+      button: onTap != null,
+      label: connected
+          ? 'Dettagli meccanico ${currentMechanic.businessName}'
+          : 'Nessun meccanico collegato',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: colore.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: HugeIcon(
-              icon: HugeIcons.strokeRoundedWrench01,
-              color: colore,
-              size: 24,
-              strokeWidth: 2.2,
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Info Officina (Nome e Codice)
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  nomeOfficina,
-                  style: TextStyle(
-                    color: colors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Meccanico · $codiceMeccanico',
-                  style: TextStyle(
-                    color: colors.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: colors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow.withValues(alpha: 0.22),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
-          ),
-          // Indicatore di Stato (Punto + Testo)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: colore,
-                  shape: BoxShape.circle,
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedWrench01,
+                    color: accent,
+                    size: 24,
+                    strokeWidth: 2.2,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                stato,
-                style: TextStyle(
-                  color: colore,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Il tuo meccanico',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.textSecondary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        currentMechanic?.businessName ??
+                            'Nessun meccanico collegato',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                if (onTap != null) ...[
+                  const SizedBox(width: 12),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: colors.textSecondary,
+                    size: 24,
+                  ),
+                ],
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }

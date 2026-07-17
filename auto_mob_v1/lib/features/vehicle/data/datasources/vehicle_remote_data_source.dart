@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'dart:developer' as developer;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/error/exceptions/exceptions.dart';
 
 import '../../domain/entities/vehicle_draft.dart';
+import '../../domain/entities/mechanic_summary.dart';
 import '../models/vehicle_model.dart';
 
 abstract class VehicleRemoteDataSource {
@@ -17,10 +19,20 @@ abstract class VehicleRemoteDataSource {
   /// Lista veicoli accessibili dall'utente corrente (RLS filtra per owner_id).
   Future<List<VehicleModel>> getVehicles();
 
+  Future<MechanicSummary> connectMechanic({
+    required String vehicleId,
+    required String mechanicCode,
+  });
+
   /// Aggiorna i km del veicolo (modale "Aggiorna KM", senza lavoro) via RPC
   /// `aggiorna_km_veicolo`. I km salgono solo (mai indietro). Ritorna i km
   /// effettivi salvati sul DB.
   Future<int> updateKm({required String vehicleId, required int newKm});
+
+  Future<DateTime> updateRevisionDate({
+    required String vehicleId,
+    required DateTime nextRevisionDate,
+  });
 }
 
 class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
@@ -88,11 +100,46 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
           .select()
           .eq('owner_id', owner_id!);
 
-      return (rows as List)
-          .map(
-            (r) => VehicleModel.fromJson(Map<String, dynamic>.from(r as Map)),
-          )
+      final vehicleRows = (rows as List)
+          .map((row) => Map<String, dynamic>.from(row as Map))
           .toList();
+      final vehicleIds = vehicleRows
+          .map((row) => row['id']?.toString())
+          .whereType<String>()
+          .where((id) => id.isNotEmpty)
+          .toList();
+
+      final mechanicsByVehicleId = <String, Map<String, dynamic>>{};
+      if (vehicleIds.isNotEmpty) {
+        final links = await supabaseClient
+            .from('vehicle_mechanics')
+            .select(
+              'vehicle_id, mechanic:mechanics('
+              'id, mechanic_code, business_name, address, number, email'
+              ')',
+            )
+            .inFilter('vehicle_id', vehicleIds);
+
+        for (final rawLink in links as List) {
+          final link = Map<String, dynamic>.from(rawLink as Map);
+          final vehicleId = link['vehicle_id']?.toString();
+          final mechanic = link['mechanic'];
+          if (vehicleId != null && mechanic is Map) {
+            mechanicsByVehicleId.putIfAbsent(
+              vehicleId,
+              () => Map<String, dynamic>.from(mechanic),
+            );
+          }
+        }
+      }
+
+      return vehicleRows.map((row) {
+        final vehicleId = row['id']?.toString();
+        return VehicleModel.fromJson({
+          ...row,
+          'mechanic': mechanicsByVehicleId[vehicleId],
+        });
+      }).toList();
     } on PostgrestException catch (e) {
       throw VehicleDataSourceException(e.message, code: e.code);
     } on SocketException {
@@ -100,6 +147,56 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     } catch (e) {
       throw const VehicleDataSourceException(
         'Errore durante il caricamento dei veicoli',
+      );
+    }
+  }
+
+  @override
+  Future<MechanicSummary> connectMechanic({
+    required String vehicleId,
+    required String mechanicCode,
+  }) async {
+    if (owner_id == null) {
+      throw const ServerException('Utente non autenticato');
+    }
+
+    try {
+      final row = await supabaseClient
+          .from('mechanics')
+          .select('id, mechanic_code, business_name, address, number, email')
+          .eq('mechanic_code', mechanicCode.trim())
+          .eq('is_active', true)
+          .maybeSingle();
+
+      if (row == null) {
+        throw const VehicleDataSourceException(
+          'Codice meccanico non valido o officina non attiva.',
+          code: 'mechanic_not_found',
+        );
+      }
+
+      await supabaseClient.from('vehicle_mechanics').insert({
+        'vehicle_id': vehicleId,
+        'mechanic_id': row['id'],
+      });
+
+      return MechanicSummary(
+        id: row['id'].toString(),
+        code: row['mechanic_code'].toString(),
+        businessName: row['business_name'].toString(),
+        address: _nullableText(row['address']),
+        phone: _nullableText(row['number']),
+        email: _nullableText(row['email']),
+      );
+    } on VehicleDataSourceException {
+      rethrow;
+    } on PostgrestException catch (error) {
+      throw VehicleDataSourceException(error.message, code: error.code);
+    } on SocketException {
+      throw const NetworkException();
+    } catch (_) {
+      throw const VehicleDataSourceException(
+        'Errore durante il collegamento del meccanico',
       );
     }
   }
@@ -125,6 +222,75 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     } catch (e) {
       throw const VehicleDataSourceException(
         'Errore durante l\'aggiornamento dei km',
+      );
+    }
+  }
+
+  @override
+  Future<DateTime> updateRevisionDate({
+    required String vehicleId,
+    required DateTime nextRevisionDate,
+  }) async {
+    if (owner_id == null) {
+      throw const ServerException('Utente non autenticato');
+    }
+
+    try {
+      final normalizedDate = DateTime(
+        nextRevisionDate.year,
+        nextRevisionDate.month,
+        nextRevisionDate.day,
+      );
+      final dateParam = normalizedDate.toIso8601String().split('T')[0];
+      developer.log(
+        'UPDATE vehicles.scadenza_revision_date start '
+        'vehicleId=$vehicleId date=$dateParam',
+        name: 'AutoMob.VehicleRevision',
+      );
+      final row = await supabaseClient
+          .from('vehicles')
+          .update({'scadenza_revision_date': dateParam})
+          .eq('id', vehicleId)
+          .select('scadenza_revision_date')
+          .single();
+      final savedDate = DateTime.parse(
+        row['scadenza_revision_date'].toString(),
+      );
+      developer.log(
+        'UPDATE vehicles.scadenza_revision_date success '
+        'vehicleId=$vehicleId savedDate=${savedDate.toIso8601String()}',
+        name: 'AutoMob.VehicleRevision',
+      );
+      return savedDate;
+    } on PostgrestException catch (e, stackTrace) {
+      developer.log(
+        'UPDATE vehicles.scadenza_revision_date PostgREST error '
+        'vehicleId=$vehicleId code=${e.code} message=${e.message}',
+        name: 'AutoMob.VehicleRevision',
+        error: e,
+        stackTrace: stackTrace,
+        level: 1000,
+      );
+      throw VehicleDataSourceException(e.message, code: e.code);
+    } on SocketException {
+      developer.log(
+        'UPDATE vehicles.scadenza_revision_date network error '
+        'vehicleId=$vehicleId',
+        name: 'AutoMob.VehicleRevision',
+        level: 1000,
+      );
+      throw const NetworkException();
+    } catch (error, stackTrace) {
+      developer.log(
+        'UPDATE vehicles.scadenza_revision_date unexpected error '
+        'vehicleId=$vehicleId',
+        name: 'AutoMob.VehicleRevision',
+        error: error,
+        stackTrace: stackTrace,
+        level: 1000,
+      );
+      throw VehicleDataSourceException(
+        'Errore durante l\'aggiornamento della revisione: $error',
       );
     }
   }
@@ -176,4 +342,9 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       'lookup_id': draft.lookupId,
     };
   }
+}
+
+String? _nullableText(dynamic value) {
+  final text = value?.toString().trim();
+  return text == null || text.isEmpty ? null : text;
 }

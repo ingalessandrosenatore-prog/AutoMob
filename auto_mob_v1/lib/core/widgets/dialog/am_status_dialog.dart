@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../../config/performance_flags.dart';
 import '../../theme/am_theme_colors.dart';
@@ -177,9 +178,20 @@ class _DialogSurface extends StatelessWidget {
     const radius = BorderRadius.all(Radius.circular(28));
     final surface = color.withValues(alpha: 0.88);
 
-    if (!kHeavyEffects) {
-      return AmFlatPopUp(color: surface, borderRadius: radius, child: child);
-    }
+   return OCLiquidGlassGroup(
+       settings: const OCLiquidGlassSettings(
+     refractStrength: -0.12,
+     blurRadiusPx: 4.0,
+     specStrength: 0,
+     specWidth: 0.0,
+     specAngle: 145,
+     blendPx: 70,
+     specPower: 10,
+   ), child: OCLiquidGlass(
+    child: child,
+     color:kHeavyEffects ? color.withValues(alpha: 0.8) : color,
+     borderRadius: 38,
+   ));
 
     return ClipRRect(
       borderRadius: radius,

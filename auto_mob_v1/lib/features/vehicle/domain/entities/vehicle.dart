@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'mechanic_summary.dart';
+
 class Vehicle extends Equatable {
   final String id;
   final String ownerId;
@@ -33,6 +35,7 @@ class Vehicle extends Equatable {
 
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final MechanicSummary? mechanic;
 
   /// Path locale della foto del veicolo (es. /data/.../foto_veicoli/veicolo_AB123CD.jpg).
   /// Null se la foto non è stata salvata. Non viene persistito su DB.
@@ -66,9 +69,10 @@ class Vehicle extends Equatable {
     this.lastRevisionDate,
     this.updatedAt,
     this.fotoPath,
+    this.mechanic,
   });
 
-  Vehicle copyWith({String? fotoPath}) {
+  Vehicle copyWith({String? fotoPath, MechanicSummary? mechanic}) {
     return Vehicle(
       id: id,
       ownerId: ownerId,
@@ -97,6 +101,7 @@ class Vehicle extends Equatable {
       lastRevisionDate: lastRevisionDate,
       updatedAt: updatedAt,
       fotoPath: fotoPath ?? this.fotoPath,
+      mechanic: mechanic ?? this.mechanic,
     );
   }
 
@@ -153,5 +158,6 @@ class Vehicle extends Equatable {
     createdAt,
     updatedAt,
     fotoPath,
+    mechanic,
   ];
 }

@@ -76,6 +76,27 @@ void main() {
   );
 
   blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
+    'targa gia cercata apre Verifica senza ripetere la query',
+    build: buildBloc,
+    seed: () => const VehicleRegistrationState(
+      currentStep: 1,
+      lookupStatus: RegistrationLookupStatus.complete,
+      draft: VehicleDraft(targa: 'AB123CD', lookupAttemptConsumed: true),
+    ),
+    act: (bloc) => bloc.add(PlateSubmitted(targa: 'AB123CD')),
+    expect: () => [
+      isA<VehicleRegistrationState>()
+          .having((s) => s.currentStep, 'step', 2)
+          .having(
+            (s) => s.lookupStatus,
+            'stato ricerca',
+            RegistrationLookupStatus.idle,
+          ),
+    ],
+    verify: (_) => verifyNever(() => lookupVehicle(any())),
+  );
+
+  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
     'targa non valida non consuma il tentativo e resta allo step targa',
     setUp: () => when(
       () => lookupVehicle('ABC'),
@@ -239,6 +260,34 @@ void main() {
             RegistrationLookupStatus.idle,
           ),
     ],
+  );
+
+  blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(
+    'continuare senza meccanico azzera errore e popup precedenti',
+    build: buildBloc,
+    seed: () => const VehicleRegistrationState(
+      mechanicStatus: MechanicLookupStatus.notFound,
+      message: 'Codice meccanico non valido.',
+      draft: VehicleDraft(
+        codiceMeccanico: 'MECH-ERR',
+        meccanicoId: 'mechanic-1',
+        meccanicoNome: 'Officina',
+      ),
+    ),
+    act: (bloc) => bloc.add(RegistrationWithoutMechanicPressed()),
+    expect: () => [
+      isA<VehicleRegistrationState>()
+          .having((s) => s.currentStep, 'step', 1)
+          .having(
+            (s) => s.mechanicStatus,
+            'stato meccanico',
+            MechanicLookupStatus.idle,
+          )
+          .having((s) => s.message, 'messaggio', isNull)
+          .having((s) => s.draft.codiceMeccanico, 'codice', isNull)
+          .having((s) => s.draft.meccanicoId, 'id', isNull),
+    ],
+    verify: (_) => verify(() => saveDraft(any())).called(1),
   );
 
   blocTest<VehicleRegistrationBloc, VehicleRegistrationState>(

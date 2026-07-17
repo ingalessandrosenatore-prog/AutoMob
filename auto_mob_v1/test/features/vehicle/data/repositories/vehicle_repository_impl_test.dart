@@ -13,6 +13,7 @@ import 'package:auto_mob_v1/core/error/exceptions/exceptions.dart';
 import 'package:auto_mob_v1/features/vehicle/data/datasources/vehicle_draft_local_data_source.dart';
 import 'package:auto_mob_v1/features/vehicle/data/datasources/vehicle_remote_data_source.dart';
 import 'package:auto_mob_v1/features/vehicle/data/repositories/vehicle_repository_impl.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:mocktail/mocktail.dart';
@@ -74,6 +75,95 @@ void main() {
       final result = await repository.updateKm(vehicleId: 'v1', newKm: 12000);
 
       expect(result, const Left<Failure, int>(NetworkFailure()));
+    });
+  });
+
+  group('connectMechanic', () {
+    const mechanic = MechanicSummary(
+      id: 'mechanic-1',
+      code: 'OFF-001',
+      businessName: 'Officina Giordano',
+    );
+
+    test('ritorna il meccanico collegato dal datasource', () async {
+      when(
+        () => remote.connectMechanic(
+          vehicleId: 'vehicle-1',
+          mechanicCode: 'OFF-001',
+        ),
+      ).thenAnswer((_) async => mechanic);
+
+      final result = await repository.connectMechanic(
+        vehicleId: 'vehicle-1',
+        mechanicCode: 'OFF-001',
+      );
+
+      expect(result, const Right<Failure, MechanicSummary>(mechanic));
+    });
+
+    test('mappa un codice sconosciuto in ValidationFailure', () async {
+      when(
+        () => remote.connectMechanic(
+          vehicleId: 'vehicle-1',
+          mechanicCode: 'ERRATO',
+        ),
+      ).thenThrow(
+        const VehicleDataSourceException(
+          'non trovato',
+          code: 'mechanic_not_found',
+        ),
+      );
+
+      final result = await repository.connectMechanic(
+        vehicleId: 'vehicle-1',
+        mechanicCode: 'ERRATO',
+      );
+
+      expect(
+        result,
+        const Left<Failure, MechanicSummary>(
+          ValidationFailure(
+            'Codice meccanico non valido o officina non attiva.',
+          ),
+        ),
+      );
+    });
+
+    test('mappa un collegamento duplicato in DuplicateFailure', () async {
+      when(
+        () => remote.connectMechanic(
+          vehicleId: 'vehicle-1',
+          mechanicCode: 'OFF-001',
+        ),
+      ).thenThrow(const VehicleDataSourceException('duplicato', code: '23505'));
+
+      final result = await repository.connectMechanic(
+        vehicleId: 'vehicle-1',
+        mechanicCode: 'OFF-001',
+      );
+
+      expect(
+        result,
+        const Left<Failure, MechanicSummary>(
+          DuplicateFailure('Questo meccanico e gia collegato al veicolo.'),
+        ),
+      );
+    });
+
+    test('mappa l’assenza di rete in NetworkFailure', () async {
+      when(
+        () => remote.connectMechanic(
+          vehicleId: 'vehicle-1',
+          mechanicCode: 'OFF-001',
+        ),
+      ).thenThrow(const NetworkException());
+
+      final result = await repository.connectMechanic(
+        vehicleId: 'vehicle-1',
+        mechanicCode: 'OFF-001',
+      );
+
+      expect(result, const Left<Failure, MechanicSummary>(NetworkFailure()));
     });
   });
 

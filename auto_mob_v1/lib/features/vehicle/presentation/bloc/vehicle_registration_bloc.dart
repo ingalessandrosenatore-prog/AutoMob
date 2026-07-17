@@ -118,14 +118,30 @@ class VehicleRegistrationBloc
       meccanicoIndirizzo: null,
     );
     await _persist(draft);
-    emit(state.copyWith(currentStep: 1, draft: draft, clearMessage: true));
+    emit(
+      state.copyWith(
+        currentStep: 1,
+        draft: draft,
+        mechanicStatus: MechanicLookupStatus.idle,
+        clearMessage: true,
+      ),
+    );
   }
 
   Future<void> _onPlateSubmitted(
     PlateSubmitted event,
     Emitter<VehicleRegistrationState> emit,
   ) async {
-    if (state.draft.lookupAttemptConsumed) return;
+    if (state.draft.lookupAttemptConsumed) {
+      emit(
+        state.copyWith(
+          currentStep: 2,
+          lookupStatus: RegistrationLookupStatus.idle,
+          clearLookupFailure: true,
+        ),
+      );
+      return;
+    }
     emit(
       state.copyWith(
         lookupStatus: RegistrationLookupStatus.loading,

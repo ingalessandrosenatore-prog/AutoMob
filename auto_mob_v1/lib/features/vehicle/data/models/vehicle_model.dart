@@ -1,4 +1,5 @@
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
 
 class VehicleModel extends Vehicle {
   const VehicleModel({
@@ -28,6 +29,7 @@ class VehicleModel extends Vehicle {
     super.lastTireRotationDate,
     super.lastRevisionDate,
     super.updatedAt,
+    super.mechanic,
   });
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
@@ -60,6 +62,18 @@ class VehicleModel extends Vehicle {
       if (v is DateTime) return v;
       return DateTime.tryParse(v.toString());
     }
+
+    final mechanicJson = json['mechanic'];
+    final mechanic = mechanicJson is Map
+        ? MechanicSummary(
+            id: str(mechanicJson['id']),
+            code: str(mechanicJson['mechanic_code']),
+            businessName: str(mechanicJson['business_name']),
+            address: _nullableString(mechanicJson['address']),
+            phone: _nullableString(mechanicJson['number']),
+            email: _nullableString(mechanicJson['email']),
+          )
+        : null;
 
     return VehicleModel(
       id: str(json['id']),
@@ -97,6 +111,7 @@ class VehicleModel extends Vehicle {
       lastRevisionDate: dateOrNull(json['last_revision_date']),
       createdAt: date(json['created_at']),
       updatedAt: dateOrNull(json['updated_at']),
+      mechanic: mechanic,
     );
   }
 
@@ -119,6 +134,21 @@ class VehicleModel extends Vehicle {
       'distribution_intervall_km': distribuzioneIntervalKm,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'mechanic': mechanic == null
+          ? null
+          : {
+              'id': mechanic!.id,
+              'mechanic_code': mechanic!.code,
+              'business_name': mechanic!.businessName,
+              'address': mechanic!.address,
+              'number': mechanic!.phone,
+              'email': mechanic!.email,
+            },
     };
   }
+}
+
+String? _nullableString(dynamic value) {
+  final text = value?.toString().trim();
+  return text == null || text.isEmpty ? null : text;
 }

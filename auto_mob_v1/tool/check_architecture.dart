@@ -6,8 +6,8 @@
 //
 //  Lancialo con:   dart run tool/check_architecture.dart
 //
-//  Escape hatch: se una riga contiene il commento  // arch-ignore
-//  lo script la salta (usare con parsimonia, solo per falsi positivi).
+//  Escape hatch valido solo con regola e motivazione:
+//    // arch-ignore(R18): animazione locale senza stato di business
 // =====================================================================
 
 // ignore_for_file: avoid_print -- e' uno script CLI, il print e' l'output.
@@ -32,7 +32,8 @@ void main() {
   final libDir = Directory('lib');
   if (!libDir.existsSync()) {
     stderr.writeln(
-        'ERRORE: cartella lib/ non trovata. Lancia lo script dalla root del progetto.');
+      'ERRORE: cartella lib/ non trovata. Lancia lo script dalla root del progetto.',
+    );
     exit(2);
   }
 
@@ -55,8 +56,19 @@ void main() {
       final line = lines[i];
       final lineNo = i + 1;
 
-      // Escape hatch per falsi positivi
-      if (line.contains('arch-ignore')) continue;
+      final validIgnore = _validArchitectureIgnore(line);
+      if (line.contains('arch-ignore') && !validIgnore) {
+        violations.add(
+          _Violation(
+            rel,
+            lineNo,
+            'R0',
+            'arch-ignore non valido: usa '
+                '"// arch-ignore(Rxx): motivazione concreta".',
+          ),
+        );
+      }
+      if (validIgnore) continue;
 
       // ---- Regole sugli IMPORT ----
       final imp = _parseImport(line);
@@ -66,6 +78,9 @@ void main() {
 
       // ---- Regola 13: niente funzioni che ritornano Widget ----
       _checkWidgetFunction(line, rel, lineNo, violations);
+
+      // ---- Regole su chiamate vietate nei layer ----
+      _checkSourcePatterns(src, line, rel, lineNo, violations);
     }
   }
 
@@ -84,7 +99,8 @@ void main() {
 
   if (baselinate > 0) {
     print(
-        '($baselinate violazioni a BASELINE — debito tecnico tracciato in $baselineFile / docs/TECH_DEBT.md)');
+      '($baselinate violazioni a BASELINE — debito tecnico tracciato in $baselineFile / docs/TECH_DEBT.md)',
+    );
   }
 
   if (nuove.isEmpty) {
@@ -101,6 +117,7 @@ void main() {
   for (final v in nuove) {
     print('  ${v.file}:${v.line}');
     print('     [${v.rule}] ${v.message}\n');
+    print('     baseline: ${v.signature}\n');
   }
   exit(1);
 }
@@ -137,8 +154,15 @@ class _FileInfo {
   final String? feature; // nome feature, se sotto features/<x>/
   final bool isBloc; // file *_bloc.dart o *_cubit.dart
   final bool isDatasource;
+  final bool isUi;
 
-  _FileInfo(this.layer, this.feature, this.isBloc, this.isDatasource);
+  _FileInfo(
+    this.layer,
+    this.feature,
+    this.isBloc,
+    this.isDatasource,
+    this.isUi,
+  );
 }
 
 _FileInfo _classify(String rel) {
@@ -161,11 +185,17 @@ _FileInfo _classify(String rel) {
 
   final fname = rel.split('/').last;
   final isBloc = fname.endsWith('_bloc.dart') || fname.endsWith('_cubit.dart');
-  final isDatasource = fname.contains('datasource') ||
+  final isDatasource =
+      fname.contains('datasource') ||
       fname.contains('data_source') ||
       rel.contains('/datasources/');
+  final isUi =
+      layer == 'presentation' &&
+      (rel.contains('/pages/') ||
+          rel.contains('/views/') ||
+          rel.contains('/widgets/'));
 
-  return _FileInfo(layer, feature, isBloc, isDatasource);
+  return _FileInfo(layer, feature, isBloc, isDatasource, isUi);
 }
 
 // =====================================================================
@@ -177,8 +207,16 @@ String? _parseImport(String line) {
   return m?.group(1);
 }
 
-void _checkImport(_FileInfo src, String target, String srcRel, int lineNo,
-    List<_Violation> out) {
+bool _validArchitectureIgnore(String line) =>
+    RegExp(r'//\s*arch-ignore\(R\d+(?:/R\d+)*\):\s*\S.{5,}$').hasMatch(line);
+
+void _checkImport(
+  _FileInfo src,
+  String target,
+  String srcRel,
+  int lineNo,
+  List<_Violation> out,
+) {
   void add(String rule, String msg) =>
       out.add(_Violation(srcRel, lineNo, rule, msg));
 
@@ -198,15 +236,40 @@ void _checkImport(_FileInfo src, String target, String srcRel, int lineNo,
 
     // Regola 3+4: il DOMAIN puo' importare solo pochi pacchetti puri
     if (src.layer == 'domain' && !domainAllowedPackages.contains(pkg)) {
-      add('R3/R4',
-          'Il DOMAIN deve essere Dart puro: vietato importare "$pkg" (ammessi solo: ${domainAllowedPackages.join(", ")}).');
+      add(
+        'R3/R4',
+        'Il DOMAIN deve essere Dart puro: vietato importare "$pkg" (ammessi solo: ${domainAllowedPackages.join(", ")}).',
+      );
       return;
+    }
+
+    // R15: il service locator vive soltanto nei composition root.
+    if (pkg == 'get_it' &&
+        !_isCompositionRoot(srcRel) &&
+        srcRel != 'main.dart') {
+      add('R15', 'GetIt e\' ammesso solo in main.dart, core/di e core/router.');
+    }
+
+    // R17: i plugin infrastrutturali non entrano nella presentation.
+    const infrastructurePackages = <String>{
+      'firebase_core',
+      'firebase_messaging',
+      'shared_preferences',
+      'supabase_flutter',
+    };
+    if (src.layer == 'presentation' && infrastructurePackages.contains(pkg)) {
+      add(
+        'R17',
+        'La PRESENTATION non deve importare il plugin infrastrutturale "$pkg".',
+      );
     }
 
     // Regola 11: il BLoC non conosce go_router
     if (src.isBloc && pkg == 'go_router') {
-      add('R11',
-          'Un BLoC non deve importare go_router: la navigazione e\' compito della UI.');
+      add(
+        'R11',
+        'Un BLoC non deve importare go_router: la navigazione e\' compito della UI.',
+      );
     }
 
     // Regola 12: il BLoC non importa la UI di Flutter (material/widgets/cupertino)
@@ -215,8 +278,10 @@ void _checkImport(_FileInfo src, String target, String srcRel, int lineNo,
       if (sub.startsWith('material') ||
           sub.startsWith('widgets') ||
           sub.startsWith('cupertino')) {
-        add('R12',
-            'Un BLoC deve essere UI-agnostic: vietato importare "$target" (usa foundation se ti serve @immutable).');
+        add(
+          'R12',
+          'Un BLoC deve essere UI-agnostic: vietato importare "$target" (usa foundation se ti serve @immutable).',
+        );
       }
     }
     return;
@@ -229,8 +294,13 @@ void _checkImport(_FileInfo src, String target, String srcRel, int lineNo,
 }
 
 // Regole che valgono quando il target e' un file interno a lib/
-void _applyInternalRules(_FileInfo src, String targetRel, String srcRel,
-    int lineNo, List<_Violation> out) {
+void _applyInternalRules(
+  _FileInfo src,
+  String targetRel,
+  String srcRel,
+  int lineNo,
+  List<_Violation> out,
+) {
   void add(String rule, String msg) =>
       out.add(_Violation(srcRel, lineNo, rule, msg));
 
@@ -251,14 +321,34 @@ void _applyInternalRules(_FileInfo src, String targetRel, String srcRel,
 
   // R6: presentation non importa data (deve passare dagli usecase del domain)
   if (src.layer == 'presentation' && tgt.layer == 'data') {
-    add('R6',
-        'La PRESENTATION non deve importare il layer DATA: passa dagli usecase/interfacce del domain.');
+    add(
+      'R6',
+      'La PRESENTATION non deve importare il layer DATA: passa dagli usecase/interfacce del domain.',
+    );
+  }
+
+  // R14: pagine e widget comunicano tramite BLoC, non con la business logic.
+  if (src.isUi && targetRel.contains('/domain/usecases/')) {
+    add('R14', 'La UI non deve importare use case: invia un evento al BLoC.');
+  }
+  if (src.isUi && targetRel.contains('/domain/repositories/')) {
+    add('R14', 'La UI non deve importare repository: usa BLoC e use case.');
+  }
+
+  // R16: il BLoC dipende dai use case, mai direttamente dai repository.
+  if (src.isBloc && targetRel.contains('/domain/repositories/')) {
+    add(
+      'R16',
+      'Un BLoC non deve importare repository: dipendi da un use case.',
+    );
   }
 
   // R7: un datasource non importa un repository (verso: repository -> datasource)
   if (src.isDatasource && targetRel.contains('/repositories/')) {
-    add('R7',
-        'Un datasource non deve importare un repository (il verso corretto e\' repository -> datasource).');
+    add(
+      'R7',
+      'Un datasource non deve importare un repository (il verso corretto e\' repository -> datasource).',
+    );
   }
 
   // R8: il core non conosce le feature.
@@ -267,8 +357,10 @@ void _applyInternalRules(_FileInfo src, String targetRel, String srcRel,
   if (src.layer == 'core' &&
       !_isCompositionRoot(srcRel) &&
       targetRel.startsWith('features/')) {
-    add('R8',
-        'Il CORE non deve importare una feature: il core e\' trasversale. (Se e\' glue di montaggio, va in core/di o core/router.)');
+    add(
+      'R8',
+      'Il CORE non deve importare una feature: il core e\' trasversale. (Se e\' glue di montaggio, va in core/di o core/router.)',
+    );
   }
 
   // R9 (morbida): cross-feature ammesso SOLO verso il domain dell'altra feature
@@ -276,14 +368,18 @@ void _applyInternalRules(_FileInfo src, String targetRel, String srcRel,
       tgt.feature != null &&
       src.feature != tgt.feature &&
       tgt.layer != 'domain') {
-    add('R9',
-        'Cross-feature: "${src.feature}" puo\' importare solo il DOMAIN di "${tgt.feature}", non il layer ${tgt.layer.toUpperCase()}.');
+    add(
+      'R9',
+      'Cross-feature: "${src.feature}" puo\' importare solo il DOMAIN di "${tgt.feature}", non il layer ${tgt.layer.toUpperCase()}.',
+    );
   }
 
   // R10: un BLoC non importa un altro BLoC
   if (src.isBloc && tgt.isBloc && targetRel != srcRel) {
-    add('R10',
-        'Un BLoC non deve importare un altro BLoC (accoppiamento vietato: comunica via UI o usecase condiviso).');
+    add(
+      'R10',
+      'Un BLoC non deve importare un altro BLoC (accoppiamento vietato: comunica via UI o usecase condiviso).',
+    );
   }
 }
 
@@ -291,8 +387,9 @@ void _applyInternalRules(_FileInfo src, String targetRel, String srcRel,
 // restituendo una path relativa a lib/ (es: features/vehicle/domain/...).
 String? _resolveRelative(String srcRel, String target) {
   if (!target.startsWith('.')) return null; // non relativo -> ignora
-  final dir =
-      srcRel.contains('/') ? srcRel.substring(0, srcRel.lastIndexOf('/')) : '';
+  final dir = srcRel.contains('/')
+      ? srcRel.substring(0, srcRel.lastIndexOf('/'))
+      : '';
   final parts = <String>[];
   if (dir.isNotEmpty) parts.addAll(dir.split('/'));
   for (final seg in target.split('/')) {
@@ -315,7 +412,11 @@ String? _resolveRelative(String srcRel, String target) {
 final _widgetFnRe = RegExp(r'(?<![A-Za-z0-9_])Widget\??\s+(\w+)\s*\(');
 
 void _checkWidgetFunction(
-    String line, String rel, int lineNo, List<_Violation> out) {
+  String line,
+  String rel,
+  int lineNo,
+  List<_Violation> out,
+) {
   final trimmed = line.trimLeft();
   if (trimmed.startsWith('//') || trimmed.startsWith('*')) return; // commenti
 
@@ -326,8 +427,47 @@ void _checkWidgetFunction(
   // Eccezioni ammesse: l'override build() e i tipi funzione (Widget Function())
   if (name == 'build' || name == 'Function') return;
 
-  out.add(_Violation(rel, lineNo, 'R13',
-      'Niente funzioni che ritornano Widget ("$name"): estrai una widget class privata. Se e\' riutilizzabile mettila in core/widgets, altrimenti nella feature corrente.'));
+  out.add(
+    _Violation(
+      rel,
+      lineNo,
+      'R13',
+      'Niente funzioni che ritornano Widget ("$name"): estrai una widget class privata. Se e\' riutilizzabile mettila in core/widgets, altrimenti nella feature corrente.',
+    ),
+  );
+}
+
+void _checkSourcePatterns(
+  _FileInfo src,
+  String line,
+  String rel,
+  int lineNo,
+  List<_Violation> out,
+) {
+  void add(String rule, String msg) =>
+      out.add(_Violation(rel, lineNo, rule, msg));
+
+  final trimmed = line.trimLeft();
+  if (trimmed.startsWith('//') || trimmed.startsWith('*')) return;
+
+  // R18: ogni nuovo setState e' bloccato. Le sole eccezioni ammesse devono
+  // essere motivate puntualmente con arch-ignore(R18).
+  if (line.contains('setState(')) {
+    add(
+      'R18',
+      'setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.',
+    );
+  }
+
+  // R19: vieta di aggirare il widget tree recuperando servizi globalmente.
+  if (!_isCompositionRoot(rel) &&
+      rel != 'main.dart' &&
+      (line.contains('GetIt.I<') || RegExp(r'\bsl<').hasMatch(line))) {
+    add(
+      'R19',
+      'Service locator usato fuori dal composition root: inietta tramite provider/costruttore.',
+    );
+  }
 }
 
 // =====================================================================
@@ -339,6 +479,9 @@ class _Violation {
   final String message;
   _Violation(this.file, this.line, this.rule, this.message);
 
-  // Firma stabile usata per confrontare col baseline.
-  String get signature => '$file:$line:$rule';
+  // Firma stabile: il numero di linea resta nel report ma non nella baseline.
+  String get signature {
+    final normalizedMessage = message.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return '$rule|$file|$normalizedMessage';
+  }
 }

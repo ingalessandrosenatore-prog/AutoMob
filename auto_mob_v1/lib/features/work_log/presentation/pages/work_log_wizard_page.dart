@@ -10,7 +10,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/am_theme_colors.dart';
 import '../../../../core/types/enum_pop_up.dart';
 import '../../../../core/widgets/blur/am_edge_blur.dart';
-import '../../../../core/widgets/buttons/back_button.dart';
+import '../../../../core/widgets/buttons/am_icon_button.dart';
 import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
 import '../../../../core/widgets/card/am_spare_part_card.dart';
@@ -458,8 +458,8 @@ class _PartsStep extends StatelessWidget {
                         prefixIcon: HugeIcon(
                           icon: HugeIcons.strokeRoundedSearch01,
                           color: colors.textSecondary,
-                          size: 20,
-                          strokeWidth: 2.2,
+                          size: 16,
+                          strokeWidth: 1.5,
                         ),
                         hintText: 'Nome del ricambio',
                       ),
@@ -671,20 +671,29 @@ class _BottomBar extends StatelessWidget {
             AnimatedContainer(
               duration: const Duration(milliseconds: 320),
               curve: Curves.easeInOutCubic,
-              width: showBack ? 130 : 0,
+              width: showBack ? 52 : 0,
               margin: EdgeInsets.only(right: showBack ? 16 : 0),
-              clipBehavior: Clip.hardEdge,
-              decoration: const BoxDecoration(),
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 200),
                 opacity: showBack ? 1 : 0,
                 child: SizedBox(
-                  width: 130,
+                  width: 52,
                   height: 52,
-                  child: AmOutlinedButton(
-                    label: 'INDIETRO',
-                    color: colors.accent,
-                    fillColor: colors.surface,
+                  child: AmIconButton(
+                    width: 52,
+                    height: 52,
+                    radius: 26,
+                    showShadow: true,
+                    shadowColor: colors.shadow.withValues(alpha: 0.18),
+                    shadowBlurRadius: 8,
+                    shadowOffset: const Offset(0, 3),
+                    backgroundColor: colors.surface,
+                    iconColor: colors.accent,
+                    icon: HugeIcons.strokeRoundedArrowRight01,
+                    iconTurns: 0.5,
+                    iconSize: 28,
+                    strokeWidth: 2.2,
+                    tooltip: 'Indietro',
                     onPressed: onBack ?? () {},
                   ),
                 ),

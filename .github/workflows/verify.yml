@@ -1,0 +1,45 @@
+name: AutoMob quality gate
+
+on:
+  pull_request:
+    paths:
+      - "auto_mob_v1/**"
+      - ".github/workflows/verify.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "auto_mob_v1/**"
+      - ".github/workflows/verify.yml"
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: auto_mob_v1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Run mandatory quality gate
+        shell: pwsh
+        env:
+          VERIFY_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: ./tool/verify.ps1

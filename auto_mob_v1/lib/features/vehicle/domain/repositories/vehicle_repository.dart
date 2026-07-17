@@ -6,6 +6,7 @@ import '../../../../core/error/exceptions/exception.dart';
 import '../entities/vehicle.dart';
 import '../entities/vehicle_draft.dart';
 import '../entities/vehicle_save_outcome.dart';
+import '../entities/mechanic_summary.dart';
 
 abstract class VehicleRepository {
   /// Salva (o aggiorna) il draft corrente in locale (SharedPreferences).
@@ -22,11 +23,21 @@ abstract class VehicleRepository {
   /// (RLS lato DB filtra per owner_id).
   Future<Either<Failure, List<Vehicle>>> getVehicles();
 
+  Future<Either<Failure, MechanicSummary>> connectMechanic({
+    required String vehicleId,
+    required String mechanicCode,
+  });
+
   /// Aggiorna i km del veicolo (senza lavoro). Ritorna i km effettivi salvati
   /// (i km salgono solo, mai indietro).
   Future<Either<Failure, int>> updateKm({
     required String vehicleId,
     required int newKm,
+  });
+
+  Future<Either<Failure, DateTime>> updateRevisionDate({
+    required String vehicleId,
+    required DateTime nextRevisionDate,
   });
 
   /// Sovrascrive la foto locale di un veicolo già esistente, riusando la

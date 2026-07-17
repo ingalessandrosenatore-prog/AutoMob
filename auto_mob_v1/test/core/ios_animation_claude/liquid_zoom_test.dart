@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:auto_mob_v1/core/ios_animation_claude/ios_animation_claude.dart';
+import 'package:auto_mob_v1/core/theme/am_theme.dart';
 
 void main() {
   Widget buildApp({LiquidZoomTarget? target}) {
     return MaterialApp(
+      theme: AmTheme.light.copyWith(splashFactory: NoSplash.splashFactory),
       home: Scaffold(
         body: Center(
           child: LiquidZoom(
-            target: target ??
-                const LiquidZoomTarget.modal(width: 300, height: 400),
+            target:
+                target ?? const LiquidZoomTarget.modal(width: 300, height: 400),
             destinationBuilder: (context, close) => Center(
-              child: TextButton(
-                onPressed: close,
-                child: const Text('CHIUDI'),
-              ),
+              child: TextButton(onPressed: close, child: const Text('CHIUDI')),
             ),
             child: const SizedBox(
               width: 64,
@@ -29,8 +28,9 @@ void main() {
   }
 
   group('LiquidZoom', () {
-    testWidgets('il tap sul trigger apre la destinazione con il morph',
-        (tester) async {
+    testWidgets('il tap sul trigger apre la destinazione con il morph', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildApp());
       expect(find.text('CHIUDI'), findsNothing);
 
@@ -40,8 +40,9 @@ void main() {
       expect(find.text('CHIUDI'), findsOneWidget);
     });
 
-    testWidgets('il callback close richiude la route fino a smontarla',
-        (tester) async {
+    testWidgets('il callback close richiude la route fino a smontarla', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildApp());
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
@@ -56,11 +57,12 @@ void main() {
       expect(find.text('CHIUDI'), findsOneWidget);
     });
 
-    testWidgets('il tap sullo scrim fuori dalla card chiude la route',
-        (tester) async {
-      await tester.pumpWidget(buildApp(
-        target: const LiquidZoomTarget.modal(width: 200, height: 200),
-      ));
+    testWidgets('il tap sullo scrim fuori dalla card chiude la route', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildApp(target: const LiquidZoomTarget.modal(width: 200, height: 200)),
+      );
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
       expect(find.text('CHIUDI'), findsOneWidget);

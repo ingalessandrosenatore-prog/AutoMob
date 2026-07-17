@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../../core/error/exceptions/exception.dart';
+import '../../domain/entities/notification_message.dart';
 import '../../domain/entities/notification_permission_status.dart';
 import '../../domain/repositories/notification_repository.dart';
 import '../datasources/firebase_messaging_data_source.dart';
@@ -19,6 +21,26 @@ class NotificationRepositoryImpl implements NotificationRepository {
   final FirebaseMessagingDataSource messaging;
   final NotificationLocalDataSource local;
   final NotificationRemoteDataSource remote;
+
+  @override
+  bool get messagingAvailable => messaging.isAvailable;
+
+  @override
+  Stream<void> get tokenRefreshes => messaging.tokenRefreshes.map((_) {});
+
+  @override
+  Stream<NotificationMessage> get foregroundMessages =>
+      messaging.foregroundMessages.map(_toDomainMessage);
+
+  @override
+  Stream<NotificationMessage> get openedMessages =>
+      messaging.openedMessages.map(_toDomainMessage);
+
+  @override
+  Future<NotificationMessage?> initialMessage() async {
+    final message = await messaging.getInitialMessage();
+    return message == null ? null : _toDomainMessage(message);
+  }
 
   @override
   Future<Either<Failure, bool>> shouldOfferPermission() async {
@@ -93,4 +115,11 @@ class NotificationRepositoryImpl implements NotificationRepository {
     if (Platform.isIOS) return 'ios';
     return 'android';
   }
+
+  NotificationMessage _toDomainMessage(RemoteMessage message) =>
+      NotificationMessage(
+        data: Map<String, dynamic>.from(message.data),
+        title: message.notification?.title,
+        body: message.notification?.body,
+      );
 }

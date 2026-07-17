@@ -76,7 +76,7 @@ class VehicleLookupRemoteDataSourceImpl
     try {
       final row = await client
           .from('mechanics')
-          .select('id, mechanic_code, business_name, address')
+          .select('id, mechanic_code, business_name, address, number, email')
           .eq('mechanic_code', code.trim())
           .eq('is_active', true)
           .maybeSingle();
@@ -86,6 +86,8 @@ class VehicleLookupRemoteDataSourceImpl
         code: row['mechanic_code'] as String,
         businessName: row['business_name'] as String,
         address: row['address'] as String?,
+        phone: row['number'] as String?,
+        email: row['email'] as String?,
       );
     } on SocketException {
       throw const VehicleLookupDataSourceException(NetworkLookupFailure());

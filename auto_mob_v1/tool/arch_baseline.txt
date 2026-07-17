@@ -1,16 +1,45 @@
 # =====================================================================
-#  BASELINE ARCHITETTURALE — DEBITO TECNICO tracciato (non silenziato).
+# BASELINE ARCHITETTURALE — debito precedente al nuovo quality gate.
 # ---------------------------------------------------------------------
-#  Queste violazioni esistevano PRIMA di introdurre il check e sono
-#  accettate temporaneamente: il gate blocca solo le violazioni NUOVE.
-#  Quando ne ripaghi una, CANCELLA la riga corrispondente da qui.
-#  Spiegazione e piano di rientro: docs/TECH_DEBT.md
+# Le firme non contengono numeri di linea: restano stabili quando il file
+# viene formattato o cambia per motivi non collegati alla violazione.
 #
-#  Formato:  file:linea:regola
+# Formato:
+#   REGOLA|file relativo a lib/|messaggio normalizzato
+#
+# Non aggiungere nuove righe per far passare una feature nuova.
+# Quando il debito viene corretto, eliminare la relativa firma.
 # =====================================================================
-core/widgets/card/am_spare_part_card.dart:1:R8
-core/widgets/card/am_spare_part_card.dart:194:R13
-core/widgets/card/am_spare_part_card.dart:215:R13
-core/widgets/card/am_spare_part_card.dart:258:R13
-features/dashboard/presentation/pages/home_view.dart:20:R9
-features/dashboard/presentation/pages/home_view.dart:21:R9
+
+R8|core/widgets/card/am_spare_part_card.dart|Il CORE non deve importare una feature: il core e' trasversale. (Se e' glue di montaggio, va in core/di o core/router.)
+
+R15|features/vehicle/presentation/pages/vehicle_registration_page.dart|GetIt e' ammesso solo in main.dart, core/di e core/router.
+R15|features/vehicle/presentation/widgets/add_vehicle_wizard.dart|GetIt e' ammesso solo in main.dart, core/di e core/router.
+R15|features/work_log/presentation/pages/work_log_history_page.dart|GetIt e' ammesso solo in main.dart, core/di e core/router.
+
+R18|core/router/shell_scaffold_wo_lg.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|core/widgets/buttons/am_animated_nav_button.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|core/widgets/buttons/am_glass_fab.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|core/widgets/card/am_spare_part_card.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|core/widgets/input/date_picker_field.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|core/widgets/input/drop_down_search.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|core/widgets/input/textfield.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/add_vehicle_form_step1.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/add_vehicle_form_step2.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/add_vehicle_form_step3.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/add_vehicle_form_step4.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/add_vehicle_form_step5.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/km_update_pop_up.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/registration/photo_step_view.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/registration/plate_step_view.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/registration/verify_step_view.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/vehicle/presentation/widgets/registration/work_log_step_view.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/work_log/presentation/widgets/add_work_log_pop_up.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+R18|features/work_log/presentation/widgets/parts_picker_body.dart|setState vietato: usa BLoC/Cubit oppure motiva una pura animazione locale.
+
+R19|features/vehicle/presentation/pages/vehicle_registration_page.dart|Service locator usato fuori dal composition root: inietta tramite provider/costruttore.
+R19|features/vehicle/presentation/widgets/add_vehicle_wizard.dart|Service locator usato fuori dal composition root: inietta tramite provider/costruttore.
+R19|features/vehicle/presentation/widgets/km_update_pop_up.dart|Service locator usato fuori dal composition root: inietta tramite provider/costruttore.
+R19|features/work_log/presentation/pages/work_log_history_page.dart|Service locator usato fuori dal composition root: inietta tramite provider/costruttore.
+R19|features/work_log/presentation/pages/work_log_wizard_page.dart|Service locator usato fuori dal composition root: inietta tramite provider/costruttore.
+R19|features/work_log/presentation/widgets/add_work_log_pop_up.dart|Service locator usato fuori dal composition root: inietta tramite provider/costruttore.

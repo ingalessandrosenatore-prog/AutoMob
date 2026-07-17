@@ -34,6 +34,7 @@ class AmTheme {
       colorScheme: colorScheme,
       brightness: brightness,
       useMaterial3: true,
+      splashFactory: InkRipple.splashFactory,
     );
 
     return base.copyWith(
