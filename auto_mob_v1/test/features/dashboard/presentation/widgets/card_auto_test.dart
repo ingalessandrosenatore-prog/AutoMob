@@ -14,15 +14,20 @@ void main() {
     expect(find.text('ALFA ROMEO STELVIO'), findsOneWidget);
     expect(find.text('AB123CD'), findsOneWidget);
     expect(find.text('166.600 km'), findsOneWidget);
+    expect(find.text('CHILOMETRAGGIO'), findsNothing);
     expect(find.text('Aggiornati 18 giorni fa'), findsOneWidget);
-    expect(find.text('+1.643 km dall’ultimo aggiornamento'), findsOneWidget);
+    expect(find.text('Stimati: 1.643 km'), findsOneWidget);
     expect(find.text('Regolare · scade 17/04/2027'), findsOneWidget);
+    expect(
+      tester.widget<Text>(find.text('ALFA ROMEO STELVIO')).style?.fontSize,
+      16,
+    );
     expect(
       tester
           .widget<Text>(find.byKey(const Key('vehicle-current-km')))
           .style
           ?.fontSize,
-      28,
+      22,
     );
     expect(
       tester.getSize(find.byKey(const Key('update-km-button'))).height,
@@ -39,7 +44,7 @@ void main() {
     );
     expect(
       tester.getSize(find.byKey(const Key('revision-info-tile'))).height,
-      66,
+      60,
     );
     final revisionIconFinder = find.byKey(const Key('revision-status-icon'));
     final revisionColors = AmThemeColors.of(tester.element(revisionIconFinder));

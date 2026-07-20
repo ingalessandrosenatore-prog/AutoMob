@@ -5,7 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
+import '../../../../core/config/performance_flags.dart';
 import '../../../../core/theme/am_theme_colors.dart';
 import '../../../../core/widgets/buttons/am_icon_button.dart';
 import '../../../../core/widgets/buttons/fab_princ.dart';
@@ -300,6 +302,18 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
             photoWarning: state.photoWarning,
           );
         }
+        final closeButton = SizedBox(
+          width: 48,
+          height: 48,
+          child: AmSoftButton(
+            width: 48,
+            height: 48,
+            color: const Color(0xFFFF6B00),
+            icon: HugeIcons.strokeRoundedAdd01,
+            iconTurns: 0.125,
+            onPressed: _chiudi,
+          ),
+        );
         final topInset = MediaQuery.paddingOf(context).top;
         return Column(
           children: [
@@ -347,18 +361,20 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerRight,
-                        child: SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: AmSoftButton(
-                            width: 48,
-                            height: 48,
-                            color: const Color(0xFFFF6B00),
-                            icon: HugeIcons.strokeRoundedAdd01,
-                            iconTurns: 0.125,
-                            onPressed: _chiudi,
-                          ),
-                        ),
+                        child: kHeavyEffects
+                            ? OCLiquidGlassGroup(
+                                settings: const OCLiquidGlassSettings(
+                                  refractStrength: -0.13,
+                                  blurRadiusPx: 1.0,
+                                  specStrength: 0,
+                                  specWidth: 0,
+                                  specAngle: 145,
+                                  blendPx: 20,
+                                  specPower: 10,
+                                ),
+                                child: closeButton,
+                              )
+                            : closeButton,
                       ),
                     ),
                   ],

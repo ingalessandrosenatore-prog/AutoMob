@@ -121,8 +121,8 @@ class CardAuto extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         height: (constraints.maxWidth * 0.5625).clamp(
-                          180.0,
-                          260.0,
+                          164.0,
+                          232.0,
                         ),
                         child: SmartEdge(
                           blur: kHeavyEffects,
@@ -513,7 +513,7 @@ class _VehicleInfoPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -527,7 +527,7 @@ class _VehicleInfoPanel extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: colors.textPrimary,
-                    fontSize: 18,
+                    fontSize: 16,
                     height: 1.1,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.2,
@@ -559,7 +559,7 @@ class _VehicleInfoPanel extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _LicensePlate(plate: targa),
-          const SizedBox(height: 18),
+          const SizedBox(height: 8),
           _MileageSection(
             kmTotali: kmTotali,
             updateLabel: kmUpdatedAt == null
@@ -568,7 +568,7 @@ class _VehicleInfoPanel extends StatelessWidget {
             estimatedAdditionalKm: estimatedAdditionalKm,
             onTap: onKmTap,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           _RevisionTile(date: nextRevisionDate, now: now, onTap: onRevisionTap),
         ],
       ),
@@ -654,16 +654,6 @@ class _MileageSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'CHILOMETRAGGIO',
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.55,
-          ),
-        ),
-        const SizedBox(height: 4),
         Row(
           children: [
             Expanded(
@@ -674,7 +664,7 @@ class _MileageSection extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: colors.textPrimary,
-                  fontSize: 28,
+                  fontSize: 22,
                   fontWeight: FontWeight.w900,
                 ),
               ),
@@ -743,10 +733,9 @@ class _MileageSection extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '+${_formatNumber(estimatedAdditionalKm)} km '
-                    'dall’ultimo aggiornamento',
+                    'Stimati: ${_formatNumber(estimatedAdditionalKm)} km',
                     key: const Key('km-estimated-increment'),
-                    style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 11),
                   ),
                 ],
               ),
@@ -819,7 +808,7 @@ class _RevisionTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Ink(
-          height: 66,
+          height: 60,
           decoration: BoxDecoration(
             color: colors.accent.withValues(alpha: 0.045),
             borderRadius: BorderRadius.circular(16),
