@@ -169,8 +169,14 @@ class AppRouter {
         pageBuilder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final currentKm = (extra?['currentKm'] as String?) ?? '0';
+          final estimatedKm =
+              (extra?['estimatedKm'] as int?) ?? int.tryParse(currentKm) ?? 0;
           final id = (extra?['id'] as String?) ?? '';
-          return KmUpdatePopUp(vehicleId: id, currentKm: currentKm);
+          return KmUpdatePopUp(
+            vehicleId: id,
+            currentKm: currentKm,
+            estimatedKm: estimatedKm,
+          );
         },
       ),
       GoRoute(

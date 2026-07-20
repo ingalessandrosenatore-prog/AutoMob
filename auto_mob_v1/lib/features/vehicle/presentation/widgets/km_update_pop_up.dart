@@ -12,11 +12,15 @@ import '../bloc/km_update_cubit.dart';
 class KmUpdatePopUp<T> extends Page<T> {
   final String vehicleId;
   final String currentKm;
+  final int estimatedKm;
+  final KmUpdateCubit Function()? createCubit;
 
   const KmUpdatePopUp({
     super.key,
     required this.vehicleId,
     required this.currentKm,
+    required this.estimatedKm,
+    this.createCubit,
   });
 
   @override
@@ -29,8 +33,12 @@ class KmUpdatePopUp<T> extends Page<T> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(50)),
       ),
       builder: (context) => BlocProvider<KmUpdateCubit>(
-        create: (_) => sl<KmUpdateCubit>(),
-        child: _KmUpdateContent(vehicleId: vehicleId, currentKm: currentKm),
+        create: (_) => (createCubit ?? () => sl<KmUpdateCubit>())(),
+        child: _KmUpdateContent(
+          vehicleId: vehicleId,
+          currentKm: currentKm,
+          estimatedKm: estimatedKm,
+        ),
       ),
       isScrollControlled: true,
     );
@@ -40,7 +48,12 @@ class KmUpdatePopUp<T> extends Page<T> {
 class _KmUpdateContent extends StatefulWidget {
   final String vehicleId;
   final String currentKm;
-  const _KmUpdateContent({required this.vehicleId, required this.currentKm});
+  final int estimatedKm;
+  const _KmUpdateContent({
+    required this.vehicleId,
+    required this.currentKm,
+    required this.estimatedKm,
+  });
 
   @override
   State<_KmUpdateContent> createState() => _KmUpdateContentState();
@@ -90,6 +103,12 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
       vehicleId: widget.vehicleId,
       newKm: nuovoKm,
     );
+  }
+
+  void _aggiungiKmStimati() {
+    if (widget.estimatedKm <= _kmAttuali) return;
+    _nuovoKmController.text = '${widget.estimatedKm}';
+    _onChanged(null);
   }
 
   @override
@@ -221,6 +240,60 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                       ),
                       const SizedBox(height: 40),
 
+                      Container(
+                        key: const Key('estimated-km-suggestion'),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceRaised,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: colors.border),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'KM stimati: ${_formatKm(widget.estimatedKm)}',
+                                style: TextStyle(
+                                  color: colors.textPrimary,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              height: 34,
+                              child: FilledButton(
+                                key: const Key('apply-estimated-km-button'),
+                                onPressed: widget.estimatedKm > _kmAttuali
+                                    ? _aggiungiKmStimati
+                                    : null,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: colors.accent,
+                                  foregroundColor: colors.onMedia,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Aggiungi',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
                       // Campo nuovo chilometraggio (con validazione in tempo reale)
                       Row(
                         children: [
@@ -326,4 +399,11 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
       },
     );
   }
+}
+
+String _formatKm(int value) {
+  return value.toString().replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => '.',
+  );
 }

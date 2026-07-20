@@ -344,7 +344,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
               child: AmSoftButton(
                 width: 45,
                 height: 45,
-                color: const Color(0xFFFF6B00),
+                color: colors.accent,
                 icon: HugeIcons.strokeRoundedAdd01,
                 onPressed: _openVehicleRegistration,
               ),
@@ -493,6 +493,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                             marca: measure.brand,
                                             modello: measure.model,
                                             kmTotali: '0 km',
+                                            targa: measure.plate,
                                             anno: measure.year,
                                             nextRevisionDate:
                                                 measure.nextRevisionDate,
@@ -551,6 +552,10 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                           itemCount: vehicles.length,
                                           itemBuilder: (context, index) {
                                             final v = vehicles[index];
+                                            final mileageEstimate = v
+                                                .mileageEstimateAt(
+                                                  DateTime.now(),
+                                                );
                                             return RepaintBoundary(
                                               child: CardAuto(
                                                 marca: v.brand,
@@ -558,8 +563,16 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                                 kmTotali: v.isPlaceholder
                                                     ? '—'
                                                     : '${v.kmCurrent} km',
+                                                targa: v.plate,
                                                 immaginePath: v.fotoPath,
                                                 anno: v.year,
+                                                kmUpdatedAt: v.kmUpdatedAt,
+                                                estimatedAdditionalKm:
+                                                    mileageEstimate
+                                                        .additionalKm,
+                                                daysSinceKmUpdate:
+                                                    mileageEstimate
+                                                        .daysSinceUpdate,
                                                 nextRevisionDate:
                                                     v.nextRevisionDate,
                                                 onRevisionTap: v.isPlaceholder
@@ -601,6 +614,9 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                                                 'id': v.id,
                                                                 'currentKm':
                                                                     '${v.kmCurrent}',
+                                                                'estimatedKm':
+                                                                    mileageEstimate
+                                                                        .estimatedKm,
                                                               },
                                                             );
                                                         // Al ritorno, se i km sono stati

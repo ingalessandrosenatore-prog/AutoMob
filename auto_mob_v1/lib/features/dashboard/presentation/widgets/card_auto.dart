@@ -15,9 +15,14 @@ class CardAuto extends StatelessWidget {
   final String marca;
   final String modello;
   final String kmTotali;
+  final String targa;
   final String? immaginePath;
   final int anno;
+  final DateTime? kmUpdatedAt;
+  final int estimatedAdditionalKm;
+  final int daysSinceKmUpdate;
   final DateTime? nextRevisionDate;
+  final DateTime? referenceDate;
 
   /// Tap sul box KM → apre il pop-up di aggiornamento km.
   final VoidCallback? onKmTap;
@@ -34,22 +39,23 @@ class CardAuto extends StatelessWidget {
     required this.marca,
     required this.modello,
     required this.kmTotali,
+    required this.targa,
     required this.anno,
     this.immaginePath,
+    this.kmUpdatedAt,
+    this.estimatedAdditionalKm = 0,
+    this.daysSinceKmUpdate = 0,
     this.nextRevisionDate,
+    this.referenceDate,
     this.onKmTap,
     this.onRevisionTap,
     this.onEditPhotoTap,
   });
 
-  String get _revisionStatus {
-    if (nextRevisionDate == null) return "N.D.";
-    return nextRevisionDate!.isBefore(DateTime.now()) ? "Scaduta" : "OK";
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
+    final now = referenceDate ?? DateTime.now();
 
     // Bottone matita con menu "MODIFICA FOTO". Lo shader di rifrazione
     // (OCLiquidGlassGroup) campiona lo sfondo in coordinate schermo: mentre la
@@ -148,18 +154,27 @@ class CardAuto extends StatelessWidget {
                       Positioned(top: 12, right: 12, child: editPull),
                     ],
                   ),
-                  _InfoTile(
+                  _VehicleInfoPanel(
                     marca: marca,
                     modello: modello,
                     kmTotali: kmTotali,
+                    targa: targa,
                     anno: anno,
+                    kmUpdatedAt: kmUpdatedAt,
+                    estimatedAdditionalKm: estimatedAdditionalKm,
+                    daysSinceKmUpdate: daysSinceKmUpdate,
+                    nextRevisionDate: nextRevisionDate,
+                    now: now,
+                    onKmTap: onKmTap,
+                    onRevisionTap: onRevisionTap,
                   ),
                 ],
               ),
             ),
+            /*
+            Vecchia grafica conservata come riferimento: i due piccoli box
+            Revisione/KM vivevano separati sotto la card principale.
             const SizedBox(height: 8),
-
-            // Box Revisione + Km (stessa altezza, cliccabili)
             IntrinsicHeight(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -182,7 +197,7 @@ class CardAuto extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 6),
-                          _RevisionStatusPill(status: _revisionStatus),
+                          _RevisionStatusPill(status: 'STATO REVISIONE'),
                         ],
                       ),
                     ),
@@ -220,6 +235,7 @@ class CardAuto extends StatelessWidget {
                 ],
               ),
             ),
+            */
           ],
         ),
       ),
@@ -227,6 +243,9 @@ class CardAuto extends StatelessWidget {
   }
 }
 
+/*
+Vecchi widget grafici della card conservati intenzionalmente come riferimento.
+Erano usati dal layout a due pulsanti rettangolari commentato sopra.
 /// Dati del veicolo integrati alla foto: brand e km, poi modello e anno.
 class _InfoTile extends StatelessWidget {
   final String marca;
@@ -451,6 +470,456 @@ class _RevisionStatusPill extends StatelessWidget {
       ),
     );
   }
+}
+
+*/
+
+class _VehicleInfoPanel extends StatelessWidget {
+  const _VehicleInfoPanel({
+    required this.marca,
+    required this.modello,
+    required this.kmTotali,
+    required this.targa,
+    required this.anno,
+    required this.kmUpdatedAt,
+    required this.estimatedAdditionalKm,
+    required this.daysSinceKmUpdate,
+    required this.nextRevisionDate,
+    required this.now,
+    required this.onKmTap,
+    required this.onRevisionTap,
+  });
+
+  final String marca;
+  final String modello;
+  final String kmTotali;
+  final String targa;
+  final int anno;
+  final DateTime? kmUpdatedAt;
+  final int estimatedAdditionalKm;
+  final int daysSinceKmUpdate;
+  final DateTime? nextRevisionDate;
+  final DateTime now;
+  final VoidCallback? onKmTap;
+  final VoidCallback? onRevisionTap;
+
+  String get _updateLabel => switch (daysSinceKmUpdate) {
+    0 => 'Aggiornati oggi',
+    1 => 'Aggiornati ieri',
+    final days => 'Aggiornati $days giorni fa',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  '${marca.trim()} ${modello.trim()}'.trim().toUpperCase(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 18,
+                    height: 1.1,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+              if (anno > 0) ...[
+                const SizedBox(width: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceDeep,
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  child: Text(
+                    '$anno',
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          _LicensePlate(plate: targa),
+          const SizedBox(height: 18),
+          _MileageSection(
+            kmTotali: kmTotali,
+            updateLabel: kmUpdatedAt == null
+                ? 'Data aggiornamento non disponibile'
+                : _updateLabel,
+            estimatedAdditionalKm: estimatedAdditionalKm,
+            onTap: onKmTap,
+          ),
+          const SizedBox(height: 16),
+          _RevisionTile(date: nextRevisionDate, now: now, onTap: onRevisionTap),
+        ],
+      ),
+    );
+  }
+}
+
+class _LicensePlate extends StatelessWidget {
+  const _LicensePlate({required this.plate});
+
+  final String plate;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    return Container(
+      key: const Key('vehicle-license-plate'),
+      height: 38,
+      decoration: BoxDecoration(
+        color: colors.surfaceRaised,
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: colors.textSecondary.withValues(alpha: 0.55)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 18,
+            decoration: const BoxDecoration(
+              color: Color(0xFF1456A0),
+              borderRadius: BorderRadius.horizontal(left: Radius.circular(6)),
+            ),
+            alignment: Alignment.center,
+            child: const Text(
+              'I',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              plate.trim().isEmpty ? '—' : plate.toUpperCase(),
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 2,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MileageSection extends StatelessWidget {
+  const _MileageSection({
+    required this.kmTotali,
+    required this.updateLabel,
+    required this.estimatedAdditionalKm,
+    required this.onTap,
+  });
+
+  final String kmTotali;
+  final String updateLabel;
+  final int estimatedAdditionalKm;
+  final VoidCallback? onTap;
+
+  String get _formattedCurrentKm {
+    final digits = kmTotali.replaceAll(RegExp(r'[^0-9]'), '');
+    final value = int.tryParse(digits);
+    return value == null ? kmTotali : '${_formatNumber(value)} km';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'CHILOMETRAGGIO',
+          style: TextStyle(
+            color: colors.textSecondary,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.55,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                _formattedCurrentKm,
+                key: const Key('vehicle-current-km'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            FilledButton.icon(
+              key: const Key('update-km-button'),
+              onPressed: onTap,
+              icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedAdd01,
+                color: Colors.white,
+                size: 19,
+                strokeWidth: 2.2,
+              ),
+              label: const Text(
+                'AGGIORNA',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: colors.accent,
+                foregroundColor: colors.onMedia,
+                minimumSize: const Size(0, 40),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 9,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: colors.accent.withValues(alpha: 0.13),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedClock01,
+                  color: colors.accent,
+                  size: 19,
+                  strokeWidth: 2,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    updateLabel,
+                    key: const Key('km-last-update-label'),
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '+${_formatNumber(estimatedAdditionalKm)} km '
+                    'dall’ultimo aggiornamento',
+                    key: const Key('km-estimated-increment'),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+enum _RevisionVisualStatus { regular, expiring, expired, unavailable }
+
+class _RevisionTile extends StatelessWidget {
+  const _RevisionTile({
+    required this.date,
+    required this.now,
+    required this.onTap,
+  });
+
+  final DateTime? date;
+  final DateTime now;
+  final VoidCallback? onTap;
+
+  _RevisionVisualStatus get _status {
+    final revisionDate = date;
+    if (revisionDate == null) return _RevisionVisualStatus.unavailable;
+    final today = DateTime(now.year, now.month, now.day);
+    final due = DateTime(
+      revisionDate.year,
+      revisionDate.month,
+      revisionDate.day,
+    );
+    if (due.isBefore(today)) return _RevisionVisualStatus.expired;
+    if (due.difference(today).inDays <= 30) {
+      return _RevisionVisualStatus.expiring;
+    }
+    return _RevisionVisualStatus.regular;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    final status = _status;
+    final warning = status != _RevisionVisualStatus.regular;
+    final statusColor = warning ? colors.danger : colors.accent;
+    final (statusLabel, statusDetail) = switch (status) {
+      _RevisionVisualStatus.regular => (
+        'Regolare',
+        ' · scade ${_formatDate(date!)}',
+      ),
+      _RevisionVisualStatus.expiring => (
+        'In scadenza',
+        ' · scade ${_formatDate(date!)}',
+      ),
+      _RevisionVisualStatus.expired => (
+        'Scaduta',
+        ' · il ${_formatDate(date!)}',
+      ),
+      _RevisionVisualStatus.unavailable => (
+        'Da impostare',
+        ' · scadenza non disponibile',
+      ),
+    };
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: const Key('revision-info-tile'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
+          height: 66,
+          decoration: BoxDecoration(
+            color: colors.accent.withValues(alpha: 0.045),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.accent.withValues(alpha: 0.9)),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: 28,
+                bottom: -25,
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedCalendar01,
+                  color: colors.accent.withValues(alpha: 0.08),
+                  size: 82,
+                  strokeWidth: 2.2,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Row(
+                  children: [
+                    HugeIcon(
+                      key: const Key('revision-status-icon'),
+                      icon: HugeIcons.strokeRoundedCalendar01,
+                      color: colors.accent,
+                      size: 26,
+                      strokeWidth: 2.2,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'REVISIONE',
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: statusLabel,
+                                  style: TextStyle(
+                                    color: statusColor,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: statusDetail,
+                                  style: TextStyle(
+                                    color: colors.textSecondary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            key: const Key('revision-status-label'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    HugeIcon(
+                      icon: HugeIcons.strokeRoundedArrowRight01,
+                      color: colors.accent,
+                      size: 23,
+                      strokeWidth: 2.3,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _formatDate(DateTime date) {
+  String twoDigits(int value) => value.toString().padLeft(2, '0');
+  return '${twoDigits(date.day)}/${twoDigits(date.month)}/${date.year}';
+}
+
+String _formatNumber(int value) {
+  final digits = value.abs().toString();
+  final formatted = digits.replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (_) => '.',
+  );
+  return value < 0 ? '-$formatted' : formatted;
 }
 
 /// Immagine del veicolo: rete, asset o file locale, con placeholder.

@@ -12,6 +12,7 @@ void main() {
       'year': 2020,
       'fuel': 'benzina',
       'km_current': 12000,
+      'km_updated_at': '2026-07-18T10:00:00Z',
       'created_at': '2026-07-16T10:00:00Z',
       'mechanic': {
         'id': 'mechanic-1',
@@ -28,6 +29,7 @@ void main() {
     expect(vehicle.mechanic?.phone, '+39 081 1234567');
     expect(vehicle.mechanic?.email, 'info@officinagiordano.it');
     expect(vehicle.mechanic?.photoUrl, isNull);
+    expect(vehicle.kmUpdatedAt, DateTime.utc(2026, 7, 18, 10));
   });
 
   test('accetta un veicolo senza meccanico collegato', () {

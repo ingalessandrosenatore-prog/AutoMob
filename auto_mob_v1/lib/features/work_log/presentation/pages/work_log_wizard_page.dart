@@ -118,6 +118,7 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AmThemeColors.of(context);
     return BlocConsumer<WorkLogBloc, WorkLogState>(
       listenWhen: (previous, current) =>
           previous.currentStep != current.currentStep ||
@@ -152,7 +153,7 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
                         child: SizedBox(width: 48, height: 48),
                       ),
                     ),
-                    const Expanded(
+                    Expanded(
                       child: Align(
                         alignment: Alignment.center,
                         child: SizedBox(
@@ -162,10 +163,10 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 16,
-                              color: Colors.white,
+                              color: colors.textPrimary,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1.2,
-                              shadows: [
+                              shadows: const [
                                 Shadow(
                                   color: Colors.black12,
                                   offset: Offset(1, 1),

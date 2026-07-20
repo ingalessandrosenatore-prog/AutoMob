@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'mechanic_summary.dart';
+import 'vehicle_mileage_estimate.dart';
 
 class Vehicle extends Equatable {
   final String id;
@@ -13,6 +14,7 @@ class Vehicle extends Equatable {
   final int? powerCv;
   final int? displacementCc;
   final int kmCurrent;
+  final DateTime? kmUpdatedAt;
   final DateTime? nextRevisionDate;
 
   // intervalli di manutenzione: popolati dal DB con default (15000/40000/10000).
@@ -57,6 +59,7 @@ class Vehicle extends Equatable {
     this.distribuzioneIntervalKm,
     this.powerCv,
     this.displacementCc,
+    this.kmUpdatedAt,
     this.nextRevisionDate,
     this.lastTagliandoKm,
     this.lastTagliandoDate,
@@ -82,6 +85,7 @@ class Vehicle extends Equatable {
       year: year,
       fuel: fuel,
       kmCurrent: kmCurrent,
+      kmUpdatedAt: kmUpdatedAt,
       tagliandoIntervalKm: tagliandoIntervalKm,
       tireChangeIntervalKm: tireChangeIntervalKm,
       tireRotationIntervalKm: tireRotationIntervalKm,
@@ -129,6 +133,15 @@ class Vehicle extends Equatable {
   /// `true` se l'oggetto e' un placeholder (id vuoto).
   bool get isPlaceholder => id.isEmpty;
 
+  VehicleMileageEstimate mileageEstimateAt(DateTime now) {
+    return VehicleMileageEstimate.calculate(
+      currentKm: kmCurrent,
+      vehicleYear: year,
+      lastKmUpdateAt: kmUpdatedAt,
+      now: now,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,
@@ -141,6 +154,7 @@ class Vehicle extends Equatable {
     powerCv,
     displacementCc,
     kmCurrent,
+    kmUpdatedAt,
     nextRevisionDate,
     tagliandoIntervalKm,
     tireChangeIntervalKm,
