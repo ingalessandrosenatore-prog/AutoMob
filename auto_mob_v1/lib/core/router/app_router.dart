@@ -2,6 +2,7 @@ import 'package:auto_mob_v1/features/dashboard/presentation/pages/home_view.dart
 import 'package:auto_mob_v1/features/servizi/presentation/pages/servizi_page.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/midify_item.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/work_log_history_page.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/pages/work_log_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +23,7 @@ import '../../features/vehicle/presentation/pages/vehicle_registration_page.dart
 import '../../features/vehicle/presentation/widgets/km_update_pop_up.dart';
 import '../../features/vehicle/presentation/widgets/revision_update_pop_up.dart';
 import '../../features/work_log/presentation/pages/work_log_wizard_page.dart';
+import '../../features/work_log/domain/entities/work_log_row.dart';
 import '../di/injection_container.dart' as di;
 import 'am_transition_page.dart';
 import 'go_router_refresh_stream.dart';
@@ -157,6 +159,24 @@ class AppRouter {
       ),
 
       GoRoute(
+        path: '/work-log-detail',
+        name: 'dettaglio_lavoro',
+        pageBuilder: (context, state) {
+          final work = state.extra;
+          if (work is! WorkLogRow) {
+            return AmFadeThroughPage(
+              key: state.pageKey,
+              child: const _WorkLogDetailUnavailablePage(),
+            );
+          }
+          return AmFadeThroughPage(
+            key: state.pageKey,
+            child: WorkLogDetailPage(work: work),
+          );
+        },
+      ),
+
+      GoRoute(
         path: '/parts',
         name: 'parts',
         pageBuilder: (context, state) =>
@@ -276,4 +296,18 @@ class AppRouter {
     // se sono su login o registration resto, altrimenti torno al login.
     return atAuth ? null : '/login';
   }
+}
+
+class _WorkLogDetailUnavailablePage extends StatelessWidget {
+  const _WorkLogDetailUnavailablePage();
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    body: Center(
+      child: FilledButton(
+        onPressed: () => context.go('/lavori'),
+        child: const Text('Torna ai lavori'),
+      ),
+    ),
+  );
 }

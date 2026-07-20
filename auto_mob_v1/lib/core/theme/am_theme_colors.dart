@@ -13,6 +13,7 @@ class AmThemeColors extends ThemeExtension<AmThemeColors> {
   final Color accent;
   final Color info;
   final Color danger;
+  final Color cardBackground;
   final Color shadow;
 
   const AmThemeColors({
@@ -28,6 +29,7 @@ class AmThemeColors extends ThemeExtension<AmThemeColors> {
     required this.accent,
     required this.info,
     required this.danger,
+    required this.cardBackground,
     required this.shadow,
   });
 
@@ -48,6 +50,7 @@ class AmThemeColors extends ThemeExtension<AmThemeColors> {
     accent: Color(0xFFFF6B00),
     info: Color(0xFF3192F3),
     danger: Color(0xFFFF453A),
+    cardBackground: Color(0xFF4A8CFF),
     shadow: Color(0x99000000),
   );
 
@@ -70,6 +73,7 @@ class AmThemeColors extends ThemeExtension<AmThemeColors> {
     accent: Color(0xFFFF6B00), // Il tuo arancione distintivo
     info: Color(0xFF007AFF), // Blu standard per accessibilità e chiarezza
     danger: Color(0xFFFF3B30), // Rosso errore standard UI moderna
+    cardBackground: Color(0xFF2E6AE6),
     shadow: Color(0x44000000), // Ombra molto morbida (10% opacità)
   );
 
@@ -93,6 +97,7 @@ class AmThemeColors extends ThemeExtension<AmThemeColors> {
     Color? accent,
     Color? info,
     Color? danger,
+    Color? cardBackground,
     Color? shadow,
   }) => AmThemeColors(
     background: background ?? this.background,
@@ -107,6 +112,7 @@ class AmThemeColors extends ThemeExtension<AmThemeColors> {
     accent: accent ?? this.accent,
     info: info ?? this.info,
     danger: danger ?? this.danger,
+    cardBackground: cardBackground ?? this.cardBackground,
     shadow: shadow ?? this.shadow,
   );
 
@@ -130,6 +136,7 @@ class AmThemeColors extends ThemeExtension<AmThemeColors> {
       accent: Color.lerp(accent, other.accent, t)!,
       info: Color.lerp(info, other.info, t)!,
       danger: Color.lerp(danger, other.danger, t)!,
+      cardBackground: Color.lerp(cardBackground, other.cardBackground, t)!,
       shadow: Color.lerp(shadow, other.shadow, t)!,
     );
   }

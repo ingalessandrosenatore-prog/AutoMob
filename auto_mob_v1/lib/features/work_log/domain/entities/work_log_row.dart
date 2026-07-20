@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'work_log_part.dart';
+
 /// Una riga dello storico lavori = un `maintenance_item`.
 /// Il [type] e' l'enum testuale del DB; [customName] e' valorizzato solo
 /// per type='altro'. [hasWorkshop] = lavoro svolto in officina
@@ -13,6 +15,8 @@ class WorkLogRow extends Equatable {
   final DateTime serviceDate;
   final String? notes;
   final bool hasWorkshop;
+  final String? workshopName;
+  final List<WorkLogPart> parts;
 
   const WorkLogRow({
     required this.id,
@@ -22,9 +26,24 @@ class WorkLogRow extends Equatable {
     required this.serviceDate,
     this.notes,
     required this.hasWorkshop,
+    this.workshopName,
+    this.parts = const [],
   });
 
+  /// Totale dei soli ricambi che hanno un prezzo valorizzato.
+  int get partsTotalCents =>
+      parts.fold(0, (total, part) => total + (part.subtotalCents ?? 0));
+
   @override
-  List<Object?> get props =>
-      [id, type, customName, serviceKm, serviceDate, notes, hasWorkshop];
+  List<Object?> get props => [
+    id,
+    type,
+    customName,
+    serviceKm,
+    serviceDate,
+    notes,
+    hasWorkshop,
+    workshopName,
+    parts,
+  ];
 }

@@ -15,10 +15,10 @@ import 'package:soft_edge_blur/soft_edge_blur.dart';
 import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
 import '../../domain/entities/vehicle_option.dart';
-import '../../domain/entities/work_log_row.dart';
 import '../bloc/work_log_history_bloc.dart';
 import '../bloc/work_log_history_event.dart';
 import '../bloc/work_log_history_state.dart';
+import '../work_log_formatters.dart';
 
 const Color _orange = Color(0xFFFF6B00);
 
@@ -501,13 +501,14 @@ class _WorkListView extends StatelessWidget {
 
             final w = works[i];
             return WorkLogItemCard(
-              title: _workTitle(w),
-              date: _formatDate(w.serviceDate),
-              km: _formatKm(w.serviceKm),
+              title: workLogTitle(w),
+              date: formatWorkLogDate(w.serviceDate),
+              km: formatWorkLogKm(w.serviceKm),
               description: (w.notes != null && w.notes!.trim().isNotEmpty)
                   ? w.notes!.trim()
                   : '—',
               hasWorkshop: w.hasWorkshop,
+              onTap: () => context.pushNamed('dettaglio_lavoro', extra: w),
             );
           },
           childCount: works.length + 1, // +1 = footer (spinner o spazio finale)
@@ -559,58 +560,4 @@ class _EmptyWorks extends StatelessWidget {
       ),
     );
   }
-}
-
-// ---- Mapping di sola presentazione (String, non Widget) --------------------
-
-/// Etichetta mostrata in card: tipo manutenzione o nome libero per "altro".
-String _workTitle(WorkLogRow w) {
-  switch (w.type) {
-    case 'tagliando':
-      return 'Tagliando';
-    case 'distribuzione':
-      return 'Distribuzione';
-    case 'revisione':
-      return 'Revisione';
-    case 'pneumatici_cambio':
-      return 'Cambio gomme';
-    case 'pneumatici_inversione':
-      return 'Inversione gomme';
-    case 'altro':
-      final name = w.customName?.trim() ?? '';
-      return name.isNotEmpty ? name : 'Altro';
-    default:
-      return w.type;
-  }
-}
-
-/// Data in formato italiano breve: "16 Giu 2026".
-String _formatDate(DateTime d) {
-  const mesi = [
-    'Gen',
-    'Feb',
-    'Mar',
-    'Apr',
-    'Mag',
-    'Giu',
-    'Lug',
-    'Ago',
-    'Set',
-    'Ott',
-    'Nov',
-    'Dic',
-  ];
-  final giorno = d.day.toString().padLeft(2, '0');
-  return '$giorno ${mesi[d.month - 1]} ${d.year}';
-}
-
-/// Km con separatore migliaia: "42.000 km".
-String _formatKm(int km) {
-  final s = km.toString();
-  final buf = StringBuffer();
-  for (var i = 0; i < s.length; i++) {
-    if (i > 0 && (s.length - i) % 3 == 0) buf.write('.');
-    buf.write(s[i]);
-  }
-  return '$buf km';
 }

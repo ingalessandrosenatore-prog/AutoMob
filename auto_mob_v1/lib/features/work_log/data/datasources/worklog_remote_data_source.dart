@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -59,12 +59,14 @@ class WorklogRemoteDataSourceImpl implements WorklogRemoteDataSource {
       'notes': notes,
       'interval_km': intervallKm,
       'parts': items
-          .map((it) => {
-                'part_id': it.partId,
-                'quantity': it.quantity,
-                'unit_price': it.unitPrice,
-                'notes': it.note,
-              })
+          .map(
+            (it) => {
+              'part_id': it.partId,
+              'quantity': it.quantity,
+              'unit_price': it.unitPrice,
+              'notes': it.note,
+            },
+          )
           .toList(),
     };
 
@@ -78,7 +80,9 @@ class WorklogRemoteDataSourceImpl implements WorklogRemoteDataSource {
     } on SocketException {
       throw const NetworkException();
     } catch (e) {
-      throw const WorkLogDataSourceException('Errore durante il salvataggio del WorkLog');
+      throw const WorkLogDataSourceException(
+        'Errore durante il salvataggio del WorkLog',
+      );
     }
   }
 
@@ -95,15 +99,20 @@ class WorklogRemoteDataSourceImpl implements WorklogRemoteDataSource {
           .order('created_at', ascending: false);
 
       return (rows as List)
-          .map((r) =>
-              VehicleOptionModel.fromJson(Map<String, dynamic>.from(r as Map)))
+          .map(
+            (r) => VehicleOptionModel.fromJson(
+              Map<String, dynamic>.from(r as Map),
+            ),
+          )
           .toList();
     } on PostgrestException catch (e) {
       throw WorkLogDataSourceException(e.message, code: e.code);
     } on SocketException {
       throw const NetworkException();
     } catch (e) {
-      throw const WorkLogDataSourceException('Errore durante il caricamento dei veicoli');
+      throw const WorkLogDataSourceException(
+        'Errore durante il caricamento dei veicoli',
+      );
     }
   }
 
@@ -121,7 +130,10 @@ class WorklogRemoteDataSourceImpl implements WorklogRemoteDataSource {
           .from('maintenance_items')
           .select(
             'id, type, custom_name, service_km, service_date, notes, '
-            'maintenance_records!inner(vehicle_id, mechanic_id)',
+            'maintenance_records!inner('
+            'vehicle_id, mechanic_id, mechanics(business_name)), '
+            'maintenance_item_parts('
+            'part_id, quantity, unit_price, notes, parts(name))',
           )
           .eq('maintenance_records.vehicle_id', vehicleId)
           .order('service_date', ascending: false)
@@ -129,15 +141,19 @@ class WorklogRemoteDataSourceImpl implements WorklogRemoteDataSource {
           .range(from, to);
 
       return (rows as List)
-          .map((r) =>
-              WorkLogRowModel.fromJson(Map<String, dynamic>.from(r as Map)))
+          .map(
+            (r) =>
+                WorkLogRowModel.fromJson(Map<String, dynamic>.from(r as Map)),
+          )
           .toList();
     } on PostgrestException catch (e) {
       throw WorkLogDataSourceException(e.message, code: e.code);
     } on SocketException {
       throw const NetworkException();
     } catch (e) {
-      throw const WorkLogDataSourceException('Errore durante il caricamento dei lavori');
+      throw const WorkLogDataSourceException(
+        'Errore durante il caricamento dei lavori',
+      );
     }
   }
 }
