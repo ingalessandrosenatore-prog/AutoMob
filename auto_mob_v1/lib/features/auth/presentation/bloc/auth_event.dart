@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/app_user.dart';
+
 sealed class AuthEvent extends Equatable {
   @override
   List<Object> get props => [];
@@ -39,6 +41,28 @@ class SignupWithEmailEvent extends AuthEvent {
 
   @override
   List<Object> get props => [name, email, password, phone ?? ''];
+}
+
+class ResendConfirmationEmailEvent extends AuthEvent {
+  ResendConfirmationEmailEvent({required this.email});
+
+  final String email;
+
+  @override
+  List<Object> get props => [email];
+}
+
+class CheckEmailConfirmationEvent extends AuthEvent {}
+
+class LeaveEmailVerificationEvent extends AuthEvent {}
+
+class AuthSessionEstablishedEvent extends AuthEvent {
+  AuthSessionEstablishedEvent({required this.user});
+
+  final AppAuthUser user;
+
+  @override
+  List<Object> get props => [user];
 }
 
 // Evento di logout

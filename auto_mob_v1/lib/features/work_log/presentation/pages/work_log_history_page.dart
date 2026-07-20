@@ -425,7 +425,7 @@ class _VehicleDropdown extends StatelessWidget {
       onTap: () {},
       lable: selected?.nome ?? 'VEICOLO',
       backgroundColor: kHeavyEffects
-          ? colors.surfaceRaised.withValues(alpha: 0.5)
+          ? colors.surfaceRaised.withValues(alpha: 0.2)
           : colors.surfaceRaised,
       popupBackgroundColor: kHeavyEffects
           ? colors.surfaceRaised.withValues(alpha: 0.5)

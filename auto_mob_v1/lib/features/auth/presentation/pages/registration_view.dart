@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -69,8 +69,10 @@ class _RegistrationViewState extends State<RegistrationView> {
                     ),
                     Text(
                       'Crea un account per iniziare',
-                      style:
-                          TextStyle(color: colors.textSecondary, fontSize: 16),
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 16,
+                      ),
                     ),
                     const SizedBox(height: 48),
                     Row(
@@ -145,12 +147,12 @@ class _RegistrationViewState extends State<RegistrationView> {
                         width: 180,
                         onPressed: () {
                           context.read<AuthBloc>().add(
-                                SignupWithEmailEvent(
-                                  name: _nameController.text.trim(),
-                                  email: _emailController.text.trim(),
-                                  password: _passwordController.text,
-                                ),
-                              );
+                            SignupWithEmailEvent(
+                              name: _nameController.text.trim(),
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text,
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -161,7 +163,9 @@ class _RegistrationViewState extends State<RegistrationView> {
                         child: RichText(
                           text: TextSpan(
                             style: TextStyle(
-                                color: colors.textSecondary, fontSize: 14),
+                              color: colors.textSecondary,
+                              fontSize: 14,
+                            ),
                             children: [
                               const TextSpan(text: 'Hai già un account? '),
                               TextSpan(

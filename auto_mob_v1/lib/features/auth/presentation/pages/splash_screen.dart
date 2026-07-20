@@ -43,11 +43,11 @@ class _SplashScreenState extends State<SplashScreen>
 
     _carAnimation =
         Tween<Offset>(begin: const Offset(-1.5, 0.0), end: Offset.zero).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.3, 0.8, curve: Curves.elasticOut),
-      ),
-    );
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.3, 0.8, curve: Curves.elasticOut),
+          ),
+        );
 
     _controller.forward();
   }
@@ -67,69 +67,69 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       backgroundColor: colors.background,
       body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SlideTransition(
-                position: _carAnimation,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: orangeColor.withValues(alpha: 0.3),
-                          blurRadius: 40,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedGarage,
-                      color: orangeColor,
-                      size: 100,
-                      strokeWidth: 2.0,
-                    ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SlideTransition(
+              position: _carAnimation,
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: orangeColor.withValues(alpha: 0.3),
+                        blurRadius: 40,
+                        spreadRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedGarage,
+                    color: orangeColor,
+                    size: 100,
+                    strokeWidth: 2.0,
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: Column(
-                  children: [
-                    Text(
-                      'AutoMob',
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 48,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2.0,
-                        shadows: [
-                          Shadow(
-                            color: blueColor.withValues(alpha: 0.8),
-                            blurRadius: 20,
-                          ),
-                        ],
-                      ),
+            ),
+            const SizedBox(height: 32),
+            FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  Text(
+                    'AutoMob',
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 48,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2.0,
+                      shadows: [
+                        Shadow(
+                          color: blueColor.withValues(alpha: 0.8),
+                          blurRadius: 20,
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'SMART MAINTENANCE',
-                      style: TextStyle(
-                        color: blueColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4.0,
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'SMART MAINTENANCE',
+                    style: TextStyle(
+                      color: blueColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 4.0,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      );
+      ),
+    );
   }
 }

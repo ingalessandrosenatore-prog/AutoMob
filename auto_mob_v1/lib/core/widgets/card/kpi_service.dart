@@ -51,14 +51,9 @@ class AmMaintenanceKpiCard extends StatelessWidget {
         border: Border.all(color: colors.border),
         boxShadow: [
           BoxShadow(
-            color: colors.shadow,
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: colors.border,
-            blurRadius: 0,
-            offset: const Offset(0, -1),
+            color: colors.shadow.withValues(alpha: 0.09),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -77,8 +72,8 @@ class AmMaintenanceKpiCard extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      colors.textSecondary.withValues(alpha: 0.06),
-                      color.withValues(alpha: 0.2),
+                      colors.surface.withValues(alpha: 0.26),
+                      color.withValues(alpha: 0.72),
                     ],
                   ).createShader(bounds),
                   child: iconBuilder(84, colors.textPrimary),
@@ -189,8 +184,8 @@ class _SegmentedProgressBar extends StatelessWidget {
               boxShadow: isActive
                   ? [
                       BoxShadow(
-                        color: color.withValues(alpha: 0.3),
-                        blurRadius: 8,
+                        color: color.withValues(alpha: 0.16),
+                        blurRadius: 5,
                         offset: const Offset(0, 2),
                       ),
                     ]

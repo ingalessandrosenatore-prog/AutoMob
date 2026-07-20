@@ -27,21 +27,25 @@ void main() {
 
   const tUser = AppAuthUser(id: 'u1', email: 'test@automob.it');
 
-  test('inoltra la richiesta al repository e ritorna l\'utente (Right)',
-      () async {
-    when(() => repository.checkSession())
-        .thenAnswer((_) async => const Right(tUser));
+  test(
+    'inoltra la richiesta al repository e ritorna l\'utente (Right)',
+    () async {
+      when(
+        () => repository.checkSession(),
+      ).thenAnswer((_) async => const Right(tUser));
 
-    final result = await usecase();
+      final result = await usecase();
 
-    expect(result, const Right<Failure, AppAuthUser?>(tUser));
-    verify(() => repository.checkSession()).called(1);
-    verifyNoMoreInteractions(repository);
-  });
+      expect(result, const Right<Failure, AppAuthUser?>(tUser));
+      verify(() => repository.checkSession()).called(1);
+      verifyNoMoreInteractions(repository);
+    },
+  );
 
   test('ritorna Right(null) quando non c\'e\' sessione attiva', () async {
-    when(() => repository.checkSession())
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => repository.checkSession(),
+    ).thenAnswer((_) async => const Right(null));
 
     final result = await usecase();
 
@@ -49,8 +53,9 @@ void main() {
   });
 
   test('propaga il Failure quando il repository fallisce (Left)', () async {
-    when(() => repository.checkSession())
-        .thenAnswer((_) async => const Left(ServerFailure()));
+    when(
+      () => repository.checkSession(),
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
     final result = await usecase();
 

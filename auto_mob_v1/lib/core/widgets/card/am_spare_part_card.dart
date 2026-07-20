@@ -289,6 +289,7 @@ class _PartQuantitySelector extends StatelessWidget {
                 onTap: quantity > 1
                     ? () => onQuantityChanged(quantity - 1)
                     : null,
+                colors: colors,
               ),
               const SizedBox(width: 20),
               Text(
@@ -305,6 +306,7 @@ class _PartQuantitySelector extends StatelessWidget {
                 color: accentColor,
                 elevated: true,
                 onTap: () => onQuantityChanged(quantity + 1),
+                colors: colors,
               ),
             ],
           ),
@@ -319,12 +321,14 @@ class _PartCircleButton extends StatelessWidget {
   final Color color;
   final VoidCallback? onTap;
   final bool elevated;
+  final AmThemeColors colors;
 
   const _PartCircleButton({
     required this.icon,
     required this.color,
     required this.onTap,
     this.elevated = false,
+    required this.colors,
   });
 
   @override
@@ -347,7 +351,7 @@ class _PartCircleButton extends StatelessWidget {
       ),
       child: HugeIcon(
         icon: icon,
-        color: Colors.white,
+        color: colors.textPrimary,
         size: 20,
         strokeWidth: 2.2,
       ),

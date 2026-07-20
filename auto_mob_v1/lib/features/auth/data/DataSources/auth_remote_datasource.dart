@@ -1,26 +1,32 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/error/exceptions/exceptions.dart';
 import '../models/app_user_model.dart';
+import '../models/signup_response_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<AppAuthUserModel> loginWithEmail(String email, String password);
   Future<AppAuthUserModel> loginWithGoogle();
   Future<AppAuthUserModel> loginWithApple();
-  Future<AppAuthUserModel> signupWithEmail(
+  Future<SignupResponseModel> signupWithEmail(
     String name,
     String email,
     String password,
-      );
+  );
+  Future<void> resendConfirmationEmail(String email);
   Future<void> logout();
   Future<AppAuthUserModel?> checkSession();
+  Stream<AppAuthUserModel> observeAuthenticatedUsers();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final SupabaseClient supabaseClient;
 
   AuthRemoteDataSourceImpl({required this.supabaseClient});
+
+  static const _emailConfirmationRedirect =
+      'com.infinty.automob://login-callback/';
 
   @override
   Future<AppAuthUserModel> loginWithEmail(String email, String password) async {
@@ -68,7 +74,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       return AppAuthUserModel.fromSupabaseUser(session!.user);
     } on AuthException catch (e) {
-      throw AuthDataSourceException(e.message, code: e.statusCode);
+      throw AuthDataSourceException(e.message, code: e.code ?? e.statusCode);
     } on SocketException {
       throw const NetworkException('Errore di connessione');
     } catch (e) {
@@ -103,32 +109,52 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<AppAuthUserModel> signupWithEmail(
+  Future<SignupResponseModel> signupWithEmail(
     String name,
     String email,
-    String password) async {
+    String password,
+  ) async {
     try {
       final response = await supabaseClient.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'role': 'proprietario',
-          'full_name': name,
-
-        },
+        data: {'role': 'proprietario', 'full_name': name},
+        emailRedirectTo: _emailConfirmationRedirect,
       );
 
       if (response.user == null) {
         throw const AuthDataSourceException('Registrazione fallita');
       }
 
-      return AppAuthUserModel.fromSupabaseUser(response.user!);
+      return SignupResponseModel(
+        user: AppAuthUserModel.fromSupabaseUser(response.user!),
+        requiresEmailConfirmation: response.session == null,
+      );
     } on AuthException catch (e) {
       throw AuthDataSourceException(e.message, code: e.statusCode);
     } on SocketException {
       throw const NetworkException('Errore di connessione');
     } catch (e) {
       throw const AuthDataSourceException('Errore durante la registrazione');
+    }
+  }
+
+  @override
+  Future<void> resendConfirmationEmail(String email) async {
+    try {
+      await supabaseClient.auth.resend(
+        type: OtpType.signup,
+        email: email,
+        emailRedirectTo: _emailConfirmationRedirect,
+      );
+    } on AuthException catch (e) {
+      throw AuthDataSourceException(e.message, code: e.code ?? e.statusCode);
+    } on SocketException {
+      throw const NetworkException('Errore di connessione');
+    } catch (_) {
+      throw const AuthDataSourceException(
+        'Errore durante il nuovo invio dell\'email',
+      );
     }
   }
 
@@ -147,11 +173,22 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<AppAuthUserModel?> checkSession() async {
     try {
       final session = supabaseClient.auth.currentSession;
-      return session?.user != null ? AppAuthUserModel.fromSupabaseUser(session!.user) : null;
+      return session?.user != null
+          ? AppAuthUserModel.fromSupabaseUser(session!.user)
+          : null;
     } on SocketException {
       throw const NetworkException('Errore di connessione');
     } catch (e) {
       return null;
     }
+  }
+
+  @override
+  Stream<AppAuthUserModel> observeAuthenticatedUsers() {
+    return supabaseClient.auth.onAuthStateChange
+        .where((change) => change.session?.user != null)
+        .map(
+          (change) => AppAuthUserModel.fromSupabaseUser(change.session!.user),
+        );
   }
 }

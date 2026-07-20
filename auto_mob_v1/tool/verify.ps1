@@ -7,10 +7,18 @@
 #  Uso:   ./tool/verify.ps1
 # =====================================================================
 
+$verifyRepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+
+function Invoke-VerifyGit {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArguments)
+
+    & git -c "safe.directory=$verifyRepoRoot" @GitArguments
+}
+
 Write-Host ""
 Write-Host "==> 1/7  File vietati e configurazione locale" -ForegroundColor Cyan
 $trackedFiles = @(
-    git ls-files --cached --others --exclude-standard |
+    Invoke-VerifyGit ls-files --cached --others --exclude-standard |
         Where-Object { Test-Path $_ }
 )
 if ($LASTEXITCODE -ne 0) {
@@ -34,7 +42,7 @@ if ($forbiddenFiles.Count -gt 0) {
 
 Write-Host ""
 Write-Host "==> 2/7  Formattazione Dart dei file modificati" -ForegroundColor Cyan
-$repoRoot = (git rev-parse --show-toplevel).Trim()
+$repoRoot = (Invoke-VerifyGit rev-parse --show-toplevel).Trim()
 if ($LASTEXITCODE -ne 0) {
     Write-Host "STOP: repository Git non trovato." -ForegroundColor Red
     exit 1
@@ -42,11 +50,11 @@ if ($LASTEXITCODE -ne 0) {
 
 $changedPaths = @()
 if ($env:VERIFY_BASE_REF) {
-    $changedPaths += git diff --name-only "$env:VERIFY_BASE_REF...HEAD"
+    $changedPaths += Invoke-VerifyGit diff --name-only "$env:VERIFY_BASE_REF...HEAD"
 } else {
-    $changedPaths += git diff --name-only HEAD
-    $changedPaths += git diff --cached --name-only
-    $changedPaths += git ls-files --others --exclude-standard
+    $changedPaths += Invoke-VerifyGit diff --name-only HEAD
+    $changedPaths += Invoke-VerifyGit diff --cached --name-only
+    $changedPaths += Invoke-VerifyGit ls-files --others --exclude-standard
 }
 
 $projectRoot = (Get-Location).Path
@@ -54,10 +62,14 @@ $dartFiles = @(
     $changedPaths |
         Sort-Object -Unique |
         Where-Object { $_ -like "*.dart" } |
-        ForEach-Object { Join-Path $repoRoot $_ } |
-        Where-Object {
-            $_.StartsWith($projectRoot, [System.StringComparison]::OrdinalIgnoreCase) -and
-            (Test-Path $_)
+        ForEach-Object {
+            $fullPath = Join-Path $repoRoot $_
+            if (
+                $fullPath.StartsWith($projectRoot, [System.StringComparison]::OrdinalIgnoreCase) -and
+                (Test-Path $fullPath)
+            ) {
+                $fullPath.Replace("$projectRoot\", '')
+            }
         }
 )
 

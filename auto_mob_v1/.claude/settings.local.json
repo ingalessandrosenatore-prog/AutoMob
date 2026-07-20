@@ -28,7 +28,8 @@
       "mcp__b0cb2f2e-787e-4d27-a322-1f79f68c1bcf__list_edge_functions",
       "mcp__b0cb2f2e-787e-4d27-a322-1f79f68c1bcf__get_logs",
       "mcp__b0cb2f2e-787e-4d27-a322-1f79f68c1bcf__execute_sql",
-      "Bash(awk '/^diff --git/{f=$3} /^new file mode/{print f} /^deleted file mode/{print \"DEL \"f}' review_diff.patch)"
+      "Bash(awk '/^diff --git/{f=$3} /^new file mode/{print f} /^deleted file mode/{print \"DEL \"f}' review_diff.patch)",
+      "Bash(grep -c \"normalizeFuel\" \"C:/Users/alexs/AppData/Local/Temp/claude/C--Users-alexs-Documents-GitHub-AutoMob-auto-mob-v1/0eab9836-2be5-47a7-b5f4-b9fe72aa8aa8/scratchpad/review_diff.patch\"; stat -c '%y' lib/features/vehicle/data/datasources/vehicle_remote_data_source.dart; git log --oneline -2 -- lib/features/vehicle/data/datasources/vehicle_remote_data_source.dart)"
     ]
   },
   "skillOverrides": {

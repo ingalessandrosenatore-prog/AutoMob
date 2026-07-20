@@ -35,8 +35,9 @@ void main() {
   });
 
   test('propaga il Failure quando il repository fallisce (Left)', () async {
-    when(() => repository.logout())
-        .thenAnswer((_) async => const Left(ServerFailure()));
+    when(
+      () => repository.logout(),
+    ).thenAnswer((_) async => const Left(ServerFailure()));
 
     final result = await usecase();
 

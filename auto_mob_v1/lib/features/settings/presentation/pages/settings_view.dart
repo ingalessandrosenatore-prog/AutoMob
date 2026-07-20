@@ -35,16 +35,20 @@ class SettingsView extends StatelessWidget {
               builder: (context, mode) => SwitchListTile(
                 value: mode == AmThemeMode.dark,
                 onChanged: context.read<ThemeCubit>().setDarkMode,
+                thumbColor: WidgetStateProperty.all(colors.onSurface),
+
                 secondary: HugeIcon(
                   icon: mode == AmThemeMode.dark
                       ? HugeIcons.strokeRoundedMoon
                       : HugeIcons.strokeRoundedSun01,
-                  size: 24,
+                  size: 28,
                   strokeWidth: 2.2,
                 ),
-                title: const Text('Modalità scura'),
+                title: const Text('SCEGLI MODALITA'),
                 subtitle: Text(
-                  mode == AmThemeMode.dark ? 'Attiva' : 'Disattivata',
+                  mode == AmThemeMode.dark
+                      ? 'Passa al tema scuro'
+                      : 'Passa al tema chiaro',
                   style: TextStyle(color: colors.onSurfaceVariant),
                 ),
               ),

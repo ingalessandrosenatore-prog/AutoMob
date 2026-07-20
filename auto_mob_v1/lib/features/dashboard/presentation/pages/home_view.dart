@@ -23,6 +23,7 @@ import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
+import '../../../../core/services/haptic_service.dart';
 import '../bloc/dashboard_bloc.dart';
 import '../bloc/dashboard_event.dart';
 import '../bloc/dashboard_state.dart';
@@ -31,7 +32,6 @@ import '../bloc/notification_prompt_event.dart';
 import '../bloc/notification_prompt_state.dart';
 import '../widgets/card_auto.dart';
 import '../widgets/card_officina.dart';
-import '../widgets/am_banners.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key, this.initialVehicleId});
@@ -277,7 +277,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 lable: '',
                 onTap: () {},
                 backgroundColor: kHeavyEffects
-                    ? colors.surfaceRaised.withValues(alpha: 0.5)
+                    ? colors.surfaceRaised.withValues(alpha: 0.2)
                     : colors.surfaceRaised,
                 popupBackgroundColor: kHeavyEffects
                     ? colors.surfaceRaised.withValues(alpha: 0.5)
@@ -425,20 +425,18 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                     // Gruppo glass solo sui top di gamma (come da commento
                     // sopra): con flag off niente backdrop shader da
                     // ricompilare/ridisegnare ad ogni frame.
-                    child: kHeavyEffects
-                        ? OCLiquidGlassGroup(
-                            settings: const OCLiquidGlassSettings(
-                              refractStrength: -0.08,
-                              blurRadiusPx: 1.0,
-                              specStrength: 0,
-                              specWidth: 0.0,
-                              specAngle: 145,
-                              blendPx: 70,
-                              specPower: 10,
-                            ),
-                            child: appBarContent,
-                          )
-                        : appBarContent,
+                    child: OCLiquidGlassGroup(
+                      settings: const OCLiquidGlassSettings(
+                        refractStrength: -0.13,
+                        blurRadiusPx: 1.0,
+                        specStrength: 0,
+                        specWidth: 0.0,
+                        specAngle: 145,
+                        blendPx: 20,
+                        specPower: 10,
+                      ),
+                      child: appBarContent,
+                    ),
                   ),
                 ),
               ),
@@ -503,113 +501,155 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                       ),
                                     ),
                                     Positioned.fill(
-                                      child: PageView.builder(
-                                        scrollDirection: Axis.horizontal,
-                                        controller: _pageController,
-                                        onPageChanged: (index) {
-                                          context.read<DashboardBloc>().add(
-                                            DashboardPageChanged(index),
-                                          );
-                                        },
-                                        itemCount: vehicles.length,
-                                        itemBuilder: (context, index) {
-                                          final v = vehicles[index];
-                                          return RepaintBoundary(
-                                            child: CardAuto(
-                                              marca: v.brand,
-                                              modello: v.model,
-                                              kmTotali: v.isPlaceholder
-                                                  ? '—'
-                                                  : '${v.kmCurrent} km',
-                                              immaginePath: v.fotoPath,
-                                              anno: v.year,
-                                              nextRevisionDate:
-                                                  v.nextRevisionDate,
-                                              onRevisionTap: v.isPlaceholder
-                                                  ? null
-                                                  : () async {
-                                                      final dashboardBloc =
-                                                          context
-                                                              .read<
-                                                                DashboardBloc
-                                                              >();
-                                                      final aggiornato =
-                                                          await context.pushNamed(
-                                                            'updateRevision',
-                                                            extra: {
-                                                              'id': v.id,
-                                                              'currentRevisionDate':
-                                                                  v.nextRevisionDate,
-                                                            },
+                                      child: SmartEdge(
+                                        blur: kHeavyEffects,
+                                        fallbackTint: colors.background,
+                                        edges: [
+                                          EdgeBlur(
+                                            type: EdgeType.leftEdge,
+                                            size: 15,
+                                            tintColor: colors.background,
+                                            sigma: 10,
+                                            controlPoints: [
+                                              ControlPoint(
+                                                position: 0.5,
+                                                type: ControlPointType.visible,
+                                              ),
+                                              ControlPoint(
+                                                position: 1.0,
+                                                type: ControlPointType
+                                                    .transparent,
+                                              ),
+                                            ],
+                                          ),
+                                          EdgeBlur(
+                                            type: EdgeType.rightEdge,
+                                            size: 15,
+                                            tintColor: colors.background,
+                                            sigma: 10,
+                                            controlPoints: [
+                                              ControlPoint(
+                                                position: 0.5,
+                                                type: ControlPointType.visible,
+                                              ),
+                                              ControlPoint(
+                                                position: 1.0,
+                                                type: ControlPointType
+                                                    .transparent,
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                        child: PageView.builder(
+                                          scrollDirection: Axis.horizontal,
+                                          controller: _pageController,
+                                          onPageChanged: (index) {
+                                            context.read<DashboardBloc>().add(
+                                              DashboardPageChanged(index),
+                                            );
+                                          },
+                                          itemCount: vehicles.length,
+                                          itemBuilder: (context, index) {
+                                            final v = vehicles[index];
+                                            return RepaintBoundary(
+                                              child: CardAuto(
+                                                marca: v.brand,
+                                                modello: v.model,
+                                                kmTotali: v.isPlaceholder
+                                                    ? '—'
+                                                    : '${v.kmCurrent} km',
+                                                immaginePath: v.fotoPath,
+                                                anno: v.year,
+                                                nextRevisionDate:
+                                                    v.nextRevisionDate,
+                                                onRevisionTap: v.isPlaceholder
+                                                    ? null
+                                                    : () async {
+                                                        final dashboardBloc =
+                                                            context
+                                                                .read<
+                                                                  DashboardBloc
+                                                                >();
+                                                        final aggiornato =
+                                                            await context.pushNamed(
+                                                              'updateRevision',
+                                                              extra: {
+                                                                'id': v.id,
+                                                                'currentRevisionDate':
+                                                                    v.nextRevisionDate,
+                                                              },
+                                                            );
+                                                        if (aggiornato ==
+                                                            true) {
+                                                          dashboardBloc.add(
+                                                            LoadDashboardData(),
                                                           );
-                                                      if (aggiornato == true) {
-                                                        dashboardBloc.add(
-                                                          LoadDashboardData(),
-                                                        );
-                                                      }
-                                                    },
-                                              onKmTap: v.isPlaceholder
-                                                  ? null
-                                                  : () async {
-                                                      final dashboardBloc =
-                                                          context
-                                                              .read<
-                                                                DashboardBloc
-                                                              >();
-                                                      final aggiornato =
-                                                          await context.pushNamed(
-                                                            'updateKm',
-                                                            extra: {
-                                                              'id': v.id,
-                                                              'currentKm':
-                                                                  '${v.kmCurrent}',
-                                                            },
+                                                        }
+                                                      },
+                                                onKmTap: v.isPlaceholder
+                                                    ? null
+                                                    : () async {
+                                                        final dashboardBloc =
+                                                            context
+                                                                .read<
+                                                                  DashboardBloc
+                                                                >();
+                                                        final aggiornato =
+                                                            await context.pushNamed(
+                                                              'updateKm',
+                                                              extra: {
+                                                                'id': v.id,
+                                                                'currentKm':
+                                                                    '${v.kmCurrent}',
+                                                              },
+                                                            );
+                                                        // Al ritorno, se i km sono stati
+                                                        // aggiornati, ricarico la dashboard.
+                                                        if (aggiornato ==
+                                                            true) {
+                                                          dashboardBloc.add(
+                                                            LoadDashboardData(),
                                                           );
-                                                      // Al ritorno, se i km sono stati
-                                                      // aggiornati, ricarico la dashboard.
-                                                      if (aggiornato == true) {
-                                                        dashboardBloc.add(
-                                                          LoadDashboardData(),
+                                                        }
+                                                      },
+                                                onEditPhotoTap: v.isPlaceholder
+                                                    ? null
+                                                    : () async {
+                                                        final dashboardBloc =
+                                                            context
+                                                                .read<
+                                                                  DashboardBloc
+                                                                >();
+                                                        final picker =
+                                                            ImagePicker();
+                                                        final picked = await picker.pickImage(
+                                                          source: ImageSource
+                                                              .gallery,
+                                                          // Ridimensiona/ricomprime a
+                                                          // monte (nativo): una foto card
+                                                          // 2:1 non ha bisogno di 12MP,
+                                                          // ed evita decode enormi sul
+                                                          // main isolate.
+                                                          maxWidth: 1280,
+                                                          maxHeight: 1280,
+                                                          imageQuality: 80,
                                                         );
-                                                      }
-                                                    },
-                                              onEditPhotoTap: v.isPlaceholder
-                                                  ? null
-                                                  : () async {
-                                                      final dashboardBloc =
-                                                          context
-                                                              .read<
-                                                                DashboardBloc
-                                                              >();
-                                                      final picker =
-                                                          ImagePicker();
-                                                      final picked = await picker.pickImage(
-                                                        source:
-                                                            ImageSource.gallery,
-                                                        // Ridimensiona/ricomprime a
-                                                        // monte (nativo): una foto card
-                                                        // 2:1 non ha bisogno di 12MP,
-                                                        // ed evita decode enormi sul
-                                                        // main isolate.
-                                                        maxWidth: 1280,
-                                                        maxHeight: 1280,
-                                                        imageQuality: 80,
-                                                      );
-                                                      if (picked == null) {
-                                                        return;
-                                                      }
-                                                      dashboardBloc.add(
-                                                        VehiclePhotoUpdateRequested(
-                                                          targa: v.plate,
-                                                          foto: File(
-                                                            picked.path,
+                                                        if (picked == null) {
+                                                          return;
+                                                        }
+                                                        dashboardBloc.add(
+                                                          VehiclePhotoUpdateRequested(
+                                                            targa: v.plate,
+                                                            foto: File(
+                                                              picked.path,
+                                                            ),
                                                           ),
-                                                        ),
-                                                      );
-                                                    },
-                                            ),
-                                          );
-                                        },
+                                                        );
+                                                      },
+                                              ),
+                                            );
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -637,7 +677,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                       },
                     ),
 
-                    // --- BANNERS ---
+                    /* // --- BANNERS ---
                     AmBannerBig(
                       title: 'Risparmia 215€/anno',
                       subtitle: 'Assicura Facile',
@@ -645,7 +685,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                       // imagePath: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=2073&auto=format&fit=crop',
                       //  logoPath: 'https://images.unsplash.com/photo-1599305090748-36655bc6f571?q=80&w=2070&auto=format&fit=crop', // Placeholder logo
                       onTap: () {},
-                    ),
+                    ),*/
 
                     // lista kpi per il veicolo corrente
                     BlocBuilder<DashboardBloc, DashboardState>(
@@ -667,6 +707,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                               onTap: vehicle == null || vehicle.isPlaceholder
                                   ? null
                                   : () async {
+                                      AmHaptics.tap();
                                       final dashboardBloc = context
                                           .read<DashboardBloc>();
                                       final connected = await context.pushNamed(
@@ -677,6 +718,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                         },
                                       );
                                       if (connected == true) {
+                                        AmHaptics.tap();
                                         dashboardBloc.add(
                                           DashboardRefreshRequested(),
                                         );
@@ -758,8 +800,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                         },
                       ),
                     ),
-                    //  const SizedBox(height: 110),
-                    Padding(
+
+                    /* Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 9.0,
                         vertical: 9.0,
@@ -904,7 +946,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // --- END BANNERS ---
+                    // --- END BANNERS --- */
+                    const SizedBox(height: 110),
                   ],
                 ),
               ),
@@ -927,12 +970,13 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
 
   Future<void> _pushFunctional(BuildContext context, EnumPopUp type) async {
     final s = context.read<DashboardBloc>().state;
+    AmHaptics.tap();
     if (s is DashboardLoaded) {
       final v = s.vehicles[s.index];
       final dashboardBloc = context.read<DashboardBloc>();
-      final salvato = await context.push(
-        '/addFunctional',
-        extra: {'type': type, 'id': v.id, 'currentKm': v.kmCurrent},
+      final salvato = await context.pushNamed(
+        'aggiungi_lavoro',
+        extra: {'vehicleId': v.id, 'currentKm': v.kmCurrent},
       );
       // Al ritorno, se il lavoro e' stato salvato, ricarico la dashboard.
       if (salvato == true) {

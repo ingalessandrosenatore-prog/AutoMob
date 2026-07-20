@@ -42,7 +42,6 @@ class AmDatePickerField extends StatefulWidget {
 }
 
 class _AmDatePickerFieldState extends State<AmDatePickerField> {
-
   DateTime? _parse(String text) {
     if (text.isEmpty) return null;
     final parts = text.split('/');
@@ -88,9 +87,7 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(foregroundColor: colors.accent),
             ),
-            dialogTheme: DialogThemeData(
-              backgroundColor: colors.surface,
-            ),
+            dialogTheme: DialogThemeData(backgroundColor: colors.surface),
           ),
           child: child!,
         );
@@ -146,10 +143,14 @@ class _AmDatePickerFieldState extends State<AmDatePickerField> {
                 decoration: BoxDecoration(
                   color: colors.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: colors.border,
-                    width: 1,
-                  ),
+                  border: Border.all(color: colors.border, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 padding: EdgeInsets.symmetric(
                   horizontal: 16,

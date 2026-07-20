@@ -32,15 +32,19 @@ class AmThemeColors extends ThemeExtension<AmThemeColors> {
   });
 
   static const dark = AmThemeColors(
-    background: Color(0xFF0F0F11),        // Colore di sfondo principale
-    surface: Color(0xFF1C1C1E),           // Superficie standard (es. card, fogli)
-    surfaceRaised: Color(0xFF2C2C2E),     // Superficie leggermente sollevata o in rilievo
-    surfaceHighlight: Color(0xFF343438),  // Superficie evidenziata o più luminosa
-    surfaceDeep: Color(0xFF171719),       // Superficie più profonda o incassata
+    background: Color(0xFF0F0F11), // Colore di sfondo principale
+    surface: Color(0xFF1C1C1E), // Superficie standard (es. card, fogli)
+    surfaceRaised: Color(
+      0xFF2C2C2E,
+    ), // Superficie leggermente sollevata o in rilievo
+    surfaceHighlight: Color(
+      0xFF343438,
+    ), // Superficie evidenziata o più luminosa
+    surfaceDeep: Color(0xFF171719), // Superficie più profonda o incassata
     textPrimary: Color(0xFFFFFFFF),
     textSecondary: Color(0xFF8E8E93),
     onMedia: Color(0xFFFFFFFF),
-    border:Colors.transparent,
+    border: Colors.transparent,
     accent: Color(0xFFFF6B00),
     info: Color(0xFF3192F3),
     danger: Color(0xFFFF453A),
@@ -48,19 +52,25 @@ class AmThemeColors extends ThemeExtension<AmThemeColors> {
   );
 
   static const light = AmThemeColors(
-    background: Color(0xFFDADADF),        // Grigio di sistema iOS-like, pulito e moderno
-    surface: Color(0xFFFFFFFF),           // Bianco puro per risaltare sullo sfondo
-    surfaceRaised:Color(0xFFFFFFFF),     // Leggera elevazione quasi impercettibile
-    surfaceHighlight: Color(0xFFFFFFFF),  // Stato hover o selezione chiaro
-    surfaceDeep: Color(0xFFE9E9EB),       // Per input fields o aree incassate
-    textPrimary: Color(0xFF000000),       // Quasi nero, riduce l'affaticamento visivo (WCAG AAA)
-    textSecondary: Color(0xFF636366),     // Grigio medio per gerarchia (WCAG AA su bianco)
-    onMedia: Color(0xFFFFFFFF),           // Testo su immagini o colori pieni
-    border:Colors.transparent,            // Bordo sottile visibile ma non invasivo
-    accent: Color(0xFFFF6B00),            // Il tuo arancione distintivo
-    info: Color(0xFF007AFF),              // Blu standard per accessibilità e chiarezza
-    danger: Color(0xFFFF3B30),            // Rosso errore standard UI moderna
-    shadow: Color(0x44000000),            // Ombra molto morbida (10% opacità)
+    background: Color(
+      0xFFFAF8F6,
+    ), // Grigio di sistema iOS-like, pulito e moderno
+    surface: Color(0xFFFFFFFF), // Bianco puro per risaltare sullo sfondo
+    surfaceRaised: Color(0xFFFFFFFF), // Leggera elevazione quasi impercettibile
+    surfaceHighlight: Color(0xFFFFFFFF), // Stato hover o selezione chiaro
+    surfaceDeep: Color(0xFFE9E9EB), // Per input fields o aree incassate
+    textPrimary: Color(
+      0xFF000000,
+    ), // Quasi nero, riduce l'affaticamento visivo (WCAG AAA)
+    textSecondary: Color(
+      0xFF636366,
+    ), // Grigio medio per gerarchia (WCAG AA su bianco)
+    onMedia: Color(0xFFFFFFFF), // Testo su immagini o colori pieni
+    border: Colors.transparent, // Bordo sottile visibile ma non invasivo
+    accent: Color(0xFFFF6B00), // Il tuo arancione distintivo
+    info: Color(0xFF007AFF), // Blu standard per accessibilità e chiarezza
+    danger: Color(0xFFFF3B30), // Rosso errore standard UI moderna
+    shadow: Color(0x44000000), // Ombra molto morbida (10% opacità)
   );
 
   static AmThemeColors of(BuildContext context) =>

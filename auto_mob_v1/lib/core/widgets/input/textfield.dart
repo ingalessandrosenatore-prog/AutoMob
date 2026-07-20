@@ -129,10 +129,14 @@ class _AmTextFieldState extends State<AmTextField> {
             decoration: BoxDecoration(
               color: colors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: colors.border,
-                width: 1,
-              ),
+              border: Border.all(color: colors.border, width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: TextFormField(
               controller: widget.controller,

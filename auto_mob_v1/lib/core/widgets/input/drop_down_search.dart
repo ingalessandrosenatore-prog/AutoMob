@@ -161,6 +161,13 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: colors.surface,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
                   color: _isOpen

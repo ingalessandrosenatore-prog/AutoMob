@@ -35,8 +35,8 @@ class AmWorkshopCard extends StatelessWidget {
               border: Border.all(color: colors.border),
               boxShadow: [
                 BoxShadow(
-                  color: colors.shadow.withValues(alpha: 0.22),
-                  blurRadius: 12,
+                  color: colors.shadow.withValues(alpha: 0.09),
+                  blurRadius: 14,
                   offset: const Offset(0, 5),
                 ),
               ],

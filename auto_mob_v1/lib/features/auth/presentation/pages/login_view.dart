@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -82,157 +82,164 @@ class _LoginViewState extends State<LoginView> {
     return BlocListener<AuthBloc, AuthState>(
       listener: _onStateForDialogs,
       child: BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final isLoading = state is AuthLoading;
-        final errorMessage =
-            (state is AuthError && !state.emailNotConfirmed)
-                ? state.message
-                : null;
-        final colors = AmThemeColors.of(context);
+        builder: (context, state) {
+          final isLoading = state is AuthLoading;
+          final errorMessage = (state is AuthError && !state.emailNotConfirmed)
+              ? state.message
+              : null;
+          final colors = AmThemeColors.of(context);
 
-        return Scaffold(
-          backgroundColor: colors.background,
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 60),
-                  Text(
-                    'BENVENUTO',
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
+          return Scaffold(
+            backgroundColor: colors.background,
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 60),
+                    Text(
+                      'BENVENUTO',
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'Accedi per gestire i tuoi veicoli',
-                    style: TextStyle(color: colors.textSecondary, fontSize: 16),
-                  ),
-                  const SizedBox(height: 48),
-                  Row(
-                    children: [
-                      AmTextField(
-                        label: 'Email',
-                        placeholder: 'Inserisci la tua email',
-                        controller: _emailController,
-                        isRequired: true,
-                        obscureText: false,
-                        keyboardType: TextInputType.emailAddress,
+                    Text(
+                      'Accedi per gestire i tuoi veicoli',
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 16,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      AmTextField(
-                        label: 'Password',
-                        placeholder: '••••••••',
-                        controller: _passwordController,
-                        isRequired: true,
-                        obscureText: true,
-                        keyboardType: TextInputType.visiblePassword,
-                      ),
-                    ],
-                  ),
-                  if (errorMessage != null) ...[
-                    const SizedBox(height: 16),
+                    ),
+                    const SizedBox(height: 48),
                     Row(
                       children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedAlert01,
-                          color: colors.danger,
-                          size: 16,
-                          strokeWidth: 2.2,
+                        AmTextField(
+                          label: 'Email',
+                          placeholder: 'Inserisci la tua email',
+                          controller: _emailController,
+                          isRequired: true,
+                          obscureText: false,
+                          keyboardType: TextInputType.emailAddress,
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            errorMessage,
-                            style: TextStyle(
-                              color: colors.danger,
-                              fontSize: 14,
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        AmTextField(
+                          label: 'Password',
+                          placeholder: '••••••••',
+                          controller: _passwordController,
+                          isRequired: true,
+                          obscureText: true,
+                          keyboardType: TextInputType.visiblePassword,
+                        ),
+                      ],
+                    ),
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedAlert01,
+                            color: colors.danger,
+                            size: 16,
+                            strokeWidth: 2.2,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              errorMessage,
+                              style: TextStyle(
+                                color: colors.danger,
+                                fontSize: 14,
+                              ),
                             ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 48),
+                    AmMainFab(
+                      label: 'Login',
+                      height: 60,
+                      width: 180,
+                      color: colors.accent,
+                      icon: HugeIcons.strokeRoundedLogin01,
+                      isLoading: isLoading,
+                      onPressed: () {
+                        context.read<AuthBloc>().add(
+                          LoginWithEmailEvent(
+                            email: _emailController.text.trim(),
+                            password: _passwordController.text,
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 48),
+                    AmMainFab(
+                      label: 'Registrati',
+                      color: colors.info,
+                      icon: HugeIcons.strokeRoundedUserAdd01,
+                      height: 60,
+                      width: 180,
+                      onPressed: () => context.goNamed('registration'),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(
+                      'oppure accedi con',
+                      style: TextStyle(
+                        color: colors.textSecondary,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          onPressed: isLoading
+                              ? null
+                              : () => context.read<AuthBloc>().add(
+                                  LoginWithGoogleEvent(),
+                                ),
+                          icon: const Icon(
+                            Icons.g_mobiledata,
+                            color: Colors.transparent,
+                            size: 0,
+                          ),
+                          style: IconButton.styleFrom(
+                            backgroundColor: colors.surface,
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        IconButton(
+                          onPressed: isLoading
+                              ? null
+                              : () => context.read<AuthBloc>().add(
+                                  LoginWithAppleEvent(),
+                                ),
+                          icon: const Icon(
+                            Icons.apple,
+                            color: Colors.transparent,
+                            size: 0,
+                          ),
+                          style: IconButton.styleFrom(
+                            backgroundColor: colors.surface,
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 24),
                   ],
-                  const SizedBox(height: 48),
-                  AmMainFab(
-                    label: 'Login',
-                    height: 60,
-                    width: 180,
-                    color: colors.accent,
-                    icon: HugeIcons.strokeRoundedLogin01,
-                    isLoading: isLoading,
-                    onPressed: () {  context.read<AuthBloc>().add(
-                           LoginWithEmailEvent(
-                              email: _emailController.text.trim(),
-                              password: _passwordController.text,
-                            ),
-                          );
-
-                    },
-                  ),
-                  const SizedBox(height: 48),
-                  AmMainFab(
-                    label: 'Registrati',
-                    color: colors.info,
-                    icon: HugeIcons.strokeRoundedUserAdd01,
-                    height: 60,
-                    width: 180,
-                    onPressed: () => context.goNamed('registration'),
-                  ),
-                  const SizedBox(height: 32),
-                  Text(
-                    'oppure accedi con',
-                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        onPressed: isLoading
-                            ? null
-                            : () => context
-                                .read<AuthBloc>()
-                                .add(LoginWithGoogleEvent()),
-                        icon: const Icon(
-                          Icons.g_mobiledata,
-                          color: Colors.transparent,
-                          size: 0,
-                        ),
-                        style: IconButton.styleFrom(
-                            backgroundColor: colors.surface),
-                      ),
-                      const SizedBox(width: 20),
-                      IconButton(
-                        onPressed: isLoading
-                            ? null
-                            : () => context
-                                .read<AuthBloc>()
-                                .add(LoginWithAppleEvent()),
-                        icon: const Icon(
-                          Icons.apple,
-                          color: Colors.transparent,
-                          size: 0,
-                        ),
-                        style: IconButton.styleFrom(
-                            backgroundColor: colors.surface),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
       ),
     );
   }

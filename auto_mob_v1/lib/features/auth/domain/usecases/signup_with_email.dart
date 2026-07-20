@@ -1,5 +1,5 @@
-﻿import 'package:fpdart/fpdart.dart';
-import '../entities/app_user.dart';
+import 'package:fpdart/fpdart.dart';
+import '../entities/signup_outcome.dart';
 import '../repositories/auth_repository.dart';
 import '../../../../core/error/exceptions/exception.dart';
 
@@ -8,7 +8,7 @@ class SignupWithEmail {
 
   SignupWithEmail(this.repository);
 
-  Future<Either<Failure, AppAuthUser>> call(
+  Future<Either<Failure, SignupOutcome>> call(
     String name,
     String email,
     String password,

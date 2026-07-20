@@ -29,22 +29,25 @@ void main() {
   const tEmail = 'test@automob.it';
   const tPassword = 'password123';
 
-  test('inoltra email e password al repository e ritorna l\'utente (Right)',
-      () async {
-    when(() => repository.loginWithEmail(tEmail, tPassword))
-        .thenAnswer((_) async => const Right(tUser));
+  test(
+    'inoltra email e password al repository e ritorna l\'utente (Right)',
+    () async {
+      when(
+        () => repository.loginWithEmail(tEmail, tPassword),
+      ).thenAnswer((_) async => const Right(tUser));
 
-    final result = await usecase(tEmail, tPassword);
+      final result = await usecase(tEmail, tPassword);
 
-    expect(result, const Right<Failure, AppAuthUser>(tUser));
-    verify(() => repository.loginWithEmail(tEmail, tPassword)).called(1);
-    verifyNoMoreInteractions(repository);
-  });
+      expect(result, const Right<Failure, AppAuthUser>(tUser));
+      verify(() => repository.loginWithEmail(tEmail, tPassword)).called(1);
+      verifyNoMoreInteractions(repository);
+    },
+  );
 
-  test('propaga il Failure quando le credenziali sono errate (Left)',
-      () async {
+  test('propaga il Failure quando le credenziali sono errate (Left)', () async {
     when(() => repository.loginWithEmail(tEmail, tPassword)).thenAnswer(
-        (_) async => const Left(AuthFailure('Credenziali non valide.')));
+      (_) async => const Left(AuthFailure('Credenziali non valide.')),
+    );
 
     final result = await usecase(tEmail, tPassword);
 

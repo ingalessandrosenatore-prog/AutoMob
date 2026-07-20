@@ -24,6 +24,43 @@ class AuthAuthenticated extends AuthState {
 
 class AuthUnauthenticated extends AuthState {}
 
+enum EmailVerificationStatus { idle, resending, resent, checking, error }
+
+class AuthEmailVerificationPending extends AuthState {
+  AuthEmailVerificationPending({
+    required this.email,
+    this.countdownSeconds = 120,
+    this.status = EmailVerificationStatus.idle,
+    this.message,
+  });
+
+  final String email;
+  final int countdownSeconds;
+  final EmailVerificationStatus status;
+  final String? message;
+
+  bool get isBusy =>
+      status == EmailVerificationStatus.resending ||
+      status == EmailVerificationStatus.checking;
+
+  AuthEmailVerificationPending copyWith({
+    EmailVerificationStatus? status,
+    int? countdownSeconds,
+    String? message,
+    bool clearMessage = false,
+  }) {
+    return AuthEmailVerificationPending(
+      email: email,
+      countdownSeconds: countdownSeconds ?? this.countdownSeconds,
+      status: status ?? this.status,
+      message: clearMessage ? null : message ?? this.message,
+    );
+  }
+
+  @override
+  List<Object?> get props => [email, countdownSeconds, status, message];
+}
+
 // Stati di errore
 class AuthError extends AuthState {
   final String message;

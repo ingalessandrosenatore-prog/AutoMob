@@ -11,6 +11,7 @@ import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/auth/presentation/pages/splash_screen.dart';
 import '../../features/auth/presentation/pages/login_view.dart';
 import '../../features/auth/presentation/pages/registration_view.dart';
+import '../../features/auth/presentation/pages/email_verification_page.dart';
 import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import '../../features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
@@ -20,10 +21,8 @@ import '../../features/vehicle/domain/entities/mechanic_summary.dart';
 import '../../features/vehicle/presentation/pages/vehicle_registration_page.dart';
 import '../../features/vehicle/presentation/widgets/km_update_pop_up.dart';
 import '../../features/vehicle/presentation/widgets/revision_update_pop_up.dart';
-import '../../features/work_log/presentation/widgets/functional_pop_up.dart';
 import '../../features/work_log/presentation/pages/work_log_wizard_page.dart';
 import '../di/injection_container.dart' as di;
-import '../types/enum_pop_up.dart';
 import 'am_transition_page.dart';
 import 'go_router_refresh_stream.dart';
 import 'shell_scaffold.dart';
@@ -56,6 +55,23 @@ class AppRouter {
         path: '/registration',
         name: 'registration',
         builder: (context, state) => const RegistrationView(),
+      ),
+      GoRoute(
+        path: '/verify-email',
+        name: 'verify-email',
+        builder: (context, state) {
+          final authState = _auth.state;
+          final email = authState is AuthEmailVerificationPending
+              ? authState.email
+              : '';
+          final countdownSeconds = authState is AuthEmailVerificationPending
+              ? authState.countdownSeconds
+              : 120;
+          return EmailVerificationPage(
+            email: email,
+            initialCountdownSeconds: countdownSeconds,
+          );
+        },
       ),
 
       // indexedStack: tiene VIVE tutte e 3 le tab contemporaneamente (solo la
@@ -123,22 +139,6 @@ class AppRouter {
           key: state.pageKey,
           child: const VehicleRegistrationPage(),
         ),
-      ),
-
-      GoRoute(
-        path: '/addFunctional',
-        name: 'aggiungi_Funzione',
-        pageBuilder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>;
-          final typeEnum = extra['type'] as EnumPopUp;
-          final id = extra['id'] as String;
-          final currentKm = (extra['currentKm'] as int?) ?? 0;
-          return BottomSheetPageFunc(
-            type: typeEnum,
-            idVeicolo: id,
-            currentKm: currentKm,
-          );
-        },
       ),
 
       GoRoute(
@@ -247,6 +247,7 @@ class AppRouter {
     final loc = state.uri.path;
 
     final atAuth = loc == '/login' || loc == '/registration';
+    final atVerification = loc == '/verify-email';
     final atSplash = loc == '/splash';
 
     // Stati transitori: non forzo nulla. All'avvio resto sullo splash
@@ -256,9 +257,13 @@ class AppRouter {
       return null;
     }
 
+    if (s is AuthEmailVerificationPending) {
+      return atVerification ? null : '/verify-email';
+    }
+
     // Autenticato: se sono ancora su splash/login/registration vado a home.
     if (s is AuthAuthenticated) {
-      return (atSplash || atAuth) ? '/home' : null;
+      return (atSplash || atAuth || atVerification) ? '/home' : null;
     }
 
     // Non autenticato (AuthUnauthenticated / AuthLoggedOut):

@@ -10,14 +10,19 @@ import '../theme/theme_preferences.dart';
 
 // Auth
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
+import '../../features/auth/data/datasources/auth_local_data_source.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/check_session.dart';
+import '../../features/auth/domain/usecases/get_pending_verification_email.dart';
 import '../../features/auth/domain/usecases/login_with_email.dart';
 import '../../features/auth/domain/usecases/login_with_google.dart';
 import '../../features/auth/domain/usecases/login_with_apple.dart';
 import '../../features/auth/domain/usecases/signup_with_email.dart';
 import '../../features/auth/domain/usecases/logout.dart';
+import '../../features/auth/domain/usecases/leave_email_verification.dart';
+import '../../features/auth/domain/usecases/observe_authenticated_users.dart';
+import '../../features/auth/domain/usecases/resend_confirmation_email.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 // Notifications
@@ -159,24 +164,41 @@ Future<void> _initAuth() async {
   sl.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
       checkSession: sl(),
+      getPendingVerificationEmail: sl(),
       loginWithEmail: sl(),
       loginWithGoogle: sl(),
       loginWithApple: sl(),
       signupWithEmail: sl(),
       logout: sl(),
+      resendConfirmationEmail: sl(),
+      leaveEmailVerification: sl(),
+      observeAuthenticatedUsers: sl(),
     ),
   );
 
   sl.registerLazySingleton<CheckSession>(() => CheckSession(sl()));
+  sl.registerLazySingleton<GetPendingVerificationEmail>(
+    () => GetPendingVerificationEmail(sl()),
+  );
   sl.registerLazySingleton<LoginWithEmail>(() => LoginWithEmail(sl()));
   sl.registerLazySingleton<LoginWithGoogle>(() => LoginWithGoogle(sl()));
   sl.registerLazySingleton<LoginWithApple>(() => LoginWithApple(sl()));
   sl.registerLazySingleton<SignupWithEmail>(() => SignupWithEmail(sl()));
   sl.registerLazySingleton<Logout>(() => Logout(sl()));
+  sl.registerLazySingleton<ResendConfirmationEmail>(
+    () => ResendConfirmationEmail(sl()),
+  );
+  sl.registerLazySingleton<LeaveEmailVerification>(
+    () => LeaveEmailVerification(sl()),
+  );
+  sl.registerLazySingleton<ObserveAuthenticatedUsers>(
+    () => ObserveAuthenticatedUsers(sl()),
+  );
 
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       remoteDataSource: sl(),
+      localDataSource: sl(),
       beforeLogout: () async {
         // Il token va disattivato mentre il JWT dell'utente e' ancora valido.
         await sl<UnregisterDeviceToken>()();
@@ -185,6 +207,9 @@ Future<void> _initAuth() async {
   );
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(supabaseClient: sl()),
+  );
+  sl.registerLazySingleton<AuthLocalDataSource>(
+    () => AuthLocalDataSourceImpl(sl()),
   );
 }
 

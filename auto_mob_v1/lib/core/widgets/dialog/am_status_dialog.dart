@@ -6,7 +6,6 @@ import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../../config/performance_flags.dart';
 import '../../theme/am_theme_colors.dart';
-import '../smart/am_flat_glass.dart';
 
 /// Una singola azione (bottone) di un [AmStatusDialog].
 /// [filled] true = bottone pieno (azione primaria, es. "Riprova"),
@@ -178,20 +177,24 @@ class _DialogSurface extends StatelessWidget {
     const radius = BorderRadius.all(Radius.circular(28));
     final surface = color.withValues(alpha: 0.88);
 
-   return OCLiquidGlassGroup(
-       settings: const OCLiquidGlassSettings(
-     refractStrength: -0.12,
-     blurRadiusPx: 4.0,
-     specStrength: 0,
-     specWidth: 0.0,
-     specAngle: 145,
-     blendPx: 70,
-     specPower: 10,
-   ), child: OCLiquidGlass(
-    child: child,
-     color:kHeavyEffects ? color.withValues(alpha: 0.8) : color,
-     borderRadius: 38,
-   ));
+    if (kHeavyEffects) {
+      return OCLiquidGlassGroup(
+        settings: const OCLiquidGlassSettings(
+          refractStrength: -0.12,
+          blurRadiusPx: 4.0,
+          specStrength: 0,
+          specWidth: 0.0,
+          specAngle: 145,
+          blendPx: 70,
+          specPower: 10,
+        ),
+        child: OCLiquidGlass(
+          color: color.withValues(alpha: 0.8),
+          borderRadius: 38,
+          child: child,
+        ),
+      );
+    }
 
     return ClipRRect(
       borderRadius: radius,
