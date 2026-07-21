@@ -12,8 +12,11 @@ class WorkLogBloc extends Bloc<WorkLogEvent, WorkLogState> {
   final CreateWorkLog createWorkLog;
   final String vehicleId;
 
-  WorkLogBloc({required this.createWorkLog, required this.vehicleId})
-    : super(WorkLogState.initial()) {
+  WorkLogBloc({
+    required this.createWorkLog,
+    required this.vehicleId,
+    required EnumPopUp initialWorkType,
+  }) : super(WorkLogState.initial(type: initialWorkType)) {
     on<WorkLogEventCohiceTap>(_onTapOnChoice);
     on<OnSubmitEvent>(_onSubmitEvent);
     on<InitKm>(_onInitKm);

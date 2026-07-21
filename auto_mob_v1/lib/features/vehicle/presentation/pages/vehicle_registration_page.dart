@@ -47,7 +47,9 @@ class VehicleRegistrationPage extends StatelessWidget {
           GetIt.I<VehicleRegistrationBloc>()..add(RegistrationStarted()),
       child: Scaffold(
         backgroundColor: colors.background,
-        resizeToAvoidBottomInset: true,
+        // La tastiera non deve spostare la bottom bar: l'inset viene
+        // applicato esclusivamente al PageView in _RegistrationBody.
+        resizeToAvoidBottomInset: false,
         body: _RegistrationBody(onClose: onClose),
       ),
     );
@@ -315,6 +317,11 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
           ),
         );
         final topInset = MediaQuery.paddingOf(context).top;
+        final keyboardOverlap = math.max(
+          0.0,
+          MediaQuery.viewInsetsOf(context).bottom -
+              _RegistrationBottomBar.extent(context),
+        );
         return Column(
           children: [
             Padding(
@@ -388,10 +395,16 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
               indicatorAsset: 'lib/assets/icons/car_red.svg',
             ),
             Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: _steps,
+              child: Padding(
+                // La barra resta nella sua posizione originale (e viene
+                // coperta dalla tastiera). Si restringe soltanto il viewport
+                // delle pagine per la porzione di tastiera che lo interseca.
+                padding: EdgeInsets.only(bottom: keyboardOverlap),
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: _steps,
+                ),
               ),
             ),
             _RegistrationBottomBar(
@@ -441,15 +454,20 @@ class _RegistrationBottomBar extends StatelessWidget {
     'REGISTRA',
   ];
 
+  static double _bottomPadding(BuildContext context) =>
+      math.max(20.0, MediaQuery.viewPaddingOf(context).bottom + 8);
+
+  /// Spazio verticale gia' occupato sotto al PageView. Quando compare la
+  /// tastiera, questa parte non va sottratta una seconda volta al contenuto.
+  static double extent(BuildContext context) =>
+      20 + 52 + _bottomPadding(context);
+
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
     final showBack = currentStep >= 1;
     final label = _labels[currentStep.clamp(0, _labels.length - 1)];
-    final bottomPadding = math.max(
-      20.0,
-      MediaQuery.paddingOf(context).bottom + 8,
-    );
+    final bottomPadding = _bottomPadding(context);
 
     return Container(
       padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPadding),

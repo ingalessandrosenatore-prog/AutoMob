@@ -1,4 +1,5 @@
 import 'package:auto_mob_v1/core/theme/am_theme.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/core/widgets/input/textfield.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle_draft.dart';
@@ -62,6 +63,162 @@ void main() {
       ),
     );
     expect(targa.controller.text, 'AB123CD');
+  });
+
+  testWidgets('usa la superficie blu tenue scura in sola lettura', (
+    tester,
+  ) async {
+    final bloc = MockVehicleRegistrationBloc();
+    const state = VehicleRegistrationState(
+      currentStep: 2,
+      draft: VehicleDraft(
+        targa: 'AB123CD',
+        marca: 'Fiat',
+        modello: 'Panda',
+        anno: 2020,
+        carburante: 'Benzina',
+        cilindrata: 1200,
+        potenzaCv: 69,
+      ),
+    );
+    whenListen(
+      bloc,
+      const Stream<VehicleRegistrationState>.empty(),
+      initialState: state,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AmTheme.dark,
+        home: Scaffold(
+          body: BlocProvider<VehicleRegistrationBloc>.value(
+            value: bloc,
+            child: const VerifyStepView(),
+          ),
+        ),
+      ),
+    );
+
+    final dataContainer = tester.widget<Container>(
+      find.byKey(const Key('verify-data-container')),
+    );
+    final dataDecoration = dataContainer.decoration! as BoxDecoration;
+    expect(
+      dataDecoration.color,
+      AmThemeColors.dark.cardBackground.withValues(alpha: 0.17),
+    );
+    expect(
+      dataDecoration.border!.top.color,
+      AmThemeColors.dark.cardBackground.withValues(alpha: 0.24),
+    );
+
+    final readonlyField = tester.widget<Container>(
+      find.byKey(const ValueKey('verify-readonly-Targa')),
+    );
+    final fieldDecoration = readonlyField.decoration! as BoxDecoration;
+    expect(fieldDecoration.color, Colors.transparent);
+  });
+
+  testWidgets('usa la superficie blu tenue chiara in sola lettura', (
+    tester,
+  ) async {
+    final bloc = MockVehicleRegistrationBloc();
+    const state = VehicleRegistrationState(
+      currentStep: 2,
+      draft: VehicleDraft(
+        targa: 'AB123CD',
+        marca: 'Fiat',
+        modello: 'Panda',
+        anno: 2020,
+        carburante: 'Benzina',
+        cilindrata: 1200,
+        potenzaCv: 69,
+      ),
+    );
+    whenListen(
+      bloc,
+      const Stream<VehicleRegistrationState>.empty(),
+      initialState: state,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AmTheme.light,
+        home: Scaffold(
+          body: BlocProvider<VehicleRegistrationBloc>.value(
+            value: bloc,
+            child: const VerifyStepView(),
+          ),
+        ),
+      ),
+    );
+
+    final dataContainer = tester.widget<Container>(
+      find.byKey(const Key('verify-data-container')),
+    );
+    final dataDecoration = dataContainer.decoration! as BoxDecoration;
+    expect(
+      dataDecoration.color,
+      AmThemeColors.light.cardBackground.withValues(alpha: 0.1),
+    );
+    expect(
+      dataDecoration.border!.top.color,
+      AmThemeColors.light.cardBackground.withValues(alpha: 0.24),
+    );
+  });
+
+  testWidgets('usa lo sfondo pagina e input surface in modifica', (
+    tester,
+  ) async {
+    final bloc = MockVehicleRegistrationBloc();
+    const state = VehicleRegistrationState(
+      currentStep: 2,
+      draft: VehicleDraft(
+        targa: 'AB123CD',
+        marca: 'Fiat',
+        modello: 'Panda',
+        anno: 2020,
+        carburante: 'Benzina',
+        cilindrata: 1200,
+        potenzaCv: 69,
+        datiInModifica: true,
+      ),
+    );
+    whenListen(
+      bloc,
+      const Stream<VehicleRegistrationState>.empty(),
+      initialState: state,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AmTheme.dark,
+        home: Scaffold(
+          body: BlocProvider<VehicleRegistrationBloc>.value(
+            value: bloc,
+            child: const VerifyStepView(),
+          ),
+        ),
+      ),
+    );
+
+    final dataContainer = tester.widget<Container>(
+      find.byKey(const Key('verify-data-container')),
+    );
+    final dataDecoration = dataContainer.decoration! as BoxDecoration;
+    expect(dataDecoration.color, AmThemeColors.dark.background);
+
+    final targaField = find.descendant(
+      of: find.byWidgetPredicate(
+        (widget) => widget is AmTextField && widget.label == 'Targa',
+      ),
+      matching: find.byType(Container),
+    );
+    final inputContainer = tester
+        .widgetList<Container>(targaField)
+        .firstWhere((container) => container.decoration is BoxDecoration);
+    final inputDecoration = inputContainer.decoration! as BoxDecoration;
+    expect(inputDecoration.color, AmThemeColors.dark.surface);
   });
 
   testWidgets('mostra il popup quando mancano campi obbligatori', (

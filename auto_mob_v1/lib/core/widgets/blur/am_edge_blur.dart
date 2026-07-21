@@ -26,7 +26,7 @@ class AmEdgeBlur extends StatelessWidget {
         edges: [
           EdgeBlur(
             type: EdgeType.topEdge,
-            size: 20,
+            size: 14,
             sigma: 10,
             controlPoints: [
               ControlPoint(position: 0.5, type: ControlPointType.visible),

@@ -28,8 +28,22 @@ void main() {
     createWorkLog = MockCreateWorkLog();
   });
 
-  WorkLogBloc buildBloc() =>
-      WorkLogBloc(createWorkLog: createWorkLog, vehicleId: 'v1');
+  WorkLogBloc buildBloc() => WorkLogBloc(
+    createWorkLog: createWorkLog,
+    vehicleId: 'v1',
+    initialWorkType: EnumPopUp.altro,
+  );
+
+  test('inizializza il tipo lavoro ricevuto dal wizard', () {
+    final bloc = WorkLogBloc(
+      createWorkLog: createWorkLog,
+      vehicleId: 'v1',
+      initialWorkType: EnumPopUp.revisione,
+    );
+
+    expect(bloc.state.type, EnumPopUp.revisione);
+    bloc.close();
+  });
 
   blocTest<WorkLogBloc, WorkLogState>(
     'WorkLogEventCohiceTap: aggiunge una parte non ancora selezionata',

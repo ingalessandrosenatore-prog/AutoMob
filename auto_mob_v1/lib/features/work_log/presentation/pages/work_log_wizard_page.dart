@@ -28,11 +28,13 @@ const _steps = ['Dati', 'Ricambi', 'Costi'];
 class WorkLogWizardPage extends StatelessWidget {
   final String vehicleId;
   final int currentKm;
+  final EnumPopUp initialWorkType;
 
   const WorkLogWizardPage({
     super.key,
     required this.vehicleId,
     required this.currentKm,
+    required this.initialWorkType,
   });
 
   @override
@@ -40,7 +42,10 @@ class WorkLogWizardPage extends StatelessWidget {
     final colors = AmThemeColors.of(context);
     return BlocProvider(
       create: (_) {
-        final bloc = sl<WorkLogBloc>(param1: vehicleId);
+        final bloc = sl<WorkLogBloc>(
+          param1: vehicleId,
+          param2: initialWorkType,
+        );
         bloc.add(InitKm(vehicleKm: currentKm));
         return bloc;
       },
@@ -48,7 +53,9 @@ class WorkLogWizardPage extends StatelessWidget {
         canPop: true,
         child: Scaffold(
           backgroundColor: colors.background,
-          resizeToAvoidBottomInset: true,
+          // La tastiera non deve spostare la bottom bar: l'inset viene
+          // applicato esclusivamente al PageView nel body del wizard.
+          resizeToAvoidBottomInset: false,
           body: _WorkLogWizardBody(currentKm: currentKm),
         ),
       ),
@@ -125,6 +132,10 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
           previous.status != current.status,
       listener: _onStateChanged,
       builder: (context, state) {
+        final keyboardOverlap = math.max(
+          0.0,
+          MediaQuery.viewInsetsOf(context).bottom - _BottomBar.extent(context),
+        );
         final addButton = AmSoftButton(
           width: 48,
           height: 48,
@@ -207,14 +218,24 @@ class _WorkLogWizardBodyState extends State<_WorkLogWizardBody> {
                 indicatorAsset: 'lib/assets/icons/car_red.svg',
               ),
               Expanded(
-                child: PageView(
-                  controller: _pages,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _DataStep(km: _km, customName: _customName, notes: _notes),
-                    const _PartsStep(),
-                    const _CostsStep(),
-                  ],
+                child: Padding(
+                  // La barra resta fissa in basso (dietro la tastiera),
+                  // mentre solo il viewport degli step perde lo spazio
+                  // effettivamente intersecato dalla tastiera.
+                  padding: EdgeInsets.only(bottom: keyboardOverlap),
+                  child: PageView(
+                    controller: _pages,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _DataStep(
+                        km: _km,
+                        customName: _customName,
+                        notes: _notes,
+                      ),
+                      const _PartsStep(),
+                      const _CostsStep(),
+                    ],
+                  ),
                 ),
               ),
               _BottomBar(
@@ -654,15 +675,21 @@ class _BottomBar extends StatelessWidget {
     required this.onBack,
     required this.onNext,
   });
+
+  static double _bottomPadding(BuildContext context) =>
+      math.max(20.0, MediaQuery.viewPaddingOf(context).bottom + 8);
+
+  /// Spazio verticale gia' occupato sotto al PageView. Va escluso dal
+  /// calcolo dell'overlap per non restringere due volte il contenuto.
+  static double extent(BuildContext context) =>
+      20 + 52 + _bottomPadding(context);
+
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
     final showBack = onBack != null;
     final label = step == 2 ? 'COMPLETA' : 'CONTINUA';
-    final bottomPadding = math.max(
-      20.0,
-      MediaQuery.paddingOf(context).bottom + 8,
-    );
+    final bottomPadding = _bottomPadding(context);
     return Container(
       padding: EdgeInsets.fromLTRB(20, 20, 20, bottomPadding),
       child: SizedBox(

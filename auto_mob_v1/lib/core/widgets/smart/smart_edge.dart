@@ -72,11 +72,16 @@ class _EdgeGradient extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tint = edge.tintColor ?? fallbackTint;
-    // Pieno al bordo esterno -> trasparente verso l'interno.
-    final colors = [
-      tint.withValues(alpha: opacity),
-      tint.withValues(alpha: 0.0),
-    ];
+    final points = [...edge.controlPoints]
+      ..sort((a, b) => a.position.compareTo(b.position));
+    final stops = points.map((point) => point.position).toList();
+    final colors = points
+        .map(
+          (point) => point.type == ControlPointType.visible
+              ? tint.withValues(alpha: opacity)
+              : tint.withValues(alpha: 0),
+        )
+        .toList();
 
     switch (edge.type) {
       case EdgeType.topEdge:
@@ -92,6 +97,7 @@ class _EdgeGradient extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: colors,
+                  stops: stops,
                 ),
               ),
             ),
@@ -110,6 +116,7 @@ class _EdgeGradient extends StatelessWidget {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: colors,
+                  stops: stops,
                 ),
               ),
             ),
@@ -128,6 +135,7 @@ class _EdgeGradient extends StatelessWidget {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: colors,
+                  stops: stops,
                 ),
               ),
             ),
@@ -146,6 +154,7 @@ class _EdgeGradient extends StatelessWidget {
                   begin: Alignment.centerRight,
                   end: Alignment.centerLeft,
                   colors: colors,
+                  stops: stops,
                 ),
               ),
             ),

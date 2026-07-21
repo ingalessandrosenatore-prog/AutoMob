@@ -42,16 +42,17 @@ class WorkLogState extends Equatable {
     this.showValidationErrors = false,
   });
 
-  factory WorkLogState.initial() => WorkLogState(
-    type: EnumPopUp.altro,
-    selectedParts: const [],
-    currentKm: 0,
-    vehicleKm: 0,
-    intervallKM: 0,
-    note: "",
-    prosssimoRichiamo: 0,
-    serviceDate: DateTime.now(),
-  );
+  factory WorkLogState.initial({EnumPopUp type = EnumPopUp.altro}) =>
+      WorkLogState(
+        type: type,
+        selectedParts: const [],
+        currentKm: 0,
+        vehicleKm: 0,
+        intervallKM: 0,
+        note: "",
+        prosssimoRichiamo: 0,
+        serviceDate: DateTime.now(),
+      );
 
   double get partsTotal => selectedParts.fold<double>(
     0,

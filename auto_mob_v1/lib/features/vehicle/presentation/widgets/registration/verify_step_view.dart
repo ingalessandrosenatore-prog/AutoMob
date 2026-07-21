@@ -133,6 +133,7 @@ class VerifyStepViewState extends State<VerifyStepView> {
           prev.draft != curr.draft || prev.lookupStatus != curr.lookupStatus,
       builder: (context, state) {
         final colors = AmThemeColors.of(context);
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         final notFound = state.draft.datiInModifica;
         return AmEdgeBlur(
           child: SingleChildScrollView(
@@ -171,11 +172,20 @@ class VerifyStepViewState extends State<VerifyStepView> {
                 ),
                 const SizedBox(height: 20),
                 Container(
+                  key: const Key('verify-data-container'),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: colors.surface,
+                    color: _editing
+                        ? colors.background
+                        : colors.cardBackground.withValues(
+                            alpha: isDark ? 0.17 : 0.1,
+                          ),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: colors.border),
+                    border: Border.all(
+                      color: _editing
+                          ? colors.border
+                          : colors.cardBackground.withValues(alpha: 0.24),
+                    ),
                   ),
                   child: Column(
                     children: [
@@ -356,30 +366,39 @@ class _DataRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return Container(
-      height: 52,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: colors.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.normal,
+    return Semantics(
+      enabled: false,
+      textField: true,
+      child: Container(
+        key: ValueKey('verify-readonly-$label'),
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: colors.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                ),
               ),
             ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              color: colors.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
+            Text(
+              value,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

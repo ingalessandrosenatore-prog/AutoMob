@@ -24,6 +24,7 @@ import '../../features/vehicle/presentation/widgets/km_update_pop_up.dart';
 import '../../features/vehicle/presentation/widgets/revision_update_pop_up.dart';
 import '../../features/work_log/presentation/pages/work_log_wizard_page.dart';
 import '../../features/work_log/domain/entities/work_log_row.dart';
+import '../types/enum_pop_up.dart';
 import '../di/injection_container.dart' as di;
 import 'am_transition_page.dart';
 import 'go_router_refresh_stream.dart';
@@ -153,6 +154,7 @@ class AppRouter {
             child: WorkLogWizardPage(
               vehicleId: extra['vehicleId'] as String,
               currentKm: extra['currentKm'] as int,
+              initialWorkType: extra['initialWorkType'] as EnumPopUp,
             ),
           );
         },

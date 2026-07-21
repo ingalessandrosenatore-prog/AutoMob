@@ -389,8 +389,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
               tintColor: colors.background,
               sigma: 10,
               controlPoints: [
-                ControlPoint(position: 0.1, type: ControlPointType.visible),
-                ControlPoint(position: 0.6, type: ControlPointType.visible),
+                ControlPoint(position: 0.5, type: ControlPointType.visible),
                 ControlPoint(position: 1.0, type: ControlPointType.transparent),
               ],
             ),
@@ -508,7 +507,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                         edges: [
                                           EdgeBlur(
                                             type: EdgeType.leftEdge,
-                                            size: 15,
+                                            size: 10,
                                             tintColor: colors.background,
                                             sigma: 10,
                                             controlPoints: [
@@ -525,7 +524,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                           ),
                                           EdgeBlur(
                                             type: EdgeType.rightEdge,
-                                            size: 15,
+                                            size: 10,
                                             tintColor: colors.background,
                                             sigma: 10,
                                             controlPoints: [
@@ -556,6 +555,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                                 .mileageEstimateAt(
                                                   DateTime.now(),
                                                 );
+                                            // TODO: spostare logica nella UI, spostare in bloc in. futuro
                                             return RepaintBoundary(
                                               child: CardAuto(
                                                 marca: v.brand,
@@ -664,6 +664,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                                       },
                                               ),
                                             );
+                                            //fine TODO: spostare logica nella UI, spostare in bloc in. futuro
                                           },
                                         ),
                                       ),
@@ -992,7 +993,11 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       final dashboardBloc = context.read<DashboardBloc>();
       final salvato = await context.pushNamed(
         'aggiungi_lavoro',
-        extra: {'vehicleId': v.id, 'currentKm': v.kmCurrent},
+        extra: {
+          'vehicleId': v.id,
+          'currentKm': v.kmCurrent,
+          'initialWorkType': type,
+        },
       );
       // Al ritorno, se il lavoro e' stato salvato, ricarico la dashboard.
       if (salvato == true) {

@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../theme/theme_cubit.dart';
 import '../theme/theme_preferences.dart';
+import '../types/enum_pop_up.dart';
 
 // Auth
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -331,8 +332,12 @@ void _initWorkLog() {
   sl.registerLazySingleton<GetVehicleWorks>(() => GetVehicleWorks(sl()));
 
   // BLoC — factory con param (vehicleId passato dal popup all'apertura)
-  sl.registerFactoryParam<WorkLogBloc, String, void>(
-    (vehicleId, _) => WorkLogBloc(createWorkLog: sl(), vehicleId: vehicleId),
+  sl.registerFactoryParam<WorkLogBloc, String, EnumPopUp>(
+    (vehicleId, initialWorkType) => WorkLogBloc(
+      createWorkLog: sl(),
+      vehicleId: vehicleId,
+      initialWorkType: initialWorkType,
+    ),
   );
 
   // BLoC storico — lazySingleton: stessa logica di DashboardBloc sopra,

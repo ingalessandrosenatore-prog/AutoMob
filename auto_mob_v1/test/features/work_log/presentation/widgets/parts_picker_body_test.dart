@@ -1,3 +1,4 @@
+import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/features/work_log/domain/usecases/create_work_log.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/bloc/work_log_bloc.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widgets/parts_picker_body.dart';
@@ -15,6 +16,7 @@ void main() {
     final bloc = WorkLogBloc(
       createWorkLog: MockCreateWorkLog(),
       vehicleId: 'vehicle-1',
+      initialWorkType: EnumPopUp.altro,
     );
     addTearDown(bloc.close);
 

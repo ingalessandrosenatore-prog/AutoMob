@@ -1,4 +1,5 @@
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
+import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/features/work_log/domain/entities/vehicle_option.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/work_log_wizard_page.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +47,7 @@ class WorkLogAddButton extends StatelessWidget {
             (context) => WorkLogWizardPage(
               vehicleId: selected.id,
               currentKm: selected.km,
+              initialWorkType: EnumPopUp.altro,
             ),
       ),
     );
