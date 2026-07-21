@@ -62,7 +62,7 @@ class AmWorkshopCard extends StatelessWidget {
                     shape: _workshopShape(radius: 14),
                   ),
                   child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedWrench01,
+                    icon: HugeIcons.strokeRoundedArrowRight01,
                     color: accent,
                     size: 24,
                     strokeWidth: 2.2,

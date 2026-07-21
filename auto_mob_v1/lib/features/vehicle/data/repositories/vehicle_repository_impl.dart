@@ -43,6 +43,7 @@ class VehicleRepositoryImpl implements VehicleRepository {
         vehicleId: vehicleId,
         mechanicCode: mechanicCode,
       );
+      print(mechanic.businessName);
       return Right(mechanic);
     } on VehicleDataSourceException catch (error) {
       return switch (error.code) {

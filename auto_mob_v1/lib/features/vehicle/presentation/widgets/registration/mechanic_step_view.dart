@@ -27,7 +27,7 @@ class MechanicStepView extends StatefulWidget {
 
 class MechanicStepViewState extends State<MechanicStepView> {
   final _codiceController = TextEditingController();
-
+  bool _submitted = false;
   @override
   void initState() {
     super.initState();
@@ -44,85 +44,94 @@ class MechanicStepViewState extends State<MechanicStepView> {
   }
 
   void submit() {
-    context.read<VehicleRegistrationBloc>().add(
+   final bloc =  context.read<VehicleRegistrationBloc>();
+   if (bloc.state.lookupStatus == RegistrationLookupStatus.loading) return;
+   setState(() => _submitted = true);
+       bloc.add(
       MechanicStepSubmitted(
         codiceMeccanico: _codiceController.text.trim().isEmpty
             ? null
             : _codiceController.text.trim(),
       ),
     );
+
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return AmEdgeBlur(
-      child: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-            const HugeIcon(
-              icon: HugeIcons.strokeRoundedAgreement01,
-              color: Color(0xFFE85A1A),
-              size: 56,
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Meccanico di fiducia',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.textPrimary,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+    return BlocListener<VehicleRegistrationBloc, VehicleRegistrationState>(
+      listener: (BuildContext context, state) {
+          _submitted = false;
+      },
+      child: AmEdgeBlur(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              const HugeIcon(
+                icon: HugeIcons.strokeRoundedAgreement01,
+                color: Color(0xFFE85A1A),
+                size: 56,
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Inserisci il codice del tuo meccanico di fiducia per collegarlo '
-              'al tuo veicolo.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.textSecondary,
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                AmTextField(
-                  label: 'Codice meccanico',
-                  placeholder: 'MECH-XXXX',
-                  controller: _codiceController,
-                  isRequired: false,
-                  obscureText: false,
-                  keyboardType: TextInputType.text,
-                  height: 52,
+              const SizedBox(height: 20),
+              Text(
+                'Meccanico di fiducia',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            BlocBuilder<VehicleRegistrationBloc, VehicleRegistrationState>(
-              builder: (context, state) => Column(
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Inserisci il codice del tuo meccanico di fiducia per collegarlo '
+                'al tuo veicolo.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colors.textSecondary,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Row(
                 children: [
-                  TextButton(
-                    onPressed:
-                        state.mechanicStatus == MechanicLookupStatus.loading
-                        ? null
-                        : () => context.read<VehicleRegistrationBloc>().add(
-                            RegistrationWithoutMechanicPressed(),
-                          ),
-                    child: Text(
-                      'Non ho un meccanico',
-                      style: TextStyle(color: colors.accent, fontSize: 14),
-                    ),
+                  AmTextField(
+                    label: 'Codice meccanico',
+                    placeholder: 'MECH-XXXX',
+                    controller: _codiceController,
+                    isRequired: false,
+                    obscureText: false,
+                    keyboardType: TextInputType.text,
+                    height: 52,
                   ),
                 ],
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              BlocBuilder<VehicleRegistrationBloc, VehicleRegistrationState>(
+                builder: (context, state) => Column(
+                  children: [
+                    TextButton(
+                      onPressed:
+                          state.mechanicStatus == MechanicLookupStatus.loading
+                          ? null
+                          : () => context.read<VehicleRegistrationBloc>().add(
+                              RegistrationWithoutMechanicPressed(),
+                            ),
+                      child: Text(
+                        'Non ho un meccanico',
+                        style: TextStyle(color: colors.accent, fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

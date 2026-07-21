@@ -74,6 +74,7 @@ class VehicleLookupRemoteDataSourceImpl
   @override
   Future<MechanicSummary?> lookupMechanicByCode(String code) async {
     try {
+      print("sono qui");
       final row = await client
           .from('mechanics')
           .select('id, mechanic_code, business_name, address, number, email')

@@ -4,7 +4,7 @@ import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 
 const _workLogCardSmoothing = 0.8;
 
-SmoothRectangleBorder _workLogShape({double radius = 22}) =>
+SmoothRectangleBorder _workLogShape({double radius = 30}) =>
     SmoothRectangleBorder(
       borderRadius: SmoothBorderRadius(
         cornerRadius: radius,
@@ -40,7 +40,7 @@ class WorkLogItemCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: colors.surface,
+        color: colors.surfaceHighlight,
         shape: _workLogShape().copyWith(side: BorderSide(color: colors.border)),
         clipBehavior: Clip.antiAlias,
         child: InkWell(

@@ -4,7 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 
 import '../../theme/am_theme_colors.dart';
 
-const _kpiCardRadius = 26.0;
+const _kpiCardRadius = 30.0;
 const _kpiCornerSmoothing = 0.8;
 
 SmoothRectangleBorder _kpiShape({double radius = _kpiCardRadius}) =>
@@ -57,7 +57,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: isDark
               ? [colors.surfaceHighlight, colors.surfaceDeep]
-              : [colors.surfaceDeep, colors.surfaceHighlight],
+              : [colors.surfaceHighlight,colors.surfaceDeep ],
         ),
         shape: _kpiShape().copyWith(side: BorderSide(color: colors.border)),
         shadows: [
