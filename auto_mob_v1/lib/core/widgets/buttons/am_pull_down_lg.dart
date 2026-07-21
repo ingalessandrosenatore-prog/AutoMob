@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../config/performance_flags.dart';
 import '../../services/haptic_service.dart';
 import '../smart/am_flat_glass.dart';
+
+const _morphPopupCornerSmoothing = 0.8;
+
+SmoothRectangleBorder _morphPopupShape({double radius = 30}) =>
+    SmoothRectangleBorder(
+      borderRadius: SmoothBorderRadius(
+        cornerRadius: radius,
+        cornerSmoothing: _morphPopupCornerSmoothing,
+      ),
+    );
 
 /// Un badge flottante che indica il veicolo selezionato.
 /// Estetica: Pillola blu con icona auto e freccia per dropdown,
@@ -393,8 +404,8 @@ class _PopUpState extends State<MorphPopUp>
               // Cosi' la Row della voce non viene mai stretta piu' del suo
               // contenuto durante l'apertura/chiusura -> niente RenderFlex
               // overflow transitorio (l'errore "overflowed by 32px").
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(30),
+              child: ClipPath(
+                clipper: ShapeBorderClipper(shape: _morphPopupShape()),
                 child: OverflowBox(
                   alignment: Alignment.topLeft,
                   minWidth: widget.larghezza,
@@ -449,8 +460,8 @@ class _PopUpSurface extends StatelessWidget {
     if (!kHeavyEffects) {
       return AmFlatPopUp(
         color: surface,
-        //borderRadius: 1,
 
+        //borderRadius: 1,
         child: child,
       );
     }
@@ -462,11 +473,14 @@ class _PopUpSurface extends StatelessWidget {
         specStrength: 0,
         specWidth: 0,
       ),
-      child: OCLiquidGlass(
-        enabled: true,
-        borderRadius: 30,
-        color: surface,
-        child: child,
+      child: ClipPath(
+        clipper: ShapeBorderClipper(shape: _morphPopupShape()),
+        child: OCLiquidGlass(
+          enabled: true,
+          borderRadius: 30,
+          color: surface,
+          child: child,
+        ),
       ),
     );
   }

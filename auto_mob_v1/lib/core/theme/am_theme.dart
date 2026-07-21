@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 
 import 'am_theme_colors.dart';
+
+const _alertDialogSmoothing = 0.8;
+
+const _alertDialogShape = SmoothRectangleBorder(
+  borderRadius: SmoothBorderRadius.all(
+    SmoothRadius(cornerRadius: 36, cornerSmoothing: _alertDialogSmoothing),
+  ),
+);
 
 class AmTheme {
   const AmTheme._();
@@ -74,7 +83,10 @@ class AmTheme {
           ),
         ),
       ),
-      dialogTheme: DialogThemeData(backgroundColor: colors.surface),
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.surface,
+        shape: _alertDialogShape,
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colors.surface,

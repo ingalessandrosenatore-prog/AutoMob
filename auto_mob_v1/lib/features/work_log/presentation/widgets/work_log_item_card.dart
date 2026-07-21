@@ -1,5 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
+
+const _workLogCardSmoothing = 0.8;
+
+SmoothRectangleBorder _workLogShape({double radius = 22}) =>
+    SmoothRectangleBorder(
+      borderRadius: SmoothBorderRadius(
+        cornerRadius: radius,
+        cornerSmoothing: _workLogCardSmoothing,
+      ),
+    );
 
 /// Card per la visualizzazione di un intervento nello storico.
 /// Estetica: Dark, con badge "Officina" opzionale.
@@ -30,14 +41,11 @@ class WorkLogItemCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
         color: colors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: colors.border),
-        ),
+        shape: _workLogShape().copyWith(side: BorderSide(color: colors.border)),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          customBorder: _workLogShape(),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -65,9 +73,9 @@ class WorkLogItemCard extends StatelessWidget {
                           horizontal: 12,
                           vertical: 4,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: ShapeDecoration(
                           color: orangeColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
+                          shape: _workLogShape(radius: 8),
                         ),
                         child: const Text(
                           'Officina',

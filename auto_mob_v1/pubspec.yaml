@@ -39,6 +39,7 @@ dependencies:
   flutter_displaymode: ^0.6.0
   oc_liquid_glass: ^0.2.2
   liquid_glass_widgets: ^0.15.0
+  figma_squircle: ^0.6.3
 
   # State Management
   flutter_bloc: ^8.1.5

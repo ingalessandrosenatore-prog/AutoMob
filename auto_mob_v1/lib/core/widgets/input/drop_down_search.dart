@@ -1,9 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../../config/performance_flags.dart';
 import '../../theme/am_theme_colors.dart';
+
+const _dropdownCornerSmoothing = 0.8;
+
+SmoothRectangleBorder _dropdownShape({double radius = 16}) =>
+    SmoothRectangleBorder(
+      borderRadius: SmoothBorderRadius(
+        cornerRadius: radius,
+        cornerSmoothing: _dropdownCornerSmoothing,
+      ),
+    );
 
 class AmDropdownSearch<T> extends StatefulWidget {
   final String label;
@@ -490,21 +501,25 @@ class _DropdownSurface extends StatelessWidget {
     );
 
     if (!kHeavyEffects) {
-      return Container(
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(radius),
-          border: Border.all(color: borderColor),
-          boxShadow: [shadow],
+      return ClipPath(
+        clipper: ShapeBorderClipper(shape: _dropdownShape(radius: radius)),
+        child: Container(
+          decoration: ShapeDecoration(
+            color: color,
+            shape: _dropdownShape(
+              radius: radius,
+            ).copyWith(side: BorderSide(color: borderColor)),
+            shadows: [shadow],
+          ),
+          child: child,
         ),
-        child: child,
       );
     }
 
     return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: [shadow],
+      decoration: ShapeDecoration(
+        shape: _dropdownShape(radius: radius),
+        shadows: [shadow],
       ),
       child: OCLiquidGlassGroup(
         settings: const OCLiquidGlassSettings(
@@ -513,11 +528,14 @@ class _DropdownSurface extends StatelessWidget {
           specStrength: 0,
           specWidth: 0,
         ),
-        child: OCLiquidGlass(
-          enabled: true,
-          borderRadius: radius,
-          color: color.withValues(alpha: 0.8),
-          child: child,
+        child: ClipPath(
+          clipper: ShapeBorderClipper(shape: _dropdownShape(radius: radius)),
+          child: OCLiquidGlass(
+            enabled: true,
+            borderRadius: radius,
+            color: color.withValues(alpha: 0.8),
+            child: child,
+          ),
         ),
       ),
     );

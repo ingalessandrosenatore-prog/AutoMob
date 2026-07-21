@@ -4,10 +4,20 @@ import 'package:auto_mob_v1/core/config/performance_flags.dart';
 import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
 import 'package:flutter/material.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 import '../../../../core/widgets/buttons/am_pull_down_lg.dart';
+
+const _vehicleCardRadius = 28.0;
+const _cornerSmoothing = 0.8;
+
+SmoothBorderRadius _smoothRadius(double radius) =>
+    SmoothBorderRadius(cornerRadius: radius, cornerSmoothing: _cornerSmoothing);
+
+SmoothRectangleBorder _vehicleShape({double radius = _vehicleCardRadius}) =>
+    SmoothRectangleBorder(borderRadius: _smoothRadius(radius));
 
 /// Card del veicolo nel PageView della home.
 /// Card solida con ombra (3D), niente blur in tempo reale → swipe fluido.
@@ -101,11 +111,12 @@ class CardAuto extends StatelessWidget {
             // foto sfuma per 10px nel colore della card, senza stacco visivo.
             Container(
               clipBehavior: Clip.antiAlias,
-              decoration: BoxDecoration(
+              decoration: ShapeDecoration(
                 color: colors.surface,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: colors.border),
-                boxShadow: [
+                shape: _vehicleShape().copyWith(
+                  side: BorderSide(color: colors.border),
+                ),
+                shadows: [
                   BoxShadow(
                     color: colors.shadow.withValues(alpha: 0.16),
                     blurRadius: 18,
@@ -541,9 +552,9 @@ class _VehicleInfoPanel extends StatelessWidget {
                     horizontal: 10,
                     vertical: 6,
                   ),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: colors.surfaceDeep,
-                    borderRadius: BorderRadius.circular(9),
+                    shape: _vehicleShape(radius: 8),
                   ),
                   child: Text(
                     '$anno',
@@ -587,10 +598,11 @@ class _LicensePlate extends StatelessWidget {
     return Container(
       key: const Key('vehicle-license-plate'),
       height: 38,
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: colors.surfaceRaised,
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: colors.textSecondary.withValues(alpha: 0.55)),
+        shape: _vehicleShape(radius: 8).copyWith(
+          side: BorderSide(color: colors.textSecondary.withValues(alpha: 0.55)),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -691,9 +703,7 @@ class _MileageSection extends StatelessWidget {
                   horizontal: 18,
                   vertical: 9,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(22),
-                ),
+                shape: _vehicleShape(radius: 20),
               ),
             ),
           ],
@@ -806,13 +816,14 @@ class _RevisionTile extends StatelessWidget {
       child: InkWell(
         key: const Key('revision-info-tile'),
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        customBorder: _vehicleShape(radius: 20),
         child: Ink(
           height: 60,
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: colors.accent.withValues(alpha: 0.045),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colors.accent.withValues(alpha: 0.9)),
+            shape: _vehicleShape(radius: 20).copyWith(
+              side: BorderSide(color: colors.accent.withValues(alpha: 0.9)),
+            ),
           ),
           child: Stack(
             children: [

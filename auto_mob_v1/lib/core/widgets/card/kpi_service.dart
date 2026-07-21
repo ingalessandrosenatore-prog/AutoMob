@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../theme/am_theme_colors.dart';
+
+const _kpiCardRadius = 26.0;
+const _kpiCornerSmoothing = 0.8;
+
+SmoothRectangleBorder _kpiShape({double radius = _kpiCardRadius}) =>
+    SmoothRectangleBorder(
+      borderRadius: SmoothBorderRadius(
+        cornerRadius: radius,
+        cornerSmoothing: _kpiCornerSmoothing,
+      ),
+    );
 
 class AmMaintenanceKpiCard extends StatelessWidget {
   final Widget Function(double size, Color color) iconBuilder;
@@ -39,8 +51,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
     return Container(
       key: const Key('am-maintenance-kpi-surface'),
       margin: const EdgeInsets.symmetric(vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
+      decoration: ShapeDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -48,8 +59,8 @@ class AmMaintenanceKpiCard extends StatelessWidget {
               ? [colors.surfaceHighlight, colors.surfaceDeep]
               : [colors.surfaceDeep, colors.surfaceHighlight],
         ),
-        border: Border.all(color: colors.border),
-        boxShadow: [
+        shape: _kpiShape().copyWith(side: BorderSide(color: colors.border)),
+        shadows: [
           BoxShadow(
             color: colors.shadow.withValues(alpha: 0.09),
             blurRadius: 10,
@@ -57,8 +68,8 @@ class AmMaintenanceKpiCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+      child: ClipPath(
+        clipper: ShapeBorderClipper(shape: _kpiShape()),
         child: Stack(
           children: [
             Positioned(
@@ -180,7 +191,7 @@ class _SegmentedProgressBar extends StatelessWidget {
             margin: EdgeInsets.only(right: index == 3 ? 0 : 8),
             decoration: BoxDecoration(
               color: isActive ? color : color.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(5),
               boxShadow: isActive
                   ? [
                       BoxShadow(

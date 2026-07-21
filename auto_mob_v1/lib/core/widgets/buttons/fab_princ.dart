@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../services/haptic_service.dart';
+
+const _mainFabSmoothing = 0.8;
+
+SmoothRectangleBorder _mainFabShape(double height) => SmoothRectangleBorder(
+  borderRadius: SmoothBorderRadius(
+    cornerRadius: height / 2,
+    cornerSmoothing: _mainFabSmoothing,
+  ),
+);
 
 /// Il pulsante principale (Main FAB) dell'applicazione.
 /// Design a "pillola" con colore pieno, icona, testo e ombra luminescente (glow).
@@ -35,10 +45,10 @@ class AmMainFab extends StatelessWidget {
       width: width,
       height: height,
       // padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(
+      decoration: ShapeDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
+        shape: _mainFabShape(height),
+        shadows: [
           BoxShadow(
             color: color.withValues(alpha: 0.4),
             // Il glow basato sul colore in ingresso
@@ -51,9 +61,9 @@ class AmMainFab extends StatelessWidget {
       child: Material(
         // Aggiungiamo Material per l'effetto tocco
         color: color,
-        borderRadius: BorderRadius.circular(32),
+        shape: _mainFabShape(height),
         child: InkWell(
-          borderRadius: BorderRadius.circular(32),
+          customBorder: _mainFabShape(height),
           onTap: () {
             AmHaptics.action();
             onPressed();

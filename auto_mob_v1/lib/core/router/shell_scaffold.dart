@@ -1,12 +1,23 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../config/performance_flags.dart';
 import '../theme/am_theme_colors.dart';
+
+const _bottomBarHeight = 66.0;
+const _bottomBarCornerSmoothing = 0.8;
+
+SmoothRectangleBorder _bottomBarShape() => SmoothRectangleBorder(
+  borderRadius: SmoothBorderRadius(
+    cornerRadius: _bottomBarHeight / 2,
+    cornerSmoothing: _bottomBarCornerSmoothing,
+  ),
+);
 
 class _NavItem {
   final String route;
@@ -171,18 +182,23 @@ class _ShellScaffoldState extends State<ShellScaffold>
                       alignment: Alignment.center,
                       children: [
                         kHeavyEffects
-                            ? OCLiquidGlass(
-                                width: larghezzaBarra,
-                                height: 66,
-                                borderRadius: 100,
-                                color: colors.surfaceHighlight.withValues(
-                                  alpha: 0.8,
+                            ? ClipPath(
+                                clipper: ShapeBorderClipper(
+                                  shape: _bottomBarShape(),
+                                ),
+                                child: OCLiquidGlass(
+                                  width: larghezzaBarra,
+                                  height: _bottomBarHeight,
+                                  borderRadius: _bottomBarHeight / 2,
+                                  color: colors.surfaceHighlight.withValues(
+                                    alpha: 0.8,
+                                  ),
                                 ),
                               )
                             : Container(
                                 width: larghezzaBarra,
-                                height: 66,
-                                decoration: BoxDecoration(
+                                height: _bottomBarHeight,
+                                decoration: ShapeDecoration(
                                   gradient: LinearGradient(
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
@@ -192,9 +208,10 @@ class _ShellScaffoldState extends State<ShellScaffold>
                                     ],
                                     stops: const [0.2, 1.0],
                                   ),
-                                  border: Border.all(color: colors.border),
-                                  borderRadius: BorderRadius.circular(100),
-                                  boxShadow: [
+                                  shape: _bottomBarShape().copyWith(
+                                    side: BorderSide(color: colors.border),
+                                  ),
+                                  shadows: [
                                     BoxShadow(
                                       color: colors.shadow,
                                       blurRadius: 20,
@@ -205,7 +222,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
                               ),
                         SizedBox(
                           width: larghezzaBarra,
-                          height: 66,
+                          height: _bottomBarHeight,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: barHorizontalPadding,

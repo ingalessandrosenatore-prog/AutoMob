@@ -1,11 +1,22 @@
 import 'dart:ui';
 
+import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../../config/performance_flags.dart';
 import '../../theme/am_theme_colors.dart';
+
+const _dialogCornerSmoothing = 0.8;
+
+SmoothRectangleBorder _dialogShape({double radius = 36}) =>
+    SmoothRectangleBorder(
+      borderRadius: SmoothBorderRadius(
+        cornerRadius: radius,
+        cornerSmoothing: _dialogCornerSmoothing,
+      ),
+    );
 
 /// Una singola azione (bottone) di un [AmStatusDialog].
 /// [filled] true = bottone pieno (azione primaria, es. "Riprova"),
@@ -140,9 +151,9 @@ class _ActionButton extends StatelessWidget {
       color: action.filled
           ? action.color
           : action.color.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(16),
+      shape: _dialogShape(radius: 25),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        customBorder: _dialogShape(radius: 25),
         onTap: action.onPressed,
         child: Container(
           height: 50,
@@ -174,7 +185,7 @@ class _DialogSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const radius = BorderRadius.all(Radius.circular(28));
+    const radius = 36.0;
     final surface = color.withValues(alpha: 0.88);
 
     if (kHeavyEffects) {
@@ -188,20 +199,26 @@ class _DialogSurface extends StatelessWidget {
           blendPx: 70,
           specPower: 10,
         ),
-        child: OCLiquidGlass(
-          color: color.withValues(alpha: 0.8),
-          borderRadius: 38,
-          child: child,
+        child: ClipPath(
+          clipper: ShapeBorderClipper(shape: _dialogShape(radius: radius)),
+          child: OCLiquidGlass(
+            color: color.withValues(alpha: 0.8),
+            borderRadius: radius,
+            child: child,
+          ),
         ),
       );
     }
 
-    return ClipRRect(
-      borderRadius: radius,
+    return ClipPath(
+      clipper: ShapeBorderClipper(shape: _dialogShape(radius: radius)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
         child: Container(
-          decoration: BoxDecoration(color: surface, borderRadius: radius),
+          decoration: ShapeDecoration(
+            color: surface,
+            shape: _dialogShape(radius: radius),
+          ),
           child: child,
         ),
       ),
