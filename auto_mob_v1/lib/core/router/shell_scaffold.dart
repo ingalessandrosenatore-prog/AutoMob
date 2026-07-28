@@ -191,7 +191,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
                                   height: _bottomBarHeight,
                                   borderRadius: _bottomBarHeight / 2,
                                   color: colors.surfaceHighlight.withValues(
-                                    alpha: 0.8,
+                                    alpha: 0.2,
                                   ),
                                 ),
                               )
