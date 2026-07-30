@@ -2,15 +2,9 @@ name: AutoMob quality gate
 
 on:
   pull_request:
-    paths:
-      - "auto_mob_v1/**"
-      - ".github/workflows/verify.yml"
   push:
     branches:
       - main
-    paths:
-      - "auto_mob_v1/**"
-      - ".github/workflows/verify.yml"
 
 concurrency:
   group: verify-${{ github.ref }}
@@ -19,9 +13,6 @@ concurrency:
 jobs:
   verify:
     runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: auto_mob_v1
 
     steps:
       - name: Checkout
@@ -36,10 +27,52 @@ jobs:
           cache: true
 
       - name: Resolve dependencies
-        run: flutter pub get
+        shell: pwsh
+        run: |
+          $projects = Get-ChildItem -Directory | Where-Object {
+            Test-Path (Join-Path $_.FullName "tool/verify.ps1")
+          }
 
-      - name: Run mandatory quality gate
+          if ($projects.Count -eq 0) {
+            Write-Host "STOP: nessun tool/verify.ps1 trovato nelle cartelle progetto." -ForegroundColor Red
+            exit 1
+          }
+
+          foreach ($project in $projects) {
+            if (Test-Path (Join-Path $project.FullName "pubspec.yaml")) {
+              Write-Host ""
+              Write-Host "==> flutter pub get $($project.Name)" -ForegroundColor Cyan
+              Push-Location $project.FullName
+              try {
+                flutter pub get
+                if ($LASTEXITCODE -ne 0) {
+                  exit $LASTEXITCODE
+                }
+              } finally {
+                Pop-Location
+              }
+            }
+          }
+
+      - name: Run mandatory quality gates
         shell: pwsh
         env:
           VERIFY_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: ./tool/verify.ps1
+        run: |
+          $projects = Get-ChildItem -Directory | Where-Object {
+            Test-Path (Join-Path $_.FullName "tool/verify.ps1")
+          }
+
+          foreach ($project in $projects) {
+            Write-Host ""
+            Write-Host "==> Verifica $($project.Name)" -ForegroundColor Cyan
+            Push-Location $project.FullName
+            try {
+              ./tool/verify.ps1
+              if ($LASTEXITCODE -ne 0) {
+                exit $LASTEXITCODE
+              }
+            } finally {
+              Pop-Location
+            }
+          }

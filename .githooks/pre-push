@@ -1,0 +1,37 @@
+#!/bin/sh
+
+set -e
+
+repo_root="$(git rev-parse --show-toplevel)"
+
+if command -v pwsh >/dev/null 2>&1; then
+    powershell_command="pwsh"
+elif command -v powershell.exe >/dev/null 2>&1; then
+    powershell_command="powershell.exe"
+else
+    echo "STOP: PowerShell non trovato. Installa pwsh o usa Windows PowerShell."
+    exit 1
+fi
+
+found_verify=0
+for verify_script in "$repo_root"/*/tool/verify.ps1; do
+    if [ ! -f "$verify_script" ]; then
+        continue
+    fi
+
+    found_verify=1
+    project_dir="$(dirname "$(dirname "$verify_script")")"
+    project_name="$(basename "$project_dir")"
+
+    echo ""
+    echo "==> Verifica $project_name"
+    (
+        cd "$project_dir"
+        "$powershell_command" -NoProfile -File ./tool/verify.ps1
+    )
+done
+
+if [ "$found_verify" -eq 0 ]; then
+    echo "STOP: nessun tool/verify.ps1 trovato nelle cartelle progetto."
+    exit 1
+fi

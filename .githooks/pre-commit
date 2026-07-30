@@ -1,5 +1,0 @@
-#!/bin/sh
-
-set -e
-cd auto_mob_v1
-pwsh -NoProfile -File ./tool/verify.ps1
