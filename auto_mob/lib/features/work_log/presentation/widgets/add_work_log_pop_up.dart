@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import '../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../core/widgets/card/pup_up_head_card.dart';
 import '../../../../core/widgets/input/date_picker_field.dart';
 import 'parts_picker_body.dart';

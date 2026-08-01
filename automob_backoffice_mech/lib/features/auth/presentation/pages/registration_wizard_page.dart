@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
@@ -77,8 +78,18 @@ final class _RegistrationWizardPageState extends State<RegistrationWizardPage> {
       child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           final page = _pageIndex(state);
+          final colors = AmThemeColors.of(context);
+          final keyboardOverlap = math.max(
+            0.0,
+            MediaQuery.viewInsetsOf(context).bottom -
+                _WizardActions.extent(context),
+          );
+          _keepFocusedFieldVisible(keyboardOverlap);
           return Scaffold(
+            backgroundColor: colors.background,
+            resizeToAvoidBottomInset: false,
             body: SafeArea(
+              maintainBottomViewPadding: true,
               child: Column(
                 children: [
                   AmWizardProgress(
@@ -86,27 +97,33 @@ final class _RegistrationWizardPageState extends State<RegistrationWizardPage> {
                     currentStep: page,
                   ),
                   Expanded(
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: [
-                        _PersonalDataStep(
-                          state: state,
-                          fullName: _fullName,
-                          email: _email,
-                          phone: _phone,
-                          password: _password,
-                          passwordConfirmation: _passwordConfirmation,
-                        ),
-                        _WorkshopStep(
-                          state: state,
-                          businessName: _businessName,
-                          vatNumber: _vatNumber,
-                          streetAddress: _streetAddress,
-                          postalCode: _postalCode,
-                        ),
-                        _EmailConfirmationStep(state: state),
-                      ],
+                    child: Padding(
+                      // La barra inferiore resta ferma e viene coperta dalla
+                      // tastiera. Si restringe soltanto il viewport dello step,
+                      // cosi' il campo focalizzato puo' scorrere sopra di essa.
+                      padding: EdgeInsets.only(bottom: keyboardOverlap),
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _PersonalDataStep(
+                            state: state,
+                            fullName: _fullName,
+                            email: _email,
+                            phone: _phone,
+                            password: _password,
+                            passwordConfirmation: _passwordConfirmation,
+                          ),
+                          _WorkshopStep(
+                            state: state,
+                            businessName: _businessName,
+                            vatNumber: _vatNumber,
+                            streetAddress: _streetAddress,
+                            postalCode: _postalCode,
+                          ),
+                          _EmailConfirmationStep(state: state),
+                        ],
+                      ),
                     ),
                   ),
                   _WizardActions(state: state, currentPage: page),
@@ -152,6 +169,41 @@ final class _RegistrationWizardPageState extends State<RegistrationWizardPage> {
     AuthEmailVerificationPending(:final dialogMessage) => dialogMessage,
     _ => null,
   };
+
+  void _keepFocusedFieldVisible(double keyboardOverlap) {
+    if (keyboardOverlap == 0) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final focusedContext = FocusManager.instance.primaryFocus?.context;
+      if (focusedContext == null) return;
+      final editableContext = _findEditableText(focusedContext);
+      if (editableContext == null) return;
+      unawaited(
+        Scrollable.ensureVisible(
+          editableContext,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+        ),
+      );
+    });
+  }
+
+  BuildContext? _findEditableText(BuildContext focusContext) {
+    BuildContext? result;
+
+    void visit(Element element) {
+      if (result != null) return;
+      if (element.widget is EditableText) {
+        result = element;
+        return;
+      }
+      element.visitChildElements(visit);
+    }
+
+    visit(focusContext as Element);
+    return result;
+  }
 }
 
 final class _PersonalDataStep extends StatelessWidget {
@@ -372,36 +424,39 @@ final class _EmailConfirmationStep extends StatelessWidget {
     final email = state is AuthEmailVerificationPending
         ? (state as AuthEmailVerificationPending).email
         : '';
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.mark_email_unread_outlined,
-              size: 72,
-              color: colors.accent,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Conferma la tua email',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.textPrimary,
-                fontSize: 25,
-                fontWeight: FontWeight.w800,
+    return AmEdgeBlur(
+      child: Center(
+        child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.mark_email_unread_outlined,
+                size: 72,
+                color: colors.accent,
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              email.isEmpty
-                  ? 'Apri il link che ti abbiamo inviato.'
-                  : 'Abbiamo inviato un link a $email. Aprilo sullo stesso dispositivo, poi torna qui.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colors.textSecondary, height: 1.45),
-            ),
-          ],
+              const SizedBox(height: 24),
+              Text(
+                'Conferma la tua email',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 25,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                email.isEmpty
+                    ? 'Apri il link che ti abbiamo inviato.'
+                    : 'Abbiamo inviato un link a $email. Aprilo sullo stesso dispositivo, poi torna qui.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.textSecondary, height: 1.45),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -421,24 +476,27 @@ final class _StepScroll extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: colors.textPrimary,
-              fontSize: 25,
-              fontWeight: FontWeight.w800,
+    return AmEdgeBlur(
+      child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 25,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(subtitle, style: TextStyle(color: colors.textSecondary)),
-          const SizedBox(height: 24),
-          ...children,
-        ],
+            const SizedBox(height: 8),
+            Text(subtitle, style: TextStyle(color: colors.textSecondary)),
+            const SizedBox(height: 24),
+            ...children,
+          ],
+        ),
       ),
     );
   }
@@ -459,6 +517,11 @@ final class _WizardActions extends StatelessWidget {
   const _WizardActions({required this.state, required this.currentPage});
   final AuthState state;
   final int currentPage;
+
+  /// Distanza fra il fondo del PageView e il bordo fisico dello schermo.
+  /// Serve a non sottrarre due volte lo spazio gia' occupato dalla barra.
+  static double extent(BuildContext context) =>
+      10 + 54 + 20 + MediaQuery.viewPaddingOf(context).bottom;
 
   @override
   Widget build(BuildContext context) {

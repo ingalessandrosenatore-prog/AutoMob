@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../../../../core/config/performance_flags.dart';
-import '../../../../core/theme/am_theme_colors.dart';
-import '../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
 import '../../domain/entities/work_log_part.dart';
 import '../../domain/entities/work_log_row.dart';

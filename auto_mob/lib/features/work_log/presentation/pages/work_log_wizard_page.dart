@@ -9,7 +9,6 @@ import '../../../../core/config/performance_flags.dart';
 import '../../../../core/constants/parts_catalog.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/types/enum_pop_up.dart';
-import '../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
 import '../widgets/am_spare_part_card.dart';
 import '../bloc/work_log_bloc.dart';

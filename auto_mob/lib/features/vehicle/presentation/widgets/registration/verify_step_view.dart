@@ -3,7 +3,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
 
-import '../../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../bloc/vehicle_registration_bloc.dart';
 import '../../bloc/vehicle_registration_event.dart';
 import '../../bloc/vehicle_registration_state.dart';

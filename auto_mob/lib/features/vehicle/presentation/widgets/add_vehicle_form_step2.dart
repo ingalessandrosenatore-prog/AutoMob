@@ -5,7 +5,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
-import '../../../../core/widgets/blur/am_edge_blur.dart';
 import '../../../../core/widgets/buttons/back_button.dart';
 import '../../../../core/widgets/card/pup_up_head_card.dart';
 import 'am_interval_chips.dart';

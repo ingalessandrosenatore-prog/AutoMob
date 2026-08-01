@@ -19,16 +19,87 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
 void main() {
+  testWidgets('il wizard mantiene il bottone fermo con la tastiera aperta', (
+    tester,
+  ) async {
+    final repository = _PendingRepository(pendingEmail: null);
+    final bloc = _buildBloc(repository);
+    addTearDown(bloc.close);
+
+    await tester.pumpWidget(
+      BlocProvider.value(
+        value: bloc,
+        child: MaterialApp(
+          theme: AmTheme.light,
+          home: const RegistrationWizardPage(),
+        ),
+      ),
+    );
+
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+    expect(scaffold.resizeToAvoidBottomInset, isFalse);
+    final buttonBefore = tester.getRect(find.byType(AmMainFab));
+    // Il quinto campo appartiene allo step anagrafica attualmente visibile;
+    // PageView puo' costruire in anticipo anche i campi dello step successivo.
+    final focusedField = find.byType(EditableText).at(4);
+    await tester.showKeyboard(focusedField);
+
+    tester.view.viewInsets = FakeViewPadding(
+      bottom: 300 * tester.view.devicePixelRatio,
+    );
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.getRect(find.byType(AmMainFab)), buttonBefore);
+    final keyboardTop =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio -
+        tester.view.viewInsets.bottom / tester.view.devicePixelRatio;
+    expect(tester.getRect(focusedField).bottom, lessThan(keyboardTop));
+  });
+
+  testWidgets('trascinare uno step chiude la tastiera', (tester) async {
+    final repository = _PendingRepository(pendingEmail: null);
+    final bloc = _buildBloc(repository);
+    addTearDown(bloc.close);
+
+    await tester.pumpWidget(
+      BlocProvider.value(
+        value: bloc,
+        child: MaterialApp(
+          theme: AmTheme.light,
+          home: const RegistrationWizardPage(),
+        ),
+      ),
+    );
+
+    expect(find.byType(AmEdgeBlur), findsWidgets);
+    final scrollView = tester.widget<SingleChildScrollView>(
+      find.byType(SingleChildScrollView).first,
+    );
+    expect(
+      scrollView.keyboardDismissBehavior,
+      ScrollViewKeyboardDismissBehavior.onDrag,
+    );
+
+    final editableText = tester.widget<EditableText>(
+      find.byType(EditableText).first,
+    );
+    await tester.showKeyboard(find.byType(EditableText).first);
+    expect(editableText.focusNode.hasFocus, isTrue);
+    await tester.drag(
+      find.byType(SingleChildScrollView).first,
+      const Offset(0, -120),
+    );
+    await tester.pump();
+
+    expect(editableText.focusNode.hasFocus, isFalse);
+  });
+
   testWidgets('la conferma mancante mostra il popup e resta nel wizard', (
     tester,
   ) async {
     final repository = _PendingRepository();
-    final bloc = AuthBloc(
-      registerMechanic: RegisterMechanic(repository),
-      checkAuthSession: CheckAuthSession(repository),
-      getPendingVerificationEmail: GetPendingVerificationEmail(repository),
-      getItalianMunicipalities: GetItalianMunicipalities(repository),
-    );
+    final bloc = _buildBloc(repository);
     addTearDown(bloc.close);
     final pending = bloc.stream
         .where((state) => state is AuthEmailVerificationPending)
@@ -66,7 +137,18 @@ void main() {
   });
 }
 
+AuthBloc _buildBloc(AuthRepository repository) => AuthBloc(
+  registerMechanic: RegisterMechanic(repository),
+  checkAuthSession: CheckAuthSession(repository),
+  getPendingVerificationEmail: GetPendingVerificationEmail(repository),
+  getItalianMunicipalities: GetItalianMunicipalities(repository),
+);
+
 final class _PendingRepository implements AuthRepository {
+  const _PendingRepository({this.pendingEmail = 'meccanico@officina.it'});
+
+  final String? pendingEmail;
+
   @override
   Future<Either<Failure, AppAuthUser?>> checkSession() async =>
       const Right(null);
@@ -77,7 +159,7 @@ final class _PendingRepository implements AuthRepository {
 
   @override
   Future<Either<Failure, String?>> getPendingVerificationEmail() async =>
-      const Right('meccanico@officina.it');
+      Right(pendingEmail);
 
   @override
   Future<Either<Failure, RegistrationOutcome>> registerMechanic(
