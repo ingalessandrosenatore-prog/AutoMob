@@ -63,7 +63,12 @@ Policy: solo il proprio profilo (select/update `auth.uid() = id`).
 Policy: CRUD solo `owner_id = auth.uid()`.
 
 ### `mechanics` — RLS ✅
-`id (PK)`, `user_id (FK→auth.users, unique)`, `mechanic_code` (unique, inserito dal proprietario nel wizard veicolo), `business_name`, `vat_number`, `address`, `is_active` (default false, attivato manualmente dall'admin quando paga l'abbonamento), `created_at`, `updated_at`.
+`id (PK)`, `user_id (FK→auth.users, unique)`, `mechanic_code` (unique, inserito dal proprietario nel wizard veicolo), `business_name`, `vat_number`, `address` (legacy compatibile), `street_address`, `postal_code` (CAP), `municipality_istat_code`, `number`, `email`, `is_active` (temporaneamente mantenuto perché lookup e collegamento veicolo lo usano), `created_at`, `updated_at`.
+
+Il comune viene selezionato nell'app dal dataset ISTAT e persistito tramite il
+codice ufficiale a sei cifre. Durante la transizione i nuovi campi indirizzo
+sono nullable per non bloccare gli account esistenti; il wizard meccanico li
+rende obbligatori per le nuove registrazioni.
 Policy: select autenticato delle officine attive o della propria riga; update
 solo della propria riga. Nessun grant anon.
 

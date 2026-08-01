@@ -4,13 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 
 import '../../../../core/widgets/blur/am_edge_blur.dart';
-import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/back_button.dart';
 import '../../../../core/widgets/card/pup_up_head_card.dart';
 import '../../../../core/widgets/input/date_picker_field.dart';
-import '../../../../core/widgets/input/textfield.dart';
 import 'am_interval_chips.dart';
 import 'maintenance_section_card.dart';
 
@@ -139,7 +138,7 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
                 children: [
                   const SizedBox(height: 150),
                   MaintenanceSectionCard(
-                icon: HugeIcons.strokeRoundedCalendar01,
+                    icon: HugeIcons.strokeRoundedCalendar01,
                     title: "Revisione",
                     children: [
                       Row(
@@ -159,7 +158,7 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
 
                   // Sezione Cambio gomme: ultimo km + intervallo (chip o custom).
                   MaintenanceSectionCard(
-                icon: HugeIcons.strokeRoundedTire,
+                    icon: HugeIcons.strokeRoundedTire,
                     title: "Cambio gomme",
                     children: [
                       Row(
@@ -236,7 +235,7 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
 
                   // Sezione Inversione gomme: ultimo km + intervallo (chip o custom).
                   MaintenanceSectionCard(
-                icon: HugeIcons.strokeRoundedCurvyLeftRightDirection,
+                    icon: HugeIcons.strokeRoundedCurvyLeftRightDirection,
                     title: "Inversione gomme",
                     children: [
                       Row(
@@ -321,7 +320,7 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
           left: 0,
           right: 0,
           child: WizardHeader(
-      stepIcon: HugeIcons.strokeRoundedCalendar01,
+            stepIcon: HugeIcons.strokeRoundedCalendar01,
             stepNumber: 4,
             totalSteps: 5,
             title: "Scadenze",
@@ -351,7 +350,7 @@ class _AddVehicleFormStep4State extends State<AddVehicleFormStep4> {
                     height: 60,
                     width: 180,
                     color: const Color(0xFFE85A1A),
-              icon: HugeIcons.strokeRoundedArrowRight01,
+                    icon: HugeIcons.strokeRoundedArrowRight01,
                     onPressed: () {
                       // Blocco l'avanzamento se un "ultimo km" supera i km attuali.
                       final bloccato =

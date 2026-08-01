@@ -6,14 +6,10 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 
 import '../../../../core/config/performance_flags.dart';
-import '../../../../core/theme/am_theme_colors.dart';
-import '../../../../core/widgets/buttons/am_icon_button.dart';
-import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
-import '../../../../core/widgets/dialog/am_status_dialog.dart';
-import '../../../../core/widgets/progress/am_wizard_progress.dart';
 import '../bloc/vehicle_registration_bloc.dart';
 import '../bloc/vehicle_registration_event.dart';
 import '../bloc/vehicle_registration_state.dart';

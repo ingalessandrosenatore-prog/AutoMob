@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
-import '../../config/performance_flags.dart';
+import '../../performance_flags.dart';
 import '../../theme/am_theme_colors.dart';
 
 const _dialogCornerSmoothing = 0.8;

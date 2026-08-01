@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:hugeicons/hugeicons.dart';
-
-import '../../services/haptic_service.dart';
 
 const _mainFabSmoothing = 0.8;
 
@@ -64,10 +63,12 @@ class AmMainFab extends StatelessWidget {
         shape: _mainFabShape(height),
         child: InkWell(
           customBorder: _mainFabShape(height),
-          onTap: () {
-            AmHaptics.action();
-            onPressed();
-          },
+          onTap: isLoading
+              ? null
+              : () {
+                  HapticFeedback.mediumImpact();
+                  onPressed();
+                },
           child: isLoading
               ? const Center(
                   child: SizedBox(

@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/am_theme_colors.dart';
-import '../../../../core/widgets/input/textfield.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import '../bloc/km_update_cubit.dart';
 
 /// Pop-up modale per l'aggiornamento dei chilometri del veicolo.

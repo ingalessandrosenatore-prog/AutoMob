@@ -56,6 +56,28 @@ void main() {
     expect(editable.controller.text, 'bozza mantenuta');
   });
 
+  testWidgets(
+    'la conferma pendente resta sulla route email fino alla sessione',
+    (tester) async {
+      final authStatus = ValueNotifier(
+        AuthNavigationStatus.emailVerificationRequired,
+      );
+      final router = _createRouter(authStatus);
+      addTearDown(() {
+        router.dispose();
+        authStatus.dispose();
+      });
+
+      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpAndSettle();
+      expect(find.text('verify-email'), findsOneWidget);
+
+      authStatus.value = AuthNavigationStatus.authenticated;
+      await tester.pumpAndSettle();
+      expect(find.text('workshop'), findsOneWidget);
+    },
+  );
+
   testWidgets('vehicle routes support nested pushes for mechanic work', (
     tester,
   ) async {

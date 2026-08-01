@@ -7,13 +7,11 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 
 import '../../../../core/widgets/blur/am_edge_blur.dart';
-import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/buttons/back_button.dart';
 import '../../../../core/widgets/card/pup_up_head_card.dart';
-import '../../../../core/widgets/input/textfield.dart';
 import 'maintenance_section_card.dart';
 
 class AddVehicleFormStep5 extends StatefulWidget {
@@ -50,7 +48,7 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
       children: [
         WizardHeader(
           // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
-  stepIcon: HugeIcons.strokeRoundedAlbum02,
+          stepIcon: HugeIcons.strokeRoundedAlbum02,
           stepNumber: 5,
           totalSteps: 5,
           title: "Foto e Officina",
@@ -105,8 +103,8 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                   const SizedBox(height: 40),
 
                   MaintenanceSectionCard(
-                  // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
-                  icon: Icons.link,
+                    // Nessun corrispettivo diretto trovato in HugeIcons 1.1.7.
+                    icon: Icons.link,
                     title: "Connetti meccanico",
                     children: [
                       Text(
@@ -140,9 +138,7 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                     decoration: BoxDecoration(
                       color: colors.surfaceRaised,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: colors.border,
-                      ),
+                      border: Border.all(color: colors.border),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,7 +205,7 @@ class _AddVehicleFormStep5State extends State<AddVehicleFormStep5> {
                           height: 60,
                           width: 180,
                           color: const Color(0xFFE85A1A),
-                  icon: HugeIcons.strokeRoundedValidationApproval,
+                          icon: HugeIcons.strokeRoundedValidationApproval,
                           onPressed: () {
                             context.read<AddVehicleBloc>().add(
                               SaveWizard(

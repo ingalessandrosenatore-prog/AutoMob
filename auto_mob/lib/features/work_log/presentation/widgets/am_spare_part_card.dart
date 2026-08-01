@@ -2,9 +2,7 @@ import 'package:auto_mob_v1/features/work_log/domain/entities/selected_part.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-
-import '../../../../core/theme/am_theme_colors.dart';
-import '../../../../core/widgets/input/textfield.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 
 class _SparePartExpansionCubit extends Cubit<bool> {
   _SparePartExpansionCubit() : super(false);

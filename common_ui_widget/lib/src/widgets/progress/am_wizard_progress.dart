@@ -11,13 +11,13 @@ class AmWizardProgress extends StatefulWidget {
   final List<String> steps;
   final int currentStep;
   final Color color;
-  final String indicatorAsset;
+  final String? indicatorAsset;
 
   const AmWizardProgress({
     super.key,
     required this.steps,
     required this.currentStep,
-    required this.indicatorAsset,
+    this.indicatorAsset,
     this.color = const Color(0xFFE85A1A),
   });
 
@@ -128,11 +128,17 @@ class _AmWizardProgressState extends State<AmWizardProgress>
                                         : math.sin(
                                             _controller.value * math.pi * 8,
                                           ),
-                                    child: SvgPicture.asset(
-                                      widget.indicatorAsset,
-                                      width: 32,
-                                      height: 32,
-                                    ),
+                                    child: widget.indicatorAsset == null
+                                        ? Icon(
+                                            Icons.build_circle_outlined,
+                                            size: 30,
+                                            color: widget.color,
+                                          )
+                                        : SvgPicture.asset(
+                                            widget.indicatorAsset!,
+                                            width: 32,
+                                            height: 32,
+                                          ),
                                   ),
                                 ],
                               );
@@ -170,10 +176,11 @@ class _AmWizardProgressState extends State<AmWizardProgress>
                                     // La versione 1.1.7 non espone
                                     // `strokeRoundedCheck`: `strokeRoundedValidation`
                                     // e' la spunta semplice equivalente.
-                                    icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+                                    icon:
+                                        HugeIcons.strokeRoundedCheckmarkBadge01,
                                     size: 12,
                                     color: colors.onMedia,
-                                    strokeWidth:1.5,
+                                    strokeWidth: 1.5,
                                   )
                                 : null,
                           ),

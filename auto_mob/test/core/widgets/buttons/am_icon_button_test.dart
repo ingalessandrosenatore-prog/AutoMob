@@ -1,6 +1,5 @@
 import 'package:auto_mob_v1/core/services/haptic_service.dart';
-import 'package:auto_mob_v1/core/theme/am_theme.dart';
-import 'package:auto_mob_v1/core/widgets/buttons/am_icon_button.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hugeicons/hugeicons.dart';

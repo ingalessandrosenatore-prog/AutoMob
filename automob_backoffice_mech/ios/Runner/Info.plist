@@ -14,6 +14,17 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.infinty.automob.mechanic</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleName</key>
 	<string>automob_backoffice_mech</string>
 	<key>CFBundlePackageType</key>

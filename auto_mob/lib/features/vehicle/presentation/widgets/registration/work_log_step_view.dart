@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 
 import '../../../../../core/widgets/blur/am_edge_blur.dart';
-import '../../../../../core/theme/am_theme_colors.dart';
 import '../../../../../core/widgets/icons/am_engine_icon.dart';
 import '../../../../../core/widgets/input/date_picker_field.dart';
-import '../../../../../core/widgets/input/textfield.dart';
-import '../../../../../core/widgets/dialog/am_status_dialog.dart';
 import '../../bloc/vehicle_registration_bloc.dart';
 import '../../bloc/vehicle_registration_event.dart';
 import '../../bloc/vehicle_registration_state.dart';

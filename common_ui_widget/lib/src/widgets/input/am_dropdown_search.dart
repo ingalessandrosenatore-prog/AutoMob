@@ -3,7 +3,7 @@ import 'package:figma_squircle/figma_squircle.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
-import '../../config/performance_flags.dart';
+import '../../performance_flags.dart';
 import '../../theme/am_theme_colors.dart';
 
 const _dropdownCornerSmoothing = 0.8;
@@ -49,7 +49,7 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
   final ValueNotifier<List<T>> _filteredNotifier = ValueNotifier([]);
   OverlayEntry? _overlayEntry;
   ScrollPosition? _scrollPosition;
-  bool _isOpen = false;
+  final ValueNotifier<bool> _isOpen = ValueNotifier(false);
 
   @override
   void initState() {
@@ -68,13 +68,10 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
 
   @override
   void dispose() {
-    // Durante dispose `mounted` e' ancora true fino a super.dispose(): usare
-    // _closeOverlay chiamerebbe quindi setState mentre l'elemento e' in fase
-    // di smontaggio.
     _overlayEntry?.remove();
     _overlayEntry = null;
     _detachScrollListener();
-    _isOpen = false;
+    _isOpen.dispose();
     _searchCtrl.dispose();
     _filteredNotifier.dispose();
     super.dispose();
@@ -95,7 +92,7 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
   }
 
   void _toggleOverlay() {
-    if (_isOpen) {
+    if (_isOpen.value) {
       _closeOverlay();
     } else {
       _openOverlay();
@@ -129,14 +126,14 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
 
     _attachScrollListener();
     Overlay.of(context).insert(_overlayEntry!);
-    setState(() => _isOpen = true);
+    _isOpen.value = true;
   }
 
   void _closeOverlay() {
     _overlayEntry?.remove();
     _overlayEntry = null;
     _detachScrollListener();
-    if (mounted) setState(() => _isOpen = false);
+    if (mounted) _isOpen.value = false;
   }
 
   void _attachScrollListener() {
@@ -184,57 +181,60 @@ class _AmDropdownSearchState<T> extends State<AmDropdownSearch<T>> {
             ),
           ),
           const SizedBox(height: 10),
-          CompositedTransformTarget(
-            key: const ValueKey('am-dropdown-search-target'),
-            link: _layerLink,
-            child: GestureDetector(
-              key: _triggerKey,
-              onTap: _toggleOverlay,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                height: widget.height,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+          ValueListenableBuilder<bool>(
+            valueListenable: _isOpen,
+            builder: (context, isOpen, _) => CompositedTransformTarget(
+              key: const ValueKey('am-dropdown-search-target'),
+              link: _layerLink,
+              child: GestureDetector(
+                key: _triggerKey,
+                onTap: _toggleOverlay,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  height: widget.height,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isOpen
+                          ? colors.accent.withValues(alpha: 0.5)
+                          : colors.border,
                     ),
-                  ],
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _isOpen
-                        ? colors.accent.withValues(alpha: 0.5)
-                        : colors.border,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        selectedLabel ?? widget.placeholder,
-                        style: TextStyle(
-                          color: selectedLabel != null
-                              ? colors.textPrimary
-                              : colors.textSecondary,
-                          fontSize: 16,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          selectedLabel ?? widget.placeholder,
+                          style: TextStyle(
+                            color: selectedLabel != null
+                                ? colors.textPrimary
+                                : colors.textSecondary,
+                            fontSize: 16,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    AnimatedRotation(
-                      turns: _isOpen ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 200),
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowDown01,
-                        color: colors.textSecondary,
-                        size: 22,
-                        strokeWidth: 2.2,
+                      AnimatedRotation(
+                        turns: isOpen ? 0.5 : 0,
+                        duration: const Duration(milliseconds: 200),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedArrowDown01,
+                          color: colors.textSecondary,
+                          size: 22,
+                          strokeWidth: 2.2,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

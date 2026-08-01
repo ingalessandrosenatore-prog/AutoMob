@@ -11,6 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
   figma_squircle: ^0.6.3
+  flutter_svg: ^2.3.0
+  hugeicons: ^1.1.7
+  oc_liquid_glass: ^0.2.2
 
 dev_dependencies:
   flutter_test:

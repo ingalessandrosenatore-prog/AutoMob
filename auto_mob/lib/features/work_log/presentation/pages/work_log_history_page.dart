@@ -1,4 +1,4 @@
-import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/widgets/work_log_item_card.dart';
@@ -12,7 +12,6 @@ import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import 'package:auto_mob_v1/core/config/performance_flags.dart';
 import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
-import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';
 import '../../domain/entities/vehicle_option.dart';

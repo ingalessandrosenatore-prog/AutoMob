@@ -3,11 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import '../../../../core/widgets/blur/am_edge_blur.dart';
-import '../../../../core/widgets/buttons/fab_princ.dart';
 import '../../../../core/widgets/card/pup_up_head_card.dart';
-import '../../../../core/widgets/input/drop_down_search.dart';
-import '../../../../core/widgets/input/textfield.dart';
 import '../bloc/add_vehicle_event.dart';
 
 const List<String> kMarcheAuto = [
@@ -232,7 +230,7 @@ class _AddVehicleFormStep1State extends State<AddVehicleFormStep1> {
           right: 0,
           left: 0,
           child: WizardHeader(
-      stepIcon: HugeIcons.strokeRoundedGarage,
+            stepIcon: HugeIcons.strokeRoundedGarage,
             stepNumber: 1,
             totalSteps: 5,
             title: "Il tuo veicolo",

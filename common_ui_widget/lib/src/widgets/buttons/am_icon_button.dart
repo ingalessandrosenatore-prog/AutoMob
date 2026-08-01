@@ -1,9 +1,8 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
-
-import '../../services/haptic_service.dart';
 
 /// Pulsante icona riutilizzabile, compatibile sia con HugeIcons sia con
 /// i normali [IconData] di Flutter.
@@ -71,7 +70,7 @@ class AmIconButton extends StatelessWidget {
         child: InkWell(
           borderRadius: borderRadius,
           onTap: () {
-            AmHaptics.tap();
+            HapticFeedback.selectionClick();
             onPressed();
           },
           child: Center(

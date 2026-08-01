@@ -12,11 +12,22 @@ dependencies:
   common_ui_widget:
     path: ../common_ui_widget
   go_router: ^17.3.0
+  equatable: ^2.0.8
+  flutter_bloc: ^9.1.1
+  fpdart: ^1.1.1
+  get_it: ^9.2.0
+  shared_preferences: ^2.5.4
+  supabase_flutter: ^2.16.0
+  uuid: ^4.5.2
 
 dev_dependencies:
+  bloc_test: ^10.0.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  mocktail: ^1.0.4
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/data/italian_municipalities.json
