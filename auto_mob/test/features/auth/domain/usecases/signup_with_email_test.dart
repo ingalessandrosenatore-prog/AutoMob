@@ -68,4 +68,52 @@ void main() {
       const Left<Failure, SignupOutcome>(EmailAlreadyInUseFailure()),
     );
   });
+
+  test('normalizza nome ed email prima di chiamare il repository', () async {
+    when(() => repository.signupWithEmail(tName, tEmail, tPassword)).thenAnswer(
+      (_) async => const Right(
+        SignupConfirmationRequired(PendingEmailVerification(email: tEmail)),
+      ),
+    );
+
+    await usecase('  $tName  ', '  TEST@AUTOMOB.IT ', tPassword);
+
+    verify(
+      () => repository.signupWithEmail(tName, tEmail, tPassword),
+    ).called(1);
+  });
+
+  test('rifiuta un nome vuoto senza chiamare il repository', () async {
+    final result = await usecase('  ', tEmail, tPassword);
+
+    expect(
+      result,
+      const Left<Failure, SignupOutcome>(
+        ValidationFailure('Inserisci il tuo nome.'),
+      ),
+    );
+    verifyNever(() => repository.signupWithEmail(any(), any(), any()));
+  });
+
+  test('rifiuta una email non valida senza chiamare il repository', () async {
+    final result = await usecase(tName, 'email-non-valida', tPassword);
+
+    expect(
+      result,
+      const Left<Failure, SignupOutcome>(
+        ValidationFailure('Inserisci un indirizzo email valido.'),
+      ),
+    );
+    verifyNever(() => repository.signupWithEmail(any(), any(), any()));
+  });
+
+  test(
+    'rifiuta password sotto gli 8 caratteri senza chiamare il repository',
+    () async {
+      final result = await usecase(tName, tEmail, '1234567');
+
+      expect(result, const Left<Failure, SignupOutcome>(WeakPasswordFailure()));
+      verifyNever(() => repository.signupWithEmail(any(), any(), any()));
+    },
+  );
 }

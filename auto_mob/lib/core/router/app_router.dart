@@ -91,19 +91,27 @@ class AppRouter {
               GoRoute(
                 path: '/home',
                 name: 'home',
-                builder: (context, state) => MultiBlocProvider(
-                  providers: [
-                    BlocProvider<DashboardBloc>.value(
-                      value: di.sl<DashboardBloc>(),
+                builder: (context, state) {
+                  final authState = _auth.state;
+                  if (authState is! AuthAuthenticated) {
+                    return const SplashScreen();
+                  }
+
+                  return MultiBlocProvider(
+                    providers: [
+                      BlocProvider<DashboardBloc>.value(
+                        value: di.sl<DashboardBloc>(),
+                      ),
+                      BlocProvider<NotificationPromptBloc>(
+                        create: (_) => di.sl<NotificationPromptBloc>(),
+                      ),
+                    ],
+                    child: HomeView(
+                      authenticatedUser: authState.user,
+                      initialVehicleId: state.uri.queryParameters['vehicleId'],
                     ),
-                    BlocProvider<NotificationPromptBloc>(
-                      create: (_) => di.sl<NotificationPromptBloc>(),
-                    ),
-                  ],
-                  child: HomeView(
-                    initialVehicleId: state.uri.queryParameters['vehicleId'],
-                  ),
-                ),
+                  );
+                },
               ),
             ],
           ),

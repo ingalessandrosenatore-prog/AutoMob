@@ -11,6 +11,7 @@ import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:auto_mob_v1/core/router/app_session_actions.dart';
+import 'package:auto_mob_v1/features/auth/domain/entities/app_user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -33,18 +34,26 @@ import '../widgets/card_auto.dart';
 import '../widgets/card_officina.dart';
 
 class HomeView extends StatelessWidget {
-  const HomeView({super.key, this.initialVehicleId});
+  const HomeView({
+    super.key,
+    required this.authenticatedUser,
+    this.initialVehicleId,
+  });
 
+  final AppAuthUser authenticatedUser;
   final String? initialVehicleId;
 
   @override
-  Widget build(BuildContext context) =>
-      _HomeViewBody(initialVehicleId: initialVehicleId);
+  Widget build(BuildContext context) => _HomeViewBody(
+    authenticatedUser: authenticatedUser,
+    initialVehicleId: initialVehicleId,
+  );
 }
 
 class _HomeViewBody extends StatefulWidget {
-  const _HomeViewBody({this.initialVehicleId});
+  const _HomeViewBody({required this.authenticatedUser, this.initialVehicleId});
 
+  final AppAuthUser authenticatedUser;
   final String? initialVehicleId;
   @override
   State<_HomeViewBody> createState() => _HomeViewBodyState();
@@ -273,7 +282,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
               alignment: AlignmentGeometry.centerLeft,
               child: AmPullDownLG(
                 brand: '',
-                lable: '',
+                lable: widget.authenticatedUser.homeLabel,
                 onTap: () {},
                 backgroundColor: kHeavyEffects
                     ? colors.surfaceRaised.withValues(alpha: 0.2)
