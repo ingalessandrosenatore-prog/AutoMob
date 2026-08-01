@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  common_ui_widget:
+    path: ../common_ui_widget
+  go_router: ^17.3.0
 
 dev_dependencies:
   flutter_test:

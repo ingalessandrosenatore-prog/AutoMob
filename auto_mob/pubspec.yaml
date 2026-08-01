@@ -30,6 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  common_ui_widget:
+    path: ../common_ui_widget
 
   # UI
   cupertino_icons: ^1.0.8

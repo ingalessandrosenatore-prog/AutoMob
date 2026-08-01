@@ -1,11 +1,11 @@
 # AutoMob agent contract
 
-These instructions are mandatory for every change under `auto_mob_v1/`.
+These instructions are mandatory for every change in this monorepo.
 
 ## Before editing
 
-1. Read `auto_mob_v1/AGENT.MD`.
-2. Run `./tool/verify.ps1` from `auto_mob_v1/` to establish the baseline.
+1. Read the `AGENT.MD` in the project being changed.
+2. Run that project's `./tool/verify.ps1` to establish the baseline.
 3. Inspect `git status` and preserve unrelated user changes.
 4. For a new workflow, write the dependency path before coding:
    `UI -> BLoC -> UseCase -> Repository -> DataSource`.
@@ -35,3 +35,14 @@ If the proposed path skips a layer, stop and redesign it before editing.
 - Never bypass hooks with `--no-verify`.
 - Do not commit `.env`, service-account files, signing keys, or
   `supabase/.temp/`.
+
+## Monorepo boundaries
+
+- `auto_mob/` is the owner app.
+- `automob_backoffice_mech/` is the mechanic app.
+- `common_ui_widget/` contains only presentation code shared by both apps.
+- WorkLog remains app-specific. Do not move WorkLog domain, data, BLoC, or pages
+  into a shared package.
+- Extract widgets only when a second app actually needs them.
+- Keep compatibility exports in the owner app until all imports have migrated
+  and deletion has been explicitly approved.
