@@ -4,6 +4,7 @@ import 'package:automob_backoffice_mech/features/auth/data/datasources/municipal
 import 'package:automob_backoffice_mech/features/auth/data/models/app_auth_user_model.dart';
 import 'package:automob_backoffice_mech/features/auth/data/models/registration_response_model.dart';
 import 'package:automob_backoffice_mech/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:automob_backoffice_mech/features/auth/domain/entities/login_credentials.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/entities/mechanic_registration.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/entities/registration_outcome.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,8 +31,40 @@ void main() {
     municipalityIstatCode: '058091',
     municipalityLabel: 'Roma (RM)',
   );
+  const credentials = LoginCredentials(
+    email: 'mario@rossi.it',
+    password: 'Password1!',
+  );
 
-  setUpAll(() => registerFallbackValue(registration));
+  setUpAll(() {
+    registerFallbackValue(registration);
+    registerFallbackValue(credentials);
+  });
+
+  test(
+    'login restituisce utente e cancella eventuale conferma pendente',
+    () async {
+      final remote = _MockRemoteDataSource();
+      final local = _MockLocalDataSource();
+      final municipalities = _MockMunicipalityDataSource();
+      when(() => remote.loginWithEmail(credentials)).thenAnswer(
+        (_) async =>
+            const AppAuthUserModel(id: 'user-1', email: 'mario@rossi.it'),
+      );
+      when(local.clearPendingVerificationEmail).thenAnswer((_) async {});
+      final repository = AuthRepositoryImpl(
+        remoteDataSource: remote,
+        localDataSource: local,
+        municipalityDataSource: municipalities,
+      );
+
+      final result = await repository.loginWithEmail(credentials);
+
+      expect(result.getOrElse((_) => throw StateError('errore')).id, 'user-1');
+      verify(() => remote.loginWithEmail(credentials)).called(1);
+      verify(local.clearPendingVerificationEmail).called(1);
+    },
+  );
 
   test('salva la fase pendente quando Supabase richiede conferma', () async {
     final remote = _MockRemoteDataSource();

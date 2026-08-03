@@ -21,3 +21,8 @@ final class ServerFailure extends Failure {
   const ServerFailure()
     : super('Si è verificato un errore. Riprova tra qualche istante.');
 }
+
+final class PermissionFailure extends Failure {
+  const PermissionFailure()
+    : super('Non hai il permesso di accedere a questa risorsa.');
+}

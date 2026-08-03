@@ -24,6 +24,7 @@ void main() {
     final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
 
     expect(app.routerConfig, isNotNull);
+    expect(app.themeMode, ThemeMode.dark);
     expect(
       app.theme?.extension<AmThemeColors>()?.accent,
       const Color(0xFFFF6B00),

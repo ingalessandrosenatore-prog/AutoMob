@@ -282,7 +282,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
               alignment: AlignmentGeometry.centerLeft,
               child: AmPullDownLG(
                 brand: '',
-                lable: widget.authenticatedUser.homeLabel,
+                lable: "",
                 onTap: () {},
                 backgroundColor: kHeavyEffects
                     ? colors.surfaceRaised.withValues(alpha: 0.2)

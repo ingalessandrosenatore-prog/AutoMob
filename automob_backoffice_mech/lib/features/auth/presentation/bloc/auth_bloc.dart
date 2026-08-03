@@ -1,22 +1,35 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/login_credentials.dart';
 import '../../domain/entities/mechanic_registration.dart';
 import '../../domain/entities/registration_outcome.dart';
 import '../../domain/usecases/check_auth_session.dart';
 import '../../domain/usecases/get_italian_municipalities.dart';
 import '../../domain/usecases/get_pending_verification_email.dart';
+import '../../domain/usecases/login_with_email.dart';
 import '../../domain/usecases/register_mechanic.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc({
+    required this.loginWithEmail,
     required this.registerMechanic,
     required this.checkAuthSession,
     required this.getPendingVerificationEmail,
     required this.getItalianMunicipalities,
   }) : super(const AuthBooting()) {
     on<AuthStarted>(_onStarted);
+    on<RegistrationStarted>(_onRegistrationStarted);
+    on<LoginEmailChanged>(
+      (event, emit) =>
+          _updateLogin(emit, (draft) => draft.copyWith(email: event.value)),
+    );
+    on<LoginPasswordChanged>(
+      (event, emit) =>
+          _updateLogin(emit, (draft) => draft.copyWith(password: event.value)),
+    );
+    on<LoginSubmitted>(_onLoginSubmitted);
     on<FullNameChanged>(
       (event, emit) =>
           _updateDraft(emit, (draft) => draft.copyWith(fullName: event.value)),
@@ -76,6 +89,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthDialogDismissed>(_onDialogDismissed);
   }
 
+  final LoginWithEmail loginWithEmail;
   final RegisterMechanic registerMechanic;
   final CheckAuthSession checkAuthSession;
   final GetPendingVerificationEmail getPendingVerificationEmail;
@@ -95,6 +109,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthEmailVerificationPending(email: pendingEmail));
       return;
     }
+    emit(const AuthLogin());
+  }
+
+  Future<void> _onRegistrationStarted(
+    RegistrationStarted event,
+    Emitter<AuthState> emit,
+  ) async {
+    final current = state;
+    if (current is AuthRegistration ||
+        current is AuthEmailVerificationPending) {
+      return;
+    }
     final municipalitiesResult = await getItalianMunicipalities();
     municipalitiesResult.fold(
       (failure) => emit(
@@ -112,6 +138,50 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           municipalities: municipalities,
         ),
       ),
+    );
+  }
+
+  void _updateLogin(
+    Emitter<AuthState> emit,
+    LoginDraft Function(LoginDraft draft) update,
+  ) {
+    final current = state;
+    if (current is! AuthLogin || current.isSubmitting) return;
+    emit(
+      current.copyWith(
+        draft: update(current.draft),
+        errors: const LoginFieldErrors(),
+        clearDialog: true,
+      ),
+    );
+  }
+
+  Future<void> _onLoginSubmitted(
+    LoginSubmitted event,
+    Emitter<AuthState> emit,
+  ) async {
+    final current = state;
+    if (current is! AuthLogin || current.isSubmitting) return;
+    final errors = _validateLogin(current.draft);
+    if (errors.hasErrors) {
+      emit(current.copyWith(errors: errors));
+      return;
+    }
+    emit(current.copyWith(status: LoginSubmissionStatus.submitting));
+    final result = await loginWithEmail(
+      LoginCredentials(
+        email: current.draft.email,
+        password: current.draft.password,
+      ),
+    );
+    result.fold(
+      (failure) => emit(
+        current.copyWith(
+          status: LoginSubmissionStatus.idle,
+          dialogMessage: failure.message,
+        ),
+      ),
+      (user) => emit(AuthAuthenticated(user)),
     );
   }
 
@@ -227,6 +297,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   void _onDialogDismissed(AuthDialogDismissed event, Emitter<AuthState> emit) {
     switch (state) {
+      case final AuthLogin current:
+        emit(current.copyWith(clearDialog: true));
       case final AuthRegistration current:
         emit(current.copyWith(clearDialog: true));
       case final AuthEmailVerificationPending current:
@@ -234,6 +306,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       default:
         break;
     }
+  }
+
+  LoginFieldErrors _validateLogin(LoginDraft draft) {
+    final emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    return LoginFieldErrors(
+      email: !emailPattern.hasMatch(draft.email.trim())
+          ? 'Inserisci un email valida.'
+          : null,
+      password: draft.password.isEmpty ? 'Inserisci la password.' : null,
+    );
   }
 
   RegistrationFieldErrors _validatePersonal(RegistrationDraft draft) {

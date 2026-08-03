@@ -4,6 +4,7 @@ import '../../../../core/error/app_exception.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/app_auth_user.dart';
 import '../../domain/entities/italian_municipality.dart';
+import '../../domain/entities/login_credentials.dart';
 import '../../domain/entities/mechanic_registration.dart';
 import '../../domain/entities/registration_outcome.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -21,6 +22,23 @@ final class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
   final AuthLocalDataSource localDataSource;
   final MunicipalityLocalDataSource municipalityDataSource;
+
+  @override
+  Future<Either<Failure, AppAuthUser>> loginWithEmail(
+    LoginCredentials credentials,
+  ) async {
+    try {
+      final user = await remoteDataSource.loginWithEmail(credentials);
+      await localDataSource.clearPendingVerificationEmail();
+      return Right(user);
+    } on NetworkException {
+      return const Left(NetworkFailure());
+    } on AuthDataException catch (error) {
+      return Left(AuthFailure(_authMessage(error)));
+    } catch (_) {
+      return const Left(ServerFailure());
+    }
+  }
 
   @override
   Future<Either<Failure, RegistrationOutcome>> registerMechanic(
@@ -74,6 +92,7 @@ final class AuthRepositoryImpl implements AuthRepository {
 
   String _authMessage(AuthDataException error) {
     return switch (error.code) {
+      'invalid_credentials' => 'Email o password non corretti.',
       'user_already_exists' => 'Questa email è già registrata.',
       'weak_password' => 'La password deve contenere almeno 8 caratteri.',
       'over_email_send_rate_limit' =>

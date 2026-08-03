@@ -8,6 +8,24 @@ final class AuthStarted extends AuthEvent {
   const AuthStarted();
 }
 
+final class RegistrationStarted extends AuthEvent {
+  const RegistrationStarted();
+}
+
+final class LoginEmailChanged extends AuthEvent {
+  const LoginEmailChanged(this.value);
+  final String value;
+}
+
+final class LoginPasswordChanged extends AuthEvent {
+  const LoginPasswordChanged(this.value);
+  final String value;
+}
+
+final class LoginSubmitted extends AuthEvent {
+  const LoginSubmitted();
+}
+
 final class FullNameChanged extends AuthEvent {
   const FullNameChanged(this.value);
   final String value;

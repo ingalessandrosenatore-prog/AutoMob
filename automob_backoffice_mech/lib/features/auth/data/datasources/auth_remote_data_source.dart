@@ -4,11 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/error/app_exception.dart';
+import '../../domain/entities/login_credentials.dart';
 import '../../domain/entities/mechanic_registration.dart';
 import '../models/app_auth_user_model.dart';
 import '../models/registration_response_model.dart';
 
 abstract interface class AuthRemoteDataSource {
+  Future<AppAuthUserModel> loginWithEmail(LoginCredentials credentials);
+
   Future<RegistrationResponseModel> registerMechanic(
     MechanicRegistration registration,
   );
@@ -23,6 +26,25 @@ final class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   static const emailConfirmationRedirect =
       'com.infinty.automob.mechanic://login-callback/';
+
+  @override
+  Future<AppAuthUserModel> loginWithEmail(LoginCredentials credentials) async {
+    try {
+      final response = await client.auth.signInWithPassword(
+        email: credentials.email.trim(),
+        password: credentials.password,
+      );
+      final user = response.user;
+      if (user == null) {
+        throw const AuthDataException('Login non completato');
+      }
+      return AppAuthUserModel.fromSupabase(user);
+    } on AuthException catch (error) {
+      throw AuthDataException(error.message, code: error.code);
+    } on SocketException {
+      throw const NetworkException();
+    }
+  }
 
   @override
   Future<RegistrationResponseModel> registerMechanic(

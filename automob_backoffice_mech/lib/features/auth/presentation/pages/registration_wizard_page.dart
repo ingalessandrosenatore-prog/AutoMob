@@ -32,9 +32,12 @@ final class _RegistrationWizardPageState extends State<RegistrationWizardPage> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(
-      initialPage: _pageIndex(context.read<AuthBloc>().state),
-    );
+    final authBloc = context.read<AuthBloc>();
+    _pageController = PageController(initialPage: _pageIndex(authBloc.state));
+    if (authBloc.state is! AuthRegistration &&
+        authBloc.state is! AuthEmailVerificationPending) {
+      authBloc.add(const RegistrationStarted());
+    }
   }
 
   @override

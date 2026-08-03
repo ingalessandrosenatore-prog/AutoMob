@@ -12,3 +12,7 @@ final class AuthDataException extends AppException {
 final class NetworkException extends AppException {
   const NetworkException() : super('Errore di connessione');
 }
+
+final class WorkshopDataException extends AppException {
+  const WorkshopDataException(super.message, {super.code});
+}

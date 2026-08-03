@@ -2,6 +2,7 @@ import 'package:automob_backoffice_mech/core/router/app_route_names.dart';
 import 'package:automob_backoffice_mech/core/router/app_router.dart';
 import 'package:automob_backoffice_mech/core/router/app_router_dependencies.dart';
 import 'package:automob_backoffice_mech/core/router/auth_navigation_status.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +18,9 @@ void main() {
       authStatus.dispose();
     });
 
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AmTheme.dark, routerConfig: router),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('login'), findsOneWidget);
@@ -26,8 +29,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('workshop'), findsOneWidget);
-    expect(find.text('Officina'), findsOneWidget);
-    expect(find.text('Abbonamento'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Servizi'), findsOneWidget);
   });
 
   testWidgets('switching tabs preserves the workshop state', (tester) async {
@@ -38,7 +41,9 @@ void main() {
       authStatus.dispose();
     });
 
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AmTheme.dark, routerConfig: router),
+    );
     await tester.pumpAndSettle();
 
     await tester.enterText(
@@ -46,11 +51,11 @@ void main() {
       'bozza mantenuta',
     );
 
-    await tester.tap(find.text('Abbonamento'));
+    await tester.tap(find.text('Servizi'));
     await tester.pumpAndSettle();
     expect(find.text('subscription'), findsOneWidget);
 
-    await tester.tap(find.text('Officina'));
+    await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();
     final editable = tester.widget<EditableText>(find.byType(EditableText));
     expect(editable.controller.text, 'bozza mantenuta');
@@ -68,7 +73,9 @@ void main() {
         authStatus.dispose();
       });
 
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      await tester.pumpWidget(
+        MaterialApp.router(theme: AmTheme.dark, routerConfig: router),
+      );
       await tester.pumpAndSettle();
       expect(find.text('verify-email'), findsOneWidget);
 
@@ -88,7 +95,9 @@ void main() {
       authStatus.dispose();
     });
 
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AmTheme.dark, routerConfig: router),
+    );
     await tester.pumpAndSettle();
 
     router.pushNamed(

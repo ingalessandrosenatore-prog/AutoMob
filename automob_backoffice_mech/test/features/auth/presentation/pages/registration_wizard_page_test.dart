@@ -1,12 +1,14 @@
 import 'package:automob_backoffice_mech/core/error/failure.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/entities/app_auth_user.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/entities/italian_municipality.dart';
+import 'package:automob_backoffice_mech/features/auth/domain/entities/login_credentials.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/entities/mechanic_registration.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/entities/registration_outcome.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/repositories/auth_repository.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/usecases/check_auth_session.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/usecases/get_italian_municipalities.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/usecases/get_pending_verification_email.dart';
+import 'package:automob_backoffice_mech/features/auth/domain/usecases/login_with_email.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/usecases/register_mechanic.dart';
 import 'package:automob_backoffice_mech/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:automob_backoffice_mech/features/auth/presentation/bloc/auth_event.dart';
@@ -138,6 +140,7 @@ void main() {
 }
 
 AuthBloc _buildBloc(AuthRepository repository) => AuthBloc(
+  loginWithEmail: LoginWithEmail(repository),
   registerMechanic: RegisterMechanic(repository),
   checkAuthSession: CheckAuthSession(repository),
   getPendingVerificationEmail: GetPendingVerificationEmail(repository),
@@ -160,6 +163,11 @@ final class _PendingRepository implements AuthRepository {
   @override
   Future<Either<Failure, String?>> getPendingVerificationEmail() async =>
       Right(pendingEmail);
+
+  @override
+  Future<Either<Failure, AppAuthUser>> loginWithEmail(
+    LoginCredentials credentials,
+  ) => throw UnimplementedError();
 
   @override
   Future<Either<Failure, RegistrationOutcome>> registerMechanic(

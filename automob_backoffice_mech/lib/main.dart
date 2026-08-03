@@ -13,6 +13,10 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/registration_wizard_page.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
+import 'features/workshop/presentation/pages/workshop_home_page.dart';
+import 'features/workshop/presentation/pages/workshop_services_page.dart';
+import 'features/workshop/presentation/bloc/workshop_bloc.dart';
+import 'features/workshop/presentation/bloc/workshop_event.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,8 +59,13 @@ class _MainAppState extends State<MainApp> {
         ),
         registration: (_) => const RegistrationWizardPage(),
         emailVerification: (_) => const RegistrationWizardPage(),
-        workshop: _emptyRoute,
-        subscription: _emptyRoute,
+        workshop: (context) => BlocProvider.value(
+          value: getIt<WorkshopBloc>()..add(const WorkshopStarted()),
+          child: WorkshopHomePage(
+            onSettingsPressed: () => context.go(AppRoutePaths.subscription),
+          ),
+        ),
+        subscription: (_) => const WorkshopServicesPage(),
         vehicleConfiguration: (_, _) => const SizedBox.shrink(),
         workRegistration: (_, _) => const SizedBox.shrink(),
         workDetail: (_, _, _) => const SizedBox.shrink(),
@@ -79,11 +88,9 @@ class _MainAppState extends State<MainApp> {
         title: 'AutoMob Meccanico',
         theme: AmTheme.light,
         darkTheme: AmTheme.dark,
-        themeMode: ThemeMode.system,
+        themeMode: ThemeMode.dark,
         routerConfig: _router,
       ),
     );
   }
 }
-
-Widget _emptyRoute(BuildContext context) => const SizedBox.shrink();

@@ -5,19 +5,19 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-import 'core/di/injection_container.dart' as di;
-import 'core/router/app_router.dart';
-import 'core/theme/am_theme.dart';
-import 'core/theme/am_theme_mode.dart';
-import 'core/theme/theme_cubit.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/bloc/auth_state.dart';
-import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
-import 'features/work_log/presentation/bloc/work_log_history_bloc.dart';
-import 'features/notifications/data/datasources/firebase_bootstrap.dart';
-import 'features/notifications/presentation/services/notification_message_coordinator.dart';
-import 'firebase_options.dart';
+import 'package:auto_mob_v1/core/di/injection_container.dart' as di;
+import 'package:auto_mob_v1/core/router/app_router.dart';
+import 'package:auto_mob_v1/core/theme/am_theme.dart';
+import 'package:auto_mob_v1/core/theme/am_theme_mode.dart';
+import 'package:auto_mob_v1/core/theme/theme_cubit.dart';
+import 'package:auto_mob_v1/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:auto_mob_v1/features/auth/presentation/bloc/auth_state.dart';
+import 'package:auto_mob_v1/features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import 'package:auto_mob_v1/features/notifications/data/datasources/firebase_bootstrap.dart';
+import 'package:auto_mob_v1/features/notifications/presentation/services/notification_message_coordinator.dart';
+import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/bloc/work_log_history_bloc.dart';
+import 'package:auto_mob_v1/firebase_options.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {

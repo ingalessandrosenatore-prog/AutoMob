@@ -18,6 +18,18 @@ class ComputeMaintenanceKpis {
     MaintenanceKpi calcola(EnumPopUp tipo, int? ultimoKm, int intervallo) {
       // Se non c'e' storico (mai fatto), parto dai km attuali come base.
       final base = ultimoKm ?? kmAttuali;
+      if (intervallo == null  || intervallo == 0){
+        switch (tipo){
+          case EnumPopUp.aggiornaTagliando: intervallo = 15000;
+          case EnumPopUp.aggiornaDistribuzione: intervallo = 100000;
+          case EnumPopUp.aggiornaCambioGomme: intervallo = 40000;
+          case EnumPopUp.revisione:
+            throw UnimplementedError();
+          case EnumPopUp.pneumaticiInversione:intervallo = 15000;
+          case EnumPopUp.altro:
+            throw UnimplementedError();
+        }
+      }
       final prossimoKm = base + intervallo; // km a cui andrebbe rifatto
       final mancanti = prossimoKm - kmAttuali; // puo' essere negativo (scaduto)
       // Evito la divisione per zero se l'intervallo non e' configurato.

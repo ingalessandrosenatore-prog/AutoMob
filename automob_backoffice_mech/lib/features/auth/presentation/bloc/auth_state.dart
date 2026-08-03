@@ -7,6 +7,35 @@ enum RegistrationStep { personalData, workshop }
 
 enum RegistrationSubmissionStatus { idle, submitting }
 
+enum LoginSubmissionStatus { idle, submitting }
+
+final class LoginDraft extends Equatable {
+  const LoginDraft({this.email = '', this.password = ''});
+
+  final String email;
+  final String password;
+
+  LoginDraft copyWith({String? email, String? password}) => LoginDraft(
+    email: email ?? this.email,
+    password: password ?? this.password,
+  );
+
+  @override
+  List<Object?> get props => [email, password];
+}
+
+final class LoginFieldErrors extends Equatable {
+  const LoginFieldErrors({this.email, this.password});
+
+  final String? email;
+  final String? password;
+
+  bool get hasErrors => email != null || password != null;
+
+  @override
+  List<Object?> get props => [email, password];
+}
+
 final class RegistrationDraft extends Equatable {
   const RegistrationDraft({
     this.fullName = '',
@@ -140,6 +169,38 @@ final class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
   @override
   List<Object?> get props => [];
+}
+
+final class AuthLogin extends AuthState {
+  const AuthLogin({
+    this.draft = const LoginDraft(),
+    this.errors = const LoginFieldErrors(),
+    this.status = LoginSubmissionStatus.idle,
+    this.dialogMessage,
+  });
+
+  final LoginDraft draft;
+  final LoginFieldErrors errors;
+  final LoginSubmissionStatus status;
+  final String? dialogMessage;
+
+  bool get isSubmitting => status == LoginSubmissionStatus.submitting;
+
+  AuthLogin copyWith({
+    LoginDraft? draft,
+    LoginFieldErrors? errors,
+    LoginSubmissionStatus? status,
+    String? dialogMessage,
+    bool clearDialog = false,
+  }) => AuthLogin(
+    draft: draft ?? this.draft,
+    errors: errors ?? this.errors,
+    status: status ?? this.status,
+    dialogMessage: clearDialog ? null : dialogMessage ?? this.dialogMessage,
+  );
+
+  @override
+  List<Object?> get props => [draft, errors, status, dialogMessage];
 }
 
 final class AuthRegistration extends AuthState {

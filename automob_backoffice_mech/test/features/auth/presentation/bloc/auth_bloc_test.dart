@@ -1,11 +1,13 @@
 import 'package:automob_backoffice_mech/features/auth/domain/entities/app_auth_user.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/entities/italian_municipality.dart';
+import 'package:automob_backoffice_mech/features/auth/domain/entities/login_credentials.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/entities/mechanic_registration.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/entities/registration_outcome.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/repositories/auth_repository.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/usecases/check_auth_session.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/usecases/get_italian_municipalities.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/usecases/get_pending_verification_email.dart';
+import 'package:automob_backoffice_mech/features/auth/domain/usecases/login_with_email.dart';
 import 'package:automob_backoffice_mech/features/auth/domain/usecases/register_mechanic.dart';
 import 'package:automob_backoffice_mech/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:automob_backoffice_mech/features/auth/presentation/bloc/auth_event.dart';
@@ -20,6 +22,7 @@ void main() {
   late _MockAuthRepository repository;
 
   setUpAll(() {
+    registerFallbackValue(const LoginCredentials(email: '', password: ''));
     registerFallbackValue(
       const MechanicRegistration(
         fullName: '',
@@ -38,6 +41,55 @@ void main() {
 
   setUp(() {
     repository = _MockAuthRepository();
+  });
+
+  test(
+    'mostra login quando non esistono sessione o conferma pendente',
+    () async {
+      when(repository.checkSession).thenAnswer((_) async => const Right(null));
+      when(
+        repository.getPendingVerificationEmail,
+      ).thenAnswer((_) async => const Right(null));
+      final bloc = _buildBloc(repository);
+      addTearDown(bloc.close);
+
+      final login = _nextState<AuthLogin>(bloc);
+      bloc.add(const AuthStarted());
+
+      expect(await login, const AuthLogin());
+      verifyNever(repository.getMunicipalities);
+    },
+  );
+
+  test('login con email e password entra nell app', () async {
+    const user = AppAuthUser(id: 'user-1', email: 'meccanico@officina.it');
+    when(repository.checkSession).thenAnswer((_) async => const Right(null));
+    when(
+      repository.getPendingVerificationEmail,
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      () => repository.loginWithEmail(any()),
+    ).thenAnswer((_) async => const Right(user));
+    final bloc = _buildBloc(repository);
+    addTearDown(bloc.close);
+    final login = _nextState<AuthLogin>(bloc);
+    bloc.add(const AuthStarted());
+    await login;
+
+    bloc
+      ..add(const LoginEmailChanged('meccanico@officina.it'))
+      ..add(const LoginPasswordChanged('ettore1234'));
+    await bloc.stream.firstWhere(
+      (state) => state is AuthLogin && state.draft.password == 'ettore1234',
+    );
+    final authenticated = _nextState<AuthAuthenticated>(bloc);
+    bloc.add(const LoginSubmitted());
+
+    expect((await authenticated).user, user);
+    final captured =
+        verify(() => repository.loginWithEmail(captureAny())).captured.single
+            as LoginCredentials;
+    expect(captured.email, 'meccanico@officina.it');
   });
 
   test('ripristina la fase di conferma email dopo il riavvio', () async {
@@ -76,8 +128,11 @@ void main() {
     final bloc = _buildBloc(repository);
     addTearDown(bloc.close);
 
+    final login = _nextState<AuthLogin>(bloc);
     final registrationReady = _nextState<AuthRegistration>(bloc);
     bloc.add(const AuthStarted());
+    await login;
+    bloc.add(const RegistrationStarted());
     await registrationReady;
 
     final personalDraftReady = bloc.stream.firstWhere(
@@ -171,6 +226,7 @@ void main() {
 }
 
 AuthBloc _buildBloc(AuthRepository repository) => AuthBloc(
+  loginWithEmail: LoginWithEmail(repository),
   registerMechanic: RegisterMechanic(repository),
   checkAuthSession: CheckAuthSession(repository),
   getPendingVerificationEmail: GetPendingVerificationEmail(repository),

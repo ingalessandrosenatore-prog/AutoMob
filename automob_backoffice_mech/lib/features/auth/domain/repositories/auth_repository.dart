@@ -3,10 +3,15 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/failure.dart';
 import '../entities/app_auth_user.dart';
 import '../entities/italian_municipality.dart';
+import '../entities/login_credentials.dart';
 import '../entities/mechanic_registration.dart';
 import '../entities/registration_outcome.dart';
 
 abstract interface class AuthRepository {
+  Future<Either<Failure, AppAuthUser>> loginWithEmail(
+    LoginCredentials credentials,
+  );
+
   Future<Either<Failure, RegistrationOutcome>> registerMechanic(
     MechanicRegistration registration,
   );

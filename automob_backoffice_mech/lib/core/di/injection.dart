@@ -10,9 +10,15 @@ import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/domain/usecases/check_auth_session.dart';
 import '../../features/auth/domain/usecases/get_italian_municipalities.dart';
 import '../../features/auth/domain/usecases/get_pending_verification_email.dart';
+import '../../features/auth/domain/usecases/login_with_email.dart';
 import '../../features/auth/domain/usecases/register_mechanic.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/bloc/auth_event.dart';
+import '../../features/workshop/data/datasources/workshop_remote_data_source.dart';
+import '../../features/workshop/data/repositories/workshop_repository_impl.dart';
+import '../../features/workshop/domain/repositories/workshop_repository.dart';
+import '../../features/workshop/domain/usecases/get_workshop_catalog.dart';
+import '../../features/workshop/presentation/bloc/workshop_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -37,11 +43,21 @@ Future<void> configureDependencies() async {
       ),
     )
     ..registerLazySingleton(() => RegisterMechanic(getIt()))
+    ..registerLazySingleton(() => LoginWithEmail(getIt()))
     ..registerLazySingleton(() => CheckAuthSession(getIt()))
     ..registerLazySingleton(() => GetPendingVerificationEmail(getIt()))
     ..registerLazySingleton(() => GetItalianMunicipalities(getIt()))
+    ..registerLazySingleton<WorkshopRemoteDataSource>(
+      () => SupabaseWorkshopRemoteDataSource(Supabase.instance.client),
+    )
+    ..registerLazySingleton<WorkshopRepository>(
+      () => WorkshopRepositoryImpl(getIt()),
+    )
+    ..registerLazySingleton(() => GetWorkshopCatalog(getIt()))
+    ..registerLazySingleton(() => WorkshopBloc(getWorkshopCatalog: getIt()))
     ..registerSingleton<AuthBloc>(
       AuthBloc(
+        loginWithEmail: getIt(),
         registerMechanic: getIt(),
         checkAuthSession: getIt(),
         getPendingVerificationEmail: getIt(),
