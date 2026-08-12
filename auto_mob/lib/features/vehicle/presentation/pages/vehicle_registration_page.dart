@@ -6,7 +6,7 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
-import 'package:common_ui_widget/common_ui_widget.dart';
+import 'package:common_ui_widget/common_ui_widget.dart' hide AmSoftButton;
 
 import '../../../../core/config/performance_flags.dart';
 import '../../../../core/widgets/buttons/soft_button.dart';

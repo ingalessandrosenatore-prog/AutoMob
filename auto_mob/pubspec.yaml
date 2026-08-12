@@ -32,6 +32,8 @@ dependencies:
     sdk: flutter
   common_ui_widget:
     path: ../common_ui_widget
+  automob_work_log:
+    path: ../packages/automob_work_log
 
   # UI
   cupertino_icons: ^1.0.8
@@ -42,6 +44,7 @@ dependencies:
   oc_liquid_glass: ^0.2.2
   liquid_glass_widgets: ^0.15.0
   figma_squircle: ^0.6.3
+  card_stack_swiper: ^1.1.2
 
   # State Management
   flutter_bloc: ^8.1.5

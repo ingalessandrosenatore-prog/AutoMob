@@ -4,9 +4,14 @@ import 'auth_navigation_status.dart';
 
 typedef RouteWidgetBuilder = Widget Function(BuildContext context);
 typedef VehicleRouteWidgetBuilder =
-    Widget Function(BuildContext context, String vehicleId);
+    Widget Function(BuildContext context, String vehicleId, Object? extra);
 typedef WorkRouteWidgetBuilder =
-    Widget Function(BuildContext context, String vehicleId, String workId);
+    Widget Function(
+      BuildContext context,
+      String vehicleId,
+      String workId,
+      Object? extra,
+    );
 
 class AppRouterDependencies {
   const AppRouterDependencies({

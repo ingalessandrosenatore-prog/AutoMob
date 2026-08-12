@@ -28,6 +28,11 @@ abstract class VehicleRepository {
     required String mechanicCode,
   });
 
+  Future<Either<Failure, void>> disconnectMechanic({
+    required String vehicleId,
+    required String mechanicId,
+  });
+
   /// Aggiorna i km del veicolo (senza lavoro). Ritorna i km effettivi salvati
   /// (i km salgono solo, mai indietro).
   Future<Either<Failure, int>> updateKm({

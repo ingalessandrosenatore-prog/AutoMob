@@ -167,6 +167,46 @@ void main() {
     });
   });
 
+  group('disconnectMechanic', () {
+    test('ritorna Right dopo aver eliminato il collegamento', () async {
+      when(
+        () => remote.disconnectMechanic(
+          vehicleId: 'vehicle-1',
+          mechanicId: 'mechanic-1',
+        ),
+      ).thenAnswer((_) async {});
+
+      final result = await repository.disconnectMechanic(
+        vehicleId: 'vehicle-1',
+        mechanicId: 'mechanic-1',
+      );
+
+      expect(result, const Right<Failure, void>(null));
+      verify(
+        () => remote.disconnectMechanic(
+          vehicleId: 'vehicle-1',
+          mechanicId: 'mechanic-1',
+        ),
+      ).called(1);
+    });
+
+    test('mappa un errore di rete in NetworkFailure', () async {
+      when(
+        () => remote.disconnectMechanic(
+          vehicleId: 'vehicle-1',
+          mechanicId: 'mechanic-1',
+        ),
+      ).thenThrow(const NetworkException());
+
+      final result = await repository.disconnectMechanic(
+        vehicleId: 'vehicle-1',
+        mechanicId: 'mechanic-1',
+      );
+
+      expect(result, const Left<Failure, void>(NetworkFailure()));
+    });
+  });
+
   group('updateVehiclePhoto', () {
     final tFile = File('veicolo_AB123CD.jpg');
 

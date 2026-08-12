@@ -4,6 +4,7 @@ import '../../domain/entities/workshop_catalog.dart';
 import '../../domain/usecases/get_workshop_catalog.dart';
 import 'workshop_event.dart';
 import 'workshop_state.dart';
+import 'workshop_vehicle_filter.dart';
 
 class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
   WorkshopBloc({required this.getWorkshopCatalog})
@@ -11,6 +12,7 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
     on<WorkshopStarted>(_onStarted);
     on<WorkshopRetryRequested>(_onRetryRequested);
     on<WorkshopSearchChanged>(_onSearchChanged);
+    on<WorkshopVehicleFilterChanged>(_onVehicleFilterChanged);
     on<WorkshopVisibleWindowRequested>(_onVisibleWindowRequested);
   }
 
@@ -40,6 +42,7 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
           allVehicles: catalog.vehicles,
           filteredVehicles: catalog.vehicles,
           query: '',
+          filter: WorkshopVehicleFilter.all,
           visibleCount: WorkshopReady.pageSize,
         ),
       ),
@@ -53,17 +56,7 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
     final current = state;
     if (current is! WorkshopReady) return;
     final query = event.query.trim();
-    final tokens = _normalize(
-      query,
-    ).split(' ').where((token) => token.isNotEmpty).toList(growable: false);
-    final filtered = tokens.isEmpty
-        ? current.allVehicles
-        : current.allVehicles
-              .where((vehicle) {
-                final searchable = _searchableText(vehicle);
-                return tokens.every(searchable.contains);
-              })
-              .toList(growable: false);
+    final filtered = _applyFilters(current.allVehicles, query, current.filter);
     emit(
       current.copyWith(
         filteredVehicles: filtered,
@@ -71,6 +64,47 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
         visibleCount: WorkshopReady.pageSize,
       ),
     );
+  }
+
+  void _onVehicleFilterChanged(
+    WorkshopVehicleFilterChanged event,
+    Emitter<WorkshopState> emit,
+  ) {
+    final current = state;
+    if (current is! WorkshopReady || current.filter == event.filter) return;
+    emit(
+      current.copyWith(
+        filteredVehicles: _applyFilters(
+          current.allVehicles,
+          current.query,
+          event.filter,
+        ),
+        filter: event.filter,
+        visibleCount: WorkshopReady.pageSize,
+      ),
+    );
+  }
+
+  List<WorkshopVehicle> _applyFilters(
+    List<WorkshopVehicle> vehicles,
+    String query,
+    WorkshopVehicleFilter filter,
+  ) {
+    final tokens = _normalize(
+      query,
+    ).split(' ').where((token) => token.isNotEmpty).toList(growable: false);
+    return vehicles
+        .where((vehicle) {
+          final matchesQuery =
+              tokens.isEmpty || tokens.every(_searchableText(vehicle).contains);
+          final matchesStatus = switch (filter) {
+            WorkshopVehicleFilter.all => true,
+            WorkshopVehicleFilter.connected => !vehicle.requiresMaintenance,
+            WorkshopVehicleFilter.maintenanceDue => vehicle.requiresMaintenance,
+          };
+          return matchesQuery && matchesStatus;
+        })
+        .toList(growable: false);
   }
 
   void _onVisibleWindowRequested(

@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/workshop_catalog.dart';
+import 'workshop_vehicle_filter.dart';
 
 sealed class WorkshopState extends Equatable {
   const WorkshopState();
@@ -26,6 +27,7 @@ final class WorkshopReady extends WorkshopState {
     required this.allVehicles,
     required this.filteredVehicles,
     required this.query,
+    required this.filter,
     required this.visibleCount,
   });
 
@@ -35,6 +37,7 @@ final class WorkshopReady extends WorkshopState {
   final List<WorkshopVehicle> allVehicles;
   final List<WorkshopVehicle> filteredVehicles;
   final String query;
+  final WorkshopVehicleFilter filter;
   final int visibleCount;
 
   List<WorkshopVehicle> get visibleVehicles => filteredVehicles
@@ -46,12 +49,14 @@ final class WorkshopReady extends WorkshopState {
   WorkshopReady copyWith({
     List<WorkshopVehicle>? filteredVehicles,
     String? query,
+    WorkshopVehicleFilter? filter,
     int? visibleCount,
   }) => WorkshopReady(
     mechanic: mechanic,
     allVehicles: allVehicles,
     filteredVehicles: filteredVehicles ?? this.filteredVehicles,
     query: query ?? this.query,
+    filter: filter ?? this.filter,
     visibleCount: visibleCount ?? this.visibleCount,
   );
 
@@ -61,6 +66,7 @@ final class WorkshopReady extends WorkshopState {
     allVehicles,
     filteredVehicles,
     query,
+    filter,
     visibleCount,
   ];
 }

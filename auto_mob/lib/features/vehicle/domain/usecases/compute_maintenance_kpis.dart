@@ -1,6 +1,7 @@
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 
 import '../entities/maintenance_kpi.dart';
+import '../entities/maintenance_defaults.dart';
 import '../entities/vehicle.dart';
 
 /// Calcola i KPI di manutenzione di UN veicolo a partire dai suoi dati:
@@ -16,16 +17,21 @@ class ComputeMaintenanceKpis {
 
     // Funzione interna: costruisce un KPI dato l'ultimo km e l'intervallo.
     MaintenanceKpi calcola(EnumPopUp tipo, int? ultimoKm, int intervallo) {
-      // Se non c'e' storico (mai fatto), parto dai km attuali come base.
-      final base = ultimoKm ?? kmAttuali;
-      if (intervallo == null  || intervallo == 0){
-        switch (tipo){
-          case EnumPopUp.aggiornaTagliando: intervallo = 15000;
-          case EnumPopUp.aggiornaDistribuzione: intervallo = 100000;
-          case EnumPopUp.aggiornaCambioGomme: intervallo = 40000;
+      // Un lavoro sconosciuto parte da zero: la base deve restare stabile anche
+      // quando aumentano i km correnti del veicolo.
+      final base = ultimoKm ?? MaintenanceDefaults.initialKm;
+      if (intervallo == 0) {
+        switch (tipo) {
+          case EnumPopUp.aggiornaTagliando:
+            intervallo = MaintenanceDefaults.tagliandoIntervalKm;
+          case EnumPopUp.aggiornaDistribuzione:
+            intervallo = MaintenanceDefaults.distribuzioneIntervalKm;
+          case EnumPopUp.aggiornaCambioGomme:
+            intervallo = MaintenanceDefaults.tireChangeIntervalKm;
           case EnumPopUp.revisione:
             throw UnimplementedError();
-          case EnumPopUp.pneumaticiInversione:intervallo = 15000;
+          case EnumPopUp.pneumaticiInversione:
+            intervallo = MaintenanceDefaults.tireRotationIntervalKm;
           case EnumPopUp.altro:
             throw UnimplementedError();
         }
@@ -49,13 +55,12 @@ class ComputeMaintenanceKpis {
         v.lastTagliandoKm,
         v.tagliandoIntervalKm,
       ),
-      // La distribuzione la mostro solo se ho un intervallo valido sul veicolo.
-      if (v.distribuzioneIntervalKm != null && v.distribuzioneIntervalKm! > 0)
-        calcola(
-          EnumPopUp.aggiornaDistribuzione,
-          v.lastDistribuzioneKm,
-          v.distribuzioneIntervalKm!,
-        ),
+      calcola(
+        EnumPopUp.aggiornaDistribuzione,
+        v.lastDistribuzioneKm,
+        v.distribuzioneIntervalKm ??
+            MaintenanceDefaults.distribuzioneIntervalKm,
+      ),
       calcola(
         EnumPopUp.aggiornaCambioGomme,
         v.lastTireChangeKm,

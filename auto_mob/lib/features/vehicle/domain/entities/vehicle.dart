@@ -37,7 +37,11 @@ class Vehicle extends Equatable {
 
   final DateTime createdAt;
   final DateTime? updatedAt;
-  final MechanicSummary? mechanic;
+  final List<MechanicSummary> mechanics;
+
+  /// Compatibilita' temporanea per i consumer ancora basati su una sola
+  /// officina. La lista ordinata resta la fonte di verita'.
+  MechanicSummary? get mechanic => mechanics.isEmpty ? null : mechanics.first;
 
   /// Path locale della foto del veicolo (es. /data/.../foto_veicoli/veicolo_AB123CD.jpg).
   /// Null se la foto non è stata salvata. Non viene persistito su DB.
@@ -72,10 +76,10 @@ class Vehicle extends Equatable {
     this.lastRevisionDate,
     this.updatedAt,
     this.fotoPath,
-    this.mechanic,
+    this.mechanics = const [],
   });
 
-  Vehicle copyWith({String? fotoPath, MechanicSummary? mechanic}) {
+  Vehicle copyWith({String? fotoPath, List<MechanicSummary>? mechanics}) {
     return Vehicle(
       id: id,
       ownerId: ownerId,
@@ -105,7 +109,7 @@ class Vehicle extends Equatable {
       lastRevisionDate: lastRevisionDate,
       updatedAt: updatedAt,
       fotoPath: fotoPath ?? this.fotoPath,
-      mechanic: mechanic ?? this.mechanic,
+      mechanics: mechanics ?? this.mechanics,
     );
   }
 
@@ -172,6 +176,6 @@ class Vehicle extends Equatable {
     createdAt,
     updatedAt,
     fotoPath,
-    mechanic,
+    mechanics,
   ];
 }

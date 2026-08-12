@@ -150,6 +150,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
     }
 
     return Scaffold(
+      backgroundColor: colors.background,
       body: Stack(
         children: [
           RepaintBoundary(child: widget.navigationShell),
@@ -171,12 +172,13 @@ class _ShellScaffoldState extends State<ShellScaffold>
                   child: OCLiquidGlassGroup(
                     settings: const OCLiquidGlassSettings(
                       refractStrength: -0.08,
-                      blurRadiusPx: 1.0,
-                      specStrength: 0,
-                      specWidth: 0.0,
+                      blurRadiusPx: 2,
+                      specStrength: 1,
+                      specWidth: 2,
                       specAngle: 145,
-                      blendPx: 70,
                       specPower: 10,
+                      lightbandOffsetPx: 7,
+                      lightbandStrength: 0.5,
                     ),
                     child: Stack(
                       alignment: Alignment.center,
@@ -190,7 +192,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
                                   width: larghezzaBarra,
                                   height: _bottomBarHeight,
                                   borderRadius: _bottomBarHeight / 2,
-                                  color: colors.surfaceHighlight.withValues(
+                                  color: colors.background.withValues(
                                     alpha: 0.2,
                                   ),
                                 ),

@@ -60,28 +60,34 @@ GoRouter createAppRouter({required AppRouterDependencies dependencies}) {
                   GoRoute(
                     path: AppRoutePaths.vehicleConfigurationSegment,
                     name: AppRouteNames.vehicleConfiguration,
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) =>
                         dependencies.vehicleConfiguration(
                           context,
                           state.pathParameters['vehicleId']!,
+                          state.extra,
                         ),
                     routes: [
                       GoRoute(
                         path: AppRoutePaths.workRegistrationSegment,
                         name: AppRouteNames.workRegistration,
+                        parentNavigatorKey: rootNavigatorKey,
                         builder: (context, state) =>
                             dependencies.workRegistration(
                               context,
                               state.pathParameters['vehicleId']!,
+                              state.extra,
                             ),
                       ),
                       GoRoute(
                         path: AppRoutePaths.workDetailSegment,
                         name: AppRouteNames.workDetail,
+                        parentNavigatorKey: rootNavigatorKey,
                         builder: (context, state) => dependencies.workDetail(
                           context,
                           state.pathParameters['vehicleId']!,
                           state.pathParameters['workId']!,
+                          state.extra,
                         ),
                       ),
                     ],

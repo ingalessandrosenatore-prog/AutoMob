@@ -2,10 +2,12 @@ import 'package:automob_backoffice_mech/core/router/app_route_names.dart';
 import 'package:automob_backoffice_mech/core/router/app_router.dart';
 import 'package:automob_backoffice_mech/core/router/app_router_dependencies.dart';
 import 'package:automob_backoffice_mech/core/router/auth_navigation_status.dart';
+import 'package:automob_backoffice_mech/core/router/mechanic_shell_metrics.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 void main() {
   testWidgets('auth guard moves unauthenticated users to login', (
@@ -31,6 +33,22 @@ void main() {
     expect(find.text('workshop'), findsOneWidget);
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Servizi'), findsOneWidget);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('mechanic_bottom_navigation')))
+          .height,
+      MechanicShellMetrics.navigationHeight,
+    );
+    final navigationRect = tester.getRect(
+      find.byKey(const ValueKey('mechanic_bottom_navigation')),
+    );
+    final publishedBottom = tester
+        .getSize(find.byKey(const ValueKey('mechanic_shell_bottom_inset')))
+        .height;
+    final screenHeight =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+    expect(navigationRect.bottom + publishedBottom, screenHeight);
+    expect(find.byType(OCLiquidGlass), findsOneWidget);
   });
 
   testWidgets('switching tabs preserves the workshop state', (tester) async {
@@ -136,9 +154,9 @@ GoRouter _createRouter(ValueNotifier<AuthNavigationStatus> authStatus) {
       emailVerification: (_) => const Text('verify-email'),
       workshop: (_) => const _CounterProbe(),
       subscription: (_) => const Text('subscription'),
-      vehicleConfiguration: (_, vehicleId) => Text('vehicle:$vehicleId'),
-      workRegistration: (_, vehicleId) => Text('new-work:$vehicleId'),
-      workDetail: (_, vehicleId, workId) => Text('work:$vehicleId:$workId'),
+      vehicleConfiguration: (_, vehicleId, _) => Text('vehicle:$vehicleId'),
+      workRegistration: (_, vehicleId, _) => Text('new-work:$vehicleId'),
+      workDetail: (_, vehicleId, workId, _) => Text('work:$vehicleId:$workId'),
     ),
   );
 }
@@ -148,10 +166,15 @@ class _CounterProbe extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    final shellBottom = MechanicShellGeometry.of(context).controlsBottom;
+    return Column(
       children: [
-        Text('workshop'),
-        TextField(key: Key('workshop-draft')),
+        SizedBox(
+          key: const ValueKey('mechanic_shell_bottom_inset'),
+          height: shellBottom,
+        ),
+        const Text('workshop'),
+        const TextField(key: Key('workshop-draft')),
       ],
     );
   }

@@ -65,6 +65,28 @@ class VehicleRepositoryImpl implements VehicleRepository {
   }
 
   @override
+  Future<Either<Failure, void>> disconnectMechanic({
+    required String vehicleId,
+    required String mechanicId,
+  }) async {
+    try {
+      await remoteDataSource.disconnectMechanic(
+        vehicleId: vehicleId,
+        mechanicId: mechanicId,
+      );
+      return const Right(null);
+    } on VehicleDataSourceException catch (error) {
+      return error.code == '42501'
+          ? const Left(PermissionFailure())
+          : const Left(ServerFailure());
+    } on NetworkException {
+      return const Left(NetworkFailure());
+    } catch (_) {
+      return const Left(ServerFailure());
+    }
+  }
+
+  @override
   Future<Either<Failure, VehicleDraft?>> loadDraft() async {
     try {
       return Right(await localDataSource.loadDraft());

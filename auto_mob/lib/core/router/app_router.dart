@@ -1,10 +1,10 @@
 import 'package:auto_mob_v1/features/dashboard/presentation/pages/home_view.dart';
 import 'package:auto_mob_v1/features/servizi/presentation/pages/servizi_page.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/midify_item.dart';
-import 'package:auto_mob_v1/features/work_log/presentation/pages/work_log_history_page.dart';
-import 'package:auto_mob_v1/features/work_log/presentation/pages/work_log_detail_page.dart';
+import 'package:auto_mob_v1/features/work_log/presentation/pages/owner_work_log_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:automob_work_log/automob_work_log.dart' as shared_work_log;
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -15,6 +15,7 @@ import '../../features/auth/presentation/pages/registration_view.dart';
 import '../../features/auth/presentation/pages/email_verification_page.dart';
 import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import '../../features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
+import '../../features/dashboard/presentation/bloc/disconnect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
 import '../../features/dashboard/presentation/widgets/mechanic_details_sheet.dart';
 import '../../features/settings/presentation/pages/settings_view.dart';
@@ -22,7 +23,7 @@ import '../../features/vehicle/domain/entities/mechanic_summary.dart';
 import '../../features/vehicle/presentation/pages/vehicle_registration_page.dart';
 import '../../features/vehicle/presentation/widgets/km_update_pop_up.dart';
 import '../../features/vehicle/presentation/widgets/revision_update_pop_up.dart';
-import '../../features/work_log/presentation/pages/work_log_wizard_page.dart';
+import '../../features/work_log/presentation/pages/owner_work_log_wizard_page.dart';
 import '../../features/work_log/domain/entities/work_log_row.dart';
 import '../types/enum_pop_up.dart';
 import '../di/injection_container.dart' as di;
@@ -120,7 +121,12 @@ class AppRouter {
               GoRoute(
                 path: '/lavori',
                 name: 'lavori',
-                builder: (context, state) => const WorkLogHistoryPage(),
+                builder: (context, state) => shared_work_log.WorkLogFeature(
+                  launch: const shared_work_log.OwnerWorkLogLaunch(),
+                  dependencies: shared_work_log.WorkLogDependencies(
+                    repository: di.sl<shared_work_log.WorkLogRepository>(),
+                  ),
+                ),
               ),
             ],
           ),
@@ -159,10 +165,15 @@ class AppRouter {
           final extra = state.extra as Map<String, dynamic>;
           return AmFadeThroughPage(
             key: state.pageKey,
-            child: WorkLogWizardPage(
-              vehicleId: extra['vehicleId'] as String,
-              currentKm: extra['currentKm'] as int,
-              initialWorkType: extra['initialWorkType'] as EnumPopUp,
+            child: OwnerWorkLogWizardPage(
+              workLogContext: shared_work_log.WorkLogLaunchContext(
+                vehicleId: extra['vehicleId'] as String,
+                vehicleName: (extra['vehicleName'] as String?) ?? 'Veicolo',
+                currentKm: extra['currentKm'] as int,
+                initialWorkType:
+                    (extra['initialWorkType'] as EnumPopUp).dbValue,
+              ),
+              cubit: di.sl<shared_work_log.WorkLogEditorCubit>(),
             ),
           );
         },
@@ -173,6 +184,12 @@ class AppRouter {
         name: 'dettaglio_lavoro',
         pageBuilder: (context, state) {
           final work = state.extra;
+          if (work is shared_work_log.WorkLogEntry) {
+            return AmFadeThroughPage(
+              key: state.pageKey,
+              child: OwnerWorkLogDetailPage.shared(entry: work),
+            );
+          }
           if (work is! WorkLogRow) {
             return AmFadeThroughPage(
               key: state.pageKey,
@@ -181,7 +198,7 @@ class AppRouter {
           }
           return AmFadeThroughPage(
             key: state.pageKey,
-            child: WorkLogDetailPage(work: work),
+            child: OwnerWorkLogDetailPage(work: work),
           );
         },
       ),
@@ -230,6 +247,7 @@ class AppRouter {
             vehicleId: extra['vehicleId'] as String,
             mechanic: extra['mechanic'] as MechanicSummary?,
             createCubit: () => di.sl<ConnectMechanicCubit>(),
+            createDisconnectCubit: () => di.sl<DisconnectMechanicCubit>(),
           );
         },
       ),

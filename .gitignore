@@ -19,6 +19,8 @@
 # IDE and OS files
 **/.idea/
 **/.claude/settings.local.json
+.codex-remote-attachments/
+.qwen/
 *.iml
 *.ipr
 *.iws

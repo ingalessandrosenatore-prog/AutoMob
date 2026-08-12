@@ -5,13 +5,15 @@ import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
 import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
-import 'package:common_ui_widget/common_ui_widget.dart';
+import 'package:common_ui_widget/common_ui_widget.dart'
+    hide AmPullDownLG, AmSoftButton, ItemMorphPopUp, MorphPopUp;
 import 'package:auto_mob_v1/core/widgets/dialog/notification_permission_dialog.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:auto_mob_v1/core/router/app_session_actions.dart';
 import 'package:auto_mob_v1/features/auth/domain/entities/app_user.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -283,12 +285,13 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
               child: AmPullDownLG(
                 brand: '',
                 lable: "",
+                larghezza: 180,
                 onTap: () {},
                 backgroundColor: kHeavyEffects
-                    ? colors.surfaceRaised.withValues(alpha: 0.2)
+                    ? colors.background.withValues(alpha: 0.2)
                     : colors.surfaceRaised,
                 popupBackgroundColor: kHeavyEffects
-                    ? colors.surfaceRaised.withValues(alpha: 0.5)
+                    ? colors.background.withValues(alpha: 0.8)
                     : colors.surfaceRaised,
                 buttonIcons: HugeIcons.strokeRoundedMoreHorizontalCircle02,
                 buttonIconsSize: 26,
@@ -434,13 +437,14 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                     // ricompilare/ridisegnare ad ogni frame.
                     child: OCLiquidGlassGroup(
                       settings: const OCLiquidGlassSettings(
-                        refractStrength: -0.13,
-                        blurRadiusPx: 1.0,
-                        specStrength: 0,
-                        specWidth: 0.0,
+                        refractStrength: -0.08,
+                        blurRadiusPx: 2,
+                        specStrength: 1,
+                        specWidth: 0.5,
                         specAngle: 145,
-                        blendPx: 20,
                         specPower: 10,
+                        lightbandOffsetPx: 7,
+                        lightbandStrength: 0.5,
                       ),
                       child: appBarContent,
                     ),
@@ -723,33 +727,24 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                         final vehicle = state is DashboardLoaded
                             ? state.vehicles[state.index]
                             : null;
-                        final mechanic = vehicle?.mechanic;
                         return Padding(
                           padding: const EdgeInsets.all(9),
                           child: RepaintBoundary(
-                            child: AmWorkshopCard(
-                              mechanic: mechanic,
-                              onTap: vehicle == null || vehicle.isPlaceholder
-                                  ? null
-                                  : () async {
-                                      AmHaptics.tap();
-                                      final dashboardBloc = context
-                                          .read<DashboardBloc>();
-                                      final connected = await context.pushNamed(
-                                        'mechanicDetails',
-                                        extra: <String, dynamic>{
-                                          'vehicleId': vehicle.id,
-                                          'mechanic': mechanic,
-                                        },
-                                      );
-                                      if (connected == true) {
-                                        AmHaptics.tap();
-                                        dashboardBloc.add(
-                                          DashboardRefreshRequested(),
-                                        );
-                                      }
-                                    },
-                            ),
+                            child: vehicle == null || vehicle.isPlaceholder
+                                ? const SizedBox.shrink()
+                                : AmWorkshopSwiper(
+                                    key: ObjectKey(state),
+                                    mechanics: vehicle.mechanics,
+                                    onAdd: () => _openWorkshop(
+                                      context,
+                                      vehicleId: vehicle.id,
+                                    ),
+                                    onMechanicTap: (mechanic) => _openWorkshop(
+                                      context,
+                                      vehicleId: vehicle.id,
+                                      mechanic: mechanic,
+                                    ),
+                                  ),
                           ),
                         );
                       },
@@ -993,6 +988,23 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     );
   }
 
+  Future<void> _openWorkshop(
+    BuildContext context, {
+    required String vehicleId,
+    MechanicSummary? mechanic,
+  }) async {
+    AmHaptics.tap();
+    final dashboardBloc = context.read<DashboardBloc>();
+    final changed = await context.pushNamed(
+      'mechanicDetails',
+      extra: <String, dynamic>{'vehicleId': vehicleId, 'mechanic': mechanic},
+    );
+    if (changed == true) {
+      AmHaptics.tap();
+      dashboardBloc.add(DashboardRefreshRequested());
+    }
+  }
+
   Future<void> _pushFunctional(BuildContext context, EnumPopUp type) async {
     final s = context.read<DashboardBloc>().state;
     AmHaptics.tap();
@@ -1003,6 +1015,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
         'aggiungi_lavoro',
         extra: {
           'vehicleId': v.id,
+          'vehicleName': '${v.brand} ${v.model}'.trim(),
           'currentKm': v.kmCurrent,
           'initialWorkType': type,
         },

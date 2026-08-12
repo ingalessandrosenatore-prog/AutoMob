@@ -7,6 +7,7 @@ import '../../../../core/error/exceptions/exceptions.dart';
 
 import '../../domain/entities/vehicle_draft.dart';
 import '../../domain/entities/mechanic_summary.dart';
+import '../../domain/entities/maintenance_defaults.dart';
 import '../models/vehicle_model.dart';
 
 abstract class VehicleRemoteDataSource {
@@ -22,6 +23,11 @@ abstract class VehicleRemoteDataSource {
   Future<MechanicSummary> connectMechanic({
     required String vehicleId,
     required String mechanicCode,
+  });
+
+  Future<void> disconnectMechanic({
+    required String vehicleId,
+    required String mechanicId,
   });
 
   /// Aggiorna i km del veicolo (modale "Aggiorna KM", senza lavoro) via RPC
@@ -109,7 +115,7 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
           .where((id) => id.isNotEmpty)
           .toList();
 
-      final mechanicsByVehicleId = <String, Map<String, dynamic>>{};
+      final mechanicsByVehicleId = <String, List<Map<String, dynamic>>>{};
       if (vehicleIds.isNotEmpty) {
         final links = await supabaseClient
             .from('vehicle_mechanics')
@@ -118,17 +124,17 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
               'id, mechanic_code, business_name, address, number, email'
               ')',
             )
-            .inFilter('vehicle_id', vehicleIds);
+            .inFilter('vehicle_id', vehicleIds)
+            .order('assigned_at', ascending: false);
 
         for (final rawLink in links as List) {
           final link = Map<String, dynamic>.from(rawLink as Map);
           final vehicleId = link['vehicle_id']?.toString();
           final mechanic = link['mechanic'];
           if (vehicleId != null && mechanic is Map) {
-            mechanicsByVehicleId.putIfAbsent(
-              vehicleId,
-              () => Map<String, dynamic>.from(mechanic),
-            );
+            mechanicsByVehicleId
+                .putIfAbsent(vehicleId, () => [])
+                .add(Map<String, dynamic>.from(mechanic));
           }
         }
       }
@@ -137,7 +143,7 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
         final vehicleId = row['id']?.toString();
         return VehicleModel.fromJson({
           ...row,
-          'mechanic': mechanicsByVehicleId[vehicleId],
+          'mechanics': mechanicsByVehicleId[vehicleId] ?? const [],
         });
       }).toList();
     } on PostgrestException catch (e) {
@@ -197,6 +203,32 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     } catch (_) {
       throw const VehicleDataSourceException(
         'Errore durante il collegamento del meccanico',
+      );
+    }
+  }
+
+  @override
+  Future<void> disconnectMechanic({
+    required String vehicleId,
+    required String mechanicId,
+  }) async {
+    if (owner_id == null) {
+      throw const ServerException('Utente non autenticato');
+    }
+
+    try {
+      await supabaseClient
+          .from('vehicle_mechanics')
+          .delete()
+          .eq('vehicle_id', vehicleId)
+          .eq('mechanic_id', mechanicId);
+    } on PostgrestException catch (error) {
+      throw VehicleDataSourceException(error.message, code: error.code);
+    } on SocketException {
+      throw const NetworkException();
+    } catch (_) {
+      throw const VehicleDataSourceException(
+        'Errore durante lo scollegamento dell\'officina',
       );
     }
   }
@@ -307,13 +339,21 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       'model': draft.modello?.toLowerCase(),
       'year': draft.anno,
       'fuel': normalizeFuel(draft.carburante),
-      'km_current': draft.kmAttuali ?? 0,
+      'km_current': draft.kmAttuali ?? MaintenanceDefaults.initialKm,
       'power_cv': draft.potenzaCv,
       'displacement_cc': draft.cilindrata,
-      'tagliando_interval_km': draft.intervalloUltimoTagliando,
-      'distribution_intervall_km': draft.intervalloUltimaDistribuzione,
-      'tire_change_interval_km': draft.intervalloCambioGomme,
-      'tire_rotation_interval_km': draft.intervalloInversioneGomme,
+      'tagliando_interval_km':
+          draft.intervalloUltimoTagliando ??
+          MaintenanceDefaults.tagliandoIntervalKm,
+      'distribution_intervall_km':
+          draft.intervalloUltimaDistribuzione ??
+          MaintenanceDefaults.distribuzioneIntervalKm,
+      'tire_change_interval_km':
+          draft.intervalloCambioGomme ??
+          MaintenanceDefaults.tireChangeIntervalKm,
+      'tire_rotation_interval_km':
+          draft.intervalloInversioneGomme ??
+          MaintenanceDefaults.tireRotationIntervalKm,
       'scadenza_revision_date': draft.prossimarevisione
           ?.toIso8601String()
           .split('T')[0],
@@ -321,17 +361,25 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
 
     // 2) Lavori iniziali: un item per ogni manutenzione di cui conosciamo il km.
     final lavori = <Map<String, dynamic>>[
-      if (draft.kmUltimoTagliando != null)
-        {'type': 'tagliando', 'service_km': draft.kmUltimoTagliando},
-      if (draft.kmUltimaDistribuzione != null)
-        {'type': 'distribuzione', 'service_km': draft.kmUltimaDistribuzione},
-      if (draft.kmUltimoCambioGomme != null)
-        {'type': 'pneumatici_cambio', 'service_km': draft.kmUltimoCambioGomme},
-      if (draft.kmUltimaInversioneGomme != null)
-        {
-          'type': 'pneumatici_inversione',
-          'service_km': draft.kmUltimaInversioneGomme,
-        },
+      {
+        'type': 'tagliando',
+        'service_km': draft.kmUltimoTagliando ?? MaintenanceDefaults.initialKm,
+      },
+      {
+        'type': 'distribuzione',
+        'service_km':
+            draft.kmUltimaDistribuzione ?? MaintenanceDefaults.initialKm,
+      },
+      {
+        'type': 'pneumatici_cambio',
+        'service_km':
+            draft.kmUltimoCambioGomme ?? MaintenanceDefaults.initialKm,
+      },
+      {
+        'type': 'pneumatici_inversione',
+        'service_km':
+            draft.kmUltimaInversioneGomme ?? MaintenanceDefaults.initialKm,
+      },
     ];
 
     return {

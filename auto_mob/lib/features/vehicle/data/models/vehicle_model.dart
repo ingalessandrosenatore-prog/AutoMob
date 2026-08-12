@@ -30,7 +30,7 @@ class VehicleModel extends Vehicle {
     super.lastTireRotationDate,
     super.lastRevisionDate,
     super.updatedAt,
-    super.mechanic,
+    super.mechanics,
   });
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
@@ -64,17 +64,23 @@ class VehicleModel extends Vehicle {
       return DateTime.tryParse(v.toString());
     }
 
-    final mechanicJson = json['mechanic'];
-    final mechanic = mechanicJson is Map
-        ? MechanicSummary(
-            id: str(mechanicJson['id']),
-            code: str(mechanicJson['mechanic_code']),
-            businessName: str(mechanicJson['business_name']),
-            address: _nullableString(mechanicJson['address']),
-            phone: _nullableString(mechanicJson['number']),
-            email: _nullableString(mechanicJson['email']),
-          )
-        : null;
+    MechanicSummary mechanicFromJson(Map<dynamic, dynamic> mechanicJson) =>
+        MechanicSummary(
+          id: str(mechanicJson['id']),
+          code: str(mechanicJson['mechanic_code']),
+          businessName: str(mechanicJson['business_name']),
+          address: _nullableString(mechanicJson['address']),
+          phone: _nullableString(mechanicJson['number']),
+          email: _nullableString(mechanicJson['email']),
+          photoUrl: _nullableString(mechanicJson['photo_url']),
+        );
+
+    final mechanicsJson = json['mechanics'];
+    final mechanics = mechanicsJson is List
+        ? mechanicsJson.whereType<Map>().map(mechanicFromJson).toList()
+        : json['mechanic'] is Map
+        ? [mechanicFromJson(json['mechanic'] as Map)]
+        : const <MechanicSummary>[];
 
     return VehicleModel(
       id: str(json['id']),
@@ -99,7 +105,7 @@ class VehicleModel extends Vehicle {
       ),
       tireRotationIntervalKm: intValue(
         json['tire_rotation_interval_km'],
-        fallback: 10000,
+        fallback: 15000,
       ),
       distribuzioneIntervalKm: intOrNull(json['distribution_intervall_km']),
       lastTagliandoKm: intOrNull(json['last_tagliando_km']),
@@ -113,7 +119,7 @@ class VehicleModel extends Vehicle {
       lastRevisionDate: dateOrNull(json['last_revision_date']),
       createdAt: date(json['created_at']),
       updatedAt: dateOrNull(json['updated_at']),
-      mechanic: mechanic,
+      mechanics: mechanics,
     );
   }
 
@@ -137,19 +143,22 @@ class VehicleModel extends Vehicle {
       'distribution_intervall_km': distribuzioneIntervalKm,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
-      'mechanic': mechanic == null
-          ? null
-          : {
-              'id': mechanic!.id,
-              'mechanic_code': mechanic!.code,
-              'business_name': mechanic!.businessName,
-              'address': mechanic!.address,
-              'number': mechanic!.phone,
-              'email': mechanic!.email,
-            },
+      'mechanics': mechanics.map(_mechanicToJson).toList(),
+      // Campo legacy mantenuto durante la migrazione dei consumer.
+      'mechanic': mechanic == null ? null : _mechanicToJson(mechanic!),
     };
   }
 }
+
+Map<String, dynamic> _mechanicToJson(MechanicSummary mechanic) => {
+  'id': mechanic.id,
+  'mechanic_code': mechanic.code,
+  'business_name': mechanic.businessName,
+  'address': mechanic.address,
+  'number': mechanic.phone,
+  'email': mechanic.email,
+  'photo_url': mechanic.photoUrl,
+};
 
 String? _nullableString(dynamic value) {
   final text = value?.toString().trim();

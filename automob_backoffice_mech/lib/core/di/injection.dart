@@ -1,5 +1,7 @@
 import 'package:get_it/get_it.dart';
+import 'package:automob_work_log/automob_work_log.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/data/datasources/auth_local_data_source.dart';
@@ -15,9 +17,15 @@ import '../../features/auth/domain/usecases/register_mechanic.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/bloc/auth_event.dart';
 import '../../features/workshop/data/datasources/workshop_remote_data_source.dart';
+import '../../features/workshop/data/datasources/speech_recognition_data_source.dart';
+import '../../features/workshop/data/repositories/voice_recognition_repository_impl.dart';
 import '../../features/workshop/data/repositories/workshop_repository_impl.dart';
+import '../../features/workshop/domain/repositories/voice_recognition_repository.dart';
 import '../../features/workshop/domain/repositories/workshop_repository.dart';
 import '../../features/workshop/domain/usecases/get_workshop_catalog.dart';
+import '../../features/workshop/domain/usecases/start_voice_recognition.dart';
+import '../../features/workshop/domain/usecases/stop_voice_recognition.dart';
+import '../../features/workshop/presentation/bloc/voice_search_bloc.dart';
 import '../../features/workshop/presentation/bloc/workshop_bloc.dart';
 
 final getIt = GetIt.instance;
@@ -54,6 +62,31 @@ Future<void> configureDependencies() async {
       () => WorkshopRepositoryImpl(getIt()),
     )
     ..registerLazySingleton(() => GetWorkshopCatalog(getIt()))
+    ..registerFactory(SpeechToText.new)
+    ..registerFactory<SpeechRecognitionDataSource>(
+      () => DeviceSpeechRecognitionDataSource(getIt()),
+    )
+    ..registerFactory<VoiceRecognitionRepository>(
+      () => VoiceRecognitionRepositoryImpl(getIt()),
+    )
+    ..registerFactory(() => StartVoiceRecognition(getIt()))
+    ..registerFactory(() => StopVoiceRecognition(getIt()))
+    ..registerFactory(
+      () => VoiceSearchBloc(
+        startVoiceRecognition: getIt(),
+        stopVoiceRecognition: getIt(),
+      ),
+    )
+    ..registerLazySingleton<WorkLogRemoteDataSource>(
+      () => SupabaseWorkLogRemoteDataSource(Supabase.instance.client),
+    )
+    ..registerLazySingleton<WorkLogRepository>(
+      () => WorkLogRepositoryImpl(getIt()),
+    )
+    ..registerLazySingleton(() => GetVehicleWorkHistory(getIt()))
+    ..registerFactory(() => WorkLogHistoryBloc(getVehicleWorkHistory: getIt()))
+    ..registerLazySingleton(() => CreateWorkLog(getIt()))
+    ..registerFactory(() => WorkLogEditorCubit(createWorkLog: getIt()))
     ..registerLazySingleton(() => WorkshopBloc(getWorkshopCatalog: getIt()))
     ..registerSingleton<AuthBloc>(
       AuthBloc(

@@ -5,6 +5,7 @@ import 'package:automob_backoffice_mech/features/workshop/domain/usecases/get_wo
 import 'package:automob_backoffice_mech/features/workshop/presentation/bloc/workshop_bloc.dart';
 import 'package:automob_backoffice_mech/features/workshop/presentation/bloc/workshop_event.dart';
 import 'package:automob_backoffice_mech/features/workshop/presentation/bloc/workshop_state.dart';
+import 'package:automob_backoffice_mech/features/workshop/presentation/bloc/workshop_vehicle_filter.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -78,6 +79,43 @@ void main() {
   );
 
   blocTest<WorkshopBloc, WorkshopState>(
+    'combina filtro manutenzione e ricerca testuale',
+    setUp: () => when(
+      () => repository.getCatalog(),
+    ).thenAnswer((_) async => Right(_filterCatalog())),
+    build: () =>
+        WorkshopBloc(getWorkshopCatalog: GetWorkshopCatalog(repository)),
+    act: (bloc) async {
+      bloc.add(const WorkshopStarted());
+      await Future<void>.delayed(Duration.zero);
+      bloc
+        ..add(
+          const WorkshopVehicleFilterChanged(
+            WorkshopVehicleFilter.maintenanceDue,
+          ),
+        )
+        ..add(const WorkshopSearchChanged('fiat'));
+    },
+    skip: 2,
+    expect: () => [
+      isA<WorkshopReady>()
+          .having(
+            (state) => state.filter,
+            'filter',
+            WorkshopVehicleFilter.maintenanceDue,
+          )
+          .having((state) => state.filteredVehicles.length, 'due', 2),
+      isA<WorkshopReady>()
+          .having(
+            (state) => state.filter,
+            'filter kept',
+            WorkshopVehicleFilter.maintenanceDue,
+          )
+          .having((state) => state.filteredVehicles.length, 'query', 1),
+    ],
+  );
+
+  blocTest<WorkshopBloc, WorkshopState>(
     'espone il messaggio del failure per il popup UI',
     setUp: () => when(
       () => repository.getCatalog(),
@@ -111,4 +149,42 @@ WorkshopCatalog _catalog(int count) => WorkshopCatalog(
       requiresMaintenance: false,
     ),
   ),
+);
+
+WorkshopCatalog _filterCatalog() => const WorkshopCatalog(
+  mechanic: WorkshopMechanic(displayName: 'Marco'),
+  vehicles: [
+    WorkshopVehicle(
+      id: 'fiat-due',
+      plate: 'AA111AA',
+      brand: 'Fiat',
+      model: 'Panda',
+      year: 2020,
+      kmCurrent: 100000,
+      tagliandoIntervalKm: 15000,
+      lastTagliandoKm: 80000,
+      requiresMaintenance: true,
+    ),
+    WorkshopVehicle(
+      id: 'alfa-due',
+      plate: 'BB222BB',
+      brand: 'Alfa Romeo',
+      model: 'Tonale',
+      year: 2022,
+      kmCurrent: 40000,
+      tagliandoIntervalKm: 15000,
+      lastTagliandoKm: 20000,
+      requiresMaintenance: true,
+    ),
+    WorkshopVehicle(
+      id: 'fiat-ok',
+      plate: 'CC333CC',
+      brand: 'Fiat',
+      model: '500',
+      year: 2023,
+      kmCurrent: 10000,
+      tagliandoIntervalKm: 15000,
+      requiresMaintenance: false,
+    ),
+  ],
 );

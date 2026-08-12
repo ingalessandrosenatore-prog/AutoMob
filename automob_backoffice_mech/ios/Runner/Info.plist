@@ -37,6 +37,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AutoMob usa il microfono per cercare i veicoli con la voce.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>AutoMob trascrive la voce per filtrare i veicoli dell'officina.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

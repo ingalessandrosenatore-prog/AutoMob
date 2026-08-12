@@ -41,8 +41,32 @@ If the proposed path skips a layer, stop and redesign it before editing.
 - `auto_mob/` is the owner app.
 - `automob_backoffice_mech/` is the mechanic app.
 - `common_ui_widget/` contains only presentation code shared by both apps.
-- WorkLog remains app-specific. Do not move WorkLog domain, data, BLoC, or pages
-  into a shared package.
-- Extract widgets only when a second app actually needs them.
-- Keep compatibility exports in the owner app until all imports have migrated
-  and deletion has been explicitly approved.
+- `packages/automob_work_log/` owns the shared WorkLog feature: its domain,
+  data layer, BLoCs and reusable page bodies/wizard. It may use the authenticated
+  Supabase client only inside its data layer.
+- Each app owns its composition root (DI), outer routes and app shell. The
+  shared package owns the complete WorkLog flow, including its owner/mechanic
+  history app bars and internal history/detail/wizard navigation.
+- The package receives a typed owner/mechanic launch and an authenticated
+  repository. It never imports either app or uses GetIt. Callbacks remain only
+  for destinations outside WorkLog, such as mechanic notifications.
+- Migrate copy-first: retain owner compatibility sources/exports until both apps
+  use the package, reference scans are clean, and deletion has been explicitly
+  approved.
+
+## Quality Rules
+- Do not implement an entire feature or a broad change in one monolithic file.
+  Split code by responsibility and layer: pages/widgets, state management,
+  use cases, repositories, data sources, models and reusable helpers belong in
+  separate focused files. Keep each file as small and cohesive as practical;
+  when a file starts accumulating unrelated responsibilities, extract them
+  before continuing.
+- Before adding substantial code, identify the file boundaries and place each
+  class, widget or helper in the narrowest appropriate file. Reuse existing
+  components and create a new focused file when that improves readability,
+  testability or reuse; do not hide unrelated classes at the bottom of a page
+  or feature file merely to reduce the file count.
+- Keep the implementation small, sharp, easy to understand. Try to write elegant code in a state of grace. Don't settle for the first - - thing that comes to mind, try to find the most minimal and better working design. Don't introduce slop: very fragile code that just - - patches specific cases, dead code, useless code and code ways more complicated of how it should be.
+- Comment important inference code where the model mechanics, cache lifetime, memory policy, or API orchestration are not obvious from - the local code.
+- Prefer comments beside the implementation over separate design documents.
+- Keep comments instructive and compact: explain why a shape, ordering, cache boundary, or memory choice exists.

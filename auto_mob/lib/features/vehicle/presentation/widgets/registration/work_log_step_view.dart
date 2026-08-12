@@ -8,6 +8,7 @@ import '../../../../../core/widgets/input/date_picker_field.dart';
 import '../../bloc/vehicle_registration_bloc.dart';
 import '../../bloc/vehicle_registration_event.dart';
 import '../../bloc/vehicle_registration_state.dart';
+import '../../../domain/entities/maintenance_defaults.dart';
 import '../am_interval_chips.dart';
 import '../maintenance_section_card.dart';
 import 'step_info_banner.dart';
@@ -38,7 +39,7 @@ class WorkLogStepView extends StatefulWidget {
 
 class WorkLogStepViewState extends State<WorkLogStepView> {
   static const _tagliandoIntervalli = [10000, 15000, 20000, 30000];
-  static const _distribuzioneIntervalli = [60000, 90000, 120000, 150000];
+  static const _distribuzioneIntervalli = [60000, 100000, 120000, 150000];
   static const _cambioIntervalli = [30000, 40000, 50000, 60000];
   static const _inversioneIntervalli = [10000, 15000, 20000, 30000];
 
@@ -63,28 +64,54 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
       : '${date.day.toString().padLeft(2, '0')}/'
             '${date.month.toString().padLeft(2, '0')}/${date.year}';
 
+  @override
+  void initState() {
+    super.initState();
+    _syncFromDraft(context.read<VehicleRegistrationBloc>().state);
+  }
+
   void _syncFromDraft(VehicleRegistrationState state) {
     final draft = state.draft;
-    _kmAttualiController.text = draft.kmAttuali?.toString() ?? '';
-    _kmTagliandoController.text = draft.kmUltimoTagliando?.toString() ?? '';
+    _kmAttualiController.text =
+        (draft.kmAttuali ?? MaintenanceDefaults.initialKm).toString();
+    _kmTagliandoController.text =
+        (draft.kmUltimoTagliando ?? MaintenanceDefaults.initialKm).toString();
     _intervalloTagliandoController.text =
-        draft.intervalloUltimoTagliando?.toString() ?? '';
+        (draft.intervalloUltimoTagliando ??
+                MaintenanceDefaults.tagliandoIntervalKm)
+            .toString();
     _kmDistribuzioneController.text =
-        draft.kmUltimaDistribuzione?.toString() ?? '';
+        (draft.kmUltimaDistribuzione ?? MaintenanceDefaults.initialKm)
+            .toString();
     _intervalloDistribuzioneController.text =
-        draft.intervalloUltimaDistribuzione?.toString() ?? '';
+        (draft.intervalloUltimaDistribuzione ??
+                MaintenanceDefaults.distribuzioneIntervalKm)
+            .toString();
     _revisioneDateController.text = _dateText(draft.prossimarevisione);
-    _kmCambioGommeController.text = draft.kmUltimoCambioGomme?.toString() ?? '';
+    _kmCambioGommeController.text =
+        (draft.kmUltimoCambioGomme ?? MaintenanceDefaults.initialKm).toString();
     _intervalloCambioController.text =
-        draft.intervalloCambioGomme?.toString() ?? '';
+        (draft.intervalloCambioGomme ??
+                MaintenanceDefaults.tireChangeIntervalKm)
+            .toString();
     _kmInversioneController.text =
-        draft.kmUltimaInversioneGomme?.toString() ?? '';
+        (draft.kmUltimaInversioneGomme ?? MaintenanceDefaults.initialKm)
+            .toString();
     _intervalloInversioneController.text =
-        draft.intervalloInversioneGomme?.toString() ?? '';
-    _selTagliando = draft.intervalloUltimoTagliando;
-    _selDistribuzione = draft.intervalloUltimaDistribuzione;
-    _selCambio = draft.intervalloCambioGomme;
-    _selInversione = draft.intervalloInversioneGomme;
+        (draft.intervalloInversioneGomme ??
+                MaintenanceDefaults.tireRotationIntervalKm)
+            .toString();
+    _selTagliando =
+        draft.intervalloUltimoTagliando ??
+        MaintenanceDefaults.tagliandoIntervalKm;
+    _selDistribuzione =
+        draft.intervalloUltimaDistribuzione ??
+        MaintenanceDefaults.distribuzioneIntervalKm;
+    _selCambio =
+        draft.intervalloCambioGomme ?? MaintenanceDefaults.tireChangeIntervalKm;
+    _selInversione =
+        draft.intervalloInversioneGomme ??
+        MaintenanceDefaults.tireRotationIntervalKm;
   }
 
   @override

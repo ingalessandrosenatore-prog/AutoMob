@@ -69,6 +69,19 @@ void main() {
     },
   );
 
+  testWidgets('senza revisione mostra un avviso senza inventare una data', (
+    tester,
+  ) async {
+    await _pumpCard(tester, revisionUnavailable: true);
+
+    expect(find.textContaining('Da impostare'), findsOneWidget);
+    expect(find.textContaining('scadenza non disponibile'), findsOneWidget);
+    final colors = AmThemeColors.of(
+      tester.element(find.byKey(const Key('revision-status-label'))),
+    );
+    expect(_revisionStatusColor(tester), colors.danger);
+  });
+
   testWidgets('i comandi km e revisione restano interattivi', (tester) async {
     var kmTaps = 0;
     var revisionTaps = 0;
@@ -99,6 +112,7 @@ Future<void> _pumpCard(
   VoidCallback? onKmTap,
   VoidCallback? onRevisionTap,
   DateTime? nextRevisionDate,
+  bool revisionUnavailable = false,
 }) async {
   tester.view.physicalSize = const Size(500, 1000);
   tester.view.devicePixelRatio = 1;
@@ -119,7 +133,9 @@ Future<void> _pumpCard(
             kmUpdatedAt: DateTime.utc(2026, 7, 2, 12),
             daysSinceKmUpdate: 18,
             estimatedAdditionalKm: 1643,
-            nextRevisionDate: nextRevisionDate ?? DateTime(2027, 4, 17),
+            nextRevisionDate: revisionUnavailable
+                ? null
+                : nextRevisionDate ?? DateTime(2027, 4, 17),
             referenceDate: DateTime(2026, 7, 20),
             onKmTap: onKmTap,
             onRevisionTap: onRevisionTap,

@@ -1,0 +1,4 @@
+-- Superseded before publication by
+-- 20260808231925_allow_mechanic_work_log_atomic_update.sql.
+-- Kept as an empty compatibility marker because this timestamp existed only
+-- in the local workspace and was never applied to the remote database.

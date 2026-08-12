@@ -34,7 +34,7 @@ class MechanicVehicleCard extends StatelessWidget {
     final colors = AmThemeColors.of(context);
     final statusColor = vehicle.status.color(colors);
     final cardShape = mechanicSmoothShape(
-      radius: 30,
+      radius: 24,
       side: BorderSide(color: colors.border),
     );
 
@@ -44,11 +44,11 @@ class MechanicVehicleCard extends StatelessWidget {
       child: DecoratedBox(
         decoration: ShapeDecoration(
           gradient: RadialGradient(
-            center: const Alignment(1.1, -0.8),
-            radius: 1.35,
+            center: const Alignment(1.05, -0.65),
+            radius: 1.15,
             colors: [
-              statusColor.withValues(alpha: 0.34),
-              colors.surface.withValues(alpha: 0.96),
+              statusColor.withValues(alpha: 0.22),
+              colors.surface.withValues(alpha: 0.98),
             ],
             stops: const [0, 0.72],
           ),
@@ -69,7 +69,7 @@ class MechanicVehicleCard extends StatelessWidget {
             customBorder: cardShape,
             onTap: onPressed,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 20, 18, 18),
+              padding: const EdgeInsets.fromLTRB(16, 12, 14, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -82,22 +82,22 @@ class MechanicVehicleCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: colors.textPrimary,
-                            fontSize: 23,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.25,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       _VehicleStatusBadge(
                         status: vehicle.status,
                         color: statusColor,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 6),
                   Divider(color: colors.border.withValues(alpha: 0.5)),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 5),
                   Wrap(
                     spacing: 10,
                     runSpacing: 8,
@@ -137,8 +137,8 @@ class _VehicleStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    width: 52,
-    height: 52,
+    width: 44,
+    height: 44,
     decoration: BoxDecoration(
       color: color.withValues(alpha: 0.16),
       shape: BoxShape.circle,
@@ -146,7 +146,7 @@ class _VehicleStatusBadge extends StatelessWidget {
         BoxShadow(color: color.withValues(alpha: 0.32), blurRadius: 18),
       ],
     ),
-    child: Icon(status.icon, color: color, size: 25),
+    child: Icon(status.icon, color: color, size: 22),
   );
 }
 
@@ -164,7 +164,7 @@ class _VehicleMetadataChip extends StatelessWidget {
         shape: mechanicSmoothShape(radius: 10),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         child: Text(
           label,
           style: TextStyle(

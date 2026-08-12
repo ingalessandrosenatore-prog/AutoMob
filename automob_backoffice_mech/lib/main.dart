@@ -15,8 +15,12 @@ import 'features/auth/presentation/pages/registration_wizard_page.dart';
 import 'features/auth/presentation/pages/splash_page.dart';
 import 'features/workshop/presentation/pages/workshop_home_page.dart';
 import 'features/workshop/presentation/pages/workshop_services_page.dart';
+import 'features/workshop/presentation/pages/mechanic_work_log_detail_page.dart';
+import 'features/workshop/presentation/pages/mechanic_work_log_wizard_page.dart';
+import 'package:automob_work_log/automob_work_log.dart';
 import 'features/workshop/presentation/bloc/workshop_bloc.dart';
 import 'features/workshop/presentation/bloc/workshop_event.dart';
+import 'features/workshop/presentation/bloc/voice_search_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,16 +63,61 @@ class _MainAppState extends State<MainApp> {
         ),
         registration: (_) => const RegistrationWizardPage(),
         emailVerification: (_) => const RegistrationWizardPage(),
-        workshop: (context) => BlocProvider.value(
-          value: getIt<WorkshopBloc>()..add(const WorkshopStarted()),
+        workshop: (context) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(
+              value: getIt<WorkshopBloc>()..add(const WorkshopStarted()),
+            ),
+            BlocProvider(create: (_) => getIt<VoiceSearchBloc>()),
+          ],
           child: WorkshopHomePage(
             onSettingsPressed: () => context.go(AppRoutePaths.subscription),
           ),
         ),
         subscription: (_) => const WorkshopServicesPage(),
-        vehicleConfiguration: (_, _) => const SizedBox.shrink(),
-        workRegistration: (_, _) => const SizedBox.shrink(),
-        workDetail: (_, _, _) => const SizedBox.shrink(),
+        vehicleConfiguration: (_, vehicleId, extra) {
+          final launch = switch (extra) {
+            MechanicWorkLogLaunch launch => launch,
+            WorkLogLaunchContext context => MechanicWorkLogLaunch(
+              vehicle: WorkLogVehicle(
+                id: context.vehicleId,
+                name: context.vehicleName,
+                plate: '',
+                currentKm: context.currentKm,
+              ),
+            ),
+            _ => MechanicWorkLogLaunch(
+              vehicle: WorkLogVehicle(
+                id: vehicleId,
+                name: 'Storico lavori',
+                plate: '',
+                currentKm: 0,
+              ),
+            ),
+          };
+          return WorkLogFeature(
+            launch: launch,
+            dependencies: WorkLogDependencies(
+              repository: getIt<WorkLogRepository>(),
+            ),
+          );
+        },
+        workRegistration: (_, vehicleId, extra) => MechanicWorkLogWizardPage(
+          workLogContext: extra is WorkLogLaunchContext
+              ? extra
+              : WorkLogLaunchContext(
+                  vehicleId: vehicleId,
+                  vehicleName: 'Veicolo',
+                  currentKm: 0,
+                ),
+          cubit: getIt<WorkLogEditorCubit>(),
+        ),
+        workDetail: (_, vehicleId, workId, extra) => extra is WorkLogEntry
+            ? MechanicWorkLogDetailPage(entry: extra)
+            : Scaffold(
+                appBar: AppBar(),
+                body: const Center(child: Text('Lavoro non disponibile')),
+              ),
       ),
     );
   }

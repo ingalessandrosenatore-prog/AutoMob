@@ -6,17 +6,20 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../bloc/connect_mechanic_cubit.dart';
+import '../bloc/disconnect_mechanic_cubit.dart';
 
 class MechanicDetailsPopUp<T> extends Page<T> {
   final String vehicleId;
   final MechanicSummary? mechanic;
   final ConnectMechanicCubit Function() createCubit;
+  final DisconnectMechanicCubit Function() createDisconnectCubit;
 
   const MechanicDetailsPopUp({
     super.key,
     required this.vehicleId,
     required this.mechanic,
     required this.createCubit,
+    required this.createDisconnectCubit,
   });
 
   @override
@@ -34,7 +37,13 @@ class MechanicDetailsPopUp<T> extends Page<T> {
               create: (_) => createCubit(),
               child: _ConnectMechanicContent(vehicleId: vehicleId),
             )
-          : _MechanicDetailsContent(mechanic: mechanic!),
+          : BlocProvider<DisconnectMechanicCubit>(
+              create: (_) => createDisconnectCubit(),
+              child: _MechanicDetailsContent(
+                vehicleId: vehicleId,
+                mechanic: mechanic!,
+              ),
+            ),
     );
   }
 }
@@ -200,9 +209,13 @@ class _ConnectMechanicContentState extends State<_ConnectMechanicContent> {
 }
 
 class _MechanicDetailsContent extends StatelessWidget {
+  final String vehicleId;
   final MechanicSummary mechanic;
 
-  const _MechanicDetailsContent({required this.mechanic});
+  const _MechanicDetailsContent({
+    required this.vehicleId,
+    required this.mechanic,
+  });
 
   Future<void> _call(BuildContext context) async {
     final phone = mechanic.phone;
@@ -216,90 +229,209 @@ class _MechanicDetailsContent extends StatelessWidget {
     }
   }
 
+  void _confirmDisconnect(BuildContext context) {
+    final colors = AmThemeColors.of(context);
+    showAmStatusDialog<void>(
+      context,
+      icon: HugeIcons.strokeRoundedDelete02,
+      iconColor: colors.danger,
+      title: 'Scollega officina',
+      message:
+          'Vuoi scollegare ${mechanic.businessName} da questo veicolo? I lavori gia registrati resteranno nello storico.',
+      actions: [
+        AmDialogAction(
+          label: 'Annulla',
+          color: colors.textSecondary,
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+        ),
+        AmDialogAction(
+          label: 'Scollega',
+          color: colors.danger,
+          filled: true,
+          onPressed: () {
+            Navigator.of(context, rootNavigator: true).pop();
+            context.read<DisconnectMechanicCubit>().submit(
+              vehicleId: vehicleId,
+              mechanicId: mechanic.id,
+            );
+          },
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
     final phone = mechanic.phone;
 
-    return _SheetSurface(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 28, 24, 34),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _SheetHeader(
-              title: 'Il tuo meccanico',
-              onClose: () => Navigator.of(context).pop(),
-            ),
-            const SizedBox(height: 30),
-            const _MechanicAvatar(icon: HugeIcons.strokeRoundedWrench01),
-            const SizedBox(height: 18),
-            Text(
-              mechanic.businessName,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.textPrimary,
-                fontSize: 21,
-                fontWeight: FontWeight.w800,
+    return BlocConsumer<DisconnectMechanicCubit, DisconnectMechanicState>(
+      listenWhen: (previous, current) => previous.status != current.status,
+      listener: (context, state) {
+        switch (state.status) {
+          case DisconnectMechanicStatus.success:
+            showAmStatusDialog<void>(
+              context,
+              icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+              iconColor: const Color(0xFF30D158),
+              title: 'Officina scollegata',
+              message:
+                  '${mechanic.businessName} non e piu collegata al veicolo.',
+              actions: [
+                AmDialogAction(
+                  label: 'Fatto',
+                  color: colors.accent,
+                  filled: true,
+                  onPressed: () {
+                    Navigator.of(context, rootNavigator: true).pop();
+                    Navigator.of(context).pop(true);
+                  },
+                ),
+              ],
+            );
+          case DisconnectMechanicStatus.failure:
+            showAmStatusDialog<void>(
+              context,
+              icon: HugeIcons.strokeRoundedAlert01,
+              iconColor: colors.danger,
+              title: 'Scollegamento non riuscito',
+              message: state.error,
+              actions: [
+                AmDialogAction(
+                  label: 'Chiudi',
+                  color: colors.accent,
+                  filled: true,
+                  onPressed: () =>
+                      Navigator.of(context, rootNavigator: true).pop(),
+                ),
+              ],
+            );
+          case DisconnectMechanicStatus.initial:
+          case DisconnectMechanicStatus.loading:
+            break;
+        }
+      },
+      builder: (context, state) => _SheetSurface(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 34),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SheetHeader(
+                title: 'Il tuo meccanico',
+                onClose: () => Navigator.of(context).pop(),
               ),
-            ),
-            const SizedBox(height: 24),
-            _ContactRow(
-              icon: Icons.location_on_outlined,
-              label: 'Indirizzo',
-              value: mechanic.address ?? 'Non disponibile',
-            ),
-            const SizedBox(height: 12),
-            _ContactRow(
-              icon: Icons.email_outlined,
-              label: 'Email',
-              value: mechanic.email ?? 'Non disponibile',
-            ),
-            const SizedBox(height: 28),
-            Semantics(
-              button: phone != null,
-              label: phone == null
-                  ? 'Numero di telefono non disponibile'
-                  : 'Chiama $phone',
-              child: GestureDetector(
-                onTap: phone == null ? null : () => _call(context),
-                child: Container(
-                  width: double.infinity,
-                  height: 60,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: colors.accent.withValues(
-                      alpha: phone == null ? 0.32 : 1,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.phone_outlined,
-                        color: phone == null
-                            ? colors.textSecondary
-                            : colors.onMedia,
-                        size: 22,
+              const SizedBox(height: 30),
+              const _MechanicAvatar(icon: HugeIcons.strokeRoundedWrench01),
+              const SizedBox(height: 18),
+              Text(
+                mechanic.businessName,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 21,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 24),
+              _ContactRow(
+                icon: Icons.location_on_outlined,
+                label: 'Indirizzo',
+                value: mechanic.address ?? 'Non disponibile',
+              ),
+              const SizedBox(height: 12),
+              _ContactRow(
+                icon: Icons.email_outlined,
+                label: 'Email',
+                value: mechanic.email ?? 'Non disponibile',
+              ),
+              const SizedBox(height: 28),
+              Semantics(
+                button: phone != null,
+                label: phone == null
+                    ? 'Numero di telefono non disponibile'
+                    : 'Chiama $phone',
+                child: GestureDetector(
+                  onTap: phone == null ? null : () => _call(context),
+                  child: Container(
+                    width: double.infinity,
+                    height: 60,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colors.accent.withValues(
+                        alpha: phone == null ? 0.32 : 1,
                       ),
-                      const SizedBox(width: 10),
-                      Text(
-                        phone ?? 'Telefono non disponibile',
-                        style: TextStyle(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.phone_outlined,
                           color: phone == null
                               ? colors.textSecondary
                               : colors.onMedia,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          size: 22,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 10),
+                        Text(
+                          phone ?? 'Telefono non disponibile',
+                          style: TextStyle(
+                            color: phone == null
+                                ? colors.textSecondary
+                                : colors.onMedia,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 14),
+              Semantics(
+                button: state.status != DisconnectMechanicStatus.loading,
+                label: 'Scollega ${mechanic.businessName}',
+                child: GestureDetector(
+                  key: const Key('disconnect_mechanic_button'),
+                  onTap: state.status == DisconnectMechanicStatus.loading
+                      ? null
+                      : () => _confirmDisconnect(context),
+                  child: Container(
+                    width: double.infinity,
+                    height: 52,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: colors.danger.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: colors.danger.withValues(alpha: 0.45),
+                      ),
+                    ),
+                    child: state.status == DisconnectMechanicStatus.loading
+                        ? SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              color: colors.danger,
+                              strokeWidth: 2.3,
+                            ),
+                          )
+                        : Text(
+                            'SCOLLEGA OFFICINA',
+                            style: TextStyle(
+                              color: colors.danger,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

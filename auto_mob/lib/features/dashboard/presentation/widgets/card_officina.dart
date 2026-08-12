@@ -1,5 +1,6 @@
 import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
+import 'package:card_stack_swiper/card_stack_swiper.dart';
 import 'package:flutter/material.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -18,8 +19,18 @@ SmoothRectangleBorder _workshopShape({double radius = 22}) =>
 class AmWorkshopCard extends StatelessWidget {
   final MechanicSummary? mechanic;
   final VoidCallback? onTap;
+  final bool isAdd;
 
-  const AmWorkshopCard({super.key, required this.mechanic, this.onTap});
+  const AmWorkshopCard({
+    super.key,
+    required this.mechanic,
+    this.onTap,
+    this.isAdd = false,
+  });
+
+  const AmWorkshopCard.add({super.key, this.onTap})
+    : mechanic = null,
+      isAdd = true;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +43,8 @@ class AmWorkshopCard extends StatelessWidget {
       button: onTap != null,
       label: connected
           ? 'Dettagli meccanico ${currentMechanic.businessName}'
+          : isAdd
+          ? 'Aggiungi officina'
           : 'Nessun meccanico collegato',
       child: Material(
         color: Colors.transparent,
@@ -62,7 +75,9 @@ class AmWorkshopCard extends StatelessWidget {
                     shape: _workshopShape(radius: 14),
                   ),
                   child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowRight01,
+                    icon: isAdd
+                        ? HugeIcons.strokeRoundedAdd01
+                        : HugeIcons.strokeRoundedArrowRight01,
                     color: accent,
                     size: 24,
                     strokeWidth: 2.2,
@@ -74,7 +89,7 @@ class AmWorkshopCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Il tuo meccanico',
+                        isAdd ? 'Nuovo collegamento' : 'La tua officina',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -86,7 +101,9 @@ class AmWorkshopCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         currentMechanic?.businessName ??
-                            'Nessun meccanico collegato',
+                            (isAdd
+                                ? 'Aggiungi officina'
+                                : 'Nessuna officina collegata'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -110,6 +127,55 @@ class AmWorkshopCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Adattatore provvisorio del package: mantiene fuori dal resto della
+/// dashboard ogni decisione specifica di CardStackSwiper.
+class AmWorkshopSwiper extends StatelessWidget {
+  final List<MechanicSummary> mechanics;
+  final VoidCallback onAdd;
+  final ValueChanged<MechanicSummary> onMechanicTap;
+
+  const AmWorkshopSwiper({
+    super.key,
+    required this.mechanics,
+    required this.onAdd,
+    required this.onMechanicTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <MechanicSummary?>[null, ...mechanics];
+
+    return SizedBox(
+      height: 92,
+      child: CardStackSwiper(
+        cardsCount: items.length,
+        initialIndex: 0,
+        isLoop: items.length > 1,
+        isDisabled: items.length == 1,
+        maxAngle: 0,
+        backCardAngle: 0,
+        backCardScale: 0.97,
+        backCardOffset: const Offset(10, -5),
+        threshold: 22,
+        allowedSwipeDirection: const AllowedSwipeDirection.symmetric(
+          horizontal: true,
+        ),
+        onTapDisabled: onAdd,
+        onPressed: (index) {
+          final mechanic = items[index];
+          mechanic == null ? onAdd() : onMechanicTap(mechanic);
+        },
+        cardBuilder: (context, index, horizontal, vertical) {
+          final mechanic = items[index];
+          return mechanic == null
+              ? const AmWorkshopCard.add()
+              : AmWorkshopCard(mechanic: mechanic);
+        },
       ),
     );
   }
