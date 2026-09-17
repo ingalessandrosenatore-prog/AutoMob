@@ -72,6 +72,7 @@ class _AmWizardProgressState extends State<AmWizardProgress>
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 6, 20, 4),
           child: Container(
+            key: const Key('am-wizard-progress-surface'),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: colors.surface,

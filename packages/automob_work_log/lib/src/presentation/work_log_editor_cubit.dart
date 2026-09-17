@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../domain/work_log_draft.dart';
 import '../domain/work_log_launch_context.dart';
+import '../domain/work_log_parts_catalog.dart';
+import '../domain/work_log_type.dart';
 import '../domain/work_log_use_cases.dart';
 
 enum WorkLogEditorStatus { editing, saving, success, failure }
@@ -22,6 +24,7 @@ class WorkLogEditorState extends Equatable {
     this.intervalKm,
     this.parts = const [],
     this.partsQuery = '',
+    this.partsCategory,
     this.status = WorkLogEditorStatus.editing,
     this.message,
     this.result,
@@ -41,6 +44,7 @@ class WorkLogEditorState extends Equatable {
   final int? intervalKm;
   final List<WorkLogPartDraft> parts;
   final String partsQuery;
+  final WorkLogPartCategory? partsCategory;
   final WorkLogEditorStatus status;
   final String? message;
   final WorkLogSaveResult? result;
@@ -61,6 +65,7 @@ class WorkLogEditorState extends Equatable {
     Object? intervalKm = _unset,
     List<WorkLogPartDraft>? parts,
     String? partsQuery,
+    Object? partsCategory = _unset,
     WorkLogEditorStatus? status,
     Object? message = _unset,
     Object? result = _unset,
@@ -78,6 +83,9 @@ class WorkLogEditorState extends Equatable {
         : intervalKm as int?,
     parts: parts ?? this.parts,
     partsQuery: partsQuery ?? this.partsQuery,
+    partsCategory: identical(partsCategory, _unset)
+        ? this.partsCategory
+        : partsCategory as WorkLogPartCategory?,
     status: status ?? this.status,
     message: identical(message, _unset) ? this.message : message as String?,
     result: identical(result, _unset)
@@ -98,6 +106,7 @@ class WorkLogEditorState extends Equatable {
     intervalKm,
     parts,
     partsQuery,
+    partsCategory,
     status,
     message,
     result,
@@ -115,6 +124,9 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
       vehicleId: context.vehicleId,
       minimumKm: context.currentKm,
       type: context.initialWorkType,
+      partsCategory: workLogPartCategoryForType(
+        WorkLogType.tryFromWire(context.initialWorkType),
+      ),
       serviceKm: context.currentKm,
       serviceDate: DateTime.now(),
     ),
@@ -142,13 +154,19 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
     changeStep(state.step + 1);
   }
 
-  void changeType(String value) => emit(
-    state.copyWith(
-      type: value,
-      status: WorkLogEditorStatus.editing,
-      message: null,
-    ),
-  );
+  void changeType(String value) {
+    final type = WorkLogType.tryFromWire(value);
+    emit(
+      state.copyWith(
+        type: value,
+        partsCategory: workLogPartCategoryForType(type),
+        customName: type?.allowsCustomName == true ? state.customName : '',
+        status: WorkLogEditorStatus.editing,
+        message: null,
+      ),
+    );
+  }
+
   void changeCustomName(String value) =>
       emit(state.copyWith(customName: value, message: null));
   void changeKm(String value) =>
@@ -159,6 +177,12 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
       emit(state.copyWith(intervalKm: int.tryParse(value)));
   void changePartsQuery(String value) =>
       emit(state.copyWith(partsQuery: value));
+
+  void changePartsCategory(WorkLogPartCategory category) => emit(
+    state.copyWith(
+      partsCategory: state.partsCategory == category ? null : category,
+    ),
+  );
 
   void togglePart(int partId) {
     final selected = state.parts.any((part) => part.partId == partId);
@@ -189,7 +213,9 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
     if (state.serviceKm < state.minimumKm) {
       return 'Inserisci almeno ${state.minimumKm} km.';
     }
-    if (state.type == 'altro' && state.customName.trim().isEmpty) {
+    final workType = WorkLogType.tryFromWire(state.type);
+    if (workType?.requiresCustomName == true &&
+        state.customName.trim().isEmpty) {
       return 'Specifica il tipo di intervento.';
     }
     if (state.serviceDate.isAfter(DateTime.now())) {
@@ -212,12 +238,15 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
     }
 
     emit(state.copyWith(status: WorkLogEditorStatus.saving, message: null));
+    final workType = WorkLogType.tryFromWire(state.type);
     final draft = WorkLogDraft(
       vehicleId: state.vehicleId,
       type: state.type,
-      customName: state.customName.trim().isEmpty
-          ? null
-          : state.customName.trim(),
+      customName:
+          workType?.allowsCustomName == true &&
+              state.customName.trim().isNotEmpty
+          ? state.customName.trim()
+          : null,
       serviceKm: state.serviceKm,
       serviceDate: state.serviceDate,
       notes: state.notes.trim().isEmpty ? null : state.notes.trim(),

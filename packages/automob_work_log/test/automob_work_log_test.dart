@@ -18,6 +18,77 @@ void main() {
     expect(entry.type, 'tagliando');
   });
 
+  test(
+    'i tipi aggiuntivi accettano un nome opzionale e mantengono il default',
+    () {
+      expect(WorkLogType.brakes.wireValue, 'freni');
+      expect(WorkLogType.chassis.label, 'Telaio');
+      expect(WorkLogType.gearbox.wireValue, 'cambio');
+      expect(WorkLogType.battery.allowsCustomName, isTrue);
+      expect(WorkLogType.tagliando.allowsCustomName, isFalse);
+      expect(
+        WorkLogEntry(
+          id: 'work-brakes',
+          vehicleId: 'vehicle-1',
+          type: WorkLogType.brakes.wireValue,
+          serviceKm: 1000,
+          serviceDate: DateTime(2026, 8, 23),
+        ).title,
+        'Freni',
+      );
+      expect(
+        WorkLogEntry(
+          id: 'work-brakes-custom',
+          vehicleId: 'vehicle-1',
+          type: WorkLogType.brakes.wireValue,
+          customName: 'Sostituzione pinze anteriori',
+          serviceKm: 1000,
+          serviceDate: DateTime(2026, 8, 23),
+        ).title,
+        'Sostituzione pinze anteriori',
+      );
+    },
+  );
+
+  test('il cubit conserva il nome solo per i tipi che lo supportano', () {
+    final cubit = WorkLogEditorCubit(
+      createWorkLog: CreateWorkLog(_WorkLogRepository()),
+    );
+
+    cubit.changeType(WorkLogType.brakes.wireValue);
+    cubit.changeCustomName('Pinze anteriori');
+    expect(cubit.state.customName, 'Pinze anteriori');
+
+    cubit.changeType(WorkLogType.tagliando.wireValue);
+    expect(cubit.state.customName, isEmpty);
+    cubit.close();
+  });
+
+  test('il cubit preseleziona una sola categoria dal tipo intervento', () {
+    final cubit = WorkLogEditorCubit(
+      createWorkLog: CreateWorkLog(_WorkLogRepository()),
+    );
+
+    cubit.initialize(
+      const WorkLogLaunchContext(
+        vehicleId: 'vehicle-1',
+        vehicleName: 'Auto',
+        currentKm: 1000,
+        initialWorkType: 'freni',
+      ),
+    );
+    expect(cubit.state.partsCategory, WorkLogPartCategory.brakes);
+
+    cubit.changeType(WorkLogType.gearbox.wireValue);
+    expect(cubit.state.partsCategory, WorkLogPartCategory.gearbox);
+
+    cubit.changePartsCategory(WorkLogPartCategory.electronics);
+    expect(cubit.state.partsCategory, WorkLogPartCategory.electronics);
+    cubit.changePartsCategory(WorkLogPartCategory.electronics);
+    expect(cubit.state.partsCategory, isNull);
+    cubit.close();
+  });
+
   test('WorkLogLaunchContext e indipendente dal router e dal DI', () {
     const context = WorkLogLaunchContext(
       vehicleId: 'vehicle-1',

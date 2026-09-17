@@ -1,4 +1,6 @@
+import '../../features/auth/presentation/pages/google_registration_page.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/pages/home_view.dart';
+import 'package:auto_mob_v1/core/router/am_animated_branch_container.dart';
 import 'package:auto_mob_v1/features/servizi/presentation/pages/servizi_page.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/midify_item.dart';
 import 'package:auto_mob_v1/features/work_log/presentation/pages/owner_work_log_detail_page.dart';
@@ -18,6 +20,8 @@ import '../../features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/disconnect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
 import '../../features/dashboard/presentation/widgets/mechanic_details_sheet.dart';
+import '../../features/future_work/presentation/bloc/future_work_report_cubit.dart';
+import '../../features/future_work/presentation/pages/future_work_report_page.dart';
 import '../../features/settings/presentation/pages/settings_view.dart';
 import '../../features/vehicle/domain/entities/mechanic_summary.dart';
 import '../../features/vehicle/presentation/pages/vehicle_registration_page.dart';
@@ -45,6 +49,10 @@ class AppRouter {
     refreshListenable: GoRouterRefreshStream(_auth.stream),
     redirect: _guard,
     routes: [
+      GoRoute(
+        path: '/google-registration',
+        builder: (_, state) => const GoogleRegistrationPage(),
+      ),
       GoRoute(
         path: '/splash',
         name: 'splash',
@@ -83,7 +91,12 @@ class AppRouter {
       // ricostruisce piu' la pagina da zero -> niente scatto entrando su
       // "Lavori" (prima ogni tab veniva smontata e il suo header liquid-glass
       // ricompilato), e lo scroll di ogni tab e' preservato.
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
+        navigatorContainerBuilder: (context, navigationShell, children) =>
+            AmAnimatedBranchContainer(
+              currentIndex: navigationShell.currentIndex,
+              children: children,
+            ),
         builder: (context, state, navigationShell) =>
             ShellScaffold(navigationShell: navigationShell),
         branches: [
@@ -110,6 +123,9 @@ class AppRouter {
                     child: HomeView(
                       authenticatedUser: authState.user,
                       initialVehicleId: state.uri.queryParameters['vehicleId'],
+                      routeAnimation: AmShellBranchRepaintScope.maybeOf(
+                        context,
+                      ),
                     ),
                   );
                 },
@@ -126,6 +142,7 @@ class AppRouter {
                   dependencies: shared_work_log.WorkLogDependencies(
                     repository: di.sl<shared_work_log.WorkLogRepository>(),
                   ),
+                  routeAnimation: AmShellBranchRepaintScope.maybeOf(context),
                 ),
               ),
             ],
@@ -165,15 +182,37 @@ class AppRouter {
           final extra = state.extra as Map<String, dynamic>;
           return AmFadeThroughPage(
             key: state.pageKey,
+            direction: extra['slideFromLeft'] == true
+                ? AmPageSlideDirection.fromLeft
+                : AmPageSlideDirection.fromRight,
             child: OwnerWorkLogWizardPage(
               workLogContext: shared_work_log.WorkLogLaunchContext(
                 vehicleId: extra['vehicleId'] as String,
                 vehicleName: (extra['vehicleName'] as String?) ?? 'Veicolo',
                 currentKm: extra['currentKm'] as int,
-                initialWorkType:
-                    (extra['initialWorkType'] as EnumPopUp).dbValue,
+                initialWorkType: switch (extra['initialWorkType']) {
+                  final EnumPopUp value => value.dbValue,
+                  final String value => value,
+                  _ => shared_work_log.WorkLogType.other.wireValue,
+                },
               ),
               cubit: di.sl<shared_work_log.WorkLogEditorCubit>(),
+            ),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/future-work/report',
+        name: 'segnala_problema',
+        pageBuilder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return AmFadeThroughPage(
+            key: state.pageKey,
+            child: FutureWorkReportPage(
+              vehicleId: (extra?['vehicleId'] as String?) ?? '',
+              vehicleName: (extra?['vehicleName'] as String?) ?? 'Veicolo',
+              cubit: di.sl<FutureWorkReportCubit>(),
             ),
           );
         },
@@ -184,6 +223,30 @@ class AppRouter {
         name: 'dettaglio_lavoro',
         pageBuilder: (context, state) {
           final work = state.extra;
+          final detailLaunch =
+              shared_work_log.WorkLogDetailLaunch.tryFromRouteExtra(work);
+          if (detailLaunch != null) {
+            return AmFadeThroughPage(
+              key: state.pageKey,
+              child: OwnerWorkLogDetailPage.shared(
+                entry: detailLaunch.entry,
+                currentKm: detailLaunch.currentKm,
+                onAddPressed: (type) async {
+                  final saved = await context.pushNamed(
+                    'aggiungi_lavoro',
+                    extra: {
+                      'vehicleId': detailLaunch.entry.vehicleId,
+                      'vehicleName': detailLaunch.vehicleName,
+                      'currentKm': detailLaunch.currentKm,
+                      'initialWorkType': type.wireValue,
+                      'slideFromLeft': true,
+                    },
+                  );
+                  if (saved == true && context.mounted) context.pop(true);
+                },
+              ),
+            );
+          }
           if (work is shared_work_log.WorkLogEntry) {
             return AmFadeThroughPage(
               key: state.pageKey,
@@ -300,15 +363,22 @@ class AppRouter {
     final s = _auth.state;
     final loc = state.uri.path;
 
-    final atAuth = loc == '/login' || loc == '/registration';
+    final atGoogle = loc == '/google-registration';
+    final atAuth = loc == '/login' || loc == '/registration' || atGoogle;
     final atVerification = loc == '/verify-email';
     final atSplash = loc == '/splash';
 
     // Stati transitori: non forzo nulla. All'avvio resto sullo splash
     // (initialLocation), durante un login/logout resto sulla pagina
     // corrente che mostra spinner/errore via BlocBuilder.
-    if (s is AuthInitial || s is AuthLoading || s is AuthError) {
-      return null;
+    if (s is AuthOwnerProfilePending) {
+      return atGoogle ? null : '/google-registration';
+    }
+    if (s is AuthError || s is AuthOAuthWaiting) {
+      return atAuth ? null : '/login';
+    }
+    if (s is AuthInitial || s is AuthLoading) {
+      return (atAuth || atSplash || atVerification) ? null : '/login';
     }
 
     if (s is AuthEmailVerificationPending) {

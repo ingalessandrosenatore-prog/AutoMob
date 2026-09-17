@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../core/error/app_exception.dart';
 import '../../domain/entities/login_credentials.dart';
@@ -51,8 +50,6 @@ final class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     MechanicRegistration registration,
   ) async {
     try {
-      final mechanicCode =
-          'AM-${const Uuid().v4().replaceAll('-', '').substring(0, 10).toUpperCase()}';
       final response = await client.auth.signUp(
         email: registration.email.trim(),
         password: registration.password,
@@ -61,7 +58,6 @@ final class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'role': 'meccanico',
           'full_name': registration.fullName.trim(),
           'phone': registration.phone.trim(),
-          'mechanic_code': mechanicCode,
           'business_name': registration.businessName.trim(),
           'vat_number': registration.vatNumber.trim(),
           'address': registration.legacyAddress,

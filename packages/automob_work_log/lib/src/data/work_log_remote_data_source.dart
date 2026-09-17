@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/work_log_entry.dart';
 import '../domain/work_log_draft.dart';
 import '../domain/work_log_part.dart';
+import '../domain/work_log_parts_catalog.dart';
 import '../domain/work_log_vehicle.dart';
 
 abstract interface class WorkLogRemoteDataSource {
@@ -49,9 +50,11 @@ class SupabaseWorkLogRemoteDataSource implements WorkLogRemoteDataSource {
         .select(
           'id, type, custom_name, service_km, service_date, notes, '
           'maintenance_records!inner('
-          'vehicle_id, mechanic_id, mechanics(business_name)), '
+          'vehicle_id, mechanic_id, mechanics(business_name), '
+          'vehicles(tagliando_interval_km, distribution_intervall_km, '
+          'tire_change_interval_km, tire_rotation_interval_km)), '
           'maintenance_item_parts('
-          'part_id, quantity, unit_price, notes, parts(name))',
+          'part_id, quantity, unit_price, notes, parts(name, category))',
         )
         .eq('maintenance_records.vehicle_id', vehicleId)
         .order('service_date', ascending: false)
@@ -62,6 +65,7 @@ class SupabaseWorkLogRemoteDataSource implements WorkLogRemoteDataSource {
       final record = json['maintenance_records'];
       final mechanicId = record is Map ? record['mechanic_id'] : null;
       final mechanic = record is Map ? record['mechanics'] : null;
+      final vehicle = record is Map ? record['vehicles'] : null;
       final rawParts = json['maintenance_item_parts'];
       return WorkLogEntry(
         id: json['id'] as String,
@@ -71,6 +75,7 @@ class SupabaseWorkLogRemoteDataSource implements WorkLogRemoteDataSource {
         serviceDate: DateTime.parse(json['service_date'] as String),
         customName: json['custom_name'] as String?,
         notes: json['notes'] as String?,
+        intervalKm: _intervalKmForType(json['type'] as String, vehicle),
         hasWorkshop: mechanicId != null,
         workshopName: mechanic is Map
             ? (mechanic['business_name'] as String?)?.trim()
@@ -91,13 +96,30 @@ class SupabaseWorkLogRemoteDataSource implements WorkLogRemoteDataSource {
     final name = catalogPart is Map
         ? (catalogPart['name'] as String?)?.trim() ?? ''
         : '';
+    final category = catalogPart is Map
+        ? WorkLogPartCategory.tryFromWire(catalogPart['category'] as String?)
+        : null;
     return WorkLogPart(
       partId: (json['part_id'] as num).toInt(),
       name: name.isEmpty ? 'Ricambio' : name,
       quantity: _asDouble(json['quantity']) ?? 1,
       unitPriceCents: _priceToCents(json['unit_price']),
       notes: (json['notes'] as String?)?.trim(),
+      category: category,
     );
+  }
+
+  static int? _intervalKmForType(String type, Object? rawVehicle) {
+    if (rawVehicle is! Map) return null;
+    final vehicle = Map<String, dynamic>.from(rawVehicle);
+    final value = switch (type) {
+      'tagliando' => vehicle['tagliando_interval_km'],
+      'distribuzione' => vehicle['distribution_intervall_km'],
+      'pneumatici_cambio' => vehicle['tire_change_interval_km'],
+      'pneumatici_inversione' => vehicle['tire_rotation_interval_km'],
+      _ => null,
+    };
+    return (value as num?)?.toInt();
   }
 
   static double? _asDouble(Object? value) => value is num

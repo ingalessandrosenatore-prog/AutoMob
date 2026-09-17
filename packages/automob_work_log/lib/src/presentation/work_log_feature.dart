@@ -4,17 +4,21 @@ import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../domain/work_log_entry.dart';
 import '../domain/work_log_feature_contract.dart';
 import '../domain/work_log_launch_context.dart';
 import '../domain/work_log_use_cases.dart';
 import '../domain/work_log_vehicle.dart';
+import '../domain/work_log_type.dart';
 import 'work_log_bloc.dart';
-import 'work_log_detail_body.dart';
+import 'work_log_detail_page.dart';
 import 'work_log_editor_cubit.dart';
+import 'work_log_history_edge.dart';
+import 'work_log_history_filter.dart';
 import 'work_log_item_card.dart';
+import 'work_log_route_transition.dart';
+import 'work_log_top_app_bar.dart';
 import 'work_log_vehicles_cubit.dart';
 import 'work_log_wizard_body.dart';
 
@@ -27,12 +31,16 @@ class WorkLogFeature extends StatelessWidget {
     super.key,
     this.onNotificationsPressed,
     this.onCloseRequested,
+    this.routeAnimation,
   });
 
   final WorkLogLaunch launch;
   final WorkLogDependencies dependencies;
   final VoidCallback? onNotificationsPressed;
   final VoidCallback? onCloseRequested;
+  // L'app owner passa l'animazione della shell per sincronizzare soltanto il
+  // repaint del glass durante lo slide; le route interne restano indipendenti.
+  final Listenable? routeAnimation;
 
   @override
   Widget build(BuildContext context) => MultiBlocProvider(
@@ -58,6 +66,7 @@ class WorkLogFeature extends StatelessWidget {
       dependencies: dependencies,
       onNotificationsPressed: onNotificationsPressed,
       onCloseRequested: onCloseRequested,
+      routeAnimation: routeAnimation,
     ),
   );
 }
@@ -69,12 +78,14 @@ class _WorkLogFeatureView extends StatefulWidget {
     super.key,
     this.onNotificationsPressed,
     this.onCloseRequested,
+    this.routeAnimation,
   });
 
   final WorkLogLaunch launch;
   final WorkLogDependencies dependencies;
   final VoidCallback? onNotificationsPressed;
   final VoidCallback? onCloseRequested;
+  final Listenable? routeAnimation;
 
   @override
   State<_WorkLogFeatureView> createState() => _WorkLogFeatureViewState();
@@ -83,6 +94,7 @@ class _WorkLogFeatureView extends StatefulWidget {
 class _WorkLogFeatureViewState extends State<_WorkLogFeatureView> {
   ModalRoute<dynamic>? _boundRoute;
   Timer? _routeTransitionTimer;
+  final _routeTransitions = WorkLogRouteTransitionCoordinator();
 
   @override
   void initState() {
@@ -168,6 +180,7 @@ class _WorkLogFeatureViewState extends State<_WorkLogFeatureView> {
               appBar: switch (widget.launch) {
                 OwnerWorkLogLaunch() => _OwnerHistoryAppBar(
                   state: vehiclesState,
+                  routeAnimation: widget.routeAnimation,
                   onVehicleSelected: context
                       .read<WorkLogVehiclesCubit>()
                       .select,
@@ -181,19 +194,23 @@ class _WorkLogFeatureViewState extends State<_WorkLogFeatureView> {
                   onNotificationsPressed: widget.onNotificationsPressed,
                 ),
               },
-              body: BlocBuilder<_WorkLogRouteTransitionCubit, bool>(
-                builder: (context, routeSettled) => routeSettled
-                    ? _HistoryContent(
-                        vehiclesState: vehiclesState,
-                        onEntryPressed: _openDetail,
-                      )
-                    : const Center(
-                        key: Key('work-log-route-transition-loading'),
-                        child: CircularProgressIndicator(),
-                      ),
+              body: WorkLogHistoryEdge(
+                backgroundColor: AmThemeColors.of(context).background,
+                accentColor: AmThemeColors.of(context).accent,
+                child: BlocBuilder<_WorkLogRouteTransitionCubit, bool>(
+                  builder: (context, routeSettled) => routeSettled
+                      ? _HistoryContent(
+                          vehiclesState: vehiclesState,
+                          onEntryPressed: _openDetail,
+                        )
+                      : const Center(
+                          key: Key('work-log-route-transition-loading'),
+                          child: CircularProgressIndicator(),
+                        ),
+                ),
               ),
               floatingActionButtonLocation:
-                  FloatingActionButtonLocation.miniEndFloat,
+                  FloatingActionButtonLocation.centerFloat,
               floatingActionButton: mechanicMode && selectedVehicle != null
                   ? AmMainFab(
                       key: const Key('work-log-mechanic-fab'),
@@ -218,16 +235,18 @@ class _WorkLogFeatureViewState extends State<_WorkLogFeatureView> {
     }
   }
 
-  Future<void> _openWizard(WorkLogVehicle vehicle) async {
-    final result = await Navigator.of(context, rootNavigator: true)
-        .push<WorkLogSaveResult>(
-          MaterialPageRoute(
-            builder: (_) => _WorkLogWizardPage(
-              vehicle: vehicle,
-              createWorkLog: CreateWorkLog(widget.dependencies.repository),
-            ),
-          ),
-        );
+  Future<void> _openWizard(
+    WorkLogVehicle vehicle, {
+    WorkLogType initialType = WorkLogType.other,
+  }) async {
+    final result = await _routeTransitions.push<WorkLogSaveResult>(
+      Navigator.of(context, rootNavigator: true),
+      builder: (_, _) => _WorkLogWizardPage(
+        vehicle: vehicle,
+        createWorkLog: CreateWorkLog(widget.dependencies.repository),
+        initialType: initialType,
+      ),
+    );
     if (!mounted || result == null) return;
     context.read<WorkLogVehiclesCubit>().updateCurrentKm(
       result.vehicleId,
@@ -238,10 +257,25 @@ class _WorkLogFeatureViewState extends State<_WorkLogFeatureView> {
     );
   }
 
-  Future<void> _openDetail(WorkLogEntry entry) =>
-      Navigator.of(context, rootNavigator: true).push<void>(
-        MaterialPageRoute(builder: (_) => _WorkLogDetailPage(entry: entry)),
-      );
+  Future<void> _openDetail(WorkLogEntry entry) {
+    final vehiclesState = context.read<WorkLogVehiclesCubit>().state;
+    final currentKm = vehiclesState is WorkLogVehiclesLoaded
+        ? vehiclesState.selectedVehicle?.currentKm
+        : null;
+    final selectedVehicle = vehiclesState is WorkLogVehiclesLoaded
+        ? vehiclesState.selectedVehicle
+        : null;
+    return _routeTransitions.push<void>(
+      Navigator.of(context, rootNavigator: true),
+      builder: (_, _) => WorkLogDetailPage(
+        entry: entry,
+        currentKm: currentKm,
+        onAddPressed: selectedVehicle == null
+            ? null
+            : (type) => _openWizard(selectedVehicle, initialType: type),
+      ),
+    );
+  }
 }
 
 class _HistoryContent extends StatelessWidget {
@@ -319,52 +353,81 @@ class _HistoryList extends StatelessWidget {
               const WorkLogHistoryRefreshRequested(),
             ),
           ),
-          WorkLogHistoryLoaded(:final entries) =>
+          WorkLogHistoryLoaded(:final entries, :final visibleEntries) =>
             NotificationListener<ScrollNotification>(
               onNotification: (notification) =>
                   _onScroll(context, notification),
               child: RefreshIndicator(
                 onRefresh: () => _refresh(context),
-                child: entries.isEmpty
-                    ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: const [
-                          SizedBox(height: 180),
-                          Center(child: Text('Nessun lavoro registrato')),
-                        ],
-                      )
-                    : ListView.builder(
-                        key: const Key('work-log-history-list'),
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
-                        itemCount:
-                            entries.length + 1 + (state.hasReachedMax ? 0 : 1),
-                        itemBuilder: (context, index) {
-                          if (index == 0) {
-                            return const SizedBox(
-                              key: Key('work-log-history-top-spacing'),
-                              height: 200,
-                            );
-                          }
-                          final entryIndex = index - 1;
-                          if (entryIndex == entries.length) {
-                            return SizedBox(
-                              key: const Key('work-log-page-loader'),
-                              height: 56,
-                              child: state.isLoadingMore
-                                  ? const Center(
-                                      child: CircularProgressIndicator(),
-                                    )
-                                  : null,
-                            );
-                          }
-                          final entry = entries[entryIndex];
-                          return WorkLogItemCard(
-                            entry: entry,
-                            onTap: () => onEntryPressed(entry),
-                          );
-                        },
+                child: Stack(
+                  children: [
+                    entries.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: const [
+                              SizedBox(
+                                key: Key('work-log-history-top-spacing'),
+                                height: 185,
+                              ),
+                              Center(child: Text('Nessun lavoro registrato')),
+                            ],
+                          )
+                        : ListView.builder(
+                            key: const Key('work-log-history-list'),
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                            itemCount: visibleEntries.length + 2,
+                            itemBuilder: (context, index) {
+                              if (index == 0) {
+                                return const SizedBox(
+                                  key: Key('work-log-history-top-spacing'),
+                                  height: 185,
+                                );
+                              }
+                              final entryIndex = index - 1;
+                              if (entryIndex == visibleEntries.length) {
+                                if (visibleEntries.isEmpty) {
+                                  return const Padding(
+                                    padding: EdgeInsets.only(top: 70),
+                                    child: Center(
+                                      child: Text(
+                                        'Nessun lavoro per questo filtro',
+                                      ),
+                                    ),
+                                  );
+                                }
+                                return SizedBox(
+                                  key: const Key('work-log-page-loader'),
+                                  height: 56,
+                                  child: state.isLoadingMore
+                                      ? const Center(
+                                          child: CircularProgressIndicator(),
+                                        )
+                                      : null,
+                                );
+                              }
+                              final entry = visibleEntries[entryIndex];
+                              return WorkLogItemCard(
+                                key: ValueKey('work-log-item-${entry.id}'),
+                                entry: entry,
+                                entranceIndex: entryIndex,
+                                onTap: () => onEntryPressed(entry),
+                              );
+                            },
+                          ),
+                    Positioned(
+                      top: 125,
+                      left: 20,
+                      right: 20,
+                      child: WorkLogHistoryFilter(
+                        selectedType: state.selectedType,
+                        onChanged: (type) => context
+                            .read<WorkLogHistoryBloc>()
+                            .add(WorkLogHistoryFilterSelected(type)),
                       ),
+                    ),
+                  ],
+                ),
               ),
             ),
         },
@@ -382,84 +445,100 @@ class _WorkLogRouteTransitionCubit extends Cubit<bool> {
   }
 }
 
-class _OwnerHistoryAppBar extends StatelessWidget
+class _OwnerHistoryAppBar extends StatefulWidget
     implements PreferredSizeWidget {
   const _OwnerHistoryAppBar({
     required this.state,
     required this.onVehicleSelected,
     required this.onAddPressed,
+    this.routeAnimation,
   });
 
   final WorkLogVehiclesState state;
   final ValueChanged<String> onVehicleSelected;
   final VoidCallback? onAddPressed;
+  final Listenable? routeAnimation;
 
   @override
-  Size get preferredSize => const Size.fromHeight(72);
+  Size get preferredSize =>
+      const Size.fromHeight(WorkLogTopAppBar.contentHeight);
+
+  @override
+  State<_OwnerHistoryAppBar> createState() => _OwnerHistoryAppBarState();
+}
+
+class _OwnerHistoryAppBarState extends State<_OwnerHistoryAppBar> {
+  late final AmLiquidGlassRepaintController _glassRepaint;
+
+  @override
+  void initState() {
+    super.initState();
+    _glassRepaint = AmLiquidGlassRepaintController();
+    _glassRepaint.bindExternalRepaint(widget.routeAnimation);
+  }
+
+  @override
+  void didUpdateWidget(_OwnerHistoryAppBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.routeAnimation != widget.routeAnimation) {
+      _glassRepaint.bindExternalRepaint(widget.routeAnimation);
+    }
+  }
+
+  @override
+  void dispose() {
+    _glassRepaint.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return OCLiquidGlassGroup(
-      settings: const OCLiquidGlassSettings(
-        refractStrength: -0.08,
-        blurRadiusPx: 2,
-        specStrength: 1,
-        specWidth: 0.5,
-        specAngle: 145,
-        specPower: 10,
-        lightbandOffsetPx: 7,
-        lightbandStrength: 0.5,
+    return WorkLogTopAppBar(
+      liquidGlassRepaint: _glassRepaint,
+      liquidGlassGeneration: widget.routeAnimation,
+      leadingWidth: null,
+      leading: BlocBuilder<WorkLogVehiclesCubit, WorkLogVehiclesState>(
+        builder: (context, state) => _VehicleDropdown(
+          state: state,
+          onVehicleSelected: widget.onVehicleSelected,
+          liquidGlassRepaint: _glassRepaint,
+        ),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: BlocBuilder<WorkLogVehiclesCubit, WorkLogVehiclesState>(
-              builder: (context, state) => _VehicleDropdown(
-                state: state,
-                onVehicleSelected: onVehicleSelected,
-              ),
+      title: Text(
+        'LAVORI',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: colors.textPrimary,
+          fontSize: 16,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.2,
+        ),
+      ),
+      trailing: BlocBuilder<WorkLogVehiclesCubit, WorkLogVehiclesState>(
+        builder: (context, state) {
+          final vehicle = state is WorkLogVehiclesLoaded
+              ? state.selectedVehicle
+              : null;
+          return Semantics(
+            label: 'Aggiungi lavoro',
+            button: true,
+            enabled: vehicle != null,
+            child: AmSoftButton(
+              key: const Key('work-log-owner-add'),
+              width: AmControlMetrics.circularButtonVisualSize,
+              height: AmControlMetrics.circularButtonVisualSize,
+              color: colors.accent,
+              iconSize: AmControlMetrics.circularButtonIconSize,
+              colorOpacity: 0.8,
+              icon: HugeIcons.strokeRoundedAdd01,
+              iconWeight: 2.8,
+              liquidGlassEnabled: true,
+              liquidGlassRepaint: _glassRepaint,
+              onPressed: vehicle == null ? null : widget.onAddPressed,
             ),
-          ),
-          Expanded(
-            child: Text(
-              'LAVORI',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colors.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: BlocBuilder<WorkLogVehiclesCubit, WorkLogVehiclesState>(
-                builder: (context, state) {
-                  final vehicle = state is WorkLogVehiclesLoaded
-                      ? state.selectedVehicle
-                      : null;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: AmSoftButton(
-                      key: const Key('work-log-owner-add'),
-                      width: 45,
-                      height: 45,
-                      color: colors.accent,
-                      iconColor: colors.textPrimary,
-                      icon: HugeIcons.strokeRoundedAdd01,
-                      tooltip: 'Aggiungi lavoro',
-                      liquidGlassEnabled: true,
-                      onPressed: vehicle == null ? null : onAddPressed,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -469,10 +548,12 @@ class _VehicleDropdown extends StatelessWidget {
   const _VehicleDropdown({
     required this.state,
     required this.onVehicleSelected,
+    required this.liquidGlassRepaint,
   });
 
   final WorkLogVehiclesState state;
   final ValueChanged<String> onVehicleSelected;
+  final AmLiquidGlassRepaintController liquidGlassRepaint;
 
   @override
   Widget build(BuildContext context) {
@@ -485,16 +566,34 @@ class _VehicleDropdown extends StatelessWidget {
     return AmPullDownLG(
       key: const Key('work-log-owner-vehicle-selector'),
       brand: '',
+      popupShadow: Theme.of(context).brightness == Brightness.light
+          ? const BoxShadow(
+              color: Colors.black12,
+              blurRadius: 78,
+              offset: Offset(0, 2),
+            )
+          : null,
+
       lable: selected == null
           ? 'VEICOLO'
           : (selected.name.isEmpty ? selected.plate : selected.name),
-      backgroundColor: colors.background.withValues(alpha: 0.3),
-      popupBackgroundColor: colors.background.withValues(alpha: 0.8),
+      backgroundColor: AmControlMetrics.pullDownFill(
+        Theme.of(context).brightness,
+      ),
+      popupBackgroundColor: AmControlMetrics.pullDownPopupFill(
+        Theme.of(context).brightness,
+      ),
+      buttonShadow: AmControlMetrics.pullDownShadow(
+        Theme.of(context).brightness,
+      ),
       liquidGlassEnabled: true,
+      ownsLiquidGlassGroup: false,
+      liquidGlassRepaint: liquidGlassRepaint,
       onTap: () {},
-      larghezza: 280,
+      larghezza: AmControlMetrics.pullDownWidth,
+      popupBorderRadius: AmControlMetrics.pullDownRadius,
       buttonIcons: HugeIcons.strokeRoundedCar05,
-      buttonIconsSize: 20,
+      buttonIconsSize: AmControlMetrics.pullDownIconSize,
       iconColor: colors.textPrimary,
       textColor: colors.textPrimary,
       buttonLableStyle: TextStyle(
@@ -507,10 +606,15 @@ class _VehicleDropdown extends StatelessWidget {
         for (final vehicle in loaded?.vehicles ?? const <WorkLogVehicle>[])
           ItemMorphPopUp(
             icon: HugeIcons.strokeRoundedCar05,
-            text: vehicle.name.isEmpty ? vehicle.plate : vehicle.name,
-            iconSize: 20,
+            text: vehicle.name.isEmpty
+                ? vehicle.plate
+                : vehicle.name.toUpperCase(),
+            iconSize: AmControlMetrics.pullDownIconSize,
             iconColor: colors.info,
             textColor: colors.textPrimary,
+            textSize: 14,
+            textWeight: FontWeight.w600,
+            iconsWheight: FontWeight.w900,
             onTap: () => onVehicleSelected(vehicle.id),
           ),
       ],
@@ -518,7 +622,7 @@ class _VehicleDropdown extends StatelessWidget {
   }
 }
 
-class _MechanicHistoryAppBar extends StatelessWidget
+class _MechanicHistoryAppBar extends StatefulWidget
     implements PreferredSizeWidget {
   const _MechanicHistoryAppBar({
     required this.title,
@@ -531,68 +635,66 @@ class _MechanicHistoryAppBar extends StatelessWidget
   final VoidCallback? onNotificationsPressed;
 
   @override
-  Size get preferredSize => const Size.fromHeight(72);
+  Size get preferredSize =>
+      const Size.fromHeight(WorkLogTopAppBar.contentHeight);
+
+  @override
+  State<_MechanicHistoryAppBar> createState() => _MechanicHistoryAppBarState();
+}
+
+class _MechanicHistoryAppBarState extends State<_MechanicHistoryAppBar> {
+  late final AmLiquidGlassRepaintController _glassRepaint;
+
+  @override
+  void initState() {
+    super.initState();
+    _glassRepaint = AmLiquidGlassRepaintController();
+  }
+
+  @override
+  void dispose() {
+    _glassRepaint.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return OCLiquidGlassGroup(
-      settings: const OCLiquidGlassSettings(
-        refractStrength: -0.08,
-        blurRadiusPx: 2,
-        specStrength: 1,
-        specWidth: 0.5,
-        specAngle: 145,
-        specPower: 10,
-        lightbandOffsetPx: 7,
-        lightbandStrength: 0.5,
+    return WorkLogTopAppBar(
+      liquidGlassRepaint: _glassRepaint,
+      leading: AmSoftButton(
+        key: const Key('work-log-mechanic-back'),
+        width: AmControlMetrics.circularButtonVisualSize,
+        height: AmControlMetrics.circularButtonVisualSize,
+        iconSize: AmControlMetrics.circularButtonIconSize,
+        color: colors.background.withValues(alpha: 0.3),
+        icon: HugeIcons.strokeRoundedArrowLeft01,
+        iconColor: colors.textPrimary,
+        tooltip: 'Indietro',
+        liquidGlassRepaint: _glassRepaint,
+        onPressed: widget.onBackPressed,
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 4),
-              child: AmSoftButton(
-                key: const Key('work-log-mechanic-back'),
-                width: 48,
-                height: 48,
-                color: colors.background.withValues(alpha: 0.3),
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                iconColor: colors.textPrimary,
-                tooltip: 'Indietro',
-                onPressed: onBackPressed,
-              ),
-            ),
-            Expanded(
-              child: Text(
-                title.toUpperCase(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: AmSoftButton(
-                key: const Key('work-log-mechanic-notifications'),
-                width: 48,
-                height: 48,
-                color: colors.background.withValues(alpha: 0.3),
-                icon: HugeIcons.strokeRoundedNotification01,
-                iconColor: colors.textPrimary,
-                tooltip: 'Notifiche',
-                onPressed: onNotificationsPressed,
-              ),
-            ),
-          ],
+      title: Text(
+        widget.title.toUpperCase(),
+        softWrap: true,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: colors.textPrimary,
+          fontSize: 16,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.2,
         ),
+      ),
+      trailing: AmSoftButton(
+        key: const Key('work-log-mechanic-notifications'),
+        width: AmControlMetrics.circularButtonVisualSize,
+        height: AmControlMetrics.circularButtonVisualSize,
+        iconSize: AmControlMetrics.circularButtonIconSize,
+        color: colors.accent.withValues(alpha: 0.3),
+        icon: HugeIcons.strokeRoundedNotification01,
+        tooltip: 'Notifiche',
+        liquidGlassRepaint: _glassRepaint,
+        onPressed: widget.onNotificationsPressed,
       ),
     );
   }
@@ -602,67 +704,65 @@ class _WorkLogWizardPage extends StatelessWidget {
   const _WorkLogWizardPage({
     required this.vehicle,
     required this.createWorkLog,
+    required this.initialType,
   });
 
   final WorkLogVehicle vehicle;
   final CreateWorkLog createWorkLog;
+  final WorkLogType initialType;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => WorkLogEditorCubit(createWorkLog: createWorkLog),
     child: Builder(
-      builder: (context) => Scaffold(
-        backgroundColor: AmThemeColors.of(context).background,
-        resizeToAvoidBottomInset: false,
-        body: SafeArea(
-          bottom: false,
-          child: WorkLogWizardBody(
-            context: WorkLogLaunchContext(
-              vehicleId: vehicle.id,
-              vehicleName: vehicle.name,
-              currentKm: vehicle.currentKm,
-            ),
-            cubit: context.read<WorkLogEditorCubit>(),
-            onSaved: (result) => Navigator.of(context).pop(result),
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-class _WorkLogDetailPage extends StatelessWidget {
-  const _WorkLogDetailPage({required this.entry});
-
-  final WorkLogEntry entry;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AmThemeColors.of(context).background,
-    body: SafeArea(
-      bottom: false,
-      child: Column(
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+      builder: (context) {
+        final colors = AmThemeColors.of(context);
+        return Scaffold(
+          backgroundColor: colors.background,
+          resizeToAvoidBottomInset: false,
+          appBar: WorkLogTopAppBar(
+            leading: WorkLogGlassControl(
               child: AmSoftButton(
-                key: const Key('work-log-detail-back'),
-                width: 48,
-                height: 48,
-                color: AmThemeColors.of(
-                  context,
-                ).surfaceRaised.withValues(alpha: .24),
+                key: const Key('work-log-wizard-back'),
+                width: AmControlMetrics.circularButtonVisualSize,
+                height: AmControlMetrics.circularButtonVisualSize,
+                iconSize: AmControlMetrics.circularButtonIconSize,
+                color: colors.background.withValues(alpha: 0.3),
                 icon: HugeIcons.strokeRoundedArrowLeft01,
+                iconColor: colors.textPrimary,
                 tooltip: 'Indietro',
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ),
+            title: Text(
+              'AGGIUNGI LAVORO',
+              key: const Key('work-log-wizard-title'),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
+            ),
+            trailing: const SizedBox.shrink(),
           ),
-          Expanded(child: WorkLogDetailBody(entry: entry)),
-        ],
-      ),
+          body: SafeArea(
+            top: false,
+            bottom: false,
+            child: WorkLogWizardBody(
+              context: WorkLogLaunchContext(
+                vehicleId: vehicle.id,
+                vehicleName: vehicle.name,
+                currentKm: vehicle.currentKm,
+                initialWorkType: initialType.wireValue,
+              ),
+              cubit: context.read<WorkLogEditorCubit>(),
+              onSaved: (result) => Navigator.of(context).pop(result),
+            ),
+          ),
+        );
+      },
     ),
   );
 }

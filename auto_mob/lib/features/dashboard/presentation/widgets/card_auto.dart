@@ -1,14 +1,10 @@
 import 'dart:io';
 
 import 'package:auto_mob_v1/core/config/performance_flags.dart';
-import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
-import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:soft_edge_blur/soft_edge_blur.dart';
-
-import '../../../../core/widgets/buttons/am_pull_down_lg.dart';
 
 const _vehicleCardRadius = 28.0;
 const _cornerSmoothing = 0.8;
@@ -19,8 +15,8 @@ SmoothBorderRadius _smoothRadius(double radius) =>
 SmoothRectangleBorder _vehicleShape({double radius = _vehicleCardRadius}) =>
     SmoothRectangleBorder(borderRadius: _smoothRadius(radius));
 
-/// Card del veicolo nel PageView della home.
-/// Card solida con ombra (3D), niente blur in tempo reale → swipe fluido.
+/// Card del veicolo nello stack della home.
+/// Superficie HSL con luce superiore e doppia ombra corta.
 class CardAuto extends StatelessWidget {
   final String marca;
   final String modello;
@@ -67,35 +63,54 @@ class CardAuto extends StatelessWidget {
     final colors = AmThemeColors.of(context);
     final now = referenceDate ?? DateTime.now();
 
-    // Bottone matita con menu "MODIFICA FOTO". Lo shader di rifrazione
-    // (OCLiquidGlassGroup) campiona lo sfondo in coordinate schermo: mentre la
-    // card scorre, lo sfondo rifratto trasla e il vetro SEMBRA scivolare. Lo
-    // accendiamo solo sui top di gamma (kHeavyEffects), come il resto dell'app
-    // (pattern SmartGlass); con flag off resta la pillola scura piatta, ferma.
+    // Il trigger edit resta piatto: una card non deve mantenere un proprio
+    // shader di rifrazione durante scroll e transizioni. Il popup temporaneo
+    // conserva invece il glass sui device che abilitano gli effetti pesanti.
     final Widget editPull = AmPullDownLG(
       brand: '',
       lable: '',
       onTap: () {},
-      backgroundColor: colors.background,
-      popupBackgroundColor: colors.background.withValues(alpha: 0.5),
+      circularTrigger: true,
+      backgroundColor: AmControlMetrics.pullDownFill(
+        Theme.of(context).brightness,
+      ),
+      popupBackgroundColor: AmControlMetrics.pullDownPopupFill(
+        Theme.of(context).brightness,
+      ),
+      buttonShadow: AmControlMetrics.pullDownShadow(
+        Theme.of(context).brightness,
+      ),
+      popupShadow: Theme.of(context).brightness == Brightness.light
+          ? const BoxShadow(
+              color: Colors.black12,
+              blurRadius: 78,
+              offset: Offset(0, 2),
+            )
+          : null,
       // larghezza = larghezza del MENU che si apre (non della matita, che si
       // dimensiona sul contenuto). A 60 la voce "MODIFICA FOTO" andava in
       // overflow (~32px): serve spazio per icona + padding + testo.
-      larghezza: 230,
+      larghezza: 210,
       buttonIcons: HugeIcons.strokeRoundedEdit01,
       buttonIconsSize: 18,
       iconColor: colors.textPrimary,
       textColor: colors.textPrimary,
       buttonLableStyle: const TextStyle(fontSize: 0),
       arrow: false,
+      liquidGlassEnabled: false,
+      popupLiquidGlassEnabled: kHeavyEffects,
       children: [
         ItemMorphPopUp(
           icon: HugeIcons.strokeRoundedAlbum02,
           text: "MODIFICA FOTO",
           onTap: onEditPhotoTap ?? () {},
-          iconColor: colors.accent,
-          iconSize: 22,
+
+          iconSize: AmControlMetrics.pullDownIconSize,
+          iconColor: colors.info,
           textColor: colors.textPrimary,
+          textSize: 14,
+          textWeight: FontWeight.w600,
+          iconsWheight: FontWeight.w900,
         ),
       ],
     );
@@ -110,76 +125,75 @@ class CardAuto extends StatelessWidget {
             // Foto e dati formano una sola superficie: l'edge inferiore della
             // foto sfuma per 10px nel colore della card, senza stacco visivo.
             Container(
-              clipBehavior: Clip.antiAlias,
+              key: const Key('vehicle-card-surface'),
+              padding: const EdgeInsets.all(1),
               decoration: ShapeDecoration(
-                color: colors.surface,
-                shape: _vehicleShape().copyWith(
-                  side: BorderSide(color: colors.border),
-                ),
-                shadows: [
-                  BoxShadow(
-                    color: colors.shadow.withValues(alpha: 0.16),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+                gradient: colors.cardBorderGradient,
+                shape: _vehicleShape(),
+                shadows: colors.cardShadows,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
+              child: ClipPath(
+                clipper: ShapeBorderClipper(shape: _vehicleShape()),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(gradient: colors.cardGradient),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        height: (constraints.maxWidth * 0.5625).clamp(
-                          164.0,
-                          232.0,
-                        ),
-                        child: SmartEdge(
-                          blur: kHeavyEffects,
-                          fallbackTint: colors.surface,
-                          opacity: 0.96,
-                          edges: [
-                            EdgeBlur(
-                              type: EdgeType.bottomEdge,
-                              size: 10,
-                              tintColor: colors.surface,
-                              sigma: 10,
-                              controlPoints: [
-                                ControlPoint(
-                                  position: 0.2,
-                                  type: ControlPointType.visible,
-                                ),
-                                ControlPoint(
-                                  position: 1.0,
-                                  type: ControlPointType.transparent,
+                      Stack(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            height: (constraints.maxWidth * 0.5625).clamp(
+                              164.0,
+                              232.0,
+                            ),
+                            child: SmartEdge(
+                              blur: kHeavyEffects,
+                              fallbackTint: colors.surface,
+                              opacity: 0.96,
+                              edges: [
+                                EdgeBlur(
+                                  type: EdgeType.bottomEdge,
+                                  size: 10,
+                                  tintColor: colors.surface,
+                                  sigma: 10,
+                                  controlPoints: [
+                                    ControlPoint(
+                                      position: 0.2,
+                                      type: ControlPointType.visible,
+                                    ),
+                                    ControlPoint(
+                                      position: 1.0,
+                                      type: ControlPointType.transparent,
+                                    ),
+                                  ],
                                 ),
                               ],
+                              child: SizedBox.expand(
+                                child: _VehicleImage(
+                                  immaginePath: immaginePath,
+                                ),
+                              ),
                             ),
-                          ],
-                          child: SizedBox.expand(
-                            child: _VehicleImage(immaginePath: immaginePath),
                           ),
-                        ),
+                          Positioned(top: 12, right: 12, child: editPull),
+                        ],
                       ),
-                      Positioned(top: 12, right: 12, child: editPull),
+                      _VehicleInfoPanel(
+                        marca: marca,
+                        modello: modello,
+                        kmTotali: kmTotali,
+                        targa: targa,
+                        anno: anno,
+                        estimatedAdditionalKm: estimatedAdditionalKm,
+                        nextRevisionDate: nextRevisionDate,
+                        now: now,
+                        onKmTap: onKmTap,
+                        onRevisionTap: onRevisionTap,
+                      ),
                     ],
                   ),
-                  _VehicleInfoPanel(
-                    marca: marca,
-                    modello: modello,
-                    kmTotali: kmTotali,
-                    targa: targa,
-                    anno: anno,
-                    kmUpdatedAt: kmUpdatedAt,
-                    estimatedAdditionalKm: estimatedAdditionalKm,
-                    daysSinceKmUpdate: daysSinceKmUpdate,
-                    nextRevisionDate: nextRevisionDate,
-                    now: now,
-                    onKmTap: onKmTap,
-                    onRevisionTap: onRevisionTap,
-                  ),
-                ],
+                ),
               ),
             ),
             /*
@@ -492,9 +506,7 @@ class _VehicleInfoPanel extends StatelessWidget {
     required this.kmTotali,
     required this.targa,
     required this.anno,
-    required this.kmUpdatedAt,
     required this.estimatedAdditionalKm,
-    required this.daysSinceKmUpdate,
     required this.nextRevisionDate,
     required this.now,
     required this.onKmTap,
@@ -506,19 +518,11 @@ class _VehicleInfoPanel extends StatelessWidget {
   final String kmTotali;
   final String targa;
   final int anno;
-  final DateTime? kmUpdatedAt;
   final int estimatedAdditionalKm;
-  final int daysSinceKmUpdate;
   final DateTime? nextRevisionDate;
   final DateTime now;
   final VoidCallback? onKmTap;
   final VoidCallback? onRevisionTap;
-
-  String get _updateLabel => switch (daysSinceKmUpdate) {
-    0 => 'Aggiornati oggi',
-    1 => 'Aggiornati ieri',
-    final days => 'Aggiornati $days giorni fa',
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -548,12 +552,13 @@ class _VehicleInfoPanel extends StatelessWidget {
               if (anno > 0) ...[
                 const SizedBox(width: 12),
                 Container(
+                  key: const Key('vehicle-year-badge'),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 6,
                   ),
                   decoration: ShapeDecoration(
-                    color: colors.surfaceDeep,
+                    color: colors.surfaceRaised,
                     shape: _vehicleShape(radius: 8),
                   ),
                   child: Text(
@@ -573,9 +578,6 @@ class _VehicleInfoPanel extends StatelessWidget {
           const SizedBox(height: 8),
           _MileageSection(
             kmTotali: kmTotali,
-            updateLabel: kmUpdatedAt == null
-                ? 'Data aggiornamento non disponibile'
-                : _updateLabel,
             estimatedAdditionalKm: estimatedAdditionalKm,
             onTap: onKmTap,
           ),
@@ -644,13 +646,11 @@ class _LicensePlate extends StatelessWidget {
 class _MileageSection extends StatelessWidget {
   const _MileageSection({
     required this.kmTotali,
-    required this.updateLabel,
     required this.estimatedAdditionalKm,
     required this.onTap,
   });
 
   final String kmTotali;
-  final String updateLabel;
   final int estimatedAdditionalKm;
   final VoidCallback? onTap;
 
@@ -669,16 +669,44 @@ class _MileageSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                _formattedCurrentKm,
-                key: const Key('vehicle-current-km'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      _formattedCurrentKm,
+                      key: const Key('vehicle-current-km'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  if (estimatedAdditionalKm > 0) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      key: const Key('km-estimated-increment'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: ShapeDecoration(
+                        color: colors.accent.withValues(alpha: 0.14),
+                        shape: _vehicleShape(radius: 12),
+                      ),
+                      child: Text(
+                        '+ ${_formatNumber(estimatedAdditionalKm)} km',
+                        style: TextStyle(
+                          color: colors.accent,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             FilledButton.icon(
@@ -704,50 +732,6 @@ class _MileageSection extends StatelessWidget {
                   vertical: 9,
                 ),
                 shape: _vehicleShape(radius: 20),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: colors.accent.withValues(alpha: 0.13),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedClock01,
-                  color: colors.accent,
-                  size: 19,
-                  strokeWidth: 2,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    updateLabel,
-                    key: const Key('km-last-update-label'),
-                    style: TextStyle(
-                      color: colors.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Stimati: ${_formatNumber(estimatedAdditionalKm)} km',
-                    key: const Key('km-estimated-increment'),
-                    style: TextStyle(color: colors.textSecondary, fontSize: 11),
-                  ),
-                ],
               ),
             ),
           ],
@@ -820,10 +804,10 @@ class _RevisionTile extends StatelessWidget {
         child: Ink(
           height: 60,
           decoration: ShapeDecoration(
-            color: colors.accent.withValues(alpha: 0.045),
-            shape: _vehicleShape(radius: 20).copyWith(
-              side: BorderSide(color: colors.accent.withValues(alpha: 0.9)),
-            ),
+            color: statusColor.withValues(alpha: 0.045),
+            shape: _vehicleShape(
+              radius: 20,
+            ).copyWith(side: BorderSide(color: statusColor)),
           ),
           child: Stack(
             children: [
@@ -832,7 +816,7 @@ class _RevisionTile extends StatelessWidget {
                 bottom: -25,
                 child: HugeIcon(
                   icon: HugeIcons.strokeRoundedCalendar01,
-                  color: colors.accent.withValues(alpha: 0.08),
+                  color: statusColor.withValues(alpha: 0.08),
                   size: 82,
                   strokeWidth: 2.2,
                 ),
@@ -844,7 +828,7 @@ class _RevisionTile extends StatelessWidget {
                     HugeIcon(
                       key: const Key('revision-status-icon'),
                       icon: HugeIcons.strokeRoundedCalendar01,
-                      color: colors.accent,
+                      color: statusColor,
                       size: 26,
                       strokeWidth: 2.2,
                     ),
@@ -893,7 +877,7 @@ class _RevisionTile extends StatelessWidget {
                     const SizedBox(width: 8),
                     HugeIcon(
                       icon: HugeIcons.strokeRoundedArrowRight01,
-                      color: colors.accent,
+                      color: statusColor,
                       size: 23,
                       strokeWidth: 2.3,
                     ),

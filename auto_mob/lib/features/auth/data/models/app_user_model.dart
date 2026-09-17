@@ -12,7 +12,11 @@ class AppAuthUserModel extends AppAuthUser {
     return AppAuthUserModel(
       id: user.id,
       email: user.email ?? '',
-      displayName: user.userMetadata?['full_name']?.toString().trim() ?? '',
+      displayName:
+          (user.userMetadata?['full_name'] ?? user.userMetadata?['name'])
+              ?.toString()
+              .trim() ??
+          '',
     );
   }
 }

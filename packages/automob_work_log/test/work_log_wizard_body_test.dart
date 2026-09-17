@@ -64,7 +64,16 @@ void main() {
       of: find.byKey(const Key('work-log-notes')),
       matching: find.byType(TextField),
     );
-    await tester.ensureVisible(notesField);
+    await tester.scrollUntilVisible(
+      notesField,
+      240,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const PageStorageKey('work-log-data-step')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     await tester.showKeyboard(notesField);
     await tester.pump();
     await tester.pumpWidget(_wizardApp(cubit: cubit, keyboardInset: 300));
@@ -74,6 +83,61 @@ void main() {
     expect(tester.takeException(), isNull);
     tester.testTextInput.hide();
     await tester.pump();
+  });
+
+  testWidgets('mostra i tipi aggiuntivi e il nome opzionale', (tester) async {
+    tester.view.physicalSize = const Size(393, 1400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final repository = _Repository();
+    final cubit = WorkLogEditorCubit(createWorkLog: CreateWorkLog(repository));
+    addTearDown(cubit.close);
+
+    await tester.pumpWidget(_wizardApp(cubit: cubit));
+
+    expect(find.text('Motore'), findsOneWidget);
+    expect(find.text('Freni'), findsOneWidget);
+    expect(find.text('Telaio'), findsOneWidget);
+    expect(find.text('Elettronica'), findsOneWidget);
+    expect(find.text('Batteria'), findsOneWidget);
+    expect(find.text('Cambio'), findsOneWidget);
+    expect(
+      find.byKey(const Key('work-log-type-selection-grid')),
+      findsOneWidget,
+    );
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget.key is ValueKey<String> &&
+            (widget.key! as ValueKey<String>).value.startsWith(
+              'work-log-type-card-',
+            ),
+      ),
+      findsNWidgets(12),
+    );
+    final grid = tester.widget<GridView>(
+      find.byKey(const Key('work-log-type-selection-grid')),
+    );
+    expect(
+      (grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount)
+          .crossAxisCount,
+      3,
+    );
+    expect(find.byKey(const Key('work-log-custom-name')), findsNothing);
+
+    final brakesCard = find.byKey(const ValueKey('work-log-type-card-freni'));
+    await tester.tap(brakesCard);
+    await tester.pump();
+    await tester.drag(
+      find.byKey(const PageStorageKey('work-log-data-step')),
+      const Offset(0, -420),
+    );
+    await tester.pump();
+
+    expect(cubit.state.type, 'freni');
+    expect(find.byKey(const Key('work-log-custom-name')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
 

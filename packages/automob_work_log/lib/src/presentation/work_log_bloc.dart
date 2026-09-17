@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../domain/work_log_entry.dart';
+import '../domain/work_log_type.dart';
 import '../domain/work_log_use_cases.dart';
 
 sealed class WorkLogHistoryEvent {
@@ -20,6 +21,11 @@ class WorkLogHistoryLoadMoreRequested extends WorkLogHistoryEvent {
   const WorkLogHistoryLoadMoreRequested();
 }
 
+class WorkLogHistoryFilterSelected extends WorkLogHistoryEvent {
+  const WorkLogHistoryFilterSelected(this.type);
+  final WorkLogType? type;
+}
+
 sealed class WorkLogHistoryState {
   const WorkLogHistoryState();
 }
@@ -35,6 +41,7 @@ class WorkLogHistoryLoaded extends WorkLogHistoryState {
     this.isLoadingMore = false,
     this.isRefreshing = false,
     this.refreshError,
+    this.selectedType,
   });
 
   final List<WorkLogEntry> entries;
@@ -42,6 +49,13 @@ class WorkLogHistoryLoaded extends WorkLogHistoryState {
   final bool isLoadingMore;
   final bool isRefreshing;
   final String? refreshError;
+  final WorkLogType? selectedType;
+
+  List<WorkLogEntry> get visibleEntries => selectedType == null
+      ? entries
+      : entries
+            .where((entry) => entry.type == selectedType!.wireValue)
+            .toList();
 }
 
 class WorkLogHistoryFailure extends WorkLogHistoryState {
@@ -56,6 +70,7 @@ class WorkLogHistoryBloc
     on<WorkLogHistoryOpened>(_onOpened);
     on<WorkLogHistoryRefreshRequested>(_onRefresh);
     on<WorkLogHistoryLoadMoreRequested>(_onLoadMore);
+    on<WorkLogHistoryFilterSelected>(_onFilterSelected);
   }
 
   static const pageSize = 20;
@@ -86,6 +101,7 @@ class WorkLogHistoryBloc
           entries: current.entries,
           hasReachedMax: current.hasReachedMax,
           isRefreshing: true,
+          selectedType: current.selectedType,
         ),
       );
     }
@@ -114,6 +130,7 @@ class WorkLogHistoryBloc
         entries: current.entries,
         hasReachedMax: false,
         isLoadingMore: true,
+        selectedType: current.selectedType,
       ),
     );
     await _loadPage(
@@ -122,6 +139,27 @@ class WorkLogHistoryBloc
       from: current.entries.length,
       replace: false,
       retained: current,
+    );
+  }
+
+  void _onFilterSelected(
+    WorkLogHistoryFilterSelected event,
+    Emitter<WorkLogHistoryState> emit,
+  ) {
+    final current = state;
+    if (current is! WorkLogHistoryLoaded ||
+        current.selectedType == event.type) {
+      return;
+    }
+    emit(
+      WorkLogHistoryLoaded(
+        entries: current.entries,
+        hasReachedMax: current.hasReachedMax,
+        isLoadingMore: current.isLoadingMore,
+        isRefreshing: current.isRefreshing,
+        refreshError: current.refreshError,
+        selectedType: event.type,
+      ),
     );
   }
 
@@ -146,6 +184,7 @@ class WorkLogHistoryBloc
               entries: retained.entries,
               hasReachedMax: retained.hasReachedMax,
               refreshError: message,
+              selectedType: retained.selectedType,
             ),
           );
         } else {
@@ -161,6 +200,9 @@ class WorkLogHistoryBloc
           WorkLogHistoryLoaded(
             entries: items,
             hasReachedMax: entries.length < pageSize,
+            selectedType: previous is WorkLogHistoryLoaded
+                ? previous.selectedType
+                : retained?.selectedType,
           ),
         );
       },

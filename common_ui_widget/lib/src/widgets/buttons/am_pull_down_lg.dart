@@ -1,21 +1,33 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:figma_squircle/figma_squircle.dart';
-import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import '../effects/am_flat_glass.dart';
+import '../effects/am_liquid_glass_repaint_controller.dart';
+import '../effects/am_route_blur_transition.dart';
+import '../effects/am_static_frosted_surface.dart';
+import '../../theme/am_control_metrics.dart';
 
 const _morphPopupCornerSmoothing = 0.8;
+const _morphPopupBorderRadius = AmControlMetrics.pullDownRadius;
+const _popupCloseDuration = Duration(milliseconds: 200);
+SmoothRectangleBorder _morphPopupShape({
+  double radius = _morphPopupBorderRadius,
+}) => SmoothRectangleBorder(
+  borderRadius: SmoothBorderRadius(
+    cornerRadius: radius,
+    cornerSmoothing: _morphPopupCornerSmoothing,
+  ),
+);
 
-SmoothRectangleBorder _morphPopupShape({double radius = 30}) =>
-    SmoothRectangleBorder(
-      borderRadius: SmoothBorderRadius(
-        cornerRadius: radius,
-        cornerSmoothing: _morphPopupCornerSmoothing,
-      ),
-    );
+double _responsivePopupRadius({
+  required double requestedRadius,
+  required double width,
+  required double height,
+}) => requestedRadius.clamp(0.0, math.min(width, height) / 2).toDouble();
 
 /// Un badge flottante che indica il veicolo selezionato.
 /// Estetica: Pillola blu con icona auto e freccia per dropdown,
@@ -36,6 +48,20 @@ class AmPullDownLG extends StatefulWidget {
   final VoidCallback onTap;
   final bool arrow;
   final bool liquidGlassEnabled;
+  final bool? popupLiquidGlassEnabled;
+  final bool ownsLiquidGlassGroup;
+  final bool transparentTrigger;
+  final AmLiquidGlassRepaintController? liquidGlassRepaint;
+  final Animation<double>? routeAnimation;
+  final double popupBorderRadius;
+  final double? popupHeight;
+  final BoxShadow? buttonShadow;
+  final BoxShadow? popupShadow;
+  final double triggerHeight;
+  final EdgeInsetsGeometry triggerPadding;
+  final double rowHeight;
+  final double itemGap;
+  final bool circularTrigger;
 
   const AmPullDownLG({
     super.key,
@@ -45,7 +71,7 @@ class AmPullDownLG extends StatefulWidget {
     required this.popupBackgroundColor,
     required this.onTap,
     required this.children,
-    this.larghezza = 250.0,
+    this.larghezza = AmControlMetrics.pullDownWidth,
     required this.buttonIcons,
     required this.buttonIconsSize,
     required this.iconColor,
@@ -53,7 +79,25 @@ class AmPullDownLG extends StatefulWidget {
     required this.buttonLableStyle,
     required this.arrow,
     this.liquidGlassEnabled = true,
-  });
+    this.popupLiquidGlassEnabled,
+    this.ownsLiquidGlassGroup = true,
+    this.transparentTrigger = false,
+    this.liquidGlassRepaint,
+    this.routeAnimation,
+    this.popupBorderRadius = _morphPopupBorderRadius,
+    this.popupHeight,
+    this.buttonShadow,
+    this.popupShadow,
+    this.triggerHeight = AmControlMetrics.pullDownTriggerHeight,
+    this.triggerPadding = AmControlMetrics.pullDownPadding,
+    this.rowHeight = AmControlMetrics.pullDownRowHeight,
+    this.itemGap = AmControlMetrics.pullDownItemGap,
+    this.circularTrigger = false,
+  }) : assert(popupBorderRadius >= 0),
+       assert(popupHeight == null || popupHeight > 0),
+       assert(triggerHeight > 0),
+       assert(rowHeight >= AmControlMetrics.minimumTouchTarget),
+       assert(itemGap >= 0);
 
   @override
   State<AmPullDownLG> createState() => _AmPullDownLGState();
@@ -71,16 +115,22 @@ class _AmPullDownLGState extends State<AmPullDownLG>
   Offset _triggerPos = Offset.zero;
   Size _triggerSize = Size.zero;
 
-  static final SpringDescription _springDescription =
+  static final SpringDescription _pressDescription =
       SpringDescription.withDurationAndBounce(
-        duration: const Duration(milliseconds: 400),
-        bounce: 0.2,
+        duration: const Duration(milliseconds: 200),
+        bounce: 0.30,
       );
 
   static final SpringDescription _lightDescription =
       SpringDescription.withDurationAndBounce(
-        duration: const Duration(milliseconds: 180),
-        bounce: 0,
+        duration: const Duration(milliseconds: 200),
+        bounce: 0.0,
+      );
+
+  static final SpringDescription _morphDescription =
+      SpringDescription.withDurationAndBounce(
+        duration: const Duration(milliseconds: 400),
+        bounce: 0.2,
       );
 
   @override
@@ -90,12 +140,18 @@ class _AmPullDownLGState extends State<AmPullDownLG>
     transistionCtrl = AnimationController.unbounded(vsync: this, value: 1.0);
     lightCtrl = AnimationController(vsync: this, value: 0.0);
     morpheCtrl = AnimationController.unbounded(vsync: this, value: 0);
+    bounceCtrl.addListener(_repaintLiquidGlass);
     morpheCtrl.addListener(_onMorphChange);
   }
 
-  void _onMorphChange() {}
+  void _repaintLiquidGlass() =>
+      widget.liquidGlassRepaint?.updateScale(bounceCtrl.value);
+
+  void _onMorphChange() => _repaintLiquidGlass();
   @override
   void dispose() {
+    bounceCtrl.removeListener(_repaintLiquidGlass);
+    morpheCtrl.removeListener(_onMorphChange);
     bounceCtrl.dispose();
     lightCtrl.dispose();
     morpheCtrl.dispose();
@@ -105,161 +161,195 @@ class _AmPullDownLGState extends State<AmPullDownLG>
 
   void _onRelese() {
     HapticFeedback.selectionClick();
-    final bcS = SpringSimulation(_springDescription, bounceCtrl.value, 1, 0);
+    final bcS = SpringSimulation(_pressDescription, bounceCtrl.value, 1, 0);
     final lcS = SpringSimulation(_lightDescription, lightCtrl.value, 0, 0);
-    final mcS = SpringSimulation(_springDescription, morpheCtrl.value, 1, 0);
-    bounceCtrl.animateWith(bcS);
+    final mcS = SpringSimulation(_morphDescription, morpheCtrl.value, 1, 0);
+    bounceCtrl.animateWith(bcS).whenComplete(() {
+      if (mounted) bounceCtrl.value = 1;
+    });
     lightCtrl.animateWith(lcS);
     morpheCtrl.animateWith(mcS);
     _apriPopup(context, morpheCtrl);
   }
 
   void _onCancel() {
-    final bcS = SpringSimulation(_springDescription, bounceCtrl.value, 1, 0);
+    final bcS = SpringSimulation(_pressDescription, bounceCtrl.value, 1, 0);
     final lcS = SpringSimulation(_lightDescription, lightCtrl.value, 0, 0);
     bounceCtrl.animateWith(bcS);
     lightCtrl.animateWith(lcS);
   }
 
   void _onPress() {
-    final bcS = SpringSimulation(_springDescription, bounceCtrl.value, 1.25, 0);
+    final bcS = SpringSimulation(_pressDescription, bounceCtrl.value, 1.15, 0);
     final lcS = SpringSimulation(_lightDescription, lightCtrl.value, 0.5, 0);
 
     bounceCtrl.animateWith(bcS);
     lightCtrl.animateWith(lcS);
   }
 
+  void _resetPressAnimation() {
+    bounceCtrl
+      ..stop()
+      ..value = 1;
+    lightCtrl
+      ..stop()
+      ..value = 0;
+  }
+
   void _misuraTrigger(BuildContext context) {
-    final box = _triggerKey.currentContext!.findRenderObject() as RenderBox;
-    _triggerPos = box.localToGlobal(Offset.zero);
+    final box = context.findRenderObject() as RenderBox;
+    final overlayBox =
+        Overlay.of(context, rootOverlay: true).context.findRenderObject()!
+            as RenderBox;
+    // Il dialog usa il root navigator: anche dentro WorkLog le coordinate
+    // devono quindi essere relative al suo Overlay, non al Navigator annidato.
+    _triggerPos = box.localToGlobal(Offset.zero, ancestor: overlayBox);
     _triggerSize = box.size;
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final content = Stack(
+      alignment: Alignment.center,
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: lightCtrl,
+              builder: (context, child) => CustomPaint(
+                key: const Key('am-pull-down-button-press-light'),
+                painter: GlowPainter(
+                  intensity: lightCtrl.value,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: widget.circularTrigger
+              ? EdgeInsets.zero
+              : widget.triggerPadding,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (!widget.arrow)
+                HugeIcon(
+                  icon: widget.buttonIcons,
+                  size: widget.buttonIconsSize,
+                  color: widget.iconColor,
+                  strokeWidth: 2.2,
+                ),
+              if (widget.arrow) const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  widget.lable.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: widget.buttonLableStyle.copyWith(
+                    color: widget.textColor,
+                  ),
+                ),
+              ),
+              if (widget.arrow) const SizedBox(width: 4),
+              if (widget.arrow)
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowDown01,
+                  color: widget.iconColor,
+                  size: widget.buttonIconsSize,
+                  strokeWidth: 2.2,
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+    final sizedContent = SizedBox(
+      width: widget.circularTrigger ? widget.triggerHeight : null,
+      height: widget.triggerHeight,
+      child: content,
+    );
+    final Widget surface = widget.transparentTrigger
+        ? sizedContent
+        : AmStaticFrostedSurface(
+            surfaceKey: const Key('am-pull-down-trigger-static-surface'),
+            blurKey: const Key('am-pull-down-trigger-backdrop-blur'),
+            decorationKey: const Key('am-pull-down-trigger-decoration'),
+            borderRadius: widget.triggerHeight / 2,
+            showShadow: widget.buttonShadow == null,
+            child: sizedContent,
+          );
+    final shadowedSurface =
+        widget.buttonShadow == null || widget.transparentTrigger
+        ? surface
+        : DecoratedBox(
+            key: const Key('am-pull-down-button-shadow'),
+            decoration: ShapeDecoration(
+              shape: widget.circularTrigger
+                  ? const CircleBorder()
+                  : const StadiumBorder(),
+              shadows: [widget.buttonShadow!],
+            ),
+            child: surface,
+          );
+    final pressVisual = AnimatedBuilder(
+      animation: bounceCtrl,
+      builder: (context, wchild) => Transform.scale(
+        key: const Key('am-pull-down-press-surface-scale'),
+        scale: bounceCtrl.value,
+        child: wchild,
+      ),
+      child: shadowedSurface,
+    );
+
+    final button = GestureDetector(
       key: _triggerKey,
-      // Gestione precisa degli stati del tocco
       onTapDown: (_) {
-        _onPress();
         _misuraTrigger(_triggerKey.currentContext!);
+        _onPress();
       },
       onTapUp: (_) => _onRelese(),
-      onTapCancel: () => _onCancel(),
-
-      // 1. ANIMAZIONE DI ESPANSIONE (Scale: 1.05 per ingrandire)
-      child: AnimatedBuilder(
-        animation: Listenable.merge([bounceCtrl, morpheCtrl]),
-        builder: (BuildContext context, Widget? child) {
-          final apertura = (1 - morpheCtrl.value).clamp(0.0, 1.0);
-          final scala = bounceCtrl.value * apertura;
-
-          final base = widget.backgroundColor;
-
-          final Widget content = Stack(
-            alignment: Alignment.center,
-            children: [
-              // 2. LIVELLO BASE E OMBRA
-              // Positioned.fill si adatta dinamicamente alle dimensioni della Row sottostante
-
-              // 3. LIVELLO LUCE APPLE (Vibrancy)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: AnimatedBuilder(
-                    animation: lightCtrl,
-                    builder: (context, child) => CustomPaint(
-                      painter: GlowPainter(
-                        intensity: morpheCtrl.value <= 0
-                            ? lightCtrl.value
-                            : morpheCtrl.value,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+      onTapCancel: _onCancel,
+      child: SizedBox(
+        width: widget.circularTrigger
+            ? AmControlMetrics.minimumTouchTarget
+            : null,
+        height: AmControlMetrics.minimumTouchTarget,
+        child: Center(
+          child: AnimatedBuilder(
+            animation: morpheCtrl,
+            child: pressVisual,
+            builder: (context, child) {
+              final apertura = (1 - morpheCtrl.value).clamp(0.0, 1.0);
+              return Opacity(
+                key: const Key('am-pull-down-morph-opacity'),
+                opacity: apertura,
+                child: Transform.scale(
+                  key: const Key('am-pull-down-morph-scale'),
+                  scale: apertura,
+                  child: child,
                 ),
-              ),
-
-              // 4. CONTENUTI (Icone e Testo) in primo piano
-              // Qui applichiamo il padding che prima era nel Container genitore
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 10,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (!widget.arrow) ...[
-                      HugeIcon(
-                        icon: widget.buttonIcons,
-                        size: widget.buttonIconsSize,
-                        color: widget.iconColor,
-                        strokeWidth: 2.2,
-                      ),
-                    ],
-                    if (widget.arrow) ...[const SizedBox(width: 4)],
-                    Flexible(
-                      child: Text(
-                        widget.lable.toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: widget.buttonLableStyle.copyWith(
-                          color: widget.textColor,
-                        ),
-                      ),
-                    ),
-                    if (widget.arrow) ...[
-                      const SizedBox(width: 4),
-                    ], // Un po' di margine prima della freccia per simmetria
-                    if (widget.arrow) ...[
-                      HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowDown01,
-                        color: widget.iconColor,
-                        size: widget.buttonIconsSize,
-                        strokeWidth: 2.2,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          );
-
-          return Transform.scale(
-            scale: scala,
-            // Il chiamante può imporre il vetro reale anche quando il profilo
-            // prestazionale globale usa normalmente il fallback piatto.
-            child: widget.liquidGlassEnabled
-                ? OCLiquidGlass(
-                    enabled: true,
-                    color: base,
-                    borderRadius: 200,
-                    child: content,
-                  )
-                : AmFlatGlass(
-                    // Le dimensioni arrivano dal contenuto: icona singola =
-                    // cerchio, label = pillola. Il gradiente segue la stessa
-                    // forma senza introdurre un bordo reale.
-                    color: widget.backgroundColor,
-                    borderRadius: 100,
-                    edgeLighten: 0.78,
-                    child: content,
-                  ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
+    );
+    return AmRouteBlurTransition(
+      animation: widget.routeAnimation,
+      child: button,
     );
   }
 
-  void _apriPopup(BuildContext context, AnimationController m) {
+  Future<void> _apriPopup(BuildContext context, AnimationController m) async {
     final Rect r = Rect.fromLTWH(
       _triggerPos.dx,
       _triggerPos.dy,
       _triggerSize.width,
       _triggerSize.height,
     );
-    showGeneralDialog(
+    final selectedAction = await showGeneralDialog<VoidCallback>(
       context: context,
       barrierDismissible: false,
       barrierLabel: 'chiudi',
@@ -281,11 +371,19 @@ class _AmPullDownLGState extends State<AmPullDownLG>
               larghezza: widget.larghezza,
               ctrlm: m,
               backgroundColor: widget.popupBackgroundColor,
-              liquidGlassEnabled: widget.liquidGlassEnabled,
+              popupBorderRadius: widget.popupBorderRadius,
+              popupHeight: widget.popupHeight,
+              popupShadow: widget.popupShadow,
+              rowHeight: widget.rowHeight,
+              itemGap: widget.itemGap,
+              liquidGlassEnabled:
+                  widget.popupLiquidGlassEnabled ?? widget.liquidGlassEnabled,
+              onClosing: _resetPressAnimation,
               children: widget.children,
             );
           },
     );
+    selectedAction?.call();
   }
 }
 
@@ -296,6 +394,12 @@ class MorphPopUp extends StatefulWidget {
   final AnimationController ctrlm;
   final Color backgroundColor;
   final bool liquidGlassEnabled;
+  final VoidCallback onClosing;
+  final double popupBorderRadius;
+  final double? popupHeight;
+  final BoxShadow? popupShadow;
+  final double rowHeight;
+  final double itemGap;
   const MorphPopUp({
     super.key,
     required this.rectButton,
@@ -303,49 +407,56 @@ class MorphPopUp extends StatefulWidget {
     required this.larghezza,
     required this.ctrlm,
     required this.backgroundColor,
+    required this.onClosing,
     this.liquidGlassEnabled = true,
-  });
+    this.popupBorderRadius = _morphPopupBorderRadius,
+    this.popupHeight,
+    this.popupShadow,
+    this.rowHeight = AmControlMetrics.pullDownRowHeight,
+    this.itemGap = AmControlMetrics.pullDownItemGap,
+  }) : assert(popupBorderRadius >= 0),
+       assert(popupHeight == null || popupHeight > 0);
 
   @override
   State<MorphPopUp> createState() => _PopUpState();
 }
 
-class _PopUpState extends State<MorphPopUp>
-    with SingleTickerProviderStateMixin {
+class _PopUpState extends State<MorphPopUp> {
   bool _closing = false;
+  bool _closeFinished = false;
+  VoidCallback? _selectedAction;
 
-  void _closePopUp() {
-    if (_closing) return;
-    _closing = true;
-    // La molla di chiusura ha bounce 0: raggiunge lo 0 in modo *asintotico*,
-    // senza mai attraversarlo. Un check `value <= 0` quindi non scatterebbe
-    // MAI, la route resterebbe montata e la sua barriera full-screen (più le
-    // voci invisibili) continuerebbe a intercettare i tap → pagina "freezata".
-    // `whenComplete` invece scatta appena la molla si assesta entro tolleranza,
-    // quando il popup è già visivamente sparito.
+  void _finishClose() {
+    if (_closeFinished) return;
+    _closeFinished = true;
     widget.ctrlm
-        .animateWith(
-          SpringSimulation(_springDescription, widget.ctrlm.value, 0, 0),
-        )
-        .whenComplete(() {
-          if (mounted) Navigator.of(context).pop();
-        });
+      ..stop(canceled: false)
+      ..value = 0;
+    if (mounted) Navigator.of(context).pop(_selectedAction);
   }
 
-  static final SpringDescription _springDescription =
-      SpringDescription.withDurationAndBounce(
-        duration: const Duration(milliseconds: 400),
-        bounce: 0, // niente rimbalzo in chiusura: raggiunge lo 0 senza
-        // oscillare, così il popup si richiude senza "rimbalzino" residuo
-      );
+  void _closePopUp([VoidCallback? selectedAction]) {
+    if (_closing) return;
+    _closing = true;
+    _selectedAction = selectedAction;
+    widget.onClosing();
+    // Una durata finita porta il controller esattamente a zero: la route e la
+    // sua barriera vengono rimosse insieme all'ultimo frame visibile.
+    widget.ctrlm
+        .animateTo(
+          0,
+          duration: _popupCloseDuration,
+          curve: Curves.easeInOutCubic,
+        )
+        .whenComplete(_finishClose);
+  }
 
   @override
   Widget build(BuildContext context) {
     // TODO: implement build
-    const altezzaRiga = 48.0;
     const margine = 8.0;
 
-    final altezzaContenuto = widget.children.length * altezzaRiga + 16;
+    final altezzaContenuto = widget.children.length * widget.rowHeight + 16;
 
     // Direzione dinamica: se non c'è spazio a sufficienza a destra del
     // bottone, il popup si apre verso sinistra (allineando il bordo destro
@@ -354,8 +465,8 @@ class _PopUpState extends State<MorphPopUp>
     final screenWidth = screenSize.width;
     // Un menu lungo resta interamente nella viewport: la ListView interna
     // diventa scrollabile anziché essere tagliata dal ClipRRect della route.
-    final altezzaFinale = altezzaContenuto
-        .clamp(altezzaRiga + 16, screenSize.height - margine * 2)
+    final altezzaFinale = (widget.popupHeight ?? altezzaContenuto)
+        .clamp(widget.rowHeight + 16, screenSize.height - margine * 2)
         .toDouble();
     final apreVersoSinistra =
         widget.rectButton.left + widget.larghezza > screenWidth - margine;
@@ -379,13 +490,22 @@ class _PopUpState extends State<MorphPopUp>
       altezzaFinale,
     );
     final rectInizio = widget.rectButton;
+    final popupBorderRadius = _responsivePopupRadius(
+      requestedRadius: widget.popupBorderRadius,
+      width: widget.larghezza,
+      height: altezzaFinale,
+    );
 
     return AnimatedBuilder(
       animation: widget.ctrlm,
       builder: (BuildContext context, Widget? child) {
         final t = widget.ctrlm.value;
         var rect = Rect.lerp(rectInizio, reactFine, t)!;
-        final opac = (t / 0.3).clamp(0.0, 1.0);
+        final animatedBorderRadius = _responsivePopupRadius(
+          requestedRadius: widget.popupBorderRadius,
+          width: rect.width,
+          height: rect.height,
+        );
         return Stack(
           children: [
             Positioned.fill(
@@ -407,32 +527,36 @@ class _PopUpState extends State<MorphPopUp>
               // Cosi' la Row della voce non viene mai stretta piu' del suo
               // contenuto durante l'apertura/chiusura -> niente RenderFlex
               // overflow transitorio (l'errore "overflowed by 32px").
-              child: ClipPath(
-                clipper: ShapeBorderClipper(shape: _morphPopupShape()),
-                child: OverflowBox(
-                  alignment: Alignment.topLeft,
-                  minWidth: widget.larghezza,
-                  maxWidth: widget.larghezza,
-                  minHeight: altezzaFinale,
-                  maxHeight: altezzaFinale,
-                  child: Opacity(
-                    opacity: opac,
+              child: _PopupShadow(
+                shadow: widget.popupShadow,
+                borderRadius: animatedBorderRadius,
+                child: ClipPath(
+                  clipper: ShapeBorderClipper(
+                    shape: _morphPopupShape(radius: animatedBorderRadius),
+                  ),
+                  child: OverflowBox(
+                    alignment: Alignment.topLeft,
+                    minWidth: widget.larghezza,
+                    maxWidth: widget.larghezza,
+                    minHeight: altezzaFinale,
+                    maxHeight: altezzaFinale,
                     child: _PopUpSurface(
-                      color: widget.backgroundColor,
-                      liquidGlassEnabled: widget.liquidGlassEnabled,
+                      borderRadius: popupBorderRadius,
+                      showShadow: widget.popupShadow == null,
                       child: ListView.builder(
                         padding: const EdgeInsets.all(8),
                         itemCount: widget.children.length,
                         itemBuilder: (context, index) {
                           final item = widget.children[index];
-                          // Il tap su una voce deve chiudere la route prima di
-                          // eseguire l'azione, altrimenti la barriera rimane.
-                          return Opacity(
-                            opacity: t.clamp(0.0, 1.0),
-                            child: item.copyWithOnTap(() {
-                              _closePopUp();
-                              item.onTap();
-                            }),
+                          // L'azione torna alla route chiamante e parte solo
+                          // dopo la rimozione completa del popup.
+                          return SizedBox(
+                            key: ValueKey('am-pull-down-popup-row-$index'),
+                            height: widget.rowHeight,
+                            child: item.copyWithOnTap(
+                              () => _closePopUp(item.onTap),
+                              itemGap: widget.itemGap,
+                            ),
                           );
                         },
                       ),
@@ -448,55 +572,51 @@ class _PopUpState extends State<MorphPopUp>
   }
 }
 
-/// Superficie del menu: quando si disattiva il liquid glass, il bordo chiaro
-/// è ottenuto dalla sfumatura del colore ricevuto, senza blur né [Border].
+class _PopupShadow extends StatelessWidget {
+  const _PopupShadow({
+    required this.shadow,
+    required this.borderRadius,
+    required this.child,
+  });
+
+  final BoxShadow? shadow;
+  final double borderRadius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => shadow == null
+      ? child
+      : DecoratedBox(
+          key: const Key('am-pull-down-popup-shadow'),
+          decoration: ShapeDecoration(
+            shape: _morphPopupShape(radius: borderRadius),
+            shadows: [shadow!],
+          ),
+          child: child,
+        );
+}
+
+/// Superficie statica del menu, condivisa con i dialog di stato.
 class _PopUpSurface extends StatelessWidget {
-  final Color color;
-  final bool liquidGlassEnabled;
+  final double borderRadius;
+  final bool showShadow;
   final Widget child;
 
   const _PopUpSurface({
-    required this.color,
-    required this.liquidGlassEnabled,
+    required this.borderRadius,
+    required this.showShadow,
     required this.child,
   });
 
   @override
-  Widget build(BuildContext context) {
-    // Più leggero del vetro reale: il bordo viene percepito dalla sfumatura,
-    // non da un riempimento opaco.
-    final surface = color;
-    if (!liquidGlassEnabled) {
-      return AmFlatPopUp(
-        color: surface,
-
-        //borderRadius: 1,
-        child: child,
-      );
-    }
-
-    return OCLiquidGlassGroup(
-      settings: const OCLiquidGlassSettings(
-        refractStrength: -0.08,
-        blurRadiusPx: 2,
-        specStrength: 1,
-        specWidth: 1.5,
-        specAngle: 155,
-        specPower: 2,
-        lightbandOffsetPx: 7,
-        lightbandStrength: 0.5,
-      ),
-      child: ClipPath(
-        clipper: ShapeBorderClipper(shape: _morphPopupShape()),
-        child: OCLiquidGlass(
-          enabled: true,
-          borderRadius: 30,
-          color: surface,
-          child: child,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AmStaticFrostedSurface(
+    surfaceKey: const Key('am-pull-down-popup-static-surface'),
+    blurKey: const Key('am-pull-down-popup-backdrop-blur'),
+    decorationKey: const Key('am-pull-down-popup-decoration'),
+    borderRadius: borderRadius,
+    showShadow: showShadow,
+    child: SizedBox(key: const Key('am-pull-down-popup-surface'), child: child),
+  );
 }
 
 class ItemMorphPopUp extends StatelessWidget {
@@ -509,6 +629,7 @@ class ItemMorphPopUp extends StatelessWidget {
   final Color? textColor;
   final VoidCallback onTap;
   final FontWeight? iconsWheight;
+  final double itemGap;
 
   const ItemMorphPopUp({
     super.key,
@@ -521,28 +642,31 @@ class ItemMorphPopUp extends StatelessWidget {
     this.textColor,
     required this.onTap,
     this.iconsWheight,
+    this.itemGap = AmControlMetrics.pullDownItemGap,
   });
 
   /// Copia identica con un [onTap] diverso: serve al pop-up per iniettare la
   /// chiusura della route prima di eseguire l'azione originale della voce.
-  ItemMorphPopUp copyWithOnTap(VoidCallback onTap) => ItemMorphPopUp(
-    icon: icon,
-    text: text,
-    textSize: textSize,
-    textWeight: textWeight,
-    iconSize: iconSize,
-    iconColor: iconColor,
-    textColor: textColor,
-    iconsWheight: iconsWheight,
-    onTap: onTap,
-  );
+  ItemMorphPopUp copyWithOnTap(VoidCallback onTap, {double? itemGap}) =>
+      ItemMorphPopUp(
+        icon: icon,
+        text: text,
+        textSize: textSize,
+        textWeight: textWeight,
+        iconSize: iconSize,
+        iconColor: iconColor,
+        textColor: textColor,
+        iconsWheight: iconsWheight,
+        itemGap: itemGap ?? this.itemGap,
+        onTap: onTap,
+      );
 
   @override
   Widget build(BuildContext context) {
     // Default fallback values
     final effectiveTextSize = textSize ?? 16.0;
-    final effectiveTextWeight = textWeight ?? FontWeight.w700;
-    final effectiveIconSize = iconSize ?? 24.0;
+    final effectiveTextWeight = textWeight ?? FontWeight.w600;
+    final effectiveIconSize = iconSize ?? AmControlMetrics.pullDownIconSize;
     final effectiveIconColor = iconColor ?? const Color(0xFFF48A37);
     final effectiveTextColor = textColor ?? Colors.white;
     // ignore: unused_local_variable
@@ -562,7 +686,8 @@ class ItemMorphPopUp extends StatelessWidget {
           alpha: 0.10,
         ), // pressione tenuta
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+          key: const Key('am-pull-down-item-padding'),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -572,7 +697,7 @@ class ItemMorphPopUp extends StatelessWidget {
                 color: effectiveIconColor,
                 strokeWidth: 1.5,
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: itemGap),
               Flexible(
                 child: Text(
                   text,
@@ -582,7 +707,6 @@ class ItemMorphPopUp extends StatelessWidget {
                     color: effectiveTextColor,
                     fontSize: effectiveTextSize,
                     fontWeight: effectiveTextWeight,
-                    letterSpacing: 1.2,
                   ),
                 ),
               ),
@@ -602,27 +726,15 @@ class GlowPainter extends CustomPainter {
   @override
   void paint(Canvas c, Size s) {
     if (intensity <= 0) return;
-    final paint = Paint();
-    paint.blendMode = BlendMode.plus;
-    final centro = color.withValues(alpha: 0.50 * intensity);
-    final meta = color.withValues(alpha: 0.40 * intensity);
-    final bordi = color.withValues(alpha: 0.3 * intensity);
-    List<Color> colors = [centro, meta, bordi];
-    final rect = Offset.zero & s;
-
-    // 2. Creiamo il gradiente radiale che si espande dal centro di questo rettangolo
-    paint.shader = RadialGradient(colors: colors).createShader(rect);
-
-    // 3. Disegniamo un rettangolo arrotondato (Pillola).
-    // Usando s.height / 2 come raggio, i bordi laterali saranno perfettamente curvi.
-    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(s.height / 2));
-
-    c.drawRRect(rrect, paint);
-
-    /* Nota: Se volessi un VERO ovale geometrico (un'ellisse, non una pillola con i lati dritti),
-     ti basterebbe sostituire le righe 3 con:
-     c.drawOval(rect, paint);
-    */
+    final paint = Paint()
+      ..blendMode = BlendMode.plus
+      ..shader = RadialGradient(
+        colors: [
+          color.withValues(alpha: 0.7 * intensity),
+          color.withValues(alpha: 0),
+        ],
+      ).createShader(Offset.zero & s);
+    c.drawRect(Offset.zero & s, paint);
   }
 
   @override

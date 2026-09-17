@@ -11,11 +11,15 @@ import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/bloc/dashboard_event.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/bloc/dashboard_state.dart';
+import 'package:auto_mob_v1/features/dashboard/domain/usecases/calculate_maintenance_cost.dart';
+import 'package:auto_mob_v1/features/dashboard/domain/entities/maintenance_cost_period.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/maintenance_kpi.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/compute_maintenance_kpis.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/get_vehicles.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/update_vehicle_photo.dart';
+import 'package:auto_mob_v1/features/future_work/domain/entities/future_work_summary.dart';
+import 'package:auto_mob_v1/features/future_work/domain/usecases/get_latest_open_future_works.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
@@ -25,9 +29,13 @@ import '../../../../fixtures/fixtures.dart';
 
 class MockGetVehicles extends Mock implements GetVehicles {}
 
-class MockComputeMaintenanceKpis extends Mock implements ComputeMaintenanceKpis {}
+class MockComputeMaintenanceKpis extends Mock
+    implements ComputeMaintenanceKpis {}
 
 class MockUpdateVehiclePhoto extends Mock implements UpdateVehiclePhoto {}
+
+class MockGetLatestOpenFutureWorks extends Mock
+    implements GetLatestOpenFutureWorks {}
 
 class FakeFile extends Fake implements File {}
 
@@ -35,6 +43,7 @@ void main() {
   late MockGetVehicles getVehicles;
   late MockComputeMaintenanceKpis computeKpis;
   late MockUpdateVehiclePhoto updateVehiclePhoto;
+  late MockGetLatestOpenFutureWorks getLatestOpenFutureWorks;
 
   const tKpis = <MaintenanceKpi>[];
 
@@ -47,22 +56,89 @@ void main() {
     getVehicles = MockGetVehicles();
     computeKpis = MockComputeMaintenanceKpis();
     updateVehiclePhoto = MockUpdateVehiclePhoto();
+    getLatestOpenFutureWorks = MockGetLatestOpenFutureWorks();
+    when(
+      () => getLatestOpenFutureWorks(),
+    ).thenAnswer((_) async => const Right([]));
   });
 
   DashboardBloc buildBloc() => DashboardBloc(
-        getVehicles: getVehicles,
-        computeKpis: computeKpis,
-        updateVehiclePhoto: updateVehiclePhoto,
-      );
+    getVehicles: getVehicles,
+    computeKpis: computeKpis,
+    updateVehiclePhoto: updateVehiclePhoto,
+    calculateMaintenanceCost: const CalculateMaintenanceCost(),
+    getLatestOpenFutureWorks: getLatestOpenFutureWorks,
+  );
 
   final tVehicle1 = vehicleFixture(id: 'v1');
   final tVehicle2 = vehicleFixture(id: 'v2');
 
+  final tFutureWork = FutureWorkSummary(
+    id: 'item-1',
+    recordId: 'record-1',
+    vehicleId: 'v1',
+    description: 'Controllare i freni',
+    registeredAt: DateTime(2026, 9, 17),
+    reminderDate: DateTime(2026, 9, 30),
+  );
+
+  blocTest<DashboardBloc, DashboardState>(
+    'raggruppa le segnalazioni aperte ricevute dalla query dashboard',
+    build: () {
+      when(
+        () => getVehicles(),
+      ).thenAnswer((_) async => Right([tVehicle1, tVehicle2]));
+      when(
+        () => getLatestOpenFutureWorks(),
+      ).thenAnswer((_) async => Right([tFutureWork]));
+      when(() => computeKpis(any())).thenReturn(tKpis);
+      return buildBloc();
+    },
+    act: (bloc) => bloc.add(LoadDashboardData()),
+    expect: () => [
+      DashboardLoading(),
+      isA<DashboardLoaded>()
+          .having(
+            (state) => state.selectedVehicleFutureWorks,
+            'segnalazioni veicolo selezionato',
+            [tFutureWork],
+          )
+          .having(
+            (state) => state.futureWorksByVehicleId['v2'],
+            'nessuna segnalazione secondo veicolo',
+            isNull,
+          ),
+    ],
+  );
+
+  blocTest<DashboardBloc, DashboardState>(
+    'cambia periodo e restituisce nello stato il costo manutenzione',
+    build: buildBloc,
+    seed: () => DashboardLoaded(
+      vehicles: [vehicleFixture(maintenanceCostCents: 120000)],
+      index: 0,
+      kpis: const [],
+      maintenanceCostCents: 10000,
+    ),
+    act: (bloc) =>
+        bloc.add(DashboardCostPeriodChanged(MaintenanceCostPeriod.daily)),
+    expect: () => [
+      isA<DashboardLoaded>()
+          .having(
+            (state) => state.costPeriod,
+            'periodo',
+            MaintenanceCostPeriod.daily,
+          )
+          .having((state) => state.maintenanceCostCents, 'costo', 329),
+    ],
+  );
+
   blocTest<DashboardBloc, DashboardState>(
     'emette [loading, loaded] con i veicoli e i kpi del primo quando ci sono veicoli',
     build: () {
-      when(() => getVehicles())
-          .thenAnswer((_) async => Right([tVehicle1, tVehicle2]));
+      when(
+        () => getVehicles(),
+      ).thenAnswer((_) async => Right([tVehicle1, tVehicle2]));
       when(() => computeKpis(any())).thenReturn(tKpis);
       return buildBloc();
     },
@@ -86,16 +162,20 @@ void main() {
     act: (bloc) => bloc.add(LoadDashboardData()),
     expect: () => [
       DashboardLoading(),
-      isA<DashboardLoaded>()
-          .having((s) => s.vehicles.single.isPlaceholder, 'isPlaceholder', true),
+      isA<DashboardLoaded>().having(
+        (s) => s.vehicles.single.isPlaceholder,
+        'isPlaceholder',
+        true,
+      ),
     ],
   );
 
   blocTest<DashboardBloc, DashboardState>(
     'emette [loading, error] quando il repository fallisce',
     build: () {
-      when(() => getVehicles())
-          .thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => getVehicles(),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
       return buildBloc();
     },
     act: (bloc) => bloc.add(LoadDashboardData()),
@@ -128,37 +208,40 @@ void main() {
   blocTest<DashboardBloc, DashboardState>(
     'DashboardRefreshRequested: aggiorna i veicoli SENZA passare da DashboardLoading',
     build: () {
-      when(() => getVehicles())
-          .thenAnswer((_) async => Right([tVehicle1, tVehicle2]));
+      when(
+        () => getVehicles(),
+      ).thenAnswer((_) async => Right([tVehicle1, tVehicle2]));
       when(() => computeKpis(any())).thenReturn(tKpis);
       return buildBloc();
     },
-    seed: () => DashboardLoaded(vehicles: [tVehicle1], index: 0, kpis: const []),
+    seed: () =>
+        DashboardLoaded(vehicles: [tVehicle1], index: 0, kpis: const []),
     act: (bloc) => bloc.add(DashboardRefreshRequested()),
     expect: () => [
-      isA<DashboardLoaded>()
-          .having((s) => s.isRefreshing, 'isRefreshing', true)
-          // i veicoli vecchi restano visibili durante il refresh.
-          .having((s) => s.vehicles, 'vehicles', [tVehicle1]),
-      DashboardLoaded(
-        vehicles: [tVehicle1, tVehicle2],
-        index: 0,
-        kpis: tKpis,
-      ),
+      isA<DashboardLoaded>().having((s) => s.isRefreshing, 'isRefreshing', true)
+      // i veicoli vecchi restano visibili durante il refresh.
+      .having((s) => s.vehicles, 'vehicles', [tVehicle1]),
+      DashboardLoaded(vehicles: [tVehicle1, tVehicle2], index: 0, kpis: tKpis),
     ],
   );
 
   blocTest<DashboardBloc, DashboardState>(
     'DashboardRefreshRequested: errore -> tiene i dati vecchi, spegne solo isRefreshing',
     build: () {
-      when(() => getVehicles())
-          .thenAnswer((_) async => const Left(ServerFailure()));
+      when(
+        () => getVehicles(),
+      ).thenAnswer((_) async => const Left(ServerFailure()));
       return buildBloc();
     },
-    seed: () => DashboardLoaded(vehicles: [tVehicle1], index: 0, kpis: const []),
+    seed: () =>
+        DashboardLoaded(vehicles: [tVehicle1], index: 0, kpis: const []),
     act: (bloc) => bloc.add(DashboardRefreshRequested()),
     expect: () => [
-      isA<DashboardLoaded>().having((s) => s.isRefreshing, 'isRefreshing', true),
+      isA<DashboardLoaded>().having(
+        (s) => s.isRefreshing,
+        'isRefreshing',
+        true,
+      ),
       isA<DashboardLoaded>()
           .having((s) => s.isRefreshing, 'isRefreshing', false)
           .having((s) => s.vehicles, 'vehicles', [tVehicle1]),
@@ -184,10 +267,12 @@ void main() {
   blocTest<DashboardBloc, DashboardState>(
     'foto ok: ricarica SENZA DashboardLoading e preserva l\'indice selezionato',
     build: () {
-      when(() => updateVehiclePhoto(targa: 'v1', foto: tFoto))
-          .thenAnswer((_) async => const Right(null));
-      when(() => getVehicles())
-          .thenAnswer((_) async => Right([tVehicle1, tVehicle2Foto]));
+      when(
+        () => updateVehiclePhoto(targa: 'v1', foto: tFoto),
+      ).thenAnswer((_) async => const Right(null));
+      when(
+        () => getVehicles(),
+      ).thenAnswer((_) async => Right([tVehicle1, tVehicle2Foto]));
       when(() => computeKpis(any())).thenReturn(tKpis);
       return buildBloc();
     },
@@ -197,9 +282,8 @@ void main() {
       index: 1,
       kpis: const [],
     ),
-    act: (bloc) => bloc.add(
-      VehiclePhotoUpdateRequested(targa: 'v1', foto: tFoto),
-    ),
+    act: (bloc) =>
+        bloc.add(VehiclePhotoUpdateRequested(targa: 'v1', foto: tFoto)),
     expect: () => [
       // Niente DashboardLoading: il carosello non viene mai smontato.
       DashboardLoaded(
@@ -218,18 +302,22 @@ void main() {
   blocTest<DashboardBloc, DashboardState>(
     'foto in errore: emette DashboardLoaded con photoUpdateError e NON ricarica',
     build: () {
-      when(() => updateVehiclePhoto(targa: 'v1', foto: tFoto))
-          .thenAnswer((_) async => const Left(StorageFailure()));
+      when(
+        () => updateVehiclePhoto(targa: 'v1', foto: tFoto),
+      ).thenAnswer((_) async => const Left(StorageFailure()));
       return buildBloc();
     },
-    seed: () => DashboardLoaded(vehicles: [tVehicle1], index: 0, kpis: const []),
-    act: (bloc) => bloc.add(
-      VehiclePhotoUpdateRequested(targa: 'v1', foto: tFoto),
-    ),
+    seed: () =>
+        DashboardLoaded(vehicles: [tVehicle1], index: 0, kpis: const []),
+    act: (bloc) =>
+        bloc.add(VehiclePhotoUpdateRequested(targa: 'v1', foto: tFoto)),
     expect: () => [
       isA<DashboardLoaded>()
-          .having((s) => s.photoUpdateError, 'photoUpdateError',
-              const StorageFailure().message)
+          .having(
+            (s) => s.photoUpdateError,
+            'photoUpdateError',
+            const StorageFailure().message,
+          )
           .having((s) => s.vehicles, 'vehicles', [tVehicle1]),
     ],
     verify: (_) {
@@ -240,15 +328,16 @@ void main() {
   blocTest<DashboardBloc, DashboardState>(
     'foto: ignora l\'evento se lo stato non e\' ancora DashboardLoaded',
     build: buildBloc,
-    act: (bloc) => bloc.add(
-      VehiclePhotoUpdateRequested(targa: 'v1', foto: tFoto),
-    ),
+    act: (bloc) =>
+        bloc.add(VehiclePhotoUpdateRequested(targa: 'v1', foto: tFoto)),
     expect: () => [],
     verify: (_) {
-      verifyNever(() => updateVehiclePhoto(
-            targa: any(named: 'targa'),
-            foto: any(named: 'foto'),
-          ));
+      verifyNever(
+        () => updateVehiclePhoto(
+          targa: any(named: 'targa'),
+          foto: any(named: 'foto'),
+        ),
+      );
     },
   );
 }

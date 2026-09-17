@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 void main() {
-  testWidgets('uses the lightweight edge gradients while blur is disabled', (
+  testWidgets('uses lightweight gradients even when blur is requested', (
     tester,
   ) async {
     await tester.pumpWidget(

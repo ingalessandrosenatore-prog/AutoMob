@@ -3,12 +3,13 @@ import 'dart:ui';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
-import '../../performance_flags.dart';
 import '../../theme/am_theme_colors.dart';
+import '../effects/am_static_frosted_surface.dart';
 
 const _dialogCornerSmoothing = 0.8;
+const _dialogWidth = 248.0;
+const _dialogRadius = 30.0;
 
 SmoothRectangleBorder _dialogShape({double radius = 36}) =>
     SmoothRectangleBorder(
@@ -35,7 +36,7 @@ class AmDialogAction {
   });
 }
 
-/// Pop-up di stato riutilizzabile in stile iOS: vetro sfocato, bordi
+/// Pop-up di stato riutilizzabile in stile iOS: superficie statica sfocata, bordi
 /// arrotondati, icona colorata, titolo, messaggio e fino a N azioni.
 ///
 /// Tre usi tipici:
@@ -69,71 +70,75 @@ class AmStatusDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 40),
-      child: _DialogSurface(
-        color: colors.surface,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showSpinner)
-                SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
-                    valueColor: AlwaysStoppedAnimation(iconColor),
+      constraints: const BoxConstraints.tightFor(width: _dialogWidth),
+      child: SizedBox(
+        width: _dialogWidth,
+        child: _DialogSurface(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showSpinner)
+                  SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation(iconColor),
+                    ),
+                  )
+                else if (icon != null)
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: HugeIcon(
+                      icon: icon!,
+                      color: iconColor,
+                      size: 30,
+                      strokeWidth: 2.2,
+                    ),
                   ),
-                )
-              else if (icon != null)
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: HugeIcon(
-                    icon: icon!,
-                    color: iconColor,
-                    size: 34,
-                    strokeWidth: 2.2,
-                  ),
-                ),
-              const SizedBox(height: 18),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              if (message != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
                 Text(
-                  message!,
+                  title,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: colors.textSecondary,
-                    fontSize: 14,
-                    height: 1.35,
+                    color: colors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-              if (actions.isNotEmpty) ...[
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    for (var i = 0; i < actions.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 12),
-                      Expanded(child: _ActionButton(action: actions[i])),
+                if (message != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    message!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: colors.textSecondary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+                if (actions.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      for (var i = 0; i < actions.length; i++) ...[
+                        if (i > 0) const SizedBox(width: 12),
+                        Expanded(child: _ActionButton(action: actions[i])),
+                      ],
                     ],
-                  ],
-                ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -175,55 +180,21 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-/// Quando il liquid glass è disattivo non monta il [BackdropFilter]: al suo
-/// posto mantiene il bordo luminoso con la sfumatura della tinta del tema.
+/// Superficie statica del dialog: mantiene solo il blur dello sfondo, senza
+/// rifrazione o animazioni Liquid Glass.
 class _DialogSurface extends StatelessWidget {
-  final Color color;
   final Widget child;
 
-  const _DialogSurface({required this.color, required this.child});
+  const _DialogSurface({required this.child});
 
   @override
-  Widget build(BuildContext context) {
-    const radius = 36.0;
-    final surface = color.withValues(alpha: 0.88);
-
-    if (kHeavyEffects) {
-      return OCLiquidGlassGroup(
-        settings: const OCLiquidGlassSettings(
-          refractStrength: -0.12,
-          blurRadiusPx: 4.0,
-          specStrength: 0,
-          specWidth: 0.0,
-          specAngle: 145,
-          blendPx: 70,
-          specPower: 10,
-        ),
-        child: ClipPath(
-          clipper: ShapeBorderClipper(shape: _dialogShape(radius: radius)),
-          child: OCLiquidGlass(
-            color: color.withValues(alpha: 0.8),
-            borderRadius: radius,
-            child: child,
-          ),
-        ),
-      );
-    }
-
-    return ClipPath(
-      clipper: ShapeBorderClipper(shape: _dialogShape(radius: radius)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          decoration: ShapeDecoration(
-            color: surface,
-            shape: _dialogShape(radius: radius),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => AmStaticFrostedSurface(
+    surfaceKey: const Key('am-status-dialog-static-surface'),
+    blurKey: const Key('am-status-dialog-backdrop-blur'),
+    decorationKey: const Key('am-status-dialog-gradient-surface'),
+    borderRadius: _dialogRadius,
+    child: child,
+  );
 }
 
 /// Mostra un [AmStatusDialog]. Di default NON si chiude toccando fuori
@@ -238,17 +209,31 @@ Future<T?> showAmStatusDialog<T>(
   bool showSpinner = false,
   bool barrierDismissible = false,
 }) {
-  return showDialog<T>(
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  return showGeneralDialog<T>(
     context: context,
     barrierDismissible: barrierDismissible,
-    barrierColor: Colors.black.withValues(alpha: 0.55),
-    builder: (_) => AmStatusDialog(
-      icon: icon,
-      iconColor: iconColor,
-      title: title,
-      message: message,
-      actions: actions,
-      showSpinner: showSpinner,
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    barrierColor: Colors.black.withValues(alpha: isDark ? 0.24 : 0.07),
+    pageBuilder: (_, animation, secondaryAnimation) => Stack(
+      fit: StackFit.expand,
+      children: [
+        BackdropFilter(
+          key: const Key('am-status-dialog-page-blur'),
+          filter: ImageFilter.blur(sigmaX: 3, sigmaY: 3),
+          child: const SizedBox.expand(),
+        ),
+        Center(
+          child: AmStatusDialog(
+            icon: icon,
+            iconColor: iconColor,
+            title: title,
+            message: message,
+            actions: actions,
+            showSpinner: showSpinner,
+          ),
+        ),
+      ],
     ),
   );
 }

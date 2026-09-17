@@ -7,6 +7,9 @@ Vehicle vehicleFixture({
   String plate = 'AB123CD',
   int kmCurrent = 10000,
   String? fotoPath,
+  int maintenanceCostCents = 0,
+  DateTime? firstMaintenanceDate,
+  Map<int, int> maintenanceCostsByYear = const {},
 }) {
   return Vehicle(
     id: id,
@@ -22,5 +25,8 @@ Vehicle vehicleFixture({
     tireRotationIntervalKm: 10000,
     createdAt: DateTime(2024, 1, 1),
     fotoPath: fotoPath,
+    maintenanceCostCents: maintenanceCostCents,
+    firstMaintenanceDate: firstMaintenanceDate,
+    maintenanceCostsByYear: maintenanceCostsByYear,
   );
 }

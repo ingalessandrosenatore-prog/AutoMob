@@ -74,13 +74,12 @@ class VehicleLookupRemoteDataSourceImpl
   @override
   Future<MechanicSummary?> lookupMechanicByCode(String code) async {
     try {
-      final row = await client
-          .from('mechanics')
-          .select('id, mechanic_code, business_name, address, number, email')
-          .eq('mechanic_code', code.trim())
-          .eq('is_active', true)
-          .maybeSingle();
-      if (row == null) return null;
+      final response = await client.rpc(
+        'verify_mechanic_code',
+        params: {'p_code': code.trim()},
+      );
+      if (response == null) return null;
+      final row = Map<String, dynamic>.from(response as Map);
       return MechanicSummary(
         id: row['id'] as String,
         code: row['mechanic_code'] as String,
@@ -91,7 +90,12 @@ class VehicleLookupRemoteDataSourceImpl
       );
     } on SocketException {
       throw const VehicleLookupDataSourceException(NetworkLookupFailure());
-    } on PostgrestException {
+    } on PostgrestException catch (error) {
+      if (error.code == '54000') {
+        throw const VehicleLookupDataSourceException(
+          RateLimitedLookupFailure(),
+        );
+      }
       throw const VehicleLookupDataSourceException(ServerLookupFailure());
     }
   }

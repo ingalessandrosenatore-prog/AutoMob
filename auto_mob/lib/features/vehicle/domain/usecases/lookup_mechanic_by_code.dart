@@ -8,6 +8,11 @@ class LookupMechanicByCode {
   final VehicleLookupRepository repository;
   const LookupMechanicByCode(this.repository);
 
-  Future<Either<VehicleLookupFailure, MechanicSummary?>> call(String code) =>
-      repository.lookupMechanicByCode(code);
+  Future<Either<VehicleLookupFailure, MechanicSummary?>> call(String code) {
+    final normalizedCode = code.trim();
+    if (!RegExp(r'^[0-9]{6}$').hasMatch(normalizedCode)) {
+      return Future.value(const Left(InvalidMechanicCodeLookupFailure()));
+    }
+    return repository.lookupMechanicByCode(normalizedCode);
+  }
 }

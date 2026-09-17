@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 import '../widgets/mechanic_shapes.dart';
@@ -56,31 +57,44 @@ class AppShell extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Expanded(
-                child: _NavigationSurface(
-                  liquidGlassEnabled: liquidGlassEnabled,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Expanded(
-                        child: _ShellDestination(
-                          label: 'Home',
-                          icon: Icons.home_rounded,
-                          selected: navigationShell.currentIndex == 0,
-                          liquidGlassEnabled: liquidGlassEnabled,
-                          onPressed: () => _selectBranch(0),
+                child: AmNavigationPress(
+                  child: _NavigationSurface(
+                    selectedIndex: navigationShell.currentIndex,
+                    liquidGlassEnabled: liquidGlassEnabled,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Expanded(
+                          child: _ShellDestination(
+                            label: 'Home',
+                            icon: HugeIcons.strokeRoundedHome01,
+                            selected: navigationShell.currentIndex == 0,
+                            liquidGlassEnabled: liquidGlassEnabled,
+                            onPressed: () => _selectBranch(0),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _ShellDestination(
-                          label: 'Servizi',
-                          icon: Icons.build_rounded,
-                          selected: navigationShell.currentIndex == 1,
-                          liquidGlassEnabled: liquidGlassEnabled,
-                          onPressed: () => _selectBranch(1),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _ShellDestination(
+                            label: 'Servizi',
+                            icon: HugeIcons.strokeRoundedTools,
+                            selected: navigationShell.currentIndex == 1,
+                            liquidGlassEnabled: liquidGlassEnabled,
+                            onPressed: () => _selectBranch(1),
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _ShellDestination(
+                            label: 'Richieste',
+                            icon: HugeIcons.strokeRoundedAlert02,
+                            selected: navigationShell.currentIndex == 2,
+                            liquidGlassEnabled: liquidGlassEnabled,
+                            onPressed: () => _selectBranch(2),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -96,40 +110,80 @@ class AppShell extends StatelessWidget {
 
 class _NavigationSurface extends StatelessWidget {
   const _NavigationSurface({
+    required this.selectedIndex,
     required this.liquidGlassEnabled,
     required this.child,
   });
 
   final bool liquidGlassEnabled;
   final Widget child;
+  final int selectedIndex;
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
     const radius = MechanicShellMetrics.navigationHeight / 2;
     final shape = mechanicSmoothShape(radius: radius);
-    final content = Padding(padding: const EdgeInsets.all(6), child: child);
+    final content = Padding(
+      padding: const EdgeInsets.all(6),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return AmNavigationGlow(
+                  alignment: switch (selectedIndex) {
+                    0 => AlignmentDirectional.centerStart,
+                    1 => AlignmentDirectional.center,
+                    _ => AlignmentDirectional.centerEnd,
+                  },
+                  width: (constraints.maxWidth - 16) / 3,
+                  height: constraints.maxHeight,
+                  color: colors.accent,
+                );
+              },
+            ),
+          ),
+          child,
+        ],
+      ),
+    );
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final shadows = isLight
+        ? const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 32,
+              spreadRadius: 0.1,
+              offset: Offset(0, 1),
+              blurStyle: BlurStyle.outer,
+            ),
+          ]
+        : const <BoxShadow>[];
 
     // The outer clip is intentional: it bounds the glass render layer itself,
     // so Android cannot expose the rectangular offscreen texture.
     return RepaintBoundary(
-      child: ClipPath(
-        clipper: ShapeBorderClipper(shape: shape),
-        child: OCLiquidGlassGroup(
-          settings: const OCLiquidGlassSettings(
-            refractStrength: -0.08,
-            blurRadiusPx: 2,
-            specStrength: 1,
-            specWidth: 2,
-            specAngle: 145,
-            specPower: 10,
-            lightbandOffsetPx: 7,
-            lightbandStrength: 0.5,
-          ),
-          child: OCLiquidGlass(
-            borderRadius: radius,
-            color: colors.background.withValues(alpha: 0.30),
-            child: content,
+      child: DecoratedBox(
+        decoration: ShapeDecoration(shape: shape, shadows: shadows),
+        child: ClipPath(
+          clipper: ShapeBorderClipper(shape: shape),
+          child: OCLiquidGlassGroup(
+            settings: const OCLiquidGlassSettings(
+              refractStrength: -0.08,
+              blurRadiusPx: 2,
+              specStrength: 1,
+              specWidth: 2,
+              specAngle: 145,
+              specPower: 10,
+              lightbandOffsetPx: 7,
+              lightbandStrength: 0.5,
+            ),
+            child: OCLiquidGlass(
+              borderRadius: radius,
+              color: colors.background.withValues(alpha: 0.30),
+              child: content,
+            ),
           ),
         ),
       ),
@@ -147,7 +201,7 @@ class _ShellDestination extends StatelessWidget {
   });
 
   final String label;
-  final IconData icon;
+  final List<List> icon;
   final bool selected;
   final bool liquidGlassEnabled;
   final VoidCallback onPressed;
@@ -165,7 +219,7 @@ class _ShellDestination extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: foreground, size: 22),
+            HugeIcon(icon: icon, color: foreground, size: 22, strokeWidth: 2),
             const SizedBox(height: 1),
             Text(
               label,
@@ -184,15 +238,7 @@ class _ShellDestination extends StatelessWidget {
       selected: selected,
       button: true,
       label: label,
-      child: selected
-          ? DecoratedBox(
-              decoration: ShapeDecoration(
-                color: colors.accent.withValues(alpha: 0.12),
-                shape: destinationShape,
-              ),
-              child: content,
-            )
-          : content,
+      child: content,
     );
   }
 }

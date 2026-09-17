@@ -2,6 +2,8 @@ import 'package:equatable/equatable.dart';
 
 import '../../../vehicle/domain/entities/maintenance_kpi.dart';
 import '../../../vehicle/domain/entities/vehicle.dart';
+import '../../../future_work/domain/entities/future_work_summary.dart';
+import '../../domain/entities/maintenance_cost_period.dart';
 
 sealed class DashboardState extends Equatable {
   @override
@@ -35,6 +37,14 @@ class DashboardLoaded extends DashboardState {
   /// FOTO). Non e' preservato da [copyWith]: viene consumato dalla UI (dialog)
   /// e sparisce alla emissione successiva. Null = nessun errore.
   final String? photoUpdateError;
+  final MaintenanceCostPeriod costPeriod;
+  final int maintenanceCostCents;
+  final Map<String, List<FutureWorkSummary>> futureWorksByVehicleId;
+
+  List<FutureWorkSummary> get selectedVehicleFutureWorks {
+    if (vehicles.isEmpty || index >= vehicles.length) return const [];
+    return futureWorksByVehicleId[vehicles[index].id] ?? const [];
+  }
 
   DashboardLoaded({
     required this.vehicles,
@@ -42,6 +52,9 @@ class DashboardLoaded extends DashboardState {
     required this.kpis,
     this.isRefreshing = false,
     this.photoUpdateError,
+    this.costPeriod = MaintenanceCostPeriod.monthly,
+    this.maintenanceCostCents = 0,
+    this.futureWorksByVehicleId = const {},
   });
 
   DashboardLoaded copyWith({
@@ -49,18 +62,34 @@ class DashboardLoaded extends DashboardState {
     int? index,
     List<MaintenanceKpi>? kpis,
     bool? isRefreshing,
+    MaintenanceCostPeriod? costPeriod,
+    int? maintenanceCostCents,
+    Map<String, List<FutureWorkSummary>>? futureWorksByVehicleId,
   }) {
     return DashboardLoaded(
       vehicles: vehicles ?? this.vehicles,
       index: index ?? this.index,
       kpis: kpis ?? this.kpis,
       isRefreshing: isRefreshing ?? this.isRefreshing,
+      costPeriod: costPeriod ?? this.costPeriod,
+      maintenanceCostCents: maintenanceCostCents ?? this.maintenanceCostCents,
+      futureWorksByVehicleId:
+          futureWorksByVehicleId ?? this.futureWorksByVehicleId,
       // photoUpdateError NON viene propagato: e' un errore one-shot.
     );
   }
 
   @override
-  List<Object?> get props => [vehicles, index, kpis, isRefreshing, photoUpdateError];
+  List<Object?> get props => [
+    vehicles,
+    index,
+    kpis,
+    isRefreshing,
+    photoUpdateError,
+    costPeriod,
+    maintenanceCostCents,
+    futureWorksByVehicleId,
+  ];
 }
 
 class DashboardError extends DashboardState {

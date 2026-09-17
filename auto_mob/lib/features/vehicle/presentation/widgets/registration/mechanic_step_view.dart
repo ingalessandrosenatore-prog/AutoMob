@@ -7,10 +7,7 @@ import '../../bloc/vehicle_registration_bloc.dart';
 import '../../bloc/vehicle_registration_event.dart';
 import '../../bloc/vehicle_registration_state.dart';
 
-/// Step 1 — codice del meccanico di fiducia (opzionale). Per ora solo il
-/// percorso "ho un meccanico" e' abilitato: il bottone "Non ho meccanico"
-/// resta visibile ma disattivato (mock, in attesa di un vero servizio di
-/// ricerca officine).
+/// Step 1 — codice del meccanico di fiducia (opzionale).
 ///
 /// Il bottone "Continua" vive nella barra fissa della pagina root
 /// ([VehicleRegistrationPage]), non qui: questo widget espone [submit]
@@ -93,11 +90,11 @@ class MechanicStepViewState extends State<MechanicStepView> {
               children: [
                 AmTextField(
                   label: 'Codice meccanico',
-                  placeholder: 'MECH-XXXX',
+                  placeholder: '123456',
                   controller: _codiceController,
                   isRequired: false,
                   obscureText: false,
-                  keyboardType: TextInputType.text,
+                  keyboardType: TextInputType.number,
                   height: 52,
                 ),
               ],

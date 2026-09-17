@@ -1,6 +1,6 @@
 # AutoMob — Database (fonte di verità: Supabase live)
 
-> Rigenerato dallo schema live il 2026-07-15. Se il codice o questo doc sembrano
+> Verificato sullo schema live il 2026-08-23. Se il codice o questo doc sembrano
 > in disaccordo con Supabase, **fidati di Supabase** e rigenera questo file
 > (query in fondo al documento). `docs/AutoMob_DB_Reference.md` è superato,
 > non usarlo.
@@ -11,9 +11,11 @@
 
 ## Sicurezza registrazione veicolo
 
-`public.mechanics`, `vehicle_lookup_results` e `vehicle_external_snapshots`
+`public.mechanics`, `mechanic_subscriptions`, `vehicle_lookup_results` e
+`vehicle_external_snapshots`
 hanno RLS attiva. Il ruolo anon non ha grant su `mechanics`; un autenticato può
-leggere le officine attive o la propria riga. L'audit completo delle vecchie
+leggere solo la propria officina o quelle già collegate ai propri veicoli. La
+ricerca di un codice passa dalla RPC autenticata e limitata. L'audit delle vecchie
 policy di manutenzione e dei grant GraphQL resta pianificato separatamente.
 
 ---
@@ -37,15 +39,22 @@ Due tipi di utenti: **proprietari** (registrano veicoli, tengono lo storico manu
 e **meccanici** (attivati manualmente dall'admin, associabili a veicoli via `vehicle_mechanics`).
 Tutta la sicurezza di riga è in Postgres (RLS): il client Flutter non la può bypassare.
 
-**3 RPC "magiche"** — mai fare INSERT/UPDATE diretti per queste operazioni:
+**RPC applicative principali** — mai sostituirle con accessi diretti:
 1. `crea_veicolo_con_storico(p_payload jsonb) → uuid` — crea un veicolo + storico iniziale, atomico.
 2. `crea_sessione_manutenzione(p_payload jsonb) → uuid` — registra un intervento (1 record + 1 item + N parti).
 3. `aggiorna_km_veicolo(p_vehicle_id uuid, p_nuovo_km integer) → integer` — aggiorna i km (salgono solo, mai indietro), ritorna i km effettivi salvati.
+4. `verify_mechanic_code(p_code text) → jsonb` — verifica un codice officina
+   attivo, con massimo 10 tentativi ogni 5 minuti per account.
+5. `connect_vehicle_to_mechanic_by_code(p_vehicle_id uuid, p_code text) → jsonb`
+   — verifica e collega atomicamente un'officina al veicolo del proprietario.
+6. `get_mechanic_subscription_overview() → jsonb` — riepilogo piano, scadenza
+   e conteggio veicoli del meccanico autenticato.
 
 Tutto il resto (leggere veicoli, aggiornare profilo) è normale `.from('table').select/update()`.
 
 **Trigger automatici** (mai da chiamare manualmente):
-- `handle_new_user()` — al signup crea `profiles` (+ `mechanics` se il ruolo lo richiede).
+- `handle_new_user()` — al signup crea `profiles` e, per il meccanico, genera
+  nel database il codice numerico univoco a sei cifre.
 - `registra_storico_km()` — scrive su `vehicle_history` quando cambiano i km.
 - `set_updated_at()` — mantiene `updated_at` sincronizzato.
 
@@ -63,14 +72,26 @@ Policy: solo il proprio profilo (select/update `auth.uid() = id`).
 Policy: CRUD solo `owner_id = auth.uid()`.
 
 ### `mechanics` — RLS ✅
-`id (PK)`, `user_id (FK→auth.users, unique)`, `mechanic_code` (unique, inserito dal proprietario nel wizard veicolo), `business_name`, `vat_number`, `address` (legacy compatibile), `street_address`, `postal_code` (CAP), `municipality_istat_code`, `number`, `email`, `is_active` (temporaneamente mantenuto perché lookup e collegamento veicolo lo usano), `created_at`, `updated_at`.
+`id (PK)`, `user_id (FK→auth.users, unique)`, `mechanic_code` (testo numerico
+a sei cifre, unique, generato da UUID officina + partita IVA con massimo 64
+tentativi), `business_name`, `vat_number`, `address` (legacy compatibile),
+`street_address`, `postal_code` (CAP), `municipality_istat_code`, `number`,
+`email`, `is_active` (attivazione manuale), `created_at`, `updated_at`.
 
 Il comune viene selezionato nell'app dal dataset ISTAT e persistito tramite il
 codice ufficiale a sei cifre. Durante la transizione i nuovi campi indirizzo
 sono nullable per non bloccare gli account esistenti; il wizard meccanico li
 rende obbligatori per le nuove registrazioni.
-Policy: select autenticato delle officine attive o della propria riga; update
-solo della propria riga. Nessun grant anon.
+Policy: select della propria riga o delle officine già collegate a un veicolo
+posseduto; update solo della propria riga. Nessun grant anon. Un'officina non
+collegata si cerca esclusivamente tramite `verify_mechanic_code`.
+
+### `mechanic_subscriptions` — RLS ✅
+Un record manuale per officina: `mechanic_id (PK/FK→mechanics)`, `plan_code`,
+`status (active|paused|cancelled)`, `starts_at`, `expires_at`,
+`vehicle_limit`, `updated_at`. Il client non ha accesso diretto alla tabella:
+il meccanico legge soltanto il riepilogo derivato tramite RPC. Inserimento e
+aggiornamento restano operazioni amministrative con `service_role`/SQL.
 
 ### `vehicle_lookup_results` — RLS ✅
 Risposta InfoTarga temporanea per il salvataggio atomico. Contiene owner, targa,
@@ -91,10 +112,32 @@ Una **sessione di lavoro** (1 data, 1 meccanico opzionale). `id (PK)`, `vehicle_
 **Immutabile**: niente policy UPDATE — solo insert (owner) e delete (owner). Per correggere un errore si crea un nuovo intervento, non si modifica lo storico.
 
 ### `maintenance_items` — RLS ✅
-Le **singole voci** di una sessione. `id (PK)`, `record_id (FK→maintenance_records)`, `type` (enum: `tagliando|distribuzione|revisione|pneumatici_cambio|pneumatici_inversione|altro`), `custom_name` (nullable, richiesto se `type=altro`), `service_km`, `service_date`, `notes`, `created_at`.
+Le **singole voci** di una sessione. `id (PK)`, `record_id (FK→maintenance_records)`, `type` (`tagliando|distribuzione|revisione|pneumatici_cambio|pneumatici_inversione|motore|freni|telaio|elettronica|batteria|altro`), `custom_name` (opzionale per le categorie aggiuntive, richiesto se `type=altro`), `service_km`, `service_date`, `notes`, `created_at`.
+
+### `future_work_records` — RLS ✅
+Un gruppo di lavori futuri o problemi segnalati per un veicolo. `id (PK)`,
+`vehicle_id (FK→vehicles)`, `created_by_user_id (FK→auth.users)`,
+`mechanic_id (FK→mechanics, nullable)`, `reminder_date`, `done` e `created_at`.
+`reminder_date` indica la data entro cui effettuare i lavori del gruppo. Il campo
+`mechanic_id` viene valorizzato quando il record è creato dal meccanico; per
+una segnalazione del proprietario resta `null`. Proprietario e meccanico
+attualmente collegato possono leggere il record e modificarne soltanto `done`.
+
+### `future_work_items` — RLS ✅
+Le singole voci testuali di un record futuro. `id (PK)`,
+`record_id (FK→future_work_records)`, `description` e `created_at`. Per ora non
+contengono categorie, costi, date previste o ricambi.
+
+La funzione `create_future_work_report(vehicle_id, description, reminder_date)`
+esegue in un'unica transazione gli insert del record e della prima voce. È
+eseguibile solo dal ruolo `authenticated`; RLS e proprietà del veicolo restano
+attive perché la funzione usa `security invoker`.
+La funzione `get_owner_dashboard_future_works()` restituisce, per ogni veicolo
+accessibile, al massimo le tre voci più recenti appartenenti a record con
+`done = false`; alimenta la timeline della Home senza dati mock.
 
 ### `parts` — RLS ✅
-Catalogo pezzi (letto da tutti gli utenti autenticati). `id (PK, bigint identity)`, `name`.
+Catalogo pezzi (letto da tutti gli utenti autenticati). `id (PK, bigint identity)`, `name`, `category` (`part_category`: `motore|veicolo|gomme|telaio|elettronica|freni`).
 
 ### `maintenance_item_parts` — RLS ✅
 Pezzi usati in un item. `id (PK)`, `item_id (FK→maintenance_items)`, `part_id (FK→parts)`, `quantity` (default 1, >0), `unit_price` (nullable), `notes`.
@@ -106,6 +149,8 @@ Log km nel tempo, scritto solo dal trigger `registra_storico_km`. `id (PK)`, `ve
 vehicles
 ├── vehicle_mechanics (N:N con mechanics)
 ├── vehicle_history (log km, sola lettura per il client)
+├── future_work_records (N gruppi di lavori futuri)
+│   └── future_work_items (N descrizioni)
 └── maintenance_records (1 sessione)
     └── maintenance_items (N voci)
         └── maintenance_item_parts (M pezzi, FK verso parts)

@@ -5,6 +5,7 @@ import 'package:common_ui_widget/common_ui_widget.dart';
 import '../domain/work_log_entry.dart';
 import '../domain/work_log_launch_context.dart';
 import 'work_log_bloc.dart';
+import 'work_log_history_filter.dart';
 import 'work_log_item_card.dart';
 
 /// Corpo riutilizzabile dello storico: la cornice (AppBar e router) resta
@@ -72,34 +73,60 @@ class _WorkLogHistoryBodyState extends State<WorkLogHistoryBody> {
                   WorkLogHistoryOpened(widget.context.vehicleId),
                 ),
               ),
-              WorkLogHistoryLoaded(:final entries) =>
+              WorkLogHistoryLoaded(:final entries, :final visibleEntries) =>
                 entries.isEmpty
                     ? _EmptyHistory(onRefresh: _refresh)
                     : RefreshIndicator(
                         onRefresh: _refresh,
-                        child: ListView.separated(
+                        child: ListView.builder(
                           padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-                          itemCount:
-                              entries.length + (state.hasReachedMax ? 0 : 1),
-                          separatorBuilder: (_, _) => const SizedBox.shrink(),
-                          itemBuilder: (_, index) => index == entries.length
-                              ? TextButton(
-                                  onPressed: state.isLoadingMore
-                                      ? null
-                                      : () => widget.bloc.add(
-                                          const WorkLogHistoryLoadMoreRequested(),
-                                        ),
-                                  child: Text(
-                                    state.isLoadingMore
-                                        ? 'Caricamento…'
-                                        : 'Carica altri lavori',
+                          itemCount: visibleEntries.length + 2,
+                          itemBuilder: (_, index) {
+                            if (index == 0) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 18),
+                                child: WorkLogHistoryFilter(
+                                  selectedType: state.selectedType,
+                                  onChanged: (type) => widget.bloc.add(
+                                    WorkLogHistoryFilterSelected(type),
                                   ),
-                                )
-                              : WorkLogItemCard(
-                                  entry: entries[index],
-                                  onTap: () =>
-                                      widget.onEntryPressed(entries[index]),
                                 ),
+                              );
+                            }
+                            if (index == visibleEntries.length + 1) {
+                              if (visibleEntries.isEmpty) {
+                                return const Padding(
+                                  padding: EdgeInsets.only(top: 70),
+                                  child: Center(
+                                    child: Text(
+                                      'Nessun lavoro per questo filtro',
+                                    ),
+                                  ),
+                                );
+                              }
+                              return state.hasReachedMax
+                                  ? const SizedBox.shrink()
+                                  : TextButton(
+                                      onPressed: state.isLoadingMore
+                                          ? null
+                                          : () => widget.bloc.add(
+                                              const WorkLogHistoryLoadMoreRequested(),
+                                            ),
+                                      child: Text(
+                                        state.isLoadingMore
+                                            ? 'Caricamento…'
+                                            : 'Carica altri lavori',
+                                      ),
+                                    );
+                            }
+                            final entry = visibleEntries[index - 1];
+                            return WorkLogItemCard(
+                              key: ValueKey('work-log-item-${entry.id}'),
+                              entry: entry,
+                              entranceIndex: index - 1,
+                              onTap: () => widget.onEntryPressed(entry),
+                            );
+                          },
                         ),
                       ),
             },

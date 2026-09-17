@@ -1,4 +1,61 @@
-/// Catalogo ricambi — UNICA fonte di verità lato app.
+import 'work_log_type.dart';
+
+enum WorkLogPartCategory {
+  engine('motore'),
+  vehicle('veicolo'),
+  tires('gomme'),
+  chassis('telaio'),
+  electronics('elettronica'),
+  brakes('freni'),
+  gearbox('cambio');
+
+  const WorkLogPartCategory(this.wireValue);
+
+  final String wireValue;
+
+  String get label => switch (this) {
+    WorkLogPartCategory.engine => 'Motore',
+    WorkLogPartCategory.vehicle => 'Veicolo',
+    WorkLogPartCategory.tires => 'Gomme',
+    WorkLogPartCategory.chassis => 'Telaio',
+    WorkLogPartCategory.electronics => 'Elettronica',
+    WorkLogPartCategory.brakes => 'Freni',
+    WorkLogPartCategory.gearbox => 'Cambio',
+  };
+
+  static WorkLogPartCategory? tryFromWire(String? value) {
+    for (final category in values) {
+      if (category.wireValue == value) return category;
+    }
+    return null;
+  }
+}
+
+WorkLogPartCategory workLogPartCategoryForType(WorkLogType? type) =>
+    switch (type) {
+      WorkLogType.distribution ||
+      WorkLogType.engine => WorkLogPartCategory.engine,
+      WorkLogType.tireChange ||
+      WorkLogType.tireRotation => WorkLogPartCategory.tires,
+      WorkLogType.brakes => WorkLogPartCategory.brakes,
+      WorkLogType.chassis => WorkLogPartCategory.chassis,
+      WorkLogType.electronics ||
+      WorkLogType.battery => WorkLogPartCategory.electronics,
+      WorkLogType.gearbox => WorkLogPartCategory.gearbox,
+      WorkLogType.tagliando ||
+      WorkLogType.revision ||
+      WorkLogType.other ||
+      null => WorkLogPartCategory.vehicle,
+    };
+
+class WorkLogPartCatalogEntry {
+  const WorkLogPartCatalogEntry({required this.name, required this.category});
+
+  final String name;
+  final WorkLogPartCategory category;
+}
+
+/// Vista compatibile `id -> nome` del catalogo ricambi.
 ///
 /// È un mirror della tabella `parts` del DB (colonne `id bigint`, `name text`):
 /// gli `id` qui DEVONO combaciare con quelli del DB (1-95). Se aggiungi/modifichi
@@ -101,5 +158,115 @@ const Map<int, String> kPartsCatalog = {
   92: 'Pompa tergicristalli',
   93: 'Specchietto sinistro',
   94: 'Specchietto destro',
-  95: 'Altro',
+  95: 'altro',
 };
+
+/// Catalogo arricchito usato dalle nuove superfici WorkLog.
+///
+/// I nomi continuano a derivare dalla mappa compatibile sopra; la categoria è
+/// dominio puro e potrà pilotare filtri e immagini senza entrare nella UI.
+final Map<int, WorkLogPartCatalogEntry> kWorkLogPartsCatalog =
+    Map.unmodifiable({
+      for (final part in kPartsCatalog.entries)
+        part.key: WorkLogPartCatalogEntry(
+          name: part.value,
+          category: _categoryForPartId(part.key),
+        ),
+    });
+
+const _enginePartIds = <int>{
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  18,
+  19,
+  45,
+  46,
+  47,
+  48,
+  49,
+  50,
+  73,
+  74,
+  75,
+  76,
+  77,
+  78,
+  79,
+  80,
+  81,
+  82,
+  83,
+  84,
+  85,
+};
+
+const _tirePartIds = <int>{86, 87, 88};
+const _gearboxPartIds = <int>{36, 37, 38, 39, 40, 41, 42, 43};
+const _brakePartIds = <int>{20, 21, 22, 23, 24, 25, 26, 27};
+const _chassisPartIds = <int>{
+  28,
+  29,
+  30,
+  31,
+  32,
+  33,
+  34,
+  35,
+  44,
+  89,
+  90,
+  91,
+  92,
+  93,
+  94,
+};
+const _electronicsPartIds = <int>{
+  51,
+  52,
+  53,
+  54,
+  55,
+  56,
+  57,
+  58,
+  59,
+  60,
+  61,
+  62,
+  63,
+  64,
+  65,
+  66,
+  67,
+  68,
+  69,
+  70,
+  71,
+  72,
+};
+
+WorkLogPartCategory _categoryForPartId(int partId) {
+  if (_tirePartIds.contains(partId)) return WorkLogPartCategory.tires;
+  if (_gearboxPartIds.contains(partId)) return WorkLogPartCategory.gearbox;
+  if (_brakePartIds.contains(partId)) return WorkLogPartCategory.brakes;
+  if (_chassisPartIds.contains(partId)) return WorkLogPartCategory.chassis;
+  if (_electronicsPartIds.contains(partId)) {
+    return WorkLogPartCategory.electronics;
+  }
+  if (_enginePartIds.contains(partId)) return WorkLogPartCategory.engine;
+  return WorkLogPartCategory.vehicle;
+}

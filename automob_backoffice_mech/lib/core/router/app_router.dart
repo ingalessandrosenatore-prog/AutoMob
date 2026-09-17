@@ -15,6 +15,9 @@ GoRouter createAppRouter({required AppRouterDependencies dependencies}) {
   final subscriptionNavigatorKey = GlobalKey<NavigatorState>(
     debugLabel: 'subscription',
   );
+  final serviceRequestsNavigatorKey = GlobalKey<NavigatorState>(
+    debugLabel: 'serviceRequests',
+  );
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
@@ -57,6 +60,12 @@ GoRouter createAppRouter({required AppRouterDependencies dependencies}) {
                 name: AppRouteNames.workshop,
                 builder: (context, state) => dependencies.workshop(context),
                 routes: [
+                  GoRoute(
+                    path: AppRoutePaths.settingsSegment,
+                    name: AppRouteNames.settings,
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => dependencies.settings(context),
+                  ),
                   GoRoute(
                     path: AppRoutePaths.vehicleConfigurationSegment,
                     name: AppRouteNames.vehicleConfiguration,
@@ -103,6 +112,33 @@ GoRouter createAppRouter({required AppRouterDependencies dependencies}) {
                 path: AppRoutePaths.subscription,
                 name: AppRouteNames.subscription,
                 builder: (context, state) => dependencies.subscription(context),
+                routes: [
+                  GoRoute(
+                    path: AppRoutePaths.subscriptionPlanSegment,
+                    name: AppRouteNames.subscriptionPlan,
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) =>
+                        dependencies.subscriptionPlan(context, state.extra),
+                  ),
+                  GoRoute(
+                    path: AppRoutePaths.workshopProfileSegment,
+                    name: AppRouteNames.workshopProfile,
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) =>
+                        dependencies.workshopProfile(context),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: serviceRequestsNavigatorKey,
+            routes: [
+              GoRoute(
+                path: AppRoutePaths.serviceRequests,
+                name: AppRouteNames.serviceRequests,
+                builder: (context, state) =>
+                    dependencies.serviceRequests(context),
               ),
             ],
           ),

@@ -55,6 +55,9 @@ class VehicleRepositoryImpl implements VehicleRepository {
           DuplicateFailure('Questo meccanico e gia collegato al veicolo.'),
         ),
         '42501' => const Left(PermissionFailure()),
+        '54000' => const Left(
+          ValidationFailure('Troppe verifiche. Riprova tra cinque minuti.'),
+        ),
         _ => const Left(ServerFailure()),
       };
     } on NetworkException {

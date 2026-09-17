@@ -183,7 +183,7 @@ class _ConnectMechanicContentState extends State<_ConnectMechanicContent> {
                           controller: _codeController,
                           isRequired: true,
                           obscureText: false,
-                          keyboardType: TextInputType.text,
+                          keyboardType: TextInputType.number,
                           onChanged: (value) => context
                               .read<ConnectMechanicCubit>()
                               .codeChanged(value.toString()),

@@ -5,11 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:oc_liquid_glass/oc_liquid_glass.dart';
-import 'package:common_ui_widget/common_ui_widget.dart' hide AmSoftButton;
+import 'package:common_ui_widget/common_ui_widget.dart';
 
-import '../../../../core/config/performance_flags.dart';
-import '../../../../core/widgets/buttons/soft_button.dart';
+import '../../../../core/widgets/app_bar/am_wizard_app_bar.dart';
 import '../bloc/vehicle_registration_bloc.dart';
 import '../bloc/vehicle_registration_event.dart';
 import '../bloc/vehicle_registration_state.dart';
@@ -293,26 +291,12 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
           prev.currentStep != curr.currentStep ||
           prev.lookupStatus != curr.lookupStatus,
       builder: (context, state) {
-        final colors = AmThemeColors.of(context);
         if (state.status == RegistrationStatus.completed) {
           return _RegistrationCompletedView(
             onClose: () => _closeNow(success: true),
             photoWarning: state.photoWarning,
           );
         }
-        final closeButton = SizedBox(
-          width: 48,
-          height: 48,
-          child: AmSoftButton(
-            width: 48,
-            height: 48,
-            color: colors.surface,
-            colorOpacity: 0.2,
-            iconColor: colors.textPrimary,
-            icon: HugeIcons.strokeRoundedArrowLeft01,
-            onPressed: _chiudi,
-          ),
-        );
         final topInset = MediaQuery.paddingOf(context).top;
         final keyboardOverlap = math.max(
           0.0,
@@ -323,66 +307,12 @@ class _RegistrationBodyState extends State<_RegistrationBody> {
           children: [
             Padding(
               padding: EdgeInsets.only(top: topInset),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 4,
+              child: AmWizardAppBar(
+                title: 'REGISTRA VEICOLO',
+                backButtonKey: const Key(
+                  'vehicle-registration-wizard-back-frame',
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: kHeavyEffects
-                            ? OCLiquidGlassGroup(
-                                settings: const OCLiquidGlassSettings(
-                                  refractStrength: -0.13,
-                                  blurRadiusPx: 1.0,
-                                  specStrength: 0,
-                                  specWidth: 0,
-                                  specAngle: 145,
-                                  blendPx: 20,
-                                  specPower: 10,
-                                ),
-                                child: closeButton,
-                              )
-                            : closeButton,
-                      ),
-                    ),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.center,
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: Text(
-                            "REGISTRA VEICOLO",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
-                              color: colors.textPrimary,
-                              shadows: [
-                                Shadow(
-                                  color: colors.shadow.withValues(alpha: 0.22),
-                                  offset: const Offset(1, 1),
-                                  blurRadius: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: SizedBox(width: 48, height: 48),
-                      ),
-                    ),
-                  ],
-                ),
+                onBackPressed: _chiudi,
               ),
             ),
             AmWizardProgress(

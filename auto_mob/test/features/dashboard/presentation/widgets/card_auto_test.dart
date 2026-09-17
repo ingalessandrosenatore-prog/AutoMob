@@ -1,6 +1,7 @@
 import 'package:auto_mob_v1/core/theme/am_theme.dart';
 import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/widgets/card_auto.dart';
+import 'package:common_ui_widget/common_ui_widget.dart' show AmPullDownLG;
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -16,8 +17,53 @@ void main() {
     expect(find.text('AB123CD'), findsOneWidget);
     expect(find.text('166.600 km'), findsOneWidget);
     expect(find.text('CHILOMETRAGGIO'), findsNothing);
-    expect(find.text('Aggiornati 18 giorni fa'), findsOneWidget);
-    expect(find.text('Stimati: 1.643 km'), findsOneWidget);
+    expect(find.textContaining('Aggiornati'), findsNothing);
+    expect(find.byKey(const Key('km-last-update-label')), findsNothing);
+    expect(find.text('+ 1.643 km'), findsOneWidget);
+    expect(find.textContaining('Stimati:'), findsNothing);
+    final cardSurface = tester.widget<Container>(
+      find.byKey(const Key('vehicle-card-surface')),
+    );
+    final cardDecoration = cardSurface.decoration! as ShapeDecoration;
+    expect(cardDecoration.shadows, [
+      BoxShadow(
+        color: AmThemeColors.light.shadowSoft,
+        blurRadius: 2,
+        offset: const Offset(0, 2),
+      ),
+      BoxShadow(
+        color: AmThemeColors.light.shadow,
+        blurRadius: 4,
+        offset: const Offset(0, 4),
+      ),
+    ]);
+    expect(
+      (cardDecoration.gradient! as LinearGradient).colors,
+      AmThemeColors.light.cardBorderGradient.colors,
+    );
+    final cardGradient = tester
+        .widgetList<DecoratedBox>(
+          find.descendant(
+            of: find.byKey(const Key('vehicle-card-surface')),
+            matching: find.byType(DecoratedBox),
+          ),
+        )
+        .map((box) => box.decoration)
+        .whereType<BoxDecoration>()
+        .map((decoration) => decoration.gradient)
+        .whereType<LinearGradient>()
+        .first;
+    expect(cardGradient.colors, [
+      AmThemeColors.light.cardGradientStart,
+      AmThemeColors.light.cardGradientEnd,
+    ]);
+    final yearBadge = tester.widget<Container>(
+      find.byKey(const Key('vehicle-year-badge')),
+    );
+    expect(
+      (yearBadge.decoration! as ShapeDecoration).color,
+      AmThemeColors.light.surfaceRaised,
+    );
     expect(find.text('Regolare · scade 17/04/2027'), findsOneWidget);
     expect(
       tester.widget<Text>(find.text('ALFA ROMEO STELVIO')).style?.fontSize,
@@ -50,6 +96,7 @@ void main() {
     expect(revisionIcon.icon, HugeIcons.strokeRoundedCalendar01);
     expect(revisionIcon.color, revisionColors.accent);
     expect(_revisionStatusColor(tester), revisionColors.accent);
+    expect(_revisionBorderColor(tester), revisionColors.accent);
   });
 
   testWidgets(
@@ -64,8 +111,9 @@ void main() {
       );
       final revisionIcon = tester.widget<HugeIcon>(revisionIconFinder);
       expect(revisionIcon.icon, HugeIcons.strokeRoundedCalendar01);
-      expect(revisionIcon.color, revisionColors.accent);
+      expect(revisionIcon.color, revisionColors.danger);
       expect(_revisionStatusColor(tester), revisionColors.danger);
+      expect(_revisionBorderColor(tester), revisionColors.danger);
     },
   );
 
@@ -97,6 +145,28 @@ void main() {
     expect(kmTaps, 1);
     expect(revisionTaps, 1);
   });
+
+  testWidgets('il trigger edit non mantiene un liquid glass nella card', (
+    tester,
+  ) async {
+    await _pumpCard(tester);
+
+    final editPull = tester.widget<AmPullDownLG>(find.byType(AmPullDownLG));
+    expect(editPull.liquidGlassEnabled, isFalse);
+    expect(editPull.popupLiquidGlassEnabled, isTrue);
+  });
+}
+
+Color? _revisionBorderColor(WidgetTester tester) {
+  final ink = tester.widget<Ink>(
+    find.descendant(
+      of: find.byKey(const Key('revision-info-tile')),
+      matching: find.byType(Ink),
+    ),
+  );
+  final decoration = ink.decoration! as ShapeDecoration;
+  final shape = decoration.shape as SmoothRectangleBorder;
+  return shape.side.color;
 }
 
 Color? _revisionStatusColor(WidgetTester tester) {

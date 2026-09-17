@@ -33,6 +33,7 @@ void main() {
     expect(find.text('workshop'), findsOneWidget);
     expect(find.text('Home'), findsOneWidget);
     expect(find.text('Servizi'), findsOneWidget);
+    expect(find.text('Richieste'), findsOneWidget);
     expect(
       tester
           .getSize(find.byKey(const ValueKey('mechanic_bottom_navigation')))
@@ -49,6 +50,30 @@ void main() {
         tester.view.physicalSize.height / tester.view.devicePixelRatio;
     expect(navigationRect.bottom + publishedBottom, screenHeight);
     expect(find.byType(OCLiquidGlass), findsOneWidget);
+
+    expect(find.byType(AmNavigationGlow), findsOneWidget);
+    final glow = tester.widget<AmNavigationGlow>(find.byType(AmNavigationGlow));
+    expect(glow.width, greaterThan(glow.height));
+    expect(glow.height, MechanicShellMetrics.navigationHeight - 12);
+    final surface = find.descendant(
+      of: find.byType(AmNavigationGlow),
+      matching: find.byType(DecoratedBox),
+    );
+    final before = tester.getRect(surface);
+    await tester.tap(find.text('Servizi'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    final during = tester.getRect(surface);
+    await tester.pumpAndSettle();
+    final after = tester.getRect(surface);
+    expect(during.left, greaterThan(before.left));
+    expect(during.left, lessThan(after.left));
+    expect(after.width, closeTo(before.width, 0.01));
+    expect(after.height, closeTo(before.height, 0.01));
+
+    await tester.tap(find.text('Richieste'));
+    await tester.pumpAndSettle();
+    expect(find.text('service-requests'), findsOneWidget);
   });
 
   testWidgets('switching tabs preserves the workshop state', (tester) async {
@@ -141,6 +166,56 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('work:vehicle-42:work-7'), findsOneWidget);
   });
+
+  testWidgets('settings apre una pagina root e torna alla Home', (
+    tester,
+  ) async {
+    final authStatus = ValueNotifier(AuthNavigationStatus.authenticated);
+    final router = _createRouter(authStatus);
+    addTearDown(() {
+      router.dispose();
+      authStatus.dispose();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AmTheme.dark, routerConfig: router),
+    );
+    await tester.pumpAndSettle();
+
+    router.pushNamed(AppRouteNames.settings);
+    await tester.pumpAndSettle();
+    expect(find.text('settings'), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('workshop'), findsOneWidget);
+  });
+
+  testWidgets('subscription cards have dedicated detail routes', (
+    tester,
+  ) async {
+    final authStatus = ValueNotifier(AuthNavigationStatus.authenticated);
+    final router = _createRouter(authStatus);
+    addTearDown(() {
+      router.dispose();
+      authStatus.dispose();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp.router(theme: AmTheme.dark, routerConfig: router),
+    );
+    await tester.pumpAndSettle();
+
+    router.pushNamed(AppRouteNames.subscriptionPlan);
+    await tester.pumpAndSettle();
+    expect(find.text('subscription-plan'), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+    router.pushNamed(AppRouteNames.workshopProfile);
+    await tester.pumpAndSettle();
+    expect(find.text('workshop-profile'), findsOneWidget);
+  });
 }
 
 GoRouter _createRouter(ValueNotifier<AuthNavigationStatus> authStatus) {
@@ -153,7 +228,11 @@ GoRouter _createRouter(ValueNotifier<AuthNavigationStatus> authStatus) {
       registration: (_) => const Text('registration'),
       emailVerification: (_) => const Text('verify-email'),
       workshop: (_) => const _CounterProbe(),
+      settings: (_) => const Text('settings'),
       subscription: (_) => const Text('subscription'),
+      serviceRequests: (_) => const Text('service-requests'),
+      subscriptionPlan: (_, _) => const Text('subscription-plan'),
+      workshopProfile: (_) => const Text('workshop-profile'),
       vehicleConfiguration: (_, vehicleId, _) => Text('vehicle:$vehicleId'),
       workRegistration: (_, vehicleId, _) => Text('new-work:$vehicleId'),
       workDetail: (_, vehicleId, workId, _) => Text('work:$vehicleId:$workId'),

@@ -1,3 +1,4 @@
+import '../../domain/entities/owner_registration.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/app_user.dart';
@@ -21,7 +22,21 @@ class LoginWithEmailEvent extends AuthEvent {
   List<Object> get props => [email, password];
 }
 
-class LoginWithGoogleEvent extends AuthEvent {}
+class LoginWithGoogleEvent extends AuthEvent {
+  LoginWithGoogleEvent({this.registration});
+  final OwnerRegistration? registration;
+  @override
+  List<Object> get props => [?registration];
+}
+
+class CompleteOwnerProfileEvent extends AuthEvent {
+  CompleteOwnerProfileEvent(this.registration);
+  final OwnerRegistration registration;
+  @override
+  List<Object> get props => [registration];
+}
+
+class AuthStreamFailedEvent extends AuthEvent {}
 
 class LoginWithAppleEvent extends AuthEvent {}
 
@@ -30,17 +45,28 @@ class SignupWithEmailEvent extends AuthEvent {
   final String name;
   final String email;
   final String password;
-  final String? phone;
+  final String passwordConfirmation;
+  final String phone;
+  final String postalCode;
 
   SignupWithEmailEvent({
     required this.name,
     required this.email,
     required this.password,
-    this.phone,
+    required this.passwordConfirmation,
+    required this.phone,
+    required this.postalCode,
   });
 
   @override
-  List<Object> get props => [name, email, password, phone ?? ''];
+  List<Object> get props => [
+    name,
+    email,
+    password,
+    passwordConfirmation,
+    phone,
+    postalCode,
+  ];
 }
 
 class ResendConfirmationEmailEvent extends AuthEvent {
@@ -72,3 +98,5 @@ class LogoutEvent extends AuthEvent {}
 class GoToLoginEvent extends AuthEvent {}
 
 class GoToRegistrationEvent extends AuthEvent {}
+
+class AuthSessionEndedEvent extends AuthEvent {}

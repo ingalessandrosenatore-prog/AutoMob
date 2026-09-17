@@ -38,6 +38,9 @@ class Vehicle extends Equatable {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final List<MechanicSummary> mechanics;
+  final int maintenanceCostCents;
+  final DateTime? firstMaintenanceDate;
+  final Map<int, int> maintenanceCostsByYear;
 
   /// Compatibilita' temporanea per i consumer ancora basati su una sola
   /// officina. La lista ordinata resta la fonte di verita'.
@@ -77,6 +80,9 @@ class Vehicle extends Equatable {
     this.updatedAt,
     this.fotoPath,
     this.mechanics = const [],
+    this.maintenanceCostCents = 0,
+    this.firstMaintenanceDate,
+    this.maintenanceCostsByYear = const {},
   });
 
   Vehicle copyWith({String? fotoPath, List<MechanicSummary>? mechanics}) {
@@ -110,6 +116,9 @@ class Vehicle extends Equatable {
       updatedAt: updatedAt,
       fotoPath: fotoPath ?? this.fotoPath,
       mechanics: mechanics ?? this.mechanics,
+      maintenanceCostCents: maintenanceCostCents,
+      firstMaintenanceDate: firstMaintenanceDate,
+      maintenanceCostsByYear: maintenanceCostsByYear,
     );
   }
 
@@ -177,5 +186,8 @@ class Vehicle extends Equatable {
     updatedAt,
     fotoPath,
     mechanics,
+    maintenanceCostCents,
+    firstMaintenanceDate,
+    maintenanceCostsByYear,
   ];
 }

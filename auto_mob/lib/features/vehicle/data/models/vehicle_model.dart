@@ -31,6 +31,9 @@ class VehicleModel extends Vehicle {
     super.lastRevisionDate,
     super.updatedAt,
     super.mechanics,
+    super.maintenanceCostCents,
+    super.firstMaintenanceDate,
+    super.maintenanceCostsByYear,
   });
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
@@ -81,6 +84,13 @@ class VehicleModel extends Vehicle {
         : json['mechanic'] is Map
         ? [mechanicFromJson(json['mechanic'] as Map)]
         : const <MechanicSummary>[];
+    final costsByYearJson = json['maintenance_costs_by_year'];
+    final costsByYear = costsByYearJson is Map
+        ? costsByYearJson.map(
+            (year, cents) =>
+                MapEntry(int.parse(year.toString()), intValue(cents)),
+          )
+        : const <int, int>{};
 
     return VehicleModel(
       id: str(json['id']),
@@ -120,6 +130,9 @@ class VehicleModel extends Vehicle {
       createdAt: date(json['created_at']),
       updatedAt: dateOrNull(json['updated_at']),
       mechanics: mechanics,
+      maintenanceCostCents: intValue(json['maintenance_cost_cents']),
+      firstMaintenanceDate: dateOrNull(json['first_maintenance_date']),
+      maintenanceCostsByYear: costsByYear,
     );
   }
 
@@ -144,6 +157,11 @@ class VehicleModel extends Vehicle {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
       'mechanics': mechanics.map(_mechanicToJson).toList(),
+      'maintenance_cost_cents': maintenanceCostCents,
+      'first_maintenance_date': firstMaintenanceDate?.toIso8601String(),
+      'maintenance_costs_by_year': maintenanceCostsByYear.map(
+        (year, cents) => MapEntry(year.toString(), cents),
+      ),
       // Campo legacy mantenuto durante la migrazione dei consumer.
       'mechanic': mechanic == null ? null : _mechanicToJson(mechanic!),
     };

@@ -35,24 +35,15 @@ class WorkshopAppBar extends StatelessWidget {
             lightbandOffsetPx: 7,
             lightbandStrength: 0.5,
           ),
-          child: OCLiquidGlass(
-            borderRadius: 37,
-            color: colors.surfaceRaised.withValues(alpha: 0.4),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(37),
-                onTap: onSettingsPressed,
-                child: Center(
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedSettings02,
-                    color: colors.textPrimary,
-                    size: 24,
-                  ),
-                ),
-              ),
-            ),
+          child: AmSoftButton(
+            width: AmControlMetrics.circularButtonVisualSize,
+            height: AmControlMetrics.circularButtonVisualSize,
+            iconSize: AmControlMetrics.circularButtonIconSize,
+            icon: HugeIcons.strokeRoundedSettings02,
+            onPressed: onSettingsPressed,
+            color: colors.background,
+            colorOpacity: 0.2,
+            iconColor: colors.textPrimary,
           ),
         ),
       ],

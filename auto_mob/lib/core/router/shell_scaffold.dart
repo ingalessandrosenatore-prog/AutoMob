@@ -1,3 +1,4 @@
+import 'package:common_ui_widget/common_ui_widget.dart' show AmNavigationGlow;
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
@@ -65,8 +66,8 @@ class _ShellScaffoldState extends State<ShellScaffold>
     ),
     _NavItem(
       route: '/lavori',
-      icon: HugeIcons.strokeRoundedTransactionHistory,
-      activeIcon: HugeIcons.strokeRoundedTransactionHistory,
+      icon: HugeIcons.strokeRoundedTools,
+      activeIcon: HugeIcons.strokeRoundedTools,
       label: 'Lavori',
     ),
   ];
@@ -99,6 +100,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
     // L'indice attivo lo dice direttamente la shell (non piu' il path).
     final selected = widget.navigationShell.currentIndex;
     final colors = AmThemeColors.of(context);
+    final isLight = Theme.of(context).brightness == Brightness.light;
 
     const iconSize = 22.0;
     const selectedHorizontalPadding = 16.0;
@@ -114,7 +116,7 @@ class _ShellScaffoldState extends State<ShellScaffold>
 
     final textDirection = Directionality.of(context);
     final textScaler = MediaQuery.textScalerOf(context);
-    final maxSelectedItemWidth = _items.fold<double>(0, (maxWidth, item) {
+    final selectedItemWidths = _items.map((item) {
       final painter = TextPainter(
         text: TextSpan(text: item.label, style: labelStyle),
         textDirection: textDirection,
@@ -122,8 +124,10 @@ class _ShellScaffoldState extends State<ShellScaffold>
       )..layout();
       final itemWidth =
           iconSize + labelGap + painter.width + selectedHorizontalPadding * 2;
-      return math.max(maxWidth, itemWidth);
-    });
+      painter.dispose();
+      return itemWidth;
+    }).toList();
+    final maxSelectedItemWidth = selectedItemWidths.reduce(math.max);
     const unselectedItemWidth = iconSize + unselectedHorizontalPadding * 2;
     final gapsWidth = math.max(0, _items.length - 1) * itemGap;
 
@@ -138,6 +142,17 @@ class _ShellScaffoldState extends State<ShellScaffold>
       preferredBarWidth,
       MediaQuery.sizeOf(context).width - 32,
     );
+    final lightGlassShadows = isLight
+        ? const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 32,
+              spreadRadius: 0.1,
+              offset: Offset(0, 1),
+              blurStyle: BlurStyle.outer,
+            ),
+          ]
+        : const <BoxShadow>[];
 
     void goTo(int index) {
       if (index < 0 || index >= _items.length) return;
@@ -171,29 +186,37 @@ class _ShellScaffoldState extends State<ShellScaffold>
                   onPointerCancel: (_) => _onRelese(),
                   child: OCLiquidGlassGroup(
                     settings: const OCLiquidGlassSettings(
-                      refractStrength: -0.08,
+                      refractStrength: -0.05,
                       blurRadiusPx: 2,
                       specStrength: 1,
                       specWidth: 2,
                       specAngle: 145,
                       specPower: 10,
-                      lightbandOffsetPx: 7,
-                      lightbandStrength: 0.5,
+                      lightbandOffsetPx: 0,
+                      lightbandStrength: 0,
+                      lightbandWidthPx: 0,
+                      distortExponent: 5,
                     ),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
                         kHeavyEffects
-                            ? ClipPath(
-                                clipper: ShapeBorderClipper(
+                            ? DecoratedBox(
+                                decoration: ShapeDecoration(
                                   shape: _bottomBarShape(),
+                                  shadows: lightGlassShadows,
                                 ),
-                                child: OCLiquidGlass(
-                                  width: larghezzaBarra,
-                                  height: _bottomBarHeight,
-                                  borderRadius: _bottomBarHeight / 2,
-                                  color: colors.background.withValues(
-                                    alpha: 0.2,
+                                child: ClipPath(
+                                  clipper: ShapeBorderClipper(
+                                    shape: _bottomBarShape(),
+                                  ),
+                                  child: OCLiquidGlass(
+                                    width: larghezzaBarra,
+                                    height: _bottomBarHeight,
+                                    borderRadius: _bottomBarHeight / 2,
+                                    color: colors.background.withValues(
+                                      alpha: 0.2,
+                                    ),
                                   ),
                                 ),
                               )
@@ -213,15 +236,24 @@ class _ShellScaffoldState extends State<ShellScaffold>
                                   shape: _bottomBarShape().copyWith(
                                     side: BorderSide(color: colors.border),
                                   ),
-                                  shadows: [
-                                    BoxShadow(
-                                      color: colors.shadow,
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 10),
-                                    ),
-                                  ],
+                                  shadows: lightGlassShadows,
                                 ),
                               ),
+                        Positioned.fill(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: barHorizontalPadding,
+                            ),
+                            child: AmNavigationGlow(
+                              width: selectedItemWidths[selected],
+                              height: _bottomBarHeight - 5,
+                              alignment: selected == 0
+                                  ? AlignmentDirectional.centerStart
+                                  : AlignmentDirectional.centerEnd,
+                              color: colors.accent,
+                            ),
+                          ),
+                        ),
                         SizedBox(
                           width: larghezzaBarra,
                           height: _bottomBarHeight,
@@ -257,32 +289,6 @@ class _ShellScaffoldState extends State<ShellScaffold>
   }
 }
 
-/* class _GradientBorderPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(size.height / 2));
-    final paint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          _appOrange.withValues(alpha: 0.4),
-          _appOrange.withValues(alpha: 0.15),
-          Colors.transparent,
-        ],
-        stops: const [0.0, 0.4, 1.0],
-      ).createShader(rect)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    canvas.drawRRect(rrect, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}*/
-
 class AmNavItem extends StatelessWidget {
   /// Accepts HugeIcons stroke data; IconData remains supported for legacy callers.
   final Object icon;
@@ -312,22 +318,6 @@ class AmNavItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(
           horizontal: isSelect ? 16.0 : 12.0,
           vertical: 16.0,
-        ),
-        decoration: BoxDecoration(
-          // Background arancione semitrasparente come richiesto
-          color: isSelect
-              ? colors.accent.withValues(alpha: 0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(100),
-          boxShadow: isSelect
-              ? [
-                  BoxShadow(
-                    color: colors.accent.withValues(alpha: 0.12),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

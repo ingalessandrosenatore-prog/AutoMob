@@ -167,24 +167,11 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     }
 
     try {
-      final row = await supabaseClient
-          .from('mechanics')
-          .select('id, mechanic_code, business_name, address, number, email')
-          .eq('mechanic_code', mechanicCode.trim())
-          .eq('is_active', true)
-          .maybeSingle();
-
-      if (row == null) {
-        throw const VehicleDataSourceException(
-          'Codice meccanico non valido o officina non attiva.',
-          code: 'mechanic_not_found',
-        );
-      }
-
-      await supabaseClient.from('vehicle_mechanics').insert({
-        'vehicle_id': vehicleId,
-        'mechanic_id': row['id'],
-      });
+      final response = await supabaseClient.rpc(
+        'connect_vehicle_to_mechanic_by_code',
+        params: {'p_vehicle_id': vehicleId, 'p_code': mechanicCode.trim()},
+      );
+      final row = Map<String, dynamic>.from(response as Map);
 
       return MechanicSummary(
         id: row['id'].toString(),
@@ -197,6 +184,12 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     } on VehicleDataSourceException {
       rethrow;
     } on PostgrestException catch (error) {
+      if (error.code == '22023') {
+        throw const VehicleDataSourceException(
+          'Codice meccanico non valido o officina non attiva.',
+          code: 'mechanic_not_found',
+        );
+      }
       throw VehicleDataSourceException(error.message, code: error.code);
     } on SocketException {
       throw const NetworkException();

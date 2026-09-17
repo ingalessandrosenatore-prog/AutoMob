@@ -133,6 +133,7 @@ class _AmTextFieldState extends State<AmTextField> {
             const SizedBox(height: 10),
             // Box del TextField
             Container(
+              key: const Key('am-text-field-box'),
               height: widget.height,
               decoration: BoxDecoration(
                 color: colors.surface,
@@ -150,8 +151,12 @@ class _AmTextFieldState extends State<AmTextField> {
                 controller: widget.controller,
                 obscureText: obscured,
                 keyboardType: widget.keyboardType,
-                expands: widget.height != null,
-                maxLines: widget.height != null ? null : 1,
+                // I campi oscurati devono restare rigorosamente su una riga:
+                // Flutter non consente `obscureText` insieme a `expands`.
+                expands: widget.height != null && !widget.obscureText,
+                maxLines: widget.height != null && !widget.obscureText
+                    ? null
+                    : 1,
                 textAlignVertical: TextAlignVertical.center,
                 style: TextStyle(
                   color: colors.textPrimary,

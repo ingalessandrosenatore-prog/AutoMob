@@ -14,9 +14,11 @@ class ConnectMechanic {
     required String mechanicCode,
   }) {
     final normalizedCode = mechanicCode.trim();
-    if (normalizedCode.isEmpty) {
+    if (!RegExp(r'^[0-9]{6}$').hasMatch(normalizedCode)) {
       return Future.value(
-        const Left(ValidationFailure('Inserisci il codice del meccanico.')),
+        const Left(
+          ValidationFailure('Il codice del meccanico deve contenere 6 cifre.'),
+        ),
       );
     }
     return repository.connectMechanic(

@@ -33,6 +33,13 @@ dev_dependencies:
 flutter:
   assets:
     - assets/icons/car_red.svg
+    - assets/images/car_check.png
+    - assets/images/motor_check.png
+    - assets/images/gomme_check.png
+    - assets/images/chassis_check.png
+    - assets/images/electronics_check.png
+    - assets/images/brakes_check.png
+    - assets/images/gearbox_check.png
 
   # To add assets to your package, add an assets section, like this:
   # assets:

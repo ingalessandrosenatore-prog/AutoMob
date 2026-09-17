@@ -60,6 +60,13 @@ void main() {
     expect(find.text('Officina'), findsOneWidget);
     expect(find.text('Conferma'), findsOneWidget);
     expect(find.bySemanticsLabel('Passaggio 2 di 3: Officina'), findsOneWidget);
+    final surface = tester.widget<Container>(
+      find.byKey(const Key('am-wizard-progress-surface')),
+    );
+    expect(
+      (surface.decoration as BoxDecoration).color,
+      AmThemeColors.light.surface,
+    );
   });
 
   testWidgets('il campo password cambia visibilita senza stato della pagina', (
@@ -96,6 +103,42 @@ void main() {
     expect(
       tester.widget<EditableText>(find.byType(EditableText)).obscureText,
       isFalse,
+    );
+  });
+
+  testWidgets('il campo password accetta la stessa altezza degli altri input', (
+    tester,
+  ) async {
+    final controller = TextEditingController(text: 'Password1!');
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AmTheme.light,
+        home: Scaffold(
+          body: Row(
+            children: [
+              AmTextField(
+                label: 'Password',
+                placeholder: 'Password',
+                controller: controller,
+                isRequired: true,
+                obscureText: true,
+                keyboardType: TextInputType.visiblePassword,
+                height: 52,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.getSize(find.byKey(const Key('am-text-field-box'))).height,
+      52,
+    );
+    expect(
+      tester.widget<EditableText>(find.byType(EditableText)).obscureText,
+      isTrue,
     );
   });
 

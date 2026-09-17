@@ -17,6 +17,7 @@ import '../bloc/workshop_event.dart';
 import '../bloc/workshop_state.dart';
 import '../bloc/workshop_vehicle_filter.dart';
 import 'workshop_header.dart';
+import 'workshop_overview_section.dart';
 import 'workshop_home_placeholders.dart';
 import 'workshop_search_controls.dart';
 import 'workshop_voice_button.dart';
@@ -63,6 +64,18 @@ class WorkshopHomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
+    final controlsGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        colors.background.withValues(alpha: 0.89),
+        colors.background.withValues(alpha: 0.75),
+        colors.background.withValues(alpha: 0.65),
+        colors.background.withValues(alpha: 0.15),
+        Colors.transparent,
+      ],
+      stops: const [0, 0.55, 0.65, 0.85, 1],
+    );
     final mediaQuery = MediaQuery.of(context);
     final topInset = mediaQuery.padding.top;
     final keyboardInset = mediaQuery.viewInsets.bottom;
@@ -82,7 +95,6 @@ class WorkshopHomeView extends StatelessWidget {
     final searchBottom = keyboardInset > 0
         ? math.max(restingSearchBottom, keyboardInset + 12)
         : restingSearchBottom;
-    final bottomBlurExtent = 92 + searchBottom - restingSearchBottom;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -93,72 +105,63 @@ class WorkshopHomeView extends StatelessWidget {
           child: Stack(
             children: [
               Positioned.fill(
-                child: TweenAnimationBuilder<double>(
-                  key: const ValueKey('workshop_edge_blur'),
-                  tween: Tween(end: bottomBlurExtent),
-                  duration: mediaQuery.disableAnimations
-                      ? Duration.zero
-                      : const Duration(milliseconds: 240),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, animatedBottomExtent, child) =>
-                      /* SoftEdgeBlur(
-                        edges: [
-                          EdgeBlur(
-                            type: EdgeType.topEdge,
-                            size: 180,
-                            tintColor: colors.background,
-                            sigma: 10,
-                            controlPoints: [
-                              ControlPoint(
-                                position: 0.5,
-                                type: ControlPointType.visible,
-                              ),
-                              ControlPoint(
-                                position: 1,
-                                type: ControlPointType.transparent,
-                              ),
-                            ],
-                          ),
-                          EdgeBlur(
-                            type: EdgeType.bottomEdge,
-                            size: animatedBottomExtent,
-                            tintColor: colors.background,
-                            sigma: 10,
-                            controlPoints: [
-                              ControlPoint(
-                                position: 0.5,
-                                type: ControlPointType.visible,
-                              ),
-                              ControlPoint(
-                                position: 1,
-                                type: ControlPointType.transparent,
-                              ),
-                            ],
-                          ),
-                        ],
-                        child: */
-                      CustomScrollView(
-                        keyboardDismissBehavior:
-                            ScrollViewKeyboardDismissBehavior.onDrag,
-                        physics: const AlwaysScrollableScrollPhysics(
-                          parent: BouncingScrollPhysics(),
+                child: SmartEdge(
+                  blur: true,
+                  fallbackTint: colors.background,
+                  edges: [
+                    EdgeBlur(
+                      type: EdgeType.topEdge,
+                      size: 180,
+                      tintColor: colors.background,
+                      sigma: 10,
+                      controlPoints: [
+                        ControlPoint(
+                          position: 0.5,
+                          type: ControlPointType.visible,
                         ),
-                        slivers: [
-                          SliverToBoxAdapter(
-                            child: SizedBox(height: appBarExtent + 18),
-                          ),
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(24, 20, 24, 18),
-                            sliver: SliverToBoxAdapter(
-                              child: WorkshopClientListHeading(
-                                total: totalVehicles,
-                              ),
-                            ),
-                          ),
-                          ..._contentSlivers(context),
-                        ],
+                        ControlPoint(
+                          position: 1,
+                          type: ControlPointType.transparent,
+                        ),
+                      ],
+                    ),
+                  ],
+                  child: CustomScrollView(
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: SizedBox(height: appBarExtent + 18),
                       ),
-                  /* ), */
+                      const SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        sliver: SliverToBoxAdapter(
+                          child: WorkshopOverviewSection(),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 18),
+                        sliver: SliverToBoxAdapter(
+                          child: WorkshopClientListHeading(
+                            total: totalVehicles,
+                          ),
+                        ),
+                      ),
+                      ..._contentSlivers(context),
+                      // Let the final card clear the search and navigation overlays.
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height:
+                              searchBottom +
+                              MechanicShellMetrics.searchHeight +
+                              16,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Positioned(
@@ -185,6 +188,7 @@ class WorkshopHomeView extends StatelessWidget {
                   controller: searchController,
                   filter: filter,
                   repaint: repaint,
+                  gradient: controlsGradient,
                   onSearchChanged: (value) => context.read<WorkshopBloc>().add(
                     WorkshopSearchChanged(value),
                   ),
@@ -210,6 +214,7 @@ class WorkshopHomeView extends StatelessWidget {
                       selector: (state) => state,
                       builder: (context, voiceState) => WorkshopVoiceButton(
                         state: voiceState,
+                        gradient: controlsGradient,
                         onPressed: () => onVoicePressed(voiceState),
                       ),
                     ),
@@ -247,7 +252,7 @@ class WorkshopHomeView extends StatelessWidget {
     if (!hasLinkedVehicles) {
       return const [
         SliverPadding(
-          padding: EdgeInsets.fromLTRB(24, 40, 24, 140),
+          padding: EdgeInsets.fromLTRB(8, 8, 8, 8),
           sliver: SliverToBoxAdapter(child: WorkshopEmptyState()),
         ),
       ];
@@ -255,7 +260,7 @@ class WorkshopHomeView extends StatelessWidget {
     if (!hasSearchResults) {
       return [
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(24, 40, 24, 140),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
           sliver: SliverToBoxAdapter(
             child: WorkshopNoSearchResults(query: query),
           ),
@@ -264,10 +269,15 @@ class WorkshopHomeView extends StatelessWidget {
     }
     return [
       SliverPadding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 160),
-        sliver: SliverList.separated(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+        sliver: SliverGrid.builder(
           itemCount: vehicles.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 240,
+            mainAxisExtent: 164,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+          ),
           itemBuilder: (context, index) {
             if (hasMore && index == math.max(0, vehicles.length - 5)) {
               context.read<WorkshopBloc>().add(

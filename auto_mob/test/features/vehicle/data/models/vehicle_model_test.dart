@@ -79,4 +79,25 @@ void main() {
     expect(vehicle.mechanic, vehicle.mechanics.first);
     expect(vehicle.toJson()['mechanics'], hasLength(2));
   });
+
+  test('mappa il totale e la prima data dei lavori della dashboard', () {
+    final vehicle = VehicleModel.fromJson(const {
+      'id': 'vehicle-1',
+      'owner_id': 'owner-1',
+      'plate': 'AB123CD',
+      'brand': 'Fiat',
+      'model': 'Panda',
+      'year': 2020,
+      'fuel': 'benzina',
+      'km_current': 12000,
+      'created_at': '2026-07-16T10:00:00Z',
+      'maintenance_cost_cents': 12345,
+      'first_maintenance_date': '2024-03-15',
+      'maintenance_costs_by_year': {'2024': 5000, '2025': 7345},
+    });
+
+    expect(vehicle.maintenanceCostCents, 12345);
+    expect(vehicle.firstMaintenanceDate, DateTime(2024, 3, 15));
+    expect(vehicle.maintenanceCostsByYear, {2024: 5000, 2025: 7345});
+  });
 }

@@ -23,5 +23,12 @@ class AmPullDownLG extends shared.AmPullDownLG {
     super.key,
     super.larghezza = 250.0,
     super.liquidGlassEnabled = kHeavyEffects,
+    super.popupLiquidGlassEnabled,
+    super.ownsLiquidGlassGroup = true,
+    super.routeAnimation,
+    super.popupBorderRadius = 40,
+    super.popupHeight,
+    super.buttonShadow,
+    super.popupShadow,
   });
 }

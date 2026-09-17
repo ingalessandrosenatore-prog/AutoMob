@@ -1,13 +1,13 @@
+import 'dart:async';
+import 'package:auto_mob_v1/features/auth/domain/usecases/resolve_owner_access.dart';
+import 'package:auto_mob_v1/features/auth/domain/entities/owner_registration.dart';
 // =====================================================================
 //  GOLDEN TEST — CUBIT / BLoC (layer presentation)
 // ---------------------------------------------------------------------
 //  Pattern per testare un Cubit/BLoC: si mocka lo use case (con mocktail)
 //  e con blocTest si dichiara la SEQUENZA di stati attesa dopo un'azione.
 //
-//  NB: LoginWithGoogleEvent e LoginWithAppleEvent non sono ancora una
-//  feature sviluppata/collegata in UI: NON testati qui di proposito
-//  (vedi report di fine loop). I relativi usecase sono comunque mockati
-//  perche' richiesti dal costruttore del bloc.
+// Google regressions also cover deferred OAuth completion below.
 // =====================================================================
 
 import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
@@ -56,7 +56,10 @@ class MockLeaveEmailVerification extends Mock
 class MockObserveAuthenticatedUsers extends Mock
     implements ObserveAuthenticatedUsers {}
 
+class MockResolveOwnerAccess extends Mock implements ResolveOwnerAccess {}
+
 void main() {
+  late MockResolveOwnerAccess resolveOwnerAccess;
   late MockCheckSession checkSession;
   late MockGetPendingVerificationEmail getPendingVerificationEmail;
   late MockLoginWithEmail loginWithEmail;
@@ -72,8 +75,16 @@ void main() {
   const tEmail = 'test@automob.it';
   const tPassword = 'password123';
   const tName = 'Mario Rossi';
+  const tPhone = '+39 333 1234567';
+  const tPostalCode = '10121';
 
   setUp(() {
+    resolveOwnerAccess = MockResolveOwnerAccess();
+    when(() => resolveOwnerAccess()).thenAnswer(
+      (_) async => const Right(
+        OwnerAccess(needsCompletion: false, profile: OwnerRegistration()),
+      ),
+    );
     checkSession = MockCheckSession();
     getPendingVerificationEmail = MockGetPendingVerificationEmail();
     loginWithEmail = MockLoginWithEmail();
@@ -91,6 +102,7 @@ void main() {
 
   AuthBloc buildBloc() => AuthBloc(
     checkSession: checkSession,
+    resolveOwnerAccess: resolveOwnerAccess,
     getPendingVerificationEmail: getPendingVerificationEmail,
     loginWithEmail: loginWithEmail,
     loginWithGoogle: loginWithGoogle,
@@ -100,6 +112,126 @@ void main() {
     resendConfirmationEmail: resendConfirmationEmail,
     leaveEmailVerification: leaveEmailVerification,
     observeAuthenticatedUsers: observeAuthenticatedUsers,
+  );
+
+  test('a late profile response cannot restore access after logout', () async {
+    final reply = Completer<Either<Failure, OwnerAccess>>();
+    when(() => resolveOwnerAccess()).thenAnswer((_) => reply.future);
+    when(() => logout()).thenAnswer((_) async => const Right(null));
+    final bloc = buildBloc();
+    final states = <AuthState>[];
+    final subscription = bloc.stream.listen(states.add);
+    bloc.add(AuthSessionEstablishedEvent(user: tUser));
+    await untilCalled(() => resolveOwnerAccess());
+    final loggedOut = bloc.stream.firstWhere((state) => state is AuthLoggedOut);
+    bloc.add(LogoutEvent());
+    await loggedOut;
+    reply.complete(
+      const Right(
+        OwnerAccess(needsCompletion: false, profile: OwnerRegistration()),
+      ),
+    );
+    await Future<void>.delayed(Duration.zero);
+    expect(states.whereType<AuthAuthenticated>(), isEmpty);
+    expect(bloc.state, isA<AuthLoggedOut>());
+    await subscription.cancel();
+    await bloc.close();
+  });
+
+  blocTest<AuthBloc, AuthState>(
+    'Google launch does not authenticate before callback',
+    setUp: () => when(
+      () => loginWithGoogle(),
+    ).thenAnswer((_) async => const Right(null)),
+    build: buildBloc,
+    act: (bloc) => bloc.add(LoginWithGoogleEvent()),
+    expect: () => [isA<AuthLoading>(), isA<AuthOAuthWaiting>()],
+    verify: (_) => verifyNever(() => resolveOwnerAccess()),
+  );
+
+  blocTest<AuthBloc, AuthState>(
+    'restored Google account with pending profile cannot enter home',
+    setUp: () {
+      when(() => checkSession()).thenAnswer((_) async => const Right(tUser));
+      when(() => resolveOwnerAccess()).thenAnswer(
+        (_) async => const Right(
+          OwnerAccess(
+            needsCompletion: true,
+            profile: OwnerRegistration(fullName: 'Mario'),
+          ),
+        ),
+      );
+    },
+    build: buildBloc,
+    act: (bloc) => bloc.add(CheckSessionEvent()),
+    expect: () => [isA<AuthLoading>(), isA<AuthOwnerProfilePending>()],
+  );
+
+  blocTest<AuthBloc, AuthState>(
+    'Google draft is completed only after the authenticated callback',
+    setUp: () {
+      when(() => loginWithGoogle()).thenAnswer((_) async => const Right(null));
+      when(() => resolveOwnerAccess()).thenAnswer(
+        (_) async => const Right(
+          OwnerAccess(
+            needsCompletion: true,
+            profile: OwnerRegistration(fullName: 'Mario'),
+          ),
+        ),
+      );
+      when(
+        () => resolveOwnerAccess(
+          registration: const OwnerRegistration(
+            fullName: 'Mario',
+            phone: '3331234567',
+            postalCode: '00100',
+          ),
+        ),
+      ).thenAnswer(
+        (_) async => const Right(
+          OwnerAccess(
+            needsCompletion: false,
+            profile: OwnerRegistration(
+              fullName: 'Mario',
+              phone: '3331234567',
+              postalCode: '00100',
+            ),
+          ),
+        ),
+      );
+    },
+    build: buildBloc,
+    act: (bloc) async {
+      bloc.add(
+        LoginWithGoogleEvent(
+          registration: const OwnerRegistration(
+            phone: '3331234567',
+            postalCode: '00100',
+          ),
+        ),
+      );
+      await bloc.stream.firstWhere((state) => state is AuthOAuthWaiting);
+      bloc.add(AuthSessionEstablishedEvent(user: tUser));
+    },
+    expect: () => [
+      isA<AuthLoading>(),
+      isA<AuthOAuthWaiting>(),
+      isA<AuthAuthenticated>(),
+    ],
+  );
+
+  blocTest<AuthBloc, AuthState>(
+    'mechanic profile is rejected and signed out',
+    setUp: () {
+      when(
+        () => resolveOwnerAccess(),
+      ).thenAnswer((_) async => const Left(PermissionFailure()));
+      when(() => logout()).thenAnswer((_) async => const Right(null));
+    },
+    build: buildBloc,
+    act: (bloc) => bloc.add(AuthSessionEstablishedEvent(user: tUser)),
+    expect: () => [isA<AuthError>()],
+    verify: (_) => verify(() => logout()).called(1),
   );
 
   blocTest<AuthBloc, AuthState>(
@@ -203,12 +335,26 @@ void main() {
     'emette [loading, authenticated] quando la registrazione riesce',
     build: () {
       when(
-        () => signupWithEmail(tName, tEmail, tPassword),
+        () => signupWithEmail(
+          tName,
+          tEmail,
+          tPassword,
+          tPassword,
+          tPhone,
+          tPostalCode,
+        ),
       ).thenAnswer((_) async => const Right(SignupAuthenticated(tUser)));
       return buildBloc();
     },
     act: (bloc) => bloc.add(
-      SignupWithEmailEvent(name: tName, email: tEmail, password: tPassword),
+      SignupWithEmailEvent(
+        name: tName,
+        email: tEmail,
+        password: tPassword,
+        passwordConfirmation: tPassword,
+        phone: tPhone,
+        postalCode: tPostalCode,
+      ),
     ),
     expect: () => [AuthLoading(), AuthAuthenticated(user: tUser)],
   );
@@ -216,7 +362,16 @@ void main() {
   blocTest<AuthBloc, AuthState>(
     'dopo signup senza sessione emette lo stato di verifica email',
     build: () {
-      when(() => signupWithEmail(tName, tEmail, tPassword)).thenAnswer(
+      when(
+        () => signupWithEmail(
+          tName,
+          tEmail,
+          tPassword,
+          tPassword,
+          tPhone,
+          tPostalCode,
+        ),
+      ).thenAnswer(
         (_) async => const Right(
           SignupConfirmationRequired(PendingEmailVerification(email: tEmail)),
         ),
@@ -224,7 +379,14 @@ void main() {
       return buildBloc();
     },
     act: (bloc) => bloc.add(
-      SignupWithEmailEvent(name: tName, email: tEmail, password: tPassword),
+      SignupWithEmailEvent(
+        name: tName,
+        email: tEmail,
+        password: tPassword,
+        passwordConfirmation: tPassword,
+        phone: tPhone,
+        postalCode: tPostalCode,
+      ),
     ),
     expect: () => [AuthLoading(), AuthEmailVerificationPending(email: tEmail)],
   );
@@ -297,12 +459,26 @@ void main() {
     'emette [loading, error] quando la registrazione fallisce',
     build: () {
       when(
-        () => signupWithEmail(tName, tEmail, tPassword),
+        () => signupWithEmail(
+          tName,
+          tEmail,
+          tPassword,
+          tPassword,
+          tPhone,
+          tPostalCode,
+        ),
       ).thenAnswer((_) async => const Left(EmailAlreadyInUseFailure()));
       return buildBloc();
     },
     act: (bloc) => bloc.add(
-      SignupWithEmailEvent(name: tName, email: tEmail, password: tPassword),
+      SignupWithEmailEvent(
+        name: tName,
+        email: tEmail,
+        password: tPassword,
+        passwordConfirmation: tPassword,
+        phone: tPhone,
+        postalCode: tPostalCode,
+      ),
     ),
     expect: () => [
       AuthLoading(),

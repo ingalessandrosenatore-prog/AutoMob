@@ -1,3 +1,7 @@
+import '../../features/auth/domain/usecases/resolve_owner_access.dart';
+import '../../features/auth/domain/repositories/owner_access_repository.dart';
+import '../../features/auth/data/repositories/owner_access_repository_impl.dart';
+import '../../features/auth/data/datasources/owner_access_remote_data_source.dart';
 import 'dart:io';
 
 import 'package:get_it/get_it.dart';
@@ -71,6 +75,15 @@ import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import '../../features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/disconnect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
+import '../../features/dashboard/domain/usecases/calculate_maintenance_cost.dart';
+
+// Future work
+import '../../features/future_work/data/datasources/future_work_remote_data_source.dart';
+import '../../features/future_work/data/repositories/future_work_repository_impl.dart';
+import '../../features/future_work/domain/repositories/future_work_repository.dart';
+import '../../features/future_work/domain/usecases/create_future_work_report.dart';
+import '../../features/future_work/domain/usecases/get_latest_open_future_works.dart';
+import '../../features/future_work/presentation/bloc/future_work_report_cubit.dart';
 
 // WorkLog
 
@@ -83,8 +96,25 @@ Future<void> init({bool firebaseAvailable = false}) async {
   _initNotifications(firebaseAvailable: firebaseAvailable);
   await _initAuth();
   await _initVehicle();
+  _initFutureWork();
   await _initDashboard();
   _initWorkLog();
+}
+
+void _initFutureWork() {
+  sl.registerLazySingleton<FutureWorkRemoteDataSource>(
+    () => SupabaseFutureWorkRemoteDataSource(sl()),
+  );
+  sl.registerLazySingleton<FutureWorkRepository>(
+    () => FutureWorkRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<CreateFutureWorkReport>(
+    () => CreateFutureWorkReport(sl()),
+  );
+  sl.registerLazySingleton<GetLatestOpenFutureWorks>(
+    () => GetLatestOpenFutureWorks(sl()),
+  );
+  sl.registerFactory<FutureWorkReportCubit>(() => FutureWorkReportCubit(sl()));
 }
 
 void _initNotifications({required bool firebaseAvailable}) {
@@ -156,9 +186,17 @@ void _initTheme() {
 }
 
 Future<void> _initAuth() async {
+  sl.registerLazySingleton<OwnerAccessRemoteDataSource>(
+    () => OwnerAccessRemoteDataSource(sl()),
+  );
+  sl.registerLazySingleton<OwnerAccessRepository>(
+    () => OwnerAccessRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<ResolveOwnerAccess>(() => ResolveOwnerAccess(sl()));
   sl.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
       checkSession: sl(),
+      resolveOwnerAccess: sl(),
       getPendingVerificationEmail: sl(),
       loginWithEmail: sl(),
       loginWithGoogle: sl(),
@@ -286,6 +324,9 @@ Future<void> _initDashboard() async {
   sl.registerLazySingleton<ComputeMaintenanceKpis>(
     () => ComputeMaintenanceKpis(),
   );
+  sl.registerLazySingleton<CalculateMaintenanceCost>(
+    () => const CalculateMaintenanceCost(),
+  );
 
   // BLoC — lazySingleton: la stessa istanza sopravvive ai cambi di tab, cosi'
   // i dati restano in cache e non si ricaricano ad ogni apertura della home
@@ -297,6 +338,8 @@ Future<void> _initDashboard() async {
       getVehicles: sl(),
       computeKpis: sl(),
       updateVehiclePhoto: sl(),
+      calculateMaintenanceCost: sl(),
+      getLatestOpenFutureWorks: sl(),
     ),
     dispose: (b) => b.close(),
   );

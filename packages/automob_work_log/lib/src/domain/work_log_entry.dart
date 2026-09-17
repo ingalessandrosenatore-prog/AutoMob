@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'work_log_part.dart';
+import 'work_log_type.dart';
 
 class WorkLogEntry extends Equatable {
   const WorkLogEntry({
@@ -11,6 +12,7 @@ class WorkLogEntry extends Equatable {
     required this.serviceDate,
     this.customName,
     this.notes,
+    this.intervalKm,
     this.hasWorkshop = false,
     this.workshopName,
     this.parts = const [],
@@ -22,24 +24,39 @@ class WorkLogEntry extends Equatable {
   final DateTime serviceDate;
   final String? customName;
   final String? notes;
+  final int? intervalKm;
   final bool hasWorkshop;
   final String? workshopName;
   final List<WorkLogPart> parts;
 
-  String get title =>
-      type == 'altro' && (customName?.trim().isNotEmpty ?? false)
-      ? customName!.trim()
-      : switch (type) {
-          'tagliando' => 'Tagliando',
-          'distribuzione' => 'Distribuzione',
-          'revisione' => 'Revisione',
-          'pneumatici_cambio' => 'Cambio gomme',
-          'pneumatici_inversione' => 'Inversione gomme',
-          _ => type,
-        };
+  String get title {
+    final custom = customName?.trim() ?? '';
+    if (custom.isNotEmpty) return custom;
+    return WorkLogType.tryFromWire(type)?.label ?? type;
+  }
 
   int get partsTotalCents =>
       parts.fold(0, (total, part) => total + (part.subtotalCents ?? 0));
+
+  bool get hasKmDeadline =>
+      const {
+        'tagliando',
+        'distribuzione',
+        'pneumatici_cambio',
+        'pneumatici_inversione',
+      }.contains(type) &&
+      (intervalKm ?? 0) > 0;
+
+  int? remainingKmAt(int? currentKm) {
+    if (!hasKmDeadline || currentKm == null) return null;
+    return serviceKm + intervalKm! - currentKm;
+  }
+
+  bool? isExpiredAt(int? currentKm) {
+    final remainingKm = remainingKmAt(currentKm);
+    return remainingKm == null ? null : remainingKm <= 0;
+  }
+
   @override
   List<Object?> get props => [
     id,
@@ -49,6 +66,7 @@ class WorkLogEntry extends Equatable {
     serviceDate,
     customName,
     notes,
+    intervalKm,
     hasWorkshop,
     workshopName,
     parts,

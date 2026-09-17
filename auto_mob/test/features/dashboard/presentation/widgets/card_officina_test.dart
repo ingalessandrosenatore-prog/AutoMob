@@ -18,7 +18,7 @@ class MockDisconnectMechanic extends Mock implements DisconnectMechanic {}
 void main() {
   const mechanic = MechanicSummary(
     id: 'mechanic-1',
-    code: 'OFF-001',
+    code: '482913',
     businessName: 'Officina Giordano',
     address: 'Via Roma 10',
     phone: '+39 081 1234567',
@@ -29,7 +29,7 @@ void main() {
     await tester.pumpWidget(const _TestApp(child: AmWorkshopCard.add()));
 
     expect(find.text('Aggiungi officina'), findsOneWidget);
-    expect(find.text('Nuovo collegamento'), findsOneWidget);
+    expect(find.text('Collega un officina al tuo Veicolo'), findsOneWidget);
   });
 
   testWidgets('senza meccanico apre il popup e consente il collegamento', (
@@ -37,7 +37,7 @@ void main() {
   ) async {
     final connectMechanic = MockConnectMechanic();
     when(
-      () => connectMechanic(vehicleId: 'vehicle-1', mechanicCode: 'OFF-001'),
+      () => connectMechanic(vehicleId: 'vehicle-1', mechanicCode: '482913'),
     ).thenAnswer((_) async => const Right(mechanic));
 
     await tester.pumpWidget(
@@ -64,7 +64,7 @@ void main() {
     expect(find.text('Aggiungi il tuo meccanico di fiducia'), findsOneWidget);
     expect(find.text('COLLEGA'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextFormField), 'OFF-001');
+    await tester.enterText(find.byType(TextFormField), '482913');
     await tester.pump();
     tester.testTextInput.hide();
     await tester.pump();
@@ -96,10 +96,10 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Officina Giordano'));
+    await tester.tap(find.text('OFFICINA GIORDANO'));
     await tester.pumpAndSettle();
 
-    expect(find.text('La tua officina'), findsOneWidget);
+    expect(find.text('Il tuo meccanico'), findsOneWidget);
     expect(find.text('Via Roma 10'), findsOneWidget);
     expect(find.text('info@officinagiordano.it'), findsOneWidget);
     expect(find.text('+39 081 1234567'), findsOneWidget);
@@ -129,9 +129,9 @@ void main() {
     await tester.tap(visibleAdd);
     expect(addTaps, 1);
 
-    await tester.drag(visibleAdd, const Offset(-320, 0));
+    await tester.drag(visibleAdd, const Offset(320, 0));
     await tester.pumpAndSettle();
-    final visibleMechanic = find.text('Officina Giordano').hitTestable();
+    final visibleMechanic = find.text('OFFICINA GIORDANO').hitTestable();
     expect(visibleMechanic, findsOneWidget);
 
     await tester.tap(visibleMechanic);
@@ -192,7 +192,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('Officina Giordano'));
+    await tester.tap(find.text('OFFICINA GIORDANO'));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('disconnect_mechanic_button')));
     await tester.pumpAndSettle();

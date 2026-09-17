@@ -1,243 +1,233 @@
+import 'package:go_router/go_router.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:common_ui_widget/common_ui_widget.dart';
-
-import 'package:go_router/go_router.dart';
 
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../widgets/auth_action_bar.dart';
+import '../widgets/auth_brand_header.dart';
+import '../widgets/auth_form_pages.dart';
 
 class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+  const LoginView({super.key, this.initialPage = 0});
+
+  final int initialPage;
 
   @override
   State<LoginView> createState() => _LoginViewState();
 }
 
 class _LoginViewState extends State<LoginView> {
-  late final TextEditingController _emailController;
-  late final TextEditingController _passwordController;
-
-  // Tiene traccia se un pop-up di stato e' attualmente aperto, per poterlo
-  // chiudere prima di mostrarne un altro (evita pop-up sovrapposti).
+  late final PageController _pageController;
+  late final TextEditingController _loginEmailController;
+  late final TextEditingController _loginPasswordController;
+  late final TextEditingController _registrationNameController;
+  late final TextEditingController _registrationEmailController;
+  late final TextEditingController _registrationPhoneController;
+  late final TextEditingController _registrationPostalCodeController;
+  late final TextEditingController _registrationPasswordController;
+  late final TextEditingController _passwordConfirmationController;
   bool _dialogOpen = false;
 
   @override
   void initState() {
     super.initState();
-    _emailController = TextEditingController();
-    _passwordController = TextEditingController();
+    _pageController = PageController(initialPage: widget.initialPage);
+    _loginEmailController = TextEditingController();
+    _loginPasswordController = TextEditingController();
+    _registrationNameController = TextEditingController();
+    _registrationEmailController = TextEditingController();
+    _registrationPhoneController = TextEditingController();
+    _registrationPostalCodeController = TextEditingController();
+    _registrationPasswordController = TextEditingController();
+    _passwordConfirmationController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _pageController.dispose();
+    _loginEmailController.dispose();
+    _loginPasswordController.dispose();
+    _registrationNameController.dispose();
+    _registrationEmailController.dispose();
+    _registrationPhoneController.dispose();
+    _registrationPostalCodeController.dispose();
+    _registrationPasswordController.dispose();
+    _passwordConfirmationController.dispose();
     super.dispose();
   }
 
+  double get _registrationProgress {
+    if (!_pageController.hasClients) return widget.initialPage.toDouble();
+    return (_pageController.page ?? widget.initialPage.toDouble()).clamp(
+      0.0,
+      1.0,
+    );
+  }
+
   void _closeDialogIfOpen() {
-    if (_dialogOpen) {
-      Navigator.of(context, rootNavigator: true).pop();
-      _dialogOpen = false;
-    }
+    if (!_dialogOpen) return;
+    Navigator.of(context, rootNavigator: true).pop();
+    _dialogOpen = false;
   }
 
-  /// Email non confermata: pop-up dedicato invece del banner generico,
-  /// con "Riprova" che chiude il pop-up (l'utente verifica la casella di
-  /// posta fuori dall'app e poi ritenta il login dal form).
-  void _onStateForDialogs(BuildContext context, AuthState s) {
-    if (s is AuthError && s.emailNotConfirmed) {
-      _dialogOpen = true;
-      showAmStatusDialog(
-        context,
-        icon: HugeIcons.strokeRoundedMail01,
-        iconColor: const Color(0xFFFFB4AB),
-        title: 'Email non verificata',
-        message: s.message,
-        actions: [
-          AmDialogAction(
-            label: 'Riprova',
-            color: const Color(0xFFE85A1A),
-            filled: true,
-            onPressed: _closeDialogIfOpen,
-          ),
-        ],
+  void _onAuthStateChanged(BuildContext context, AuthState state) {
+    _closeDialogIfOpen();
+    if (state is! AuthError) return;
+
+    final isRegistration = _registrationProgress >= 0.5;
+    if (!state.emailNotConfirmed && !isRegistration) return;
+
+    _dialogOpen = true;
+    showAmStatusDialog(
+      context,
+      icon: state.emailNotConfirmed
+          ? HugeIcons.strokeRoundedMail01
+          : HugeIcons.strokeRoundedAlert01,
+      iconColor: AmThemeColors.of(context).danger,
+      title: state.emailNotConfirmed
+          ? 'Email non verificata'
+          : 'Registrazione non riuscita',
+      message: state.message,
+      actions: [
+        AmDialogAction(
+          label: state.emailNotConfirmed ? 'Riprova' : 'Chiudi',
+          color: AmThemeColors.of(context).accent,
+          filled: true,
+          onPressed: _closeDialogIfOpen,
+        ),
+      ],
+    );
+  }
+
+  void _syncSharedCredentials(int page) {
+    if (page == 1) {
+      _registrationEmailController.text = _loginEmailController.text;
+      _registrationPasswordController.text = _loginPasswordController.text;
+      return;
+    }
+    _loginEmailController.text = _registrationEmailController.text;
+    _loginPasswordController.text = _registrationPasswordController.text;
+  }
+
+  Future<void> _showLogin() async {
+    if ((_pageController.page ?? widget.initialPage) >= 0.5) {
+      await _pageController.animateToPage(
+        0,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
       );
-    } else {
-      _closeDialogIfOpen();
+      return;
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // BlocListener per i pop-up di stato + BlocBuilder per il resto della UI:
-    // la navigazione verso /home la decide la redirect del router quando lo
-    // stato diventa AuthAuthenticated. Qui gestisco solo la UI.
-    return BlocListener<AuthBloc, AuthState>(
-      listener: _onStateForDialogs,
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          final isLoading = state is AuthLoading;
-          final errorMessage = (state is AuthError && !state.emailNotConfirmed)
-              ? state.message
-              : null;
-          final colors = AmThemeColors.of(context);
-
-          return Scaffold(
-            backgroundColor: colors.background,
-            body: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 60),
-                    Text(
-                      'BENVENUTO',
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'Accedi per gestire i tuoi veicoli',
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 48),
-                    Row(
-                      children: [
-                        AmTextField(
-                          label: 'Email',
-                          placeholder: 'Inserisci la tua email',
-                          controller: _emailController,
-                          isRequired: true,
-                          obscureText: false,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        AmTextField(
-                          label: 'Password',
-                          placeholder: '••••••••',
-                          controller: _passwordController,
-                          isRequired: true,
-                          obscureText: true,
-                          keyboardType: TextInputType.visiblePassword,
-                        ),
-                      ],
-                    ),
-                    if (errorMessage != null) ...[
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          HugeIcon(
-                            icon: HugeIcons.strokeRoundedAlert01,
-                            color: colors.danger,
-                            size: 16,
-                            strokeWidth: 2.2,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              errorMessage,
-                              style: TextStyle(
-                                color: colors.danger,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                    const SizedBox(height: 48),
-                    AmMainFab(
-                      label: 'Login',
-                      height: 60,
-                      width: 180,
-                      color: colors.accent,
-                      icon: HugeIcons.strokeRoundedLogin01,
-                      isLoading: isLoading,
-                      onPressed: () {
-                        context.read<AuthBloc>().add(
-                          LoginWithEmailEvent(
-                            email: _emailController.text.trim(),
-                            password: _passwordController.text,
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 48),
-                    AmMainFab(
-                      label: 'Registrati',
-                      color: colors.info,
-                      icon: HugeIcons.strokeRoundedUserAdd01,
-                      height: 60,
-                      width: 180,
-                      onPressed: () => context.goNamed('registration'),
-                    ),
-                    const SizedBox(height: 32),
-                    Text(
-                      'oppure accedi con',
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          onPressed: isLoading
-                              ? null
-                              : () => context.read<AuthBloc>().add(
-                                  LoginWithGoogleEvent(),
-                                ),
-                          icon: const Icon(
-                            Icons.g_mobiledata,
-                            color: Colors.transparent,
-                            size: 0,
-                          ),
-                          style: IconButton.styleFrom(
-                            backgroundColor: colors.surface,
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        IconButton(
-                          onPressed: isLoading
-                              ? null
-                              : () => context.read<AuthBloc>().add(
-                                  LoginWithAppleEvent(),
-                                ),
-                          icon: const Icon(
-                            Icons.apple,
-                            color: Colors.transparent,
-                            size: 0,
-                          ),
-                          style: IconButton.styleFrom(
-                            backgroundColor: colors.surface,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+    if (!mounted) return;
+    context.read<AuthBloc>().add(
+      LoginWithEmailEvent(
+        email: _loginEmailController.text.trim(),
+        password: _loginPasswordController.text,
       ),
     );
   }
+
+  Future<void> _showRegistration() async {
+    if ((_pageController.page ?? widget.initialPage) < 0.5) {
+      await _pageController.animateToPage(
+        1,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+    if (!mounted) return;
+    context.read<AuthBloc>().add(
+      SignupWithEmailEvent(
+        name: _registrationNameController.text.trim(),
+        email: _registrationEmailController.text.trim(),
+        phone: _registrationPhoneController.text.trim(),
+        postalCode: _registrationPostalCodeController.text.trim(),
+        password: _registrationPasswordController.text,
+        passwordConfirmation: _passwordConfirmationController.text,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => BlocListener<AuthBloc, AuthState>(
+    listener: _onAuthStateChanged,
+    child: BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final colors = AmThemeColors.of(context);
+        final isLoading = state is AuthLoading;
+        final errorMessage = state is AuthError && !state.emailNotConfirmed
+            ? state.message
+            : null;
+
+        return Scaffold(
+          backgroundColor: colors.background,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  AnimatedBuilder(
+                    animation: _pageController,
+                    builder: (context, _) => AuthBrandHeader(
+                      registrationProgress: _registrationProgress,
+                    ),
+                  ),
+                  Expanded(
+                    child: PageView(
+                      key: const Key('auth-page-view'),
+                      controller: _pageController,
+                      onPageChanged: _syncSharedCredentials,
+                      children: [
+                        AuthLoginForm(
+                          emailController: _loginEmailController,
+                          passwordController: _loginPasswordController,
+                          errorMessage: errorMessage,
+                        ),
+                        AuthRegistrationForm(
+                          nameController: _registrationNameController,
+                          emailController: _registrationEmailController,
+                          phoneController: _registrationPhoneController,
+                          postalCodeController:
+                              _registrationPostalCodeController,
+                          passwordController: _registrationPasswordController,
+                          passwordConfirmationController:
+                              _passwordConfirmationController,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 18),
+                    child: AnimatedBuilder(
+                      animation: _pageController,
+                      builder: (context, _) => AuthActionBar(
+                        registrationProgress: _registrationProgress,
+                        isLoading: isLoading,
+                        onLoginPressed: _showLogin,
+                        onRegistrationPressed: _showRegistration,
+                        onGooglePressed: () {
+                          if (_registrationProgress >= 0.5) {
+                            context.go('/google-registration');
+                          } else {
+                            context.read<AuthBloc>().add(
+                              LoginWithGoogleEvent(),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    ),
+  );
 }

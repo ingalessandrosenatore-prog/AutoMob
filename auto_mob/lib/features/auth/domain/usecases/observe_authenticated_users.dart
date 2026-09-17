@@ -9,7 +9,7 @@ class ObserveAuthenticatedUsers {
 
   final AuthRepository repository;
 
-  Stream<Either<Failure, AppAuthUser>> call() {
+  Stream<Either<Failure, AppAuthUser?>> call() {
     return repository.observeAuthenticatedUsers();
   }
 }

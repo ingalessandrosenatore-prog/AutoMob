@@ -14,7 +14,7 @@ void main() {
 
   const mechanic = MechanicSummary(
     id: 'mechanic-1',
-    code: 'OFF-001',
+    code: '482913',
     businessName: 'Officina Giordano',
   );
 
@@ -29,39 +29,45 @@ void main() {
       when(
         () => repository.connectMechanic(
           vehicleId: 'vehicle-1',
-          mechanicCode: 'OFF-001',
+          mechanicCode: '482913',
         ),
       ).thenAnswer((_) async => const Right(mechanic));
 
       final result = await usecase(
         vehicleId: 'vehicle-1',
-        mechanicCode: '  OFF-001  ',
+        mechanicCode: '  482913  ',
       );
 
       expect(result, const Right<Failure, MechanicSummary>(mechanic));
       verify(
         () => repository.connectMechanic(
           vehicleId: 'vehicle-1',
-          mechanicCode: 'OFF-001',
+          mechanicCode: '482913',
         ),
       ).called(1);
     },
   );
 
-  test('rifiuta un codice vuoto senza interrogare il repository', () async {
-    final result = await usecase(vehicleId: 'vehicle-1', mechanicCode: '   ');
+  test(
+    'rifiuta un codice non numerico senza interrogare il repository',
+    () async {
+      final result = await usecase(
+        vehicleId: 'vehicle-1',
+        mechanicCode: 'ABC123',
+      );
 
-    expect(
-      result,
-      const Left<Failure, MechanicSummary>(
-        ValidationFailure('Inserisci il codice del meccanico.'),
-      ),
-    );
-    verifyNever(
-      () => repository.connectMechanic(
-        vehicleId: any(named: 'vehicleId'),
-        mechanicCode: any(named: 'mechanicCode'),
-      ),
-    );
-  });
+      expect(
+        result,
+        const Left<Failure, MechanicSummary>(
+          ValidationFailure('Il codice del meccanico deve contenere 6 cifre.'),
+        ),
+      );
+      verifyNever(
+        () => repository.connectMechanic(
+          vehicleId: any(named: 'vehicleId'),
+          mechanicCode: any(named: 'mechanicCode'),
+        ),
+      );
+    },
+  );
 }

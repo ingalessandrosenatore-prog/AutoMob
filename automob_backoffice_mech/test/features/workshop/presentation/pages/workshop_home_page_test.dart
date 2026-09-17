@@ -1,4 +1,8 @@
 import 'dart:async';
+import 'package:automob_backoffice_mech/features/workshop/data/datasources/workshop_overview_demo_data_source.dart';
+import 'package:automob_backoffice_mech/features/workshop/data/repositories/workshop_overview_repository_impl.dart';
+import 'package:automob_backoffice_mech/features/workshop/domain/usecases/get_workshop_overview.dart';
+import 'package:automob_backoffice_mech/features/workshop/presentation/bloc/workshop_overview_cubit.dart';
 
 import 'package:automob_backoffice_mech/core/widgets/mechanic_shapes.dart';
 import 'package:automob_backoffice_mech/core/widgets/mechanic_vehicle_card.dart';
@@ -19,7 +23,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
-import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 final class _MockWorkshopBloc extends MockBloc<WorkshopEvent, WorkshopState>
     implements WorkshopBloc {}
@@ -49,17 +52,46 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(DecoratedBox), findsAtLeastNWidgets(3));
+    final controlGradients = tester
+        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
+        .map((widget) => widget.decoration)
+        .whereType<BoxDecoration>()
+        .map((decoration) => decoration.gradient)
+        .whereType<LinearGradient>()
+        .where(
+          (gradient) =>
+              gradient.begin == Alignment.topCenter &&
+              gradient.end == Alignment.bottomCenter &&
+              gradient.stops?.join(',') == '0.0,0.55,0.65,0.85,1.0',
+        );
+    expect(controlGradients, hasLength(1));
+    for (final gradient in controlGradients) {
+      expect(
+        gradient.colors.map((color) => color.a),
+        orderedEquals([0.89, 0.75, 0.65, 0.15, 0]),
+      );
+    }
     expect(find.byType(SoftEdgeBlur), findsNothing);
-    expect(find.byKey(const ValueKey('workshop_edge_blur')), findsOneWidget);
+    expect(find.byType(SmartEdge), findsOneWidget);
     expect(find.byType(SafeArea), findsNothing);
     expect(
       tester.getSize(
         find.descendant(
           of: find.byKey(const ValueKey('workshop_app_bar')),
-          matching: find.byType(InkWell),
+          matching: find.byType(AmSoftButton),
         ),
       ),
-      const Size(48, 48),
+      isA<Size>()
+          .having(
+            (size) => size.width,
+            'touch width',
+            greaterThanOrEqualTo(AmControlMetrics.minimumTouchTarget),
+          )
+          .having(
+            (size) => size.height,
+            'touch height',
+            greaterThanOrEqualTo(AmControlMetrics.minimumTouchTarget),
+          ),
     );
     expect(mechanicMinimumTouchTarget, 48);
     expect(
@@ -108,10 +140,14 @@ void main() {
     ).thenReturn(_ready(vehicles: [_vehicle(id: 'due', due: true)]));
 
     await _pump(tester, bloc: bloc);
-    final button = tester.widget<PopupMenuButton<WorkshopVehicleFilter>>(
+    final button = tester.widget<AmPullDownLG>(
       find.byKey(const ValueKey('workshop_filter_button')),
     );
-    button.onSelected!(WorkshopVehicleFilter.maintenanceDue);
+    button.children
+        .singleWhere(
+          (item) => item.text == WorkshopVehicleFilter.maintenanceDue.label,
+        )
+        .onTap();
     await tester.pump();
 
     verify(
@@ -188,6 +224,48 @@ void main() {
     },
   );
 
+  testWidgets('il microfono sincronizza scala e repaint del gruppo glass', (
+    tester,
+  ) async {
+    final workshopBloc = _MockWorkshopBloc();
+    when(() => workshopBloc.state).thenReturn(_ready());
+    final voiceBloc = _MockVoiceSearchBloc();
+    whenListen(
+      voiceBloc,
+      const Stream<VoiceSearchState>.empty(),
+      initialState: const VoiceSearchState(),
+    );
+
+    await _pump(tester, bloc: workshopBloc, voiceBloc: voiceBloc);
+    await tester.pumpAndSettle();
+    final voiceButton = find.byKey(const ValueKey('workshop_voice_button'));
+    final voiceGlassGroup = tester.widget<OCLiquidGlassGroup>(
+      find.descendant(
+        of: voiceButton,
+        matching: find.byType(OCLiquidGlassGroup),
+      ),
+    );
+    final repaint = voiceGlassGroup.repaint!;
+    var repaintCount = 0;
+    void onRepaint() => repaintCount++;
+    repaint.addListener(onRepaint);
+    addTearDown(() => repaint.removeListener(onRepaint));
+
+    expect(repaint, isA<AmLiquidGlassRepaintController>());
+    expect(
+      tester
+          .widget<Stack>(find.byKey(const ValueKey('workshop_voice_stack')))
+          .clipBehavior,
+      Clip.none,
+    );
+
+    final gesture = await tester.startGesture(tester.getCenter(voiceButton));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(repaintCount, greaterThan(0));
+    await gesture.cancel();
+  });
+
   testWidgets('il microfono avvia la ricerca vocale senza overlay', (
     tester,
   ) async {
@@ -212,6 +290,8 @@ void main() {
       const VoiceSearchState(status: VoiceSearchStatus.listening),
     );
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
     expect(find.byKey(const ValueKey('workshop_voice_glow')), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('workshop_voice_button')));
@@ -219,6 +299,7 @@ void main() {
 
     voiceStates.add(const VoiceSearchState(status: VoiceSearchStatus.failure));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
     await tester.tap(find.byKey(const ValueKey('workshop_voice_button')));
     verify(
       () => voiceBloc.add(any(that: isA<VoiceSearchDismissed>())),
@@ -306,6 +387,15 @@ Future<void> _pump(
           controlsBottom: shellControlsBottom,
           child: MultiBlocProvider(
             providers: [
+              BlocProvider(
+                create: (_) => WorkshopOverviewCubit(
+                  GetWorkshopOverview(
+                    WorkshopOverviewRepositoryImpl(
+                      const WorkshopOverviewDemoDataSource(),
+                    ),
+                  ),
+                ),
+              ),
               BlocProvider.value(value: bloc),
               BlocProvider.value(value: voiceBloc ?? _idleVoiceSearchBloc()),
             ],

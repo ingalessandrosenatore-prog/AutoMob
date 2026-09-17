@@ -6,10 +6,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../domain/work_log_launch_context.dart';
+import '../domain/work_log_type.dart';
 import '../domain/work_log_parts_catalog.dart';
 import 'work_log_editor_cubit.dart';
 import 'work_log_parts_picker.dart';
 import 'work_log_spare_part_card.dart';
+import 'work_log_type_selection_grid.dart';
 
 const _orange = Color(0xFFFF6B00);
 const _steps = ['Dati', 'Ricambi', 'Costi'];
@@ -267,14 +269,15 @@ class _DataStep extends StatelessWidget {
           const SizedBox(height: 20),
           BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
             buildWhen: (previous, current) => previous.type != current.type,
-            builder: (context, state) => _WorkTypeChipGrid(
+            builder: (context, state) => WorkLogTypeSelectionGrid(
               selectedType: state.type,
               onChanged: context.read<WorkLogEditorCubit>().changeType,
             ),
           ),
           BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
             buildWhen: (previous, current) => previous.type != current.type,
-            builder: (context, state) => state.type != 'altro'
+            builder: (context, state) =>
+                WorkLogType.tryFromWire(state.type)?.allowsCustomName != true
                 ? const SizedBox.shrink()
                 : Padding(
                     padding: const EdgeInsets.only(top: 20),
@@ -310,11 +313,16 @@ class _PartsStep extends StatelessWidget {
     child: BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
       buildWhen: (previous, current) =>
           previous.parts != current.parts ||
-          previous.partsQuery != current.partsQuery,
+          previous.partsQuery != current.partsQuery ||
+          previous.partsCategory != current.partsCategory,
       builder: (context, state) => WorkLogPartsPicker(
         selectedParts: state.parts,
         query: state.partsQuery,
+        selectedCategory: state.partsCategory,
         onQueryChanged: context.read<WorkLogEditorCubit>().changePartsQuery,
+        onCategoryChanged: context
+            .read<WorkLogEditorCubit>()
+            .changePartsCategory,
         onPartToggled: context.read<WorkLogEditorCubit>().togglePart,
       ),
     ),
@@ -368,117 +376,6 @@ class _CostsStep extends StatelessWidget {
       ),
     ),
   );
-}
-
-class _WorkTypeChipGrid extends StatelessWidget {
-  const _WorkTypeChipGrid({
-    required this.selectedType,
-    required this.onChanged,
-  });
-  final String selectedType;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AmThemeColors.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'SELEZIONA TIPO INTERVENTO:',
-          style: TextStyle(
-            color: colors.textSecondary,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1.1,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: [
-            for (final type in _workTypes)
-              _WorkTypeChip(
-                type: type,
-                selected: selectedType == type.value,
-                onTap: () => onChanged(type.value),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _WorkTypeChip extends StatelessWidget {
-  const _WorkTypeChip({
-    required this.type,
-    required this.selected,
-    required this.onTap,
-  });
-  final _WorkType type;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AmThemeColors.of(context);
-    final background = selected ? colors.accent : colors.surface;
-    final foreground = selected ? colors.onMedia : colors.textPrimary;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-          decoration: BoxDecoration(
-            color: background,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: selected
-                  ? colors.accent
-                  : colors.surfaceHighlight.withValues(alpha: .55),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                width: 30,
-                height: 30,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: selected
-                      ? colors.onMedia.withValues(alpha: .16)
-                      : colors.surfaceRaised,
-                  shape: BoxShape.circle,
-                ),
-                child: HugeIcon(
-                  icon: type.icon,
-                  size: 18,
-                  color: foreground,
-                  strokeWidth: 2.2,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                type.label,
-                style: TextStyle(
-                  color: foreground,
-                  fontSize: 14,
-                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _TotalBar extends StatelessWidget {
@@ -705,34 +602,3 @@ InputDecoration _decoration(BuildContext context, {bool multiline = false}) {
     ),
   );
 }
-
-typedef _WorkType = ({String value, String label, List<List<dynamic>> icon});
-
-final _workTypes = <_WorkType>[
-  (value: 'tagliando', label: 'Tagliando', icon: HugeIcons.strokeRoundedTools),
-  (
-    value: 'distribuzione',
-    label: 'Distribuzione',
-    icon: HugeIcons.strokeRoundedSettings02,
-  ),
-  (
-    value: 'pneumatici_cambio',
-    label: 'Cambio gomme',
-    icon: HugeIcons.strokeRoundedTire,
-  ),
-  (
-    value: 'revisione',
-    label: 'Revisione',
-    icon: HugeIcons.strokeRoundedValidation,
-  ),
-  (
-    value: 'pneumatici_inversione',
-    label: 'Inversione gomme',
-    icon: HugeIcons.strokeRoundedRefresh,
-  ),
-  (
-    value: 'altro',
-    label: 'Altro',
-    icon: HugeIcons.strokeRoundedMoreHorizontalCircle02,
-  ),
-];
