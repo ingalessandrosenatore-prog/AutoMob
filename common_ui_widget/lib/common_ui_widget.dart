@@ -25,4 +25,4 @@ export 'src/widgets/input/am_dropdown_search.dart';
 export 'src/widgets/input/am_text_field.dart';
 export 'src/widgets/input/am_inset_tab_bar.dart';
 export 'src/widgets/progress/am_wizard_progress.dart';
-export 'src/widgets/card/SwiperCard.dart';
+export 'src/widgets/card/swiper_card.dart';

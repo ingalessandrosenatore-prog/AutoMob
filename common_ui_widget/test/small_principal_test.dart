@@ -50,17 +50,14 @@ void main() {
       Color.lerp(
         const Color(0xFF2F73E8),
         Colors.white,
-        0.20,
-      )!.withValues(alpha: 0.98),
+        0.30,
+      )!.withValues(alpha: 1),
     );
     expect(gradient.colors[1], const Color(0xFF2F73E8).withValues(alpha: 0.96));
     expect(gradient.colors[2], const Color(0xFF2F73E8).withValues(alpha: 0.96));
     expect(gradient.colors.last, gradient.colors.first);
     expect(gradient.stops, const [0, 0.05, 0.95, 1]);
-    expect(
-      (decoration.shape as SmoothRectangleBorder).side,
-      const BorderSide(color: Color.fromRGBO(255, 255, 255, 0.38), width: 0.5),
-    );
+    expect((decoration.shape as SmoothRectangleBorder).side, BorderSide.none);
     expect(
       (decoration.shape as SmoothRectangleBorder).borderRadius.toString(),
       contains('18.0'),

@@ -78,7 +78,7 @@ class SmallPrincipal extends StatelessWidget {
         Color.lerp(color, Colors.white, 0.30)!.withValues(alpha: 1),
       ],
       stops: const [0, 0.05, 0.95, 1],
-      tileMode: TileMode.mirror
+      tileMode: TileMode.mirror,
     );
 
     final button = DecoratedBox(
@@ -96,10 +96,7 @@ class SmallPrincipal extends StatelessWidget {
             key: const Key('small-principal-gradient'),
             decoration: ShapeDecoration(
               gradient: gradient,
-              shape: _smallPrincipalShape(
-                radius,
-
-              ),
+              shape: _smallPrincipalShape(radius),
             ),
             child: CustomPaint(
               key: const Key('small-principal-edge-treatment'),

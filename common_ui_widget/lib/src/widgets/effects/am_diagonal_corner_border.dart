@@ -18,7 +18,7 @@ class AmDiagonalCornerBorder extends StatelessWidget {
     final light = Theme.of(context).brightness == Brightness.light;
     return CustomPaint(
       key: const Key('am-diagonal-corner-border-paint'),
-      foregroundPainter: false//light
+      foregroundPainter: light
           ? _DiagonalCornerBorderPainter(
               radius: radius,
               width: width,

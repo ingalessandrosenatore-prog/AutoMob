@@ -176,7 +176,10 @@ void main() {
     );
 
     await tester.pumpWidget(app(shadow: false));
-    expect(tester.widget<OCLiquidGlass>(find.byType(OCLiquidGlass)).shadow, isNull);
+    expect(
+      tester.widget<OCLiquidGlass>(find.byType(OCLiquidGlass)).shadow,
+      isNull,
+    );
 
     await tester.pumpWidget(app(shadow: true));
     expect(

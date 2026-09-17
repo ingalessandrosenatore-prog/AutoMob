@@ -5,58 +5,61 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 
 void main() {
-  testWidgets(
-    'disabilita tutti i controlli glass mentre il PageView si muove',
-    (tester) async {
-      final isMoving = ValueNotifier(false);
-      addTearDown(isMoving.dispose);
+  testWidgets('disabilita il glass dinamico mentre il PageView si muove', (
+    tester,
+  ) async {
+    final isMoving = ValueNotifier(false);
+    addTearDown(isMoving.dispose);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: AmLiquidGlassMotionScope(
-            isMoving: isMoving,
-            child: Column(
-              children: [
-                AmSoftButton(
-                  width: 44,
-                  height: 44,
-                  icon: Icons.add,
-                  onPressed: () {},
-                ),
-                AmPullDownLG(
-                  brand: '',
-                  lable: 'Veicolo',
-                  backgroundColor: Colors.black,
-                  popupBackgroundColor: Colors.black,
-                  onTap: () {},
-                  buttonIcons: HugeIcons.strokeRoundedCar05,
-                  buttonIconsSize: 20,
-                  iconColor: Colors.white,
-                  textColor: Colors.white,
-                  buttonLableStyle: const TextStyle(),
-                  arrow: false,
-                  children: const [],
-                ),
-              ],
-            ),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AmLiquidGlassMotionScope(
+          isMoving: isMoving,
+          child: Column(
+            children: [
+              AmSoftButton(
+                width: 44,
+                height: 44,
+                icon: Icons.add,
+                onPressed: () {},
+              ),
+              AmPullDownLG(
+                brand: '',
+                lable: 'Veicolo',
+                backgroundColor: Colors.black,
+                popupBackgroundColor: Colors.black,
+                onTap: () {},
+                buttonIcons: HugeIcons.strokeRoundedCar05,
+                buttonIconsSize: 20,
+                iconColor: Colors.white,
+                textColor: Colors.white,
+                buttonLableStyle: const TextStyle(),
+                arrow: false,
+                children: const [],
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    );
 
-      expect(find.byType(OCLiquidGlass), findsNWidgets(2));
-      expect(find.byType(AmFlatGlass), findsNothing);
+    expect(find.byType(OCLiquidGlass), findsOneWidget);
+    expect(
+      find.byKey(const Key('am-pull-down-trigger-backdrop-blur')),
+      findsOneWidget,
+    );
+    expect(find.byType(AmFlatGlass), findsNothing);
 
-      isMoving.value = true;
-      await tester.pump();
+    isMoving.value = true;
+    await tester.pump();
 
-      expect(find.byType(OCLiquidGlass), findsNothing);
-      expect(find.byType(AmFlatGlass), findsNWidgets(2));
+    expect(find.byType(OCLiquidGlass), findsNothing);
+    expect(find.byType(AmFlatGlass), findsOneWidget);
 
-      isMoving.value = false;
-      await tester.pump();
+    isMoving.value = false;
+    await tester.pump();
 
-      expect(find.byType(OCLiquidGlass), findsNWidgets(2));
-      expect(find.byType(AmFlatGlass), findsNothing);
-    },
-  );
+    expect(find.byType(OCLiquidGlass), findsOneWidget);
+    expect(find.byType(AmFlatGlass), findsNothing);
+  });
 }
