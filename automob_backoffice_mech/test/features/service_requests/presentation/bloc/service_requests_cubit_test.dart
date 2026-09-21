@@ -34,6 +34,31 @@ void main() {
       await Future.wait([first, second]);
     },
   );
+  test('filtra per veicolo targa e descrizione del problema', () async {
+    final cubit = ServiceRequestsCubit(GetServiceRequests(_SearchRepository()));
+    addTearDown(cubit.close);
+    await cubit.load();
+
+    cubit.search('alfa mito');
+    expect(
+      (cubit.state as ServiceRequestsReady).requests.single.id,
+      'request-alfa',
+    );
+
+    cubit.search('EF 456 GH');
+    expect(
+      (cubit.state as ServiceRequestsReady).requests.single.id,
+      'request-fiat',
+    );
+
+    cubit.search('rumore motore');
+    final state = cubit.state as ServiceRequestsReady;
+    expect(state.requests.single.id, 'request-alfa');
+    expect(state.query, 'rumore motore');
+
+    cubit.search('');
+    expect((cubit.state as ServiceRequestsReady).requests, hasLength(2));
+  });
 }
 
 class _Repository implements ServiceRequestRepository {
@@ -56,4 +81,26 @@ class _Repository implements ServiceRequestRepository {
       ),
     );
   }
+}
+
+class _SearchRepository implements ServiceRequestRepository {
+  @override
+  Future<List<ServiceRequest>> getRequests() async => [
+    ServiceRequest(
+      id: 'request-alfa',
+      vehicleModel: 'Alfa Romeo Mito',
+      plate: 'DT 512 FD',
+      issues: const ['Rumore anomalo dal motore'],
+      registeredAt: DateTime(2026, 9, 1),
+      reminderDate: DateTime(2026, 9, 30),
+    ),
+    ServiceRequest(
+      id: 'request-fiat',
+      vehicleModel: 'Fiat Panda',
+      plate: 'EF 456 GH',
+      issues: const ['Cambio pastiglie'],
+      registeredAt: DateTime(2026, 9, 2),
+      reminderDate: DateTime(2026, 10, 1),
+    ),
+  ];
 }

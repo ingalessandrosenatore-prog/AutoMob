@@ -30,10 +30,10 @@ import '../bloc/notification_prompt_event.dart';
 import '../bloc/notification_prompt_state.dart';
 import '../maintenance_kpi_work_log_launch.dart';
 import '../widgets/card_auto.dart';
-import '../widgets/card_auto_swiper.dart';
 import '../widgets/card_officina.dart';
 import '../widgets/home_costs_section.dart';
 import '../widgets/home_future_work_timeline.dart';
+import '../widgets/vehicle_card_page_view.dart';
 
 const _homeControlGlassSettings = OCLiquidGlassSettings(
   refractStrength: -0.08,
@@ -82,6 +82,7 @@ class _HomeViewBody extends StatefulWidget {
 
 class _HomeViewBodyState extends State<_HomeViewBody> {
   late final AmLiquidGlassRepaintController _appBarGlassRepaint;
+  late final PageController _vehiclePageController;
 
   // Tiene traccia se un pop-up di stato e' attualmente aperto, per poterlo
   // chiudere prima di mostrarne un altro (evita pop-up sovrapposti).
@@ -100,6 +101,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     super.initState();
     _appBarGlassRepaint = AmLiquidGlassRepaintController();
     _appBarGlassRepaint.bindExternalRepaint(widget.routeAnimation);
+    _vehiclePageController = PageController();
     // Carica solo se non e' gia' stato fatto: il bloc e' un singleton che
     // sopravvive ai cambi di tab, quindi rientrando in Home i dati sono
     // gia' li'. Riprova anche da DashboardError: e' l'unico modo per
@@ -135,6 +137,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   @override
   void dispose() {
     _appBarGlassRepaint.dispose();
+    _vehiclePageController.dispose();
     super.dispose();
   }
 
@@ -238,6 +241,11 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     );
     if (index < 0) return;
     context.read<DashboardBloc>().add(DashboardPageChanged(index));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _vehiclePageController.hasClients) {
+        _vehiclePageController.jumpToPage(index);
+      }
+    });
   }
 
   void _checkNotificationPrompt(DashboardLoaded state) {
@@ -577,12 +585,9 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                             ],
                                           ),
                                         ],
-                                        child: AmVehicleSwiper(
-                                          key: ValueKey(
-                                            'vehicle-swiper-${state.index}',
-                                          ),
-                                          initialIndex: state.index,
-                                          onVehicleChanged: (index) {
+                                        child: VehicleCardPageView(
+                                          controller: _vehiclePageController,
+                                          onPageChanged: (index) {
                                             context.read<DashboardBloc>().add(
                                               DashboardPageChanged(index),
                                             );

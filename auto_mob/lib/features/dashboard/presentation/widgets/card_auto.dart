@@ -663,80 +663,105 @@ class _MileageSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      _formattedCurrentKm,
-                      key: const Key('vehicle-current-km'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: const Key('mileage-info-tile'),
+        onTap: onTap,
+        customBorder: _vehicleShape(radius: 20),
+        child: Ink(
+          height: 60,
+          decoration: ShapeDecoration(
+            color: colors.accent.withValues(alpha: 0.045),
+            shape: _vehicleShape(
+              radius: 20,
+            ).copyWith(side: BorderSide(color: colors.accent)),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned(
+                right: 42,
+                bottom: -25,
+                child: HugeIcon(
+                  key: const Key('mileage-watermark-icon'),
+                  icon: HugeIcons.strokeRoundedDashboardSpeed02,
+                  color: colors.accent.withValues(alpha: 0.08),
+                  size: 82,
+                  strokeWidth: 2.2,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    HugeIcon(
+                      key: const Key('mileage-status-icon'),
+                      icon: HugeIcons.strokeRoundedDashboardSpeed02,
+                      color: colors.accent,
+                      size: 26,
+                      strokeWidth: 2.2,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _formattedCurrentKm,
+                              key: const Key('vehicle-current-km'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colors.textPrimary,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          if (estimatedAdditionalKm > 0) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              key: const Key('km-estimated-increment'),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: ShapeDecoration(
+                                color: colors.accent.withValues(alpha: 0.14),
+                                shape: _vehicleShape(radius: 12),
+                              ),
+                              child: Text(
+                                '+ ${_formatNumber(estimatedAdditionalKm)} km',
+                                maxLines: 1,
+                                style: TextStyle(
+                                  color: colors.accent,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                  ),
-                  if (estimatedAdditionalKm > 0) ...[
                     const SizedBox(width: 8),
-                    Container(
-                      key: const Key('km-estimated-increment'),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: ShapeDecoration(
-                        color: colors.accent.withValues(alpha: 0.14),
-                        shape: _vehicleShape(radius: 12),
-                      ),
-                      child: Text(
-                        '+ ${_formatNumber(estimatedAdditionalKm)} km',
-                        style: TextStyle(
-                          color: colors.accent,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
+                    HugeIcon(
+                      key: const Key('update-km-button'),
+                      icon: HugeIcons.strokeRoundedAdd01,
+                      color: colors.accent,
+                      size: 23,
+                      strokeWidth: 2.3,
                     ),
                   ],
-                ],
-              ),
-            ),
-            FilledButton.icon(
-              key: const Key('update-km-button'),
-              onPressed: onTap,
-              icon: const HugeIcon(
-                icon: HugeIcons.strokeRoundedAdd01,
-                color: Colors.white,
-                size: 19,
-                strokeWidth: 2.2,
-              ),
-              label: const Text(
-                'AGGIORNA',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: colors.accent,
-                foregroundColor: colors.onMedia,
-                minimumSize: const Size(0, 40),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 9,
                 ),
-                shape: _vehicleShape(radius: 20),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ],
+      ),
     );
   }
 }

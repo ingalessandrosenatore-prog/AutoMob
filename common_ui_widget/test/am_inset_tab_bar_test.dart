@@ -34,10 +34,20 @@ void main() {
       matching: find.byType(Material),
     );
     expect(tester.getSize(material).height, 42);
+    final colors = AmTheme.dark.extension<AmThemeColors>()!;
+    final recess = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('am-inset-tab-recess')),
+    );
+    final recessDecoration = recess.decoration as BoxDecoration;
+    expect(recessDecoration.color, colors.surface);
+    final upperShadow = recessDecoration.gradient! as LinearGradient;
+    expect(upperShadow.colors.first, Colors.black.withValues(alpha: 0.62));
+    expect(upperShadow.colors.last, Colors.transparent);
+    expect(upperShadow.stops, const [0, 0.18, 0.48]);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('compact light selector has a soft recess and taller container', (
+  testWidgets('light selector keeps surface under the upper inset shadow', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -60,16 +70,13 @@ void main() {
     expect(tester.getSize(find.byType(AmInsetTabBar)).height, 59);
     final colors = AmTheme.light.extension<AmThemeColors>()!;
     final recess = tester.widget<DecoratedBox>(
-      find
-          .descendant(
-            of: find.byType(ClipRRect),
-            matching: find.byType(DecoratedBox),
-          )
-          .first,
+      find.byKey(const ValueKey('am-inset-tab-recess')),
     );
-    final gradient =
-        (recess.decoration as BoxDecoration).gradient! as LinearGradient;
-    expect(gradient.colors.first, colors.surfaceDeep);
+    final decoration = recess.decoration as BoxDecoration;
+    expect(decoration.color, colors.surface);
+    final upperShadow = decoration.gradient! as LinearGradient;
+    expect(upperShadow.colors.first, Colors.black.withValues(alpha: 0.22));
+    expect(upperShadow.colors.last, Colors.transparent);
     expect(tester.takeException(), isNull);
   });
 

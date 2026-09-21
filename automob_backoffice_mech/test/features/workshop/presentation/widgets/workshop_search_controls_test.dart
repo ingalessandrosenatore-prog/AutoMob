@@ -15,10 +15,7 @@ void main() {
     expect(find.byType(OCLiquidGlassGroup), findsOneWidget);
     expect(find.byType(OCLiquidGlass), findsOneWidget);
     final searchBar = tester.widget<SearchBar>(find.byType(SearchBar));
-    expect(
-      searchBar.backgroundColor?.resolve(const {}),
-      AmThemeColors.dark.surface,
-    );
+    expect(searchBar.backgroundColor?.resolve(const {}), Colors.transparent);
     expect(searchBar.elevation?.resolve(const {}), 0);
     expect(searchBar.shadowColor?.resolve(const {}), Colors.transparent);
     expect(searchBar.surfaceTintColor?.resolve(const {}), Colors.transparent);
@@ -30,10 +27,21 @@ void main() {
       ),
       findsNothing,
     );
-    final sharedFill = tester.widget<ColoredBox>(
-      find.byKey(const ValueKey('workshop-search-shared-fill')),
+    final sharedFill = tester.widget<DecoratedBox>(
+      find.byKey(const ValueKey('mechanic-search-shared-fill')),
     );
-    expect(sharedFill.color, AmThemeColors.dark.surface);
+    final sharedDecoration = sharedFill.decoration as BoxDecoration;
+    expect(
+      sharedDecoration.color,
+      AmThemeColors.dark.surface.withValues(alpha: 0.72),
+    );
+    expect(
+      tester
+          .widget<OCLiquidGlassGroup>(find.byType(OCLiquidGlassGroup))
+          .settings
+          .blurRadiusPx,
+      8,
+    );
     final filter = tester.widget<AmPullDownLG>(find.byType(AmPullDownLG));
     expect(filter.circularTrigger, isFalse);
     expect(filter.transparentTrigger, isFalse);
@@ -42,7 +50,7 @@ void main() {
       findsOneWidget,
     );
     final borderSurface = tester.widget<DecoratedBox>(
-      find.byKey(const ValueKey('workshop-search-border-surface')),
+      find.byKey(const ValueKey('mechanic-search-border-surface')),
     );
     final borderDecoration = borderSurface.decoration as ShapeDecoration;
     expect(borderDecoration.gradient, AmThemeColors.dark.cardBorderGradient);
@@ -64,10 +72,10 @@ void main() {
           .widget<SearchBar>(find.byType(SearchBar))
           .backgroundColor
           ?.resolve(const {}),
-      AmThemeColors.light.surface,
+      Colors.transparent,
     );
     final borderSurface = tester.widget<DecoratedBox>(
-      find.byKey(const ValueKey('workshop-search-border-surface')),
+      find.byKey(const ValueKey('mechanic-search-border-surface')),
     );
     final decoration = borderSurface.decoration as ShapeDecoration;
     expect(decoration.gradient, AmThemeColors.light.cardBorderGradient);

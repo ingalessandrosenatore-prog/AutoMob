@@ -3,6 +3,8 @@ import 'package:automob_backoffice_mech/features/workshop/data/repositories/work
 import 'package:automob_backoffice_mech/features/workshop/domain/entities/workshop_overview.dart';
 import 'package:automob_backoffice_mech/features/workshop/domain/usecases/get_workshop_overview.dart';
 import 'package:automob_backoffice_mech/features/workshop/presentation/bloc/workshop_overview_cubit.dart';
+import 'package:automob_backoffice_mech/features/workshop/presentation/widgets/workshop_gear_period_selector.dart';
+import 'package:automob_backoffice_mech/features/workshop/presentation/widgets/workshop_kpi_gauge.dart';
 import 'package:automob_backoffice_mech/features/workshop/presentation/widgets/workshop_overview_section.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
@@ -59,20 +61,24 @@ void main() {
             ),
           ),
         );
+        await tester.pumpAndSettle();
         expect(find.text('Dati dimostrativi'), findsNothing);
         expect(find.text('€ 1.250'), findsOneWidget);
-        await tester.tap(find.text('Mensile'));
+        expect(find.byType(WorkshopKpiGauge), findsNWidgets(2));
+        expect(find.byType(WorkshopGearPeriodSelector), findsOneWidget);
+        final gaugesBottom = tester.getBottomLeft(
+          find.byType(WorkshopKpiGauge).last,
+        );
+        final selectorTop = tester.getTopLeft(
+          find.byType(WorkshopGearPeriodSelector),
+        );
+        expect(selectorTop.dy, greaterThan(gaugesBottom.dy));
+        expect(selectorTop.dy - gaugesBottom.dy, closeTo(4, 0.01));
+        await tester.tap(find.text('MENSILE'));
         await tester.pumpAndSettle();
         expect(find.text('€ 24.800'), findsOneWidget);
-        expect(
-          find.textContaining('rispetto', findRichText: true),
-          findsNothing,
-        );
-        expect(
-          find.textContaining('18 % in più', findRichText: true),
-          findsOneWidget,
-        );
-        expect(find.byIcon(Icons.north_east_rounded), findsNWidgets(2));
+        expect(find.text('€ 27.600'), findsOneWidget);
+        expect(find.text('149'), findsOneWidget);
         expect(tester.takeException(), isNull);
       },
     );

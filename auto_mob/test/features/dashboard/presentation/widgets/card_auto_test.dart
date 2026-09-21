@@ -69,23 +69,60 @@ void main() {
       tester.widget<Text>(find.text('ALFA ROMEO STELVIO')).style?.fontSize,
       16,
     );
+    expect(find.text('AGGIORNA'), findsNothing);
     expect(
       tester
           .widget<Text>(find.byKey(const Key('vehicle-current-km')))
           .style
           ?.fontSize,
-      22,
+      17,
+    );
+    expect(tester.widget<Text>(find.text('+ 1.643 km')).style?.fontSize, 10);
+    expect(
+      tester.getSize(find.byKey(const Key('mileage-info-tile'))).height,
+      60,
+    );
+    final mileageColors = AmThemeColors.of(
+      tester.element(find.byKey(const Key('mileage-status-icon'))),
+    );
+    final mileageIcon = tester.widget<HugeIcon>(
+      find.byKey(const Key('mileage-status-icon')),
+    );
+    final mileageWatermark = tester.widget<HugeIcon>(
+      find.byKey(const Key('mileage-watermark-icon')),
+    );
+    expect(mileageIcon.icon, HugeIcons.strokeRoundedDashboardSpeed02);
+    expect(mileageIcon.color, mileageColors.accent);
+    expect(mileageWatermark.icon, HugeIcons.strokeRoundedDashboardSpeed02);
+    expect(
+      mileageWatermark.color,
+      mileageColors.accent.withValues(alpha: 0.08),
     );
     expect(
-      tester.getSize(find.byKey(const Key('update-km-button'))).height,
-      40,
+      _mileageFillColor(tester),
+      mileageColors.accent.withValues(alpha: 0.045),
     );
-    final updateButton = tester.widget<FilledButton>(
+    expect(_mileageBorderColor(tester), mileageColors.accent);
+    expect(find.byType(IconButton), findsNothing);
+    final addIcon = tester.widget<HugeIcon>(
       find.byKey(const Key('update-km-button')),
     );
-    final updateButtonShape = updateButton.style?.shape?.resolve({});
-    expect(updateButtonShape, isA<SmoothRectangleBorder>());
-    expect(updateButtonShape.toString(), contains('cornerRadius: 20.00'));
+    expect(addIcon.icon, HugeIcons.strokeRoundedAdd01);
+    expect(addIcon.color, mileageColors.accent);
+    final mileageCenterY = tester
+        .getCenter(find.byKey(const Key('mileage-info-tile')))
+        .dy;
+    for (final key in [
+      const Key('mileage-status-icon'),
+      const Key('vehicle-current-km'),
+      const Key('km-estimated-increment'),
+      const Key('update-km-button'),
+    ]) {
+      expect(
+        tester.getCenter(find.byKey(key)).dy,
+        closeTo(mileageCenterY, 0.5),
+      );
+    }
     expect(
       tester.getSize(find.byKey(const Key('revision-info-tile'))).height,
       60,
@@ -169,6 +206,28 @@ Color? _revisionBorderColor(WidgetTester tester) {
   return shape.side.color;
 }
 
+Color? _mileageFillColor(WidgetTester tester) {
+  final ink = tester.widget<Ink>(
+    find.descendant(
+      of: find.byKey(const Key('mileage-info-tile')),
+      matching: find.byType(Ink),
+    ),
+  );
+  return (ink.decoration! as ShapeDecoration).color;
+}
+
+Color? _mileageBorderColor(WidgetTester tester) {
+  final ink = tester.widget<Ink>(
+    find.descendant(
+      of: find.byKey(const Key('mileage-info-tile')),
+      matching: find.byType(Ink),
+    ),
+  );
+  final decoration = ink.decoration! as ShapeDecoration;
+  final shape = decoration.shape as SmoothRectangleBorder;
+  return shape.side.color;
+}
+
 Color? _revisionStatusColor(WidgetTester tester) {
   final label = tester.widget<Text>(
     find.byKey(const Key('revision-status-label')),
@@ -184,7 +243,7 @@ Future<void> _pumpCard(
   DateTime? nextRevisionDate,
   bool revisionUnavailable = false,
 }) async {
-  tester.view.physicalSize = const Size(500, 1000);
+  tester.view.physicalSize = const Size(390, 1000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);

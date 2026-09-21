@@ -24,5 +24,7 @@ export 'src/widgets/effects/am_static_frosted_surface.dart';
 export 'src/widgets/input/am_dropdown_search.dart';
 export 'src/widgets/input/am_text_field.dart';
 export 'src/widgets/input/am_inset_tab_bar.dart';
+export 'src/widgets/input/am_gear_period_selector.dart';
 export 'src/widgets/progress/am_wizard_progress.dart';
+export 'src/widgets/progress/am_kpi_gauge.dart';
 export 'src/widgets/card/swiper_card.dart';

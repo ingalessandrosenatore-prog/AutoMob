@@ -9,6 +9,7 @@ void main() {
     WidgetTester tester, {
     MaintenanceCostPeriod period = MaintenanceCostPeriod.monthly,
     int maintenanceCostCents = 10000,
+    DateTime? now,
     ValueChanged<MaintenanceCostPeriod>? onChanged,
   }) => tester.pumpWidget(
     MaterialApp(
@@ -18,6 +19,7 @@ void main() {
           child: HomeCostsSection(
             selectedPeriod: period,
             maintenanceCostCents: maintenanceCostCents,
+            now: now,
             onPeriodChanged: onChanged,
           ),
         ),
@@ -25,48 +27,86 @@ void main() {
     ),
   );
 
-  testWidgets('mostra periodi, riepiloghi costo e timeline demo', (
+  testWidgets('mostra tre tachimetri compatti con icone e dati disponibili', (
     tester,
   ) async {
-    await pumpSection(tester);
+    await pumpSection(tester, now: DateTime(2024, 2, 15, 12));
+    await tester.pumpAndSettle();
 
-    expect(find.byType(AmInsetTabBar), findsOneWidget);
-    expect(find.text('Giornaliero'), findsOneWidget);
-    expect(find.text('Mensile'), findsOneWidget);
-    expect(find.text('Annuale'), findsOneWidget);
-    expect(find.text('Manutenzione'), findsOneWidget);
-    expect(find.text('Carburante'), findsOneWidget);
-    expect(find.text('Documenti'), findsOneWidget);
+    expect(find.byType(AmInsetTabBar), findsNothing);
+    expect(find.byType(AmGearPeriodSelector), findsOneWidget);
+    expect(find.byType(AmKpiGauge), findsNWidgets(3));
+    expect(find.text('GIORNALIERO'), findsOneWidget);
+    expect(find.text('MENSILE'), findsOneWidget);
+    expect(find.text('ANNUALE'), findsOneWidget);
+    expect(find.byIcon(Icons.handyman_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.local_gas_station_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.description_outlined), findsOneWidget);
     expect(find.text('€ 100,00'), findsOneWidget);
     expect(find.text('-'), findsNWidgets(2));
-    expect(find.text('Scaduto'), findsOneWidget);
-    expect(find.text('Pagato'), findsNWidgets(3));
-    expect(find.text('In corso'), findsOneWidget);
-    final colors = AmThemeColors.of(
-      tester.element(find.byType(HomeCostsSection)),
+    expect(find.text('Manutenzione'), findsNothing);
+    final gaugesBottom = tester.getBottomLeft(find.byType(AmKpiGauge).last);
+    final selectorTop = tester.getTopLeft(find.byType(AmGearPeriodSelector));
+    expect(selectorTop.dy - gaugesBottom.dy, closeTo(4, 0.01));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('mantiene i tre tachimetri leggibili su una home stretta', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(280, 500));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await pumpSection(tester, now: DateTime(2024, 2, 15, 12));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AmKpiGauge), findsNWidgets(3));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('riempie il quadrante in base al tempo del periodo', (
+    tester,
+  ) async {
+    final now = DateTime(2024, 2, 15, 12);
+
+    Future<double> progressFor(MaintenanceCostPeriod period) async {
+      await pumpSection(tester, period: period, now: now);
+      await tester.pumpAndSettle();
+      final gauge = find.byKey(const ValueKey('home_cost_gauge_0'));
+      final paint = tester.widget<CustomPaint>(
+        find.descendant(
+          of: gauge,
+          matching: find.byKey(const ValueKey('am_kpi_dial')),
+        ),
+      );
+      return (paint.painter as dynamic).progress as double;
+    }
+
+    expect(await progressFor(MaintenanceCostPeriod.daily), closeTo(0.5, 0.001));
+    expect(
+      await progressFor(MaintenanceCostPeriod.monthly),
+      closeTo(15 / 29, 0.001),
     );
     expect(
-      tester.widget<Icon>(find.byIcon(Icons.car_repair_outlined).first).color,
-      colors.textSecondary,
+      await progressFor(MaintenanceCostPeriod.annual),
+      closeTo(2 / 12, 0.001),
     );
-    expect(
-      tester
-          .widget<Scrollable>(
-            find.descendant(
-              of: find.byKey(const Key('home-costs-year-timeline')),
-              matching: find.byType(Scrollable),
-            ),
-          )
-          .axisDirection,
-      AxisDirection.right,
-    );
+  });
+
+  testWidgets('mostra trattino anche per manutenzione senza dati', (
+    tester,
+  ) async {
+    await pumpSection(tester, maintenanceCostCents: 0);
+    await tester.pumpAndSettle();
+
+    expect(find.text('-'), findsNWidgets(3));
   });
 
   testWidgets('inoltra al bloc il nuovo periodo selezionato', (tester) async {
     MaintenanceCostPeriod? selected;
     await pumpSection(tester, onChanged: (value) => selected = value);
 
-    await tester.tap(find.text('Annuale'));
+    await tester.tap(find.text('ANNUALE'));
     await tester.pumpAndSettle();
 
     expect(selected, MaintenanceCostPeriod.annual);

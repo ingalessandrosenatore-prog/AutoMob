@@ -11,8 +11,9 @@ final class ServiceRequestsLoading extends ServiceRequestsState {
 }
 
 final class ServiceRequestsReady extends ServiceRequestsState {
-  const ServiceRequestsReady(this.requests);
+  const ServiceRequestsReady(this.requests, {this.query = ''});
   final List<ServiceRequest> requests;
+  final String query;
 }
 
 final class ServiceRequestsFailure extends ServiceRequestsState {
@@ -23,6 +24,8 @@ class ServiceRequestsCubit extends Cubit<ServiceRequestsState> {
   ServiceRequestsCubit(this.getServiceRequests)
     : super(const ServiceRequestsLoading());
   final GetServiceRequests getServiceRequests;
+  List<ServiceRequest> _requests = const [];
+  String _query = '';
   Future<void>? _pending;
   Future<void> load() =>
       _pending ??= _load().whenComplete(() => _pending = null);
@@ -31,9 +34,40 @@ class ServiceRequestsCubit extends Cubit<ServiceRequestsState> {
     emit(const ServiceRequestsLoading());
     try {
       final requests = await getServiceRequests();
-      if (!isClosed) emit(ServiceRequestsReady(List.unmodifiable(requests)));
+      _requests = List.unmodifiable(requests);
+      if (!isClosed) emit(_readyState());
     } on Object {
       if (!isClosed) emit(const ServiceRequestsFailure());
     }
   }
+
+  void search(String query) {
+    if (state is! ServiceRequestsReady) return;
+    _query = query.trim();
+    emit(_readyState());
+  }
+
+  ServiceRequestsReady _readyState() {
+    final tokens = _normalize(
+      _query,
+    ).split(' ').where((token) => token.isNotEmpty).toList(growable: false);
+    final filtered = tokens.isEmpty
+        ? _requests
+        : _requests
+              .where((request) {
+                final searchable = _normalize(
+                  '${request.vehicleModel} ${request.plate} ${request.issues.join(' ')}',
+                );
+                final compact = searchable.replaceAll(' ', '');
+                return tokens.every(
+                  (token) =>
+                      searchable.contains(token) || compact.contains(token),
+                );
+              })
+              .toList(growable: false);
+    return ServiceRequestsReady(filtered, query: _query);
+  }
+
+  String _normalize(String value) =>
+      value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), ' ').trim();
 }

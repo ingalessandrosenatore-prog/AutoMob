@@ -39,17 +39,20 @@ class AmInsetTabBar extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(40),
           child: DecoratedBox(
-            // The clipped gradient casts the recess inside the upper edge.
+            key: const ValueKey('am-inset-tab-recess'),
+            // Surface remains uniform; only the short black overlay simulates
+            // the shadow cast inward by the upper edge.
             decoration: BoxDecoration(
+              color: colors.surface,
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  isLight ? colors.surfaceDeep : colors.shadow,
-                  colors.surfaceDeep,
-                  colors.surface,
+                  Colors.black.withValues(alpha: isLight ? 0.22 : 0.62),
+                  Colors.black.withValues(alpha: isLight ? 0.08 : 0.22),
+                  Colors.transparent,
                 ],
-                stops: const [0, 0.35, 1],
+                stops: const [0, 0.18, 0.48],
               ),
             ),
             child: Padding(

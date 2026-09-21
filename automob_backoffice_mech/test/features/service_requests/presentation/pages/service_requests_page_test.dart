@@ -31,14 +31,18 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Veicolo 29'), findsNothing);
+      final requestScroll = find.descendant(
+        of: find.byType(CustomScrollView),
+        matching: find.byType(Scrollable),
+      );
       await tester.scrollUntilVisible(
         find.text('Veicolo 29'),
         600,
-        scrollable: find.byType(Scrollable),
+        scrollable: requestScroll,
       );
       expect(find.text('Veicolo 29'), findsOneWidget);
       expect(repository.calls, 1);
-      final scrollable = tester.state<ScrollableState>(find.byType(Scrollable));
+      final scrollable = tester.state<ScrollableState>(requestScroll);
       scrollable.position.jumpTo(0);
       await tester.pumpAndSettle();
       await tester.drag(find.byType(CustomScrollView), const Offset(0, 500));
@@ -96,6 +100,52 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets('la barra filtra richieste per veicolo targa e problema', (
+    tester,
+  ) async {
+    final cubit = ServiceRequestsCubit(GetServiceRequests(_SearchRepository()))
+      ..load();
+    addTearDown(cubit.close);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AmTheme.dark,
+        home: MechanicShellGeometry(
+          controlsBottom: 12,
+          child: BlocProvider.value(
+            value: cubit,
+            child: const ServiceRequestsPage(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final search = find.byType(SearchBar);
+    expect(search, findsOneWidget);
+
+    await tester.enterText(search, 'Fiat Panda');
+    await tester.pump();
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('request-fiat')),
+        matching: find.text('Fiat Panda'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Alfa Romeo Mito'), findsNothing);
+
+    await tester.enterText(search, 'DT 512 FD');
+    await tester.pump();
+    expect(find.text('Alfa Romeo Mito'), findsOneWidget);
+    expect(find.text('Fiat Panda'), findsNothing);
+
+    await tester.enterText(search, 'rumore motore');
+    await tester.pump();
+    expect(find.text('Rumore anomalo dal motore'), findsOneWidget);
+    expect(find.text('Cambio pastiglie'), findsNothing);
+  });
 }
 
 class _FakeRepository implements ServiceRequestRepository {
@@ -132,4 +182,26 @@ class _LongRepository implements ServiceRequestRepository {
       ),
     );
   }
+}
+
+class _SearchRepository implements ServiceRequestRepository {
+  @override
+  Future<List<ServiceRequest>> getRequests() async => [
+    ServiceRequest(
+      id: 'request-alfa',
+      vehicleModel: 'Alfa Romeo Mito',
+      plate: 'DT 512 FD',
+      issues: const ['Rumore anomalo dal motore'],
+      registeredAt: DateTime(2026, 9, 1),
+      reminderDate: DateTime(2026, 9, 30),
+    ),
+    ServiceRequest(
+      id: 'request-fiat',
+      vehicleModel: 'Fiat Panda',
+      plate: 'EF 456 GH',
+      issues: const ['Cambio pastiglie'],
+      registeredAt: DateTime(2026, 9, 2),
+      reminderDate: DateTime(2026, 10, 1),
+    ),
+  ];
 }
