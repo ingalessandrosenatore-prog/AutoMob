@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
+import '../widgets/home_workshop_carousel.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/notification_permission_dialog.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
@@ -10,7 +11,6 @@ import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:auto_mob_v1/core/router/app_session_actions.dart';
 import 'package:auto_mob_v1/features/auth/domain/entities/app_user.dart';
-import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/maintenance_kpi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,7 +30,7 @@ import '../bloc/notification_prompt_event.dart';
 import '../bloc/notification_prompt_state.dart';
 import '../maintenance_kpi_work_log_launch.dart';
 import '../widgets/card_auto.dart';
-import '../widgets/card_officina.dart';
+import '../widgets/dashboard_scroll_activity.dart';
 import '../widgets/home_costs_section.dart';
 import '../widgets/home_future_work_timeline.dart';
 import '../widgets/vehicle_card_page_view.dart';
@@ -83,6 +83,8 @@ class _HomeViewBody extends StatefulWidget {
 class _HomeViewBodyState extends State<_HomeViewBody> {
   late final AmLiquidGlassRepaintController _appBarGlassRepaint;
   late final PageController _vehiclePageController;
+  late final ScrollController _homeScrollController;
+  final _scrollActivity = DashboardScrollActivity();
 
   // Tiene traccia se un pop-up di stato e' attualmente aperto, per poterlo
   // chiudere prima di mostrarne un altro (evita pop-up sovrapposti).
@@ -101,7 +103,14 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     super.initState();
     _appBarGlassRepaint = AmLiquidGlassRepaintController();
     _appBarGlassRepaint.bindExternalRepaint(widget.routeAnimation);
-    _vehiclePageController = PageController();
+    _vehiclePageController = PageController(
+      onAttach: _scrollActivity.attach,
+      onDetach: _scrollActivity.detach,
+    );
+    _homeScrollController = ScrollController(
+      onAttach: _scrollActivity.attach,
+      onDetach: _scrollActivity.detach,
+    );
     // Carica solo se non e' gia' stato fatto: il bloc e' un singleton che
     // sopravvive ai cambi di tab, quindi rientrando in Home i dati sono
     // gia' li'. Riprova anche da DashboardError: e' l'unico modo per
@@ -120,7 +129,9 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       // Home: in quel caso eseguiamo qui gli effetti iniziali, compresa la
       // richiesta del permesso notifiche.
       if (s is DashboardLoaded) {
-        _selectInitialVehicle(s);
+        if (!_selectInitialVehicle(s)) {
+          _syncVehiclePage(s.index);
+        }
         _checkNotificationPrompt(s);
       }
     });
@@ -138,6 +149,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   void dispose() {
     _appBarGlassRepaint.dispose();
     _vehiclePageController.dispose();
+    _homeScrollController.dispose();
+    _scrollActivity.dispose();
     super.dispose();
   }
 
@@ -226,23 +239,32 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     }
 
     if (s is DashboardLoaded) {
-      _selectInitialVehicle(s);
+      if (!_selectInitialVehicle(s)) {
+        _syncVehiclePage(s.index);
+      }
       _checkNotificationPrompt(s);
     }
   }
 
-  void _selectInitialVehicle(DashboardLoaded state) {
+  bool _selectInitialVehicle(DashboardLoaded state) {
     final vehicleId = widget.initialVehicleId;
-    if (_initialVehicleHandled || vehicleId == null) return;
+    if (_initialVehicleHandled || vehicleId == null) return false;
     _initialVehicleHandled = true;
 
     final index = state.vehicles.indexWhere(
       (vehicle) => vehicle.id == vehicleId,
     );
-    if (index < 0) return;
+    if (index < 0) return false;
     context.read<DashboardBloc>().add(DashboardPageChanged(index));
+    _syncVehiclePage(index);
+    return true;
+  }
+
+  void _syncVehiclePage(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _vehiclePageController.hasClients) {
+      if (!mounted || !_vehiclePageController.hasClients) return;
+      final currentPage = _vehiclePageController.page?.round();
+      if (currentPage != index) {
         _vehiclePageController.jumpToPage(index);
       }
     });
@@ -467,6 +489,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
           // overlay, questo spinge fisicamente giu' l'header (sliver dopo di
           // lui) durante il pull e lo tiene giu' finche' il refresh non finisce.
           child: CustomScrollView(
+            controller: _homeScrollController,
             // AlwaysScrollable+Bouncing: CupertinoSliverRefreshControl richiede
             // overscroll per attivarsi, non disponibile con Clamping (default Android).
             physics: const AlwaysScrollableScrollPhysics(
@@ -642,7 +665,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                                               if (aggiornato ==
                                                                   true) {
                                                                 dashboardBloc.add(
-                                                                  LoadDashboardData(),
+                                                                  DashboardRefreshRequested(),
                                                                 );
                                                               }
                                                             },
@@ -670,7 +693,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                                               if (aggiornato ==
                                                                   true) {
                                                                 dashboardBloc.add(
-                                                                  LoadDashboardData(),
+                                                                  DashboardRefreshRequested(),
                                                                 );
                                                               }
                                                             },
@@ -761,7 +784,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                           current is! DashboardLoaded ||
                           previous.costPeriod != current.costPeriod ||
                           previous.maintenanceCostCents !=
-                              current.maintenanceCostCents,
+                              current.maintenanceCostCents ||
+                          previous.fuelCostCents != current.fuelCostCents,
                       builder: (context, state) {
                         if (state is! DashboardLoaded) {
                           return const SizedBox.shrink();
@@ -769,46 +793,19 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                         return HomeCostsSection(
                           selectedPeriod: state.costPeriod,
                           maintenanceCostCents: state.maintenanceCostCents,
+                          fuelCostCents: state.fuelCostCents,
                           onPeriodChanged: (period) => context
                               .read<DashboardBloc>()
                               .add(DashboardCostPeriodChanged(period)),
                         );
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
-                    // lista kpi per il veicolo corrente
-                    BlocBuilder<DashboardBloc, DashboardState>(
-                      buildWhen: (previous, current) =>
-                          previous is! DashboardLoaded ||
-                          current is! DashboardLoaded ||
-                          previous.index != current.index ||
-                          previous.vehicles != current.vehicles,
-                      builder: (context, state) {
-                        final vehicle = state is DashboardLoaded
-                            ? state.vehicles[state.index]
-                            : null;
-                        return Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Center(
-                            child: vehicle == null || vehicle.isPlaceholder
-                                ? const SizedBox.shrink()
-                                : AmWorkshopSwiper(
-                                    key: ObjectKey(state),
-                                    mechanics: vehicle.mechanics,
-                                    onAdd: () => _openWorkshop(
-                                      context,
-                                      vehicleId: vehicle.id,
-                                    ),
-                                    onMechanicTap: (mechanic) => _openWorkshop(
-                                      context,
-                                      vehicleId: vehicle.id,
-                                      mechanic: mechanic,
-                                    ),
-                                  ),
-                          ),
-                        );
-                      },
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _scrollActivity,
+                      builder: (context, scrolling, _) =>
+                          HomeWorkshopCarousel(isScrolling: scrolling),
                     ),
 
                     Padding(
@@ -1083,23 +1080,6 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     );
   }
 
-  Future<void> _openWorkshop(
-    BuildContext context, {
-    required String vehicleId,
-    MechanicSummary? mechanic,
-  }) async {
-    AmHaptics.tap();
-    final dashboardBloc = context.read<DashboardBloc>();
-    final changed = await context.pushNamed(
-      'mechanicDetails',
-      extra: <String, dynamic>{'vehicleId': vehicleId, 'mechanic': mechanic},
-    );
-    if (changed == true) {
-      AmHaptics.tap();
-      dashboardBloc.add(DashboardRefreshRequested());
-    }
-  }
-
   Future<void> _openMaintenanceDetail(
     BuildContext context,
     MaintenanceKpi kpi,
@@ -1115,7 +1095,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       );
       // Al ritorno, se il lavoro e' stato salvato, ricarico la dashboard.
       if (salvato == true) {
-        dashboardBloc.add(LoadDashboardData());
+        dashboardBloc.add(DashboardRefreshRequested());
       }
     }
   }

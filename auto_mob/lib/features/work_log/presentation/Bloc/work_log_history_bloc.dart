@@ -1,4 +1,4 @@
-﻿import 'package:bloc_concurrency/bloc_concurrency.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/get_vehicle_options.dart';
@@ -37,16 +37,24 @@ class WorkLogHistoryBloc
     final id = state.selectedVehicleId;
     if (id == null) return;
 
-    emit(state.copyWith(works: const [], isLoadingMore: true, hasReachedMax: false));
+    emit(
+      state.copyWith(
+        works: const [],
+        isLoadingMore: true,
+        hasReachedMax: false,
+      ),
+    );
 
     final res = await getVehicleWorks(vehicleId: id, from: 0, to: pageSize - 1);
     res.fold(
       (f) => emit(state.copyWith(isLoadingMore: false)),
-      (works) => emit(state.copyWith(
-        works: works,
-        isLoadingMore: false,
-        hasReachedMax: works.length < pageSize,
-      )),
+      (works) => emit(
+        state.copyWith(
+          works: works,
+          isLoadingMore: false,
+          hasReachedMax: works.length < pageSize,
+        ),
+      ),
     );
   }
 
@@ -58,41 +66,50 @@ class WorkLogHistoryBloc
     final vehicles = vehiclesRes.getOrElse((_) => []);
 
     if (vehiclesRes.isLeft()) {
-      emit(state.copyWith(
-        status: HistoryStatus.error,
-        errorMessage: _msg(vehiclesRes),
-      ));
+      emit(
+        state.copyWith(
+          status: HistoryStatus.error,
+          errorMessage: _msg(vehiclesRes),
+        ),
+      );
       return;
     }
 
     // Nessun veicolo: pagina "pronta" ma vuota -> il pop-up warning lo decide
     // la UI guardando vehicles.isEmpty.
     if (vehicles.isEmpty) {
-      emit(state.copyWith(
-        status: HistoryStatus.loaded,
-        vehicles: vehicles,
-        works: const [],
-        hasReachedMax: true,
-      ));
+      emit(
+        state.copyWith(
+          status: HistoryStatus.loaded,
+          vehicles: vehicles,
+          works: const [],
+          hasReachedMax: true,
+        ),
+      );
       return;
     }
 
     final firstId = vehicles.first.id;
-    final worksRes = await getVehicleWorks(vehicleId: firstId, from: 0, to: pageSize - 1);
+    final worksRes = await getVehicleWorks(
+      vehicleId: firstId,
+      from: 0,
+      to: pageSize - 1,
+    );
 
     worksRes.fold(
-      (f) => emit(state.copyWith(
-        status: HistoryStatus.error,
-        errorMessage: f.message,
-      )),
-      (works) => emit(state.copyWith(
-        status: HistoryStatus.loaded,
-        vehicles: vehicles,
-        selectedVehicleId: firstId,
-        works: works,
-        isLoadingMore: false,
-        hasReachedMax: works.length < pageSize,
-      )),
+      (f) => emit(
+        state.copyWith(status: HistoryStatus.error, errorMessage: f.message),
+      ),
+      (works) => emit(
+        state.copyWith(
+          status: HistoryStatus.loaded,
+          vehicles: vehicles,
+          selectedVehicleId: firstId,
+          works: works,
+          isLoadingMore: false,
+          hasReachedMax: works.length < pageSize,
+        ),
+      ),
     );
   }
 
@@ -104,12 +121,14 @@ class WorkLogHistoryBloc
   ) async {
     if (event.vehicleId == state.selectedVehicleId) return;
 
-    emit(state.copyWith(
-      selectedVehicleId: event.vehicleId,
-      works: const [],
-      isLoadingMore: true,
-      hasReachedMax: false,
-    ));
+    emit(
+      state.copyWith(
+        selectedVehicleId: event.vehicleId,
+        works: const [],
+        isLoadingMore: true,
+        hasReachedMax: false,
+      ),
+    );
 
     final res = await getVehicleWorks(
       vehicleId: event.vehicleId,
@@ -118,16 +137,20 @@ class WorkLogHistoryBloc
     );
 
     res.fold(
-      (f) => emit(state.copyWith(
-        status: HistoryStatus.error,
-        errorMessage: f.message,
-        isLoadingMore: false,
-      )),
-      (works) => emit(state.copyWith(
-        works: works,
-        isLoadingMore: false,
-        hasReachedMax: works.length < pageSize,
-      )),
+      (f) => emit(
+        state.copyWith(
+          status: HistoryStatus.error,
+          errorMessage: f.message,
+          isLoadingMore: false,
+        ),
+      ),
+      (works) => emit(
+        state.copyWith(
+          works: works,
+          isLoadingMore: false,
+          hasReachedMax: works.length < pageSize,
+        ),
+      ),
     );
   }
 
@@ -151,11 +174,13 @@ class WorkLogHistoryBloc
     res.fold(
       // Errore: tengo i dati vecchi in vista, spengo solo lo spinner.
       (f) => emit(state.copyWith(isRefreshing: false)),
-      (works) => emit(state.copyWith(
-        works: works,
-        isRefreshing: false,
-        hasReachedMax: works.length < pageSize,
-      )),
+      (works) => emit(
+        state.copyWith(
+          works: works,
+          isRefreshing: false,
+          hasReachedMax: works.length < pageSize,
+        ),
+      ),
     );
   }
 
@@ -184,11 +209,13 @@ class WorkLogHistoryBloc
       // Errore in coda: non butto giu' la lista con un pop-up, spengo solo
       // lo spinner. L'utente puo' riprovare scrollando di nuovo.
       (f) => emit(state.copyWith(isLoadingMore: false)),
-      (nuovi) => emit(state.copyWith(
-        works: [...state.works, ...nuovi],
-        isLoadingMore: false,
-        hasReachedMax: nuovi.length < pageSize,
-      )),
+      (nuovi) => emit(
+        state.copyWith(
+          works: [...state.works, ...nuovi],
+          isLoadingMore: false,
+          hasReachedMax: nuovi.length < pageSize,
+        ),
+      ),
     );
   }
 

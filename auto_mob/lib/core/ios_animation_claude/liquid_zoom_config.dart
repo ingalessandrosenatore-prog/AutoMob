@@ -78,34 +78,34 @@ class LiquidZoomConfig {
 
   /// Molla principale di apertura (morph e lift del trigger).
   SpringDescription get openSpring => SpringDescription.withDurationAndBounce(
-        duration: openDuration,
-        bounce: openBounce,
-      );
+    duration: openDuration,
+    bounce: openBounce,
+  );
 
   /// Molla di chiusura: bounce 0, si assesta in modo asintotico senza
   /// oscillare (vedi nota in `LiquidZoomOverlay` sul perché il pop della
   /// route usa `whenComplete` e non un check sul valore).
   SpringDescription get closeSpring => SpringDescription.withDurationAndBounce(
-        duration: closeDuration,
-        bounce: 0,
-      );
+    duration: closeDuration,
+    bounce: 0,
+  );
 
   /// Molla del press (veloce, un filo elastica).
   SpringDescription get pressSpring => SpringDescription.withDurationAndBounce(
-        duration: const Duration(milliseconds: 300),
-        bounce: 0.2,
-      );
+    duration: const Duration(milliseconds: 300),
+    bounce: 0.2,
+  );
 
   /// Molla della luce (rapidissima, senza rimbalzo).
   SpringDescription get lightSpring => SpringDescription.withDurationAndBounce(
-        duration: const Duration(milliseconds: 180),
-        bounce: 0,
-      );
+    duration: const Duration(milliseconds: 180),
+    bounce: 0,
+  );
 
   /// Molla del "riatterraggio" del trigger a chiusura completata: il bounce
   /// più alto fa affondare il widget un pelo sotto il riposo prima di fermarsi.
   SpringDescription get settleSpring => SpringDescription.withDurationAndBounce(
-        duration: const Duration(milliseconds: 350),
-        bounce: 0.3,
-      );
+    duration: const Duration(milliseconds: 350),
+    bounce: 0.3,
+  );
 }

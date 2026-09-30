@@ -127,15 +127,22 @@ class CardAuto extends StatelessWidget {
             Container(
               key: const Key('vehicle-card-surface'),
               padding: const EdgeInsets.all(1),
-              decoration: ShapeDecoration(
-                gradient: colors.cardBorderGradient,
-                shape: _vehicleShape(),
-                shadows: colors.cardShadows,
-              ),
               child: ClipPath(
                 clipper: ShapeBorderClipper(shape: _vehicleShape()),
                 child: DecoratedBox(
-                  decoration: BoxDecoration(gradient: colors.cardGradient),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        colors.surfaceHighlight.withValues(alpha: 0.6),
+                        colors.surfaceHighlight.withValues(alpha: 0.7),
+                        colors.surfaceHighlight.withValues(alpha: 0.9),
+                        colors.surfaceHighlight,
+                      ],
+                      stops: const [0.0, 0.3, 0.75, 1.0],
+                    ),
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -147,31 +154,27 @@ class CardAuto extends StatelessWidget {
                               164.0,
                               232.0,
                             ),
-                            child: SmartEdge(
-                              blur: kHeavyEffects,
-                              fallbackTint: colors.surface,
-                              opacity: 0.96,
-                              edges: [
-                                EdgeBlur(
-                                  type: EdgeType.bottomEdge,
-                                  size: 10,
-                                  tintColor: colors.surface,
-                                  sigma: 10,
-                                  controlPoints: [
-                                    ControlPoint(
-                                      position: 0.2,
-                                      type: ControlPointType.visible,
+                            child: _VehicleImage(immaginePath: immaginePath),
+                          ),
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    colors.surfaceHighlight.withValues(
+                                      alpha: 0.0,
                                     ),
-                                    ControlPoint(
-                                      position: 1.0,
-                                      type: ControlPointType.transparent,
+                                    colors.surfaceHighlight.withValues(
+                                      alpha: 0.0,
                                     ),
+                                    colors.surfaceHighlight.withValues(
+                                      alpha: 0.6,
+                                    ),
+                                    colors.surfaceHighlight,
                                   ],
-                                ),
-                              ],
-                              child: SizedBox.expand(
-                                child: _VehicleImage(
-                                  immaginePath: immaginePath,
+                                  stops: const [0.0, 0.3, 0.75, 1.0],
                                 ),
                               ),
                             ),

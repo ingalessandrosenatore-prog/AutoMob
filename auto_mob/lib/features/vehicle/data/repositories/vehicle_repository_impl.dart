@@ -8,6 +8,7 @@ import '../../domain/entities/vehicle.dart';
 import '../../domain/entities/vehicle_draft.dart';
 import '../../domain/entities/vehicle_save_outcome.dart';
 import '../../domain/entities/mechanic_summary.dart';
+import '../../domain/entities/fuel_expense_draft.dart';
 import '../../domain/repositories/vehicle_repository.dart';
 import '../datasources/vehicle_draft_local_data_source.dart';
 import '../datasources/vehicle_remote_data_source.dart';
@@ -147,6 +148,32 @@ class VehicleRepositoryImpl implements VehicleRepository {
       );
       return Right(kmSalvati);
     } on VehicleDataSourceException {
+      return const Left(ServerFailure());
+    } on NetworkException {
+      return const Left(NetworkFailure());
+    } catch (_) {
+      return const Left(ServerFailure());
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> addFuelExpense({
+    required String vehicleId,
+    required FuelExpenseDraft expense,
+  }) async {
+    try {
+      return Right(
+        await remoteDataSource.addFuelExpense(
+          vehicleId: vehicleId,
+          expense: expense,
+        ),
+      );
+    } on VehicleDataSourceException catch (error) {
+      if (error.code == '23514' || error.code == '22003') {
+        return const Left(
+          ValidationFailure('Costo e litri devono essere maggiori di zero.'),
+        );
+      }
       return const Left(ServerFailure());
     } on NetworkException {
       return const Left(NetworkFailure());

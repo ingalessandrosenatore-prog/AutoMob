@@ -10,12 +10,14 @@ class HomeCostsSection extends StatelessWidget {
     super.key,
     this.selectedPeriod = MaintenanceCostPeriod.monthly,
     this.maintenanceCostCents = 0,
+    this.fuelCostCents = 0,
     this.onPeriodChanged,
     this.now,
   });
 
   final MaintenanceCostPeriod selectedPeriod;
   final int maintenanceCostCents;
+  final int fuelCostCents;
   final ValueChanged<MaintenanceCostPeriod>? onPeriodChanged;
 
   /// Iniettabile per rendere deterministici i test del progresso temporale.
@@ -33,7 +35,7 @@ class HomeCostsSection extends StatelessWidget {
       (
         icon: Icons.local_gas_station_outlined,
         label: 'Carburante',
-        value: null,
+        value: fuelCostCents > 0 ? fuelCostCents : null,
       ),
       (icon: Icons.description_outlined, label: 'Documenti', value: null),
     ];

@@ -1,5 +1,4 @@
 import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
-import 'package:card_stack_swiper/card_stack_swiper.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -81,70 +80,6 @@ class AmWorkshopCard extends StatelessWidget {
       titoloStyle: titleStyle,
       descrizioneStyle: descriptionStyle,
       onTap: onTap ?? () {},
-    );
-  }
-}
-
-/// Adattatore provvisorio del package: mantiene fuori dal resto della
-/// dashboard ogni decisione specifica di CardStackSwiper.
-class AmWorkshopSwiper extends StatelessWidget {
-  final List<MechanicSummary> mechanics;
-  final VoidCallback onAdd;
-  final ValueChanged<MechanicSummary> onMechanicTap;
-  final controller = CardStackSwiperController();
-
-  AmWorkshopSwiper({
-    super.key,
-    required this.mechanics,
-    required this.onAdd,
-    required this.onMechanicTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // La prima card è sempre quella di aggiunta
-    final items = <MechanicSummary?>[null, ...mechanics];
-
-    return SizedBox(
-      height: 140,
-      width: 400,
-      child: CardStackSwiper(
-        controller: controller,
-        cardsCount: items.length,
-        onSwipe: (previousIndex, currentIndex, direction) {
-          if (direction == CardStackSwiperDirection.left) return false;
-          return true;
-        },
-        initialIndex: 0,
-        isLoop: items.length > 1,
-        isDisabled: items.length == 1,
-        maxAngle: 0,
-        backCardAngle: 0,
-        backCardScale: 1,
-        // Con 3 card totali e dx positivo, CardStackSwiper alterna
-        // automaticamente il dx tra negativo (seconda card) e positivo (terza card).
-        backCardOffset: const Offset(5, 0),
-        threshold: 20,
-        swipeAnimationDuration: const Duration(milliseconds: 400),
-        returnAnimationDuration: const Duration(milliseconds: 400),
-        allowedSwipeDirection: const AllowedSwipeDirection.symmetric(
-          horizontal: true,
-        ),
-        onTapDisabled: onAdd,
-        onPressed: (index) {
-          final mechanic = items[index];
-          mechanic == null ? onAdd() : onMechanicTap(mechanic);
-        },
-        cardBuilder: (context, index, horizontal, vertical) {
-          final mechanic = items[index];
-          return mechanic == null
-              ? AmWorkshopCard.add(onTap: onAdd)
-              : AmWorkshopCard(
-                  mechanic: mechanic,
-                  onTap: () => onMechanicTap(mechanic),
-                );
-        },
-      ),
     );
   }
 }

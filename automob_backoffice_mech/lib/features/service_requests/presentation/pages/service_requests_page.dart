@@ -110,7 +110,9 @@ class _ServiceRequestsContent extends StatelessWidget {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              '${requests.length} segnalazioni aperte',
+                              requests.length == 1
+                                  ? '1 veicolo con lavori aperti'
+                                  : '${requests.length} veicoli con lavori aperti',
                               style: TextStyle(
                                 color: colors.textSecondary,
                                 fontSize: 14,

@@ -1,12 +1,12 @@
-import '../../domain/entities/workshop_overview.dart';
+import '../../domain/entities/workshop_overview_catalog.dart';
 import '../../domain/repositories/workshop_overview_repository.dart';
-import '../datasources/workshop_overview_demo_data_source.dart';
+import '../datasources/workshop_overview_remote_data_source.dart';
 
 class WorkshopOverviewRepositoryImpl implements WorkshopOverviewRepository {
   const WorkshopOverviewRepositoryImpl(this.dataSource);
-  final WorkshopOverviewDemoDataSource dataSource;
+  final WorkshopOverviewRemoteDataSource dataSource;
 
   @override
-  WorkshopOverview getOverview(WorkshopPeriod period) =>
-      dataSource.getOverview(period);
+  Future<WorkshopOverviewCatalog> getOverview(DateTime referenceDate) =>
+      dataSource.getOverview(referenceDate);
 }

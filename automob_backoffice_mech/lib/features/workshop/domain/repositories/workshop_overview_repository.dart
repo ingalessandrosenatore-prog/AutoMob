@@ -1,5 +1,5 @@
-import '../entities/workshop_overview.dart';
+import '../entities/workshop_overview_catalog.dart';
 
 abstract interface class WorkshopOverviewRepository {
-  WorkshopOverview getOverview(WorkshopPeriod period);
+  Future<WorkshopOverviewCatalog> getOverview(DateTime referenceDate);
 }

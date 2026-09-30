@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'notification_injection.dart';
-import '../../features/workshop/data/datasources/workshop_overview_demo_data_source.dart';
+import '../../features/workshop/data/datasources/workshop_overview_remote_data_source.dart';
 import '../../features/workshop/data/repositories/workshop_overview_repository_impl.dart';
 import '../../features/workshop/domain/repositories/workshop_overview_repository.dart';
 import '../../features/workshop/domain/usecases/get_workshop_overview.dart';
@@ -58,7 +58,9 @@ Future<void> configureDependencies() async {
     )
     ..registerLazySingleton(() => GetServiceRequests(getIt()))
     ..registerFactory(() => ServiceRequestsCubit(getIt()))
-    ..registerLazySingleton(WorkshopOverviewDemoDataSource.new)
+    ..registerLazySingleton<WorkshopOverviewRemoteDataSource>(
+      () => SupabaseWorkshopOverviewRemoteDataSource(Supabase.instance.client),
+    )
     ..registerLazySingleton<WorkshopOverviewRepository>(
       () => WorkshopOverviewRepositoryImpl(getIt()),
     )

@@ -84,5 +84,7 @@ class FirebaseMessagingDataSourceImpl implements FirebaseMessagingDataSource {
     AuthorizationStatus.denied => NotificationPermissionStatus.denied,
     AuthorizationStatus.notDetermined =>
       NotificationPermissionStatus.notDetermined,
+    // TODO: Handle this case.
+    AuthorizationStatus.deniedPermanently => throw UnimplementedError(),
   };
 }

@@ -1,5 +1,6 @@
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/fuel_cost_averages.dart';
 
 class VehicleModel extends Vehicle {
   const VehicleModel({
@@ -34,6 +35,7 @@ class VehicleModel extends Vehicle {
     super.maintenanceCostCents,
     super.firstMaintenanceDate,
     super.maintenanceCostsByYear,
+    super.fuelCostAverages,
   });
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
@@ -133,6 +135,11 @@ class VehicleModel extends Vehicle {
       maintenanceCostCents: intValue(json['maintenance_cost_cents']),
       firstMaintenanceDate: dateOrNull(json['first_maintenance_date']),
       maintenanceCostsByYear: costsByYear,
+      fuelCostAverages: FuelCostAverages(
+        dailyCents: intValue(json['fuel_daily_cost_cents']),
+        monthlyCents: intValue(json['fuel_monthly_cost_cents']),
+        annualCents: intValue(json['fuel_annual_cost_cents']),
+      ),
     );
   }
 
@@ -162,6 +169,9 @@ class VehicleModel extends Vehicle {
       'maintenance_costs_by_year': maintenanceCostsByYear.map(
         (year, cents) => MapEntry(year.toString(), cents),
       ),
+      'fuel_daily_cost_cents': fuelCostAverages.dailyCents,
+      'fuel_monthly_cost_cents': fuelCostAverages.monthlyCents,
+      'fuel_annual_cost_cents': fuelCostAverages.annualCents,
       // Campo legacy mantenuto durante la migrazione dei consumer.
       'mechanic': mechanic == null ? null : _mechanicToJson(mechanic!),
     };

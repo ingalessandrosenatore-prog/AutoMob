@@ -93,14 +93,21 @@ void main() {
     final valueText = tester.widget<Text>(
       find.descendant(of: currentValueFinder, matching: find.byType(Text)),
     );
-    expect(label.style?.fontSize, 7.5);
+    expect(label.style?.fontSize, 6.5);
     expect(
       tester.getTopLeft(currentValueFinder).dy,
       greaterThan(tester.getTopLeft(labelFinder).dy),
     );
     expect(valueText.textAlign, TextAlign.center);
-    expect(valueText.style?.fontSize, 10.5);
+    expect(valueText.style?.fontSize, 12.5);
     expect(valueText.style?.color, AmThemeColors.dark.textPrimary);
+    final maximumText = tester.widget<Text>(
+      find.descendant(
+        of: find.byKey(const ValueKey('am_kpi_maximum')),
+        matching: find.byType(Text),
+      ),
+    );
+    expect(maximumText.style?.fontSize, 10);
     expect(tester.takeException(), isNull);
   });
 

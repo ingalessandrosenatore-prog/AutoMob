@@ -85,7 +85,7 @@ class _MainAppState extends State<MainApp> {
               value: getIt<WorkshopBloc>()..add(const WorkshopStarted()),
             ),
             BlocProvider(create: (_) => getIt<VoiceSearchBloc>()),
-            BlocProvider(create: (_) => getIt<WorkshopOverviewCubit>()),
+            BlocProvider(create: (_) => getIt<WorkshopOverviewCubit>()..load()),
           ],
           child: WorkshopHomePage(
             onSettingsPressed: () => context.pushNamed(AppRouteNames.settings),

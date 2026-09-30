@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
 import '../bloc/km_update_cubit.dart';
+import '../../domain/entities/fuel_expense_draft.dart';
 
 /// Pop-up modale per l'aggiornamento dei chilometri del veicolo.
 /// Implementato come PageRoute (Page) per l'integrazione con il router.
@@ -60,12 +61,15 @@ class _KmUpdateContent extends StatefulWidget {
 
 class _KmUpdateContentState extends State<_KmUpdateContent> {
   final _nuovoKmController = TextEditingController();
+  final _fuelCostController = TextEditingController();
+  final _fuelLitersController = TextEditingController();
 
   /// km attuali del veicolo (parsati dalla stringa ricevuta).
   late final int _kmAttuali = int.tryParse(widget.currentKm) ?? 0;
 
   /// Messaggio di errore in tempo reale sotto il campo. Null = campo valido.
   String? _errore;
+  String? _fuelErrore;
 
   /// Il nuovo km e' valido solo se e' un numero e supera i km attuali.
   bool get _valido {
@@ -73,9 +77,22 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
     return n != null && n > _kmAttuali;
   }
 
+  bool get _fuelFieldsEmpty =>
+      _fuelCostController.text.trim().isEmpty &&
+      _fuelLitersController.text.trim().isEmpty;
+
+  FuelExpenseDraft? get _fuelExpense => FuelExpenseDraft.tryParse(
+    costEuros: _fuelCostController.text,
+    liters: _fuelLitersController.text,
+  );
+
+  bool get _fuelValido => _fuelFieldsEmpty || _fuelExpense != null;
+
   @override
   void dispose() {
     _nuovoKmController.dispose();
+    _fuelCostController.dispose();
+    _fuelLitersController.dispose();
     super.dispose();
   }
 
@@ -92,15 +109,28 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
       } else {
         _errore = null;
       }
+      if (_fuelFieldsEmpty) {
+        _fuelErrore = null;
+      } else if (FuelExpenseDraft.hasPartialInput(
+        costEuros: _fuelCostController.text,
+        liters: _fuelLitersController.text,
+      )) {
+        _fuelErrore = 'Compila sia il costo sia i litri';
+      } else if (_fuelExpense == null) {
+        _fuelErrore = 'Inserisci valori maggiori di zero';
+      } else {
+        _fuelErrore = null;
+      }
     });
   }
 
   void _salva() {
-    if (!_valido) return;
+    if (!_valido || !_fuelValido) return;
     final nuovoKm = int.parse(_nuovoKmController.text.trim());
     context.read<KmUpdateCubit>().aggiorna(
       vehicleId: widget.vehicleId,
       newKm: nuovoKm,
+      fuelExpense: _fuelExpense,
     );
   }
 
@@ -131,7 +161,7 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
       },
       builder: (context, state) {
         final loading = state.status == KmUpdateStatus.loading;
-        final attivo = _valido && !loading;
+        final attivo = _valido && _fuelValido && !loading;
         final keyboardHeight = MediaQuery.viewInsetsOf(context).bottom;
         final mediaSize = MediaQuery.sizeOf(context);
         final topSafeArea = MediaQuery.paddingOf(context).top;
@@ -297,6 +327,7 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                       Row(
                         children: [
                           AmTextField(
+                            key: const Key('new-km-field'),
                             label: "NUOVO CHILOMETRAGGIO",
                             placeholder: "${_kmAttuali + 100}",
                             controller: _nuovoKmController,
@@ -315,6 +346,59 @@ class _KmUpdateContentState extends State<_KmUpdateContent> {
                                 style: TextStyle(
                                   color: colors.textSecondary,
                                   fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AmTextField(
+                            key: const Key('fuel-cost-field'),
+                            label: 'EURO CARBURANTE',
+                            placeholder: '50,00',
+                            controller: _fuelCostController,
+                            isRequired: false,
+                            obscureText: false,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            onChanged: _onChanged,
+                            suffixIcon: Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: Text(
+                                '€',
+                                style: TextStyle(
+                                  color: colors.textSecondary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          AmTextField(
+                            key: const Key('fuel-liters-field'),
+                            label: 'NUMERO LITRI',
+                            placeholder: '32,5',
+                            controller: _fuelLitersController,
+                            isRequired: false,
+                            obscureText: false,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            onChanged: _onChanged,
+                            errorText: _fuelErrore,
+                            suffixIcon: Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: Text(
+                                'L',
+                                style: TextStyle(
+                                  color: colors.textSecondary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

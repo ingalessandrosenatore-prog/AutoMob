@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'package:automob_backoffice_mech/features/workshop/data/datasources/workshop_overview_demo_data_source.dart';
-import 'package:automob_backoffice_mech/features/workshop/data/repositories/workshop_overview_repository_impl.dart';
+import 'package:automob_backoffice_mech/features/workshop/domain/entities/workshop_overview.dart';
+import 'package:automob_backoffice_mech/features/workshop/domain/entities/workshop_overview_catalog.dart';
+import 'package:automob_backoffice_mech/features/workshop/domain/repositories/workshop_overview_repository.dart';
 import 'package:automob_backoffice_mech/features/workshop/domain/usecases/get_workshop_overview.dart';
 import 'package:automob_backoffice_mech/features/workshop/presentation/bloc/workshop_overview_cubit.dart';
 
@@ -389,12 +390,8 @@ Future<void> _pump(
             providers: [
               BlocProvider(
                 create: (_) => WorkshopOverviewCubit(
-                  GetWorkshopOverview(
-                    WorkshopOverviewRepositoryImpl(
-                      const WorkshopOverviewDemoDataSource(),
-                    ),
-                  ),
-                ),
+                  GetWorkshopOverview(_FakeOverviewRepository()),
+                )..load(),
               ),
               BlocProvider.value(value: bloc),
               BlocProvider.value(value: voiceBloc ?? _idleVoiceSearchBloc()),
@@ -406,6 +403,31 @@ Future<void> _pump(
     ),
   ),
 );
+
+class _FakeOverviewRepository implements WorkshopOverviewRepository {
+  @override
+  Future<WorkshopOverviewCatalog> getOverview(DateTime referenceDate) async =>
+      const WorkshopOverviewCatalog(
+        day: WorkshopOverview(
+          period: WorkshopPeriod.day,
+          revenueCents: 0,
+          completedJobs: 0,
+          availableJobs: 0,
+        ),
+        month: WorkshopOverview(
+          period: WorkshopPeriod.month,
+          revenueCents: 0,
+          completedJobs: 0,
+          availableJobs: 0,
+        ),
+        year: WorkshopOverview(
+          period: WorkshopPeriod.year,
+          revenueCents: 0,
+          completedJobs: 0,
+          availableJobs: 0,
+        ),
+      );
+}
 
 VoiceSearchBloc _idleVoiceSearchBloc() {
   final bloc = _MockVoiceSearchBloc();

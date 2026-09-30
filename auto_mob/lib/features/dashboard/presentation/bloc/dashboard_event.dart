@@ -18,6 +18,16 @@ class DashboardPageChanged extends DashboardEvent {
   DashboardPageChanged(this.newIndex);
 }
 
+class WorkshopPageChanged extends DashboardEvent {
+  WorkshopPageChanged({required this.vehicleId, required this.index});
+
+  final String vehicleId;
+  final int index;
+
+  @override
+  List<Object?> get props => [vehicleId, index];
+}
+
 /// Pull-to-refresh esplicito: ricarica i veicoli SENZA passare per
 /// DashboardLoading, cosi' vehicles/kpis restano visibili durante il
 /// refresh invece di far comparire il pop-up di caricamento a tutto schermo.

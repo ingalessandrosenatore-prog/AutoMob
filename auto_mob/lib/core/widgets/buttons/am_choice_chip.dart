@@ -19,7 +19,8 @@ class AmChoiceChip extends StatelessWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
-    this.activeColor = const Color(0xFFE85A1A), required this.id,
+    this.activeColor = const Color(0xFFE85A1A),
+    required this.id,
   });
 
   @override
@@ -46,7 +47,7 @@ class AmChoiceChip extends StatelessWidget {
                     color: activeColor.withValues(alpha: 0.1),
                     blurRadius: 8,
                     spreadRadius: 1,
-                  )
+                  ),
                 ]
               : [],
         ),

@@ -4,6 +4,7 @@ import '../../../vehicle/domain/entities/maintenance_kpi.dart';
 import '../../../vehicle/domain/entities/vehicle.dart';
 import '../../../future_work/domain/entities/future_work_summary.dart';
 import '../../domain/entities/maintenance_cost_period.dart';
+import '../../domain/entities/workshop_mascot.dart';
 
 sealed class DashboardState extends Equatable {
   @override
@@ -39,7 +40,10 @@ class DashboardLoaded extends DashboardState {
   final String? photoUpdateError;
   final MaintenanceCostPeriod costPeriod;
   final int maintenanceCostCents;
+  final int fuelCostCents;
   final Map<String, List<FutureWorkSummary>> futureWorksByVehicleId;
+  final Map<String, List<WorkshopMascot>> workshopMascotsByVehicleId;
+  final Map<String, int> workshopIndexByVehicleId;
 
   List<FutureWorkSummary> get selectedVehicleFutureWorks {
     if (vehicles.isEmpty || index >= vehicles.length) return const [];
@@ -54,7 +58,10 @@ class DashboardLoaded extends DashboardState {
     this.photoUpdateError,
     this.costPeriod = MaintenanceCostPeriod.monthly,
     this.maintenanceCostCents = 0,
+    this.fuelCostCents = 0,
     this.futureWorksByVehicleId = const {},
+    this.workshopMascotsByVehicleId = const {},
+    this.workshopIndexByVehicleId = const {},
   });
 
   DashboardLoaded copyWith({
@@ -64,7 +71,10 @@ class DashboardLoaded extends DashboardState {
     bool? isRefreshing,
     MaintenanceCostPeriod? costPeriod,
     int? maintenanceCostCents,
+    int? fuelCostCents,
     Map<String, List<FutureWorkSummary>>? futureWorksByVehicleId,
+    Map<String, List<WorkshopMascot>>? workshopMascotsByVehicleId,
+    Map<String, int>? workshopIndexByVehicleId,
   }) {
     return DashboardLoaded(
       vehicles: vehicles ?? this.vehicles,
@@ -73,8 +83,13 @@ class DashboardLoaded extends DashboardState {
       isRefreshing: isRefreshing ?? this.isRefreshing,
       costPeriod: costPeriod ?? this.costPeriod,
       maintenanceCostCents: maintenanceCostCents ?? this.maintenanceCostCents,
+      fuelCostCents: fuelCostCents ?? this.fuelCostCents,
       futureWorksByVehicleId:
           futureWorksByVehicleId ?? this.futureWorksByVehicleId,
+      workshopMascotsByVehicleId:
+          workshopMascotsByVehicleId ?? this.workshopMascotsByVehicleId,
+      workshopIndexByVehicleId:
+          workshopIndexByVehicleId ?? this.workshopIndexByVehicleId,
       // photoUpdateError NON viene propagato: e' un errore one-shot.
     );
   }
@@ -88,7 +103,10 @@ class DashboardLoaded extends DashboardState {
     photoUpdateError,
     costPeriod,
     maintenanceCostCents,
+    fuelCostCents,
     futureWorksByVehicleId,
+    workshopMascotsByVehicleId,
+    workshopIndexByVehicleId,
   ];
 }
 

@@ -100,4 +100,26 @@ void main() {
     expect(vehicle.firstMaintenanceDate, DateTime(2024, 3, 15));
     expect(vehicle.maintenanceCostsByYear, {2024: 5000, 2025: 7345});
   });
+
+  test('mappa le medie carburante restituite dalla dashboard', () {
+    final vehicle = VehicleModel.fromJson(const {
+      'id': 'vehicle-1',
+      'owner_id': 'owner-1',
+      'plate': 'AB123CD',
+      'brand': 'Fiat',
+      'model': 'Panda',
+      'year': 2020,
+      'fuel': 'benzina',
+      'km_current': 12000,
+      'created_at': '2026-07-16T10:00:00Z',
+      'fuel_daily_cost_cents': 325,
+      'fuel_monthly_cost_cents': 9891,
+      'fuel_annual_cost_cents': 118690,
+    });
+
+    expect(vehicle.fuelCostAverages.dailyCents, 325);
+    expect(vehicle.fuelCostAverages.monthlyCents, 9891);
+    expect(vehicle.fuelCostAverages.annualCents, 118690);
+    expect(vehicle.toJson()['fuel_daily_cost_cents'], 325);
+  });
 }

@@ -1,0 +1,1 @@
+drop index if exists public.maintenance_records_mechanic_service_date_idx;

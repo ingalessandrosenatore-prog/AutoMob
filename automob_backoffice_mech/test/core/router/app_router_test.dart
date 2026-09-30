@@ -13,6 +13,11 @@ void main() {
   testWidgets('auth guard moves unauthenticated users to login', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final authStatus = ValueNotifier(AuthNavigationStatus.unauthenticated);
     final router = _createRouter(authStatus);
     addTearDown(() {
@@ -39,6 +44,12 @@ void main() {
           .getSize(find.byKey(const ValueKey('mechanic_bottom_navigation')))
           .height,
       MechanicShellMetrics.navigationHeight,
+    );
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('mechanic_navigation_surface')))
+          .width,
+      232,
     );
     final navigationRect = tester.getRect(
       find.byKey(const ValueKey('mechanic_bottom_navigation')),

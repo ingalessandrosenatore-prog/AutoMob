@@ -1,0 +1,52 @@
+[
+  {
+    "mesh": "standing_BODY",
+    "sourceTriangles": 125232,
+    "mobileTriangles": 28000
+  },
+  {
+    "mesh": "standing_PROP_wrench",
+    "sourceTriangles": 620,
+    "mobileTriangles": 620
+  },
+  {
+    "mesh": "standing_PROP_screwdriver",
+    "sourceTriangles": 372,
+    "mobileTriangles": 372
+  },
+  {
+    "mesh": "standing_PROP_tablet",
+    "sourceTriangles": 381,
+    "mobileTriangles": 381
+  },
+  {
+    "mesh": "standing_PROP_tire",
+    "sourceTriangles": 3698,
+    "mobileTriangles": 1800
+  },
+  {
+    "mesh": "desk_BODY",
+    "sourceTriangles": 123354,
+    "mobileTriangles": 28000
+  },
+  {
+    "mesh": "desk_PROP_wrench",
+    "sourceTriangles": 620,
+    "mobileTriangles": 620
+  },
+  {
+    "mesh": "desk_PROP_screwdriver",
+    "sourceTriangles": 372,
+    "mobileTriangles": 372
+  },
+  {
+    "mesh": "desk_PROP_tablet",
+    "sourceTriangles": 381,
+    "mobileTriangles": 381
+  },
+  {
+    "mesh": "desk_WORKBENCH",
+    "sourceTriangles": 1780,
+    "mobileTriangles": 1780
+  }
+]

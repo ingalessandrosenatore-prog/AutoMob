@@ -1,4 +1,4 @@
-﻿import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/vehicle_option.dart';
 import '../../domain/entities/work_log_row.dart';
@@ -67,13 +67,13 @@ class WorkLogHistoryState extends Equatable {
 
   @override
   List<Object?> get props => [
-        status,
-        vehicles,
-        selectedVehicleId,
-        works,
-        isLoadingMore,
-        hasReachedMax,
-        isRefreshing,
-        errorMessage,
-      ];
+    status,
+    vehicles,
+    selectedVehicleId,
+    works,
+    isLoadingMore,
+    hasReachedMax,
+    isRefreshing,
+    errorMessage,
+  ];
 }

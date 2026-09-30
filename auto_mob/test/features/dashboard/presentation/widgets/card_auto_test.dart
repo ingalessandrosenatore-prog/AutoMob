@@ -24,23 +24,7 @@ void main() {
     final cardSurface = tester.widget<Container>(
       find.byKey(const Key('vehicle-card-surface')),
     );
-    final cardDecoration = cardSurface.decoration! as ShapeDecoration;
-    expect(cardDecoration.shadows, [
-      BoxShadow(
-        color: AmThemeColors.light.shadowSoft,
-        blurRadius: 2,
-        offset: const Offset(0, 2),
-      ),
-      BoxShadow(
-        color: AmThemeColors.light.shadow,
-        blurRadius: 4,
-        offset: const Offset(0, 4),
-      ),
-    ]);
-    expect(
-      (cardDecoration.gradient! as LinearGradient).colors,
-      AmThemeColors.light.cardBorderGradient.colors,
-    );
+    expect(cardSurface.decoration, isNull);
     final cardGradient = tester
         .widgetList<DecoratedBox>(
           find.descendant(
@@ -54,8 +38,10 @@ void main() {
         .whereType<LinearGradient>()
         .first;
     expect(cardGradient.colors, [
-      AmThemeColors.light.cardGradientStart,
-      AmThemeColors.light.cardGradientEnd,
+      AmThemeColors.light.surfaceHighlight.withValues(alpha: 0.6),
+      AmThemeColors.light.surfaceHighlight.withValues(alpha: 0.7),
+      AmThemeColors.light.surfaceHighlight.withValues(alpha: 0.9),
+      AmThemeColors.light.surfaceHighlight,
     ]);
     final yearBadge = tester.widget<Container>(
       find.byKey(const Key('vehicle-year-badge')),

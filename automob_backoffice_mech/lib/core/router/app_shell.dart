@@ -19,6 +19,8 @@ class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
   final bool liquidGlassEnabled;
 
+  static const _destinationCount = 3;
+
   void _selectBranch(int index) {
     navigationShell.goBranch(
       index,
@@ -52,55 +54,75 @@ class AppShell extends StatelessWidget {
         child: SizedBox(
           key: const ValueKey('mechanic_bottom_navigation'),
           height: MechanicShellMetrics.navigationHeight,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final availableNavigationWidth = math.max(
+                0.0,
+                constraints.maxWidth -
+                    MechanicShellMetrics.microphoneSize -
+                    MechanicShellMetrics.minimumControlSpacing,
+              );
+              final navigationWidth = math.min(
+                MechanicShellMetrics.navigationWidthFor(_destinationCount),
+                availableNavigationWidth,
+              );
 
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Expanded(
-                child: AmNavigationPress(
-                  child: _NavigationSurface(
-                    selectedIndex: navigationShell.currentIndex,
-                    liquidGlassEnabled: liquidGlassEnabled,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Expanded(
-                          child: _ShellDestination(
-                            label: 'Home',
-                            icon: HugeIcons.strokeRoundedHome01,
-                            selected: navigationShell.currentIndex == 0,
-                            liquidGlassEnabled: liquidGlassEnabled,
-                            onPressed: () => _selectBranch(0),
-                          ),
+              return Row(
+                children: [
+                  SizedBox(
+                    key: const ValueKey('mechanic_navigation_surface'),
+                    width: navigationWidth,
+                    child: AmNavigationPress(
+                      child: _NavigationSurface(
+                        selectedIndex: navigationShell.currentIndex,
+                        liquidGlassEnabled: liquidGlassEnabled,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _ShellDestination(
+                                label: 'Home',
+                                icon: HugeIcons.strokeRoundedHome01,
+                                selected: navigationShell.currentIndex == 0,
+                                liquidGlassEnabled: liquidGlassEnabled,
+                                onPressed: () => _selectBranch(0),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: MechanicShellMetrics
+                                  .navigationDestinationSpacing,
+                            ),
+                            Expanded(
+                              child: _ShellDestination(
+                                label: 'Servizi',
+                                icon: HugeIcons.strokeRoundedTools,
+                                selected: navigationShell.currentIndex == 1,
+                                liquidGlassEnabled: liquidGlassEnabled,
+                                onPressed: () => _selectBranch(1),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: MechanicShellMetrics
+                                  .navigationDestinationSpacing,
+                            ),
+                            Expanded(
+                              child: _ShellDestination(
+                                label: 'Richieste',
+                                icon: HugeIcons.strokeRoundedAlert02,
+                                selected: navigationShell.currentIndex == 2,
+                                liquidGlassEnabled: liquidGlassEnabled,
+                                onPressed: () => _selectBranch(2),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _ShellDestination(
-                            label: 'Servizi',
-                            icon: HugeIcons.strokeRoundedTools,
-                            selected: navigationShell.currentIndex == 1,
-                            liquidGlassEnabled: liquidGlassEnabled,
-                            onPressed: () => _selectBranch(1),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _ShellDestination(
-                            label: 'Richieste',
-                            icon: HugeIcons.strokeRoundedAlert02,
-                            selected: navigationShell.currentIndex == 2,
-                            liquidGlassEnabled: liquidGlassEnabled,
-                            onPressed: () => _selectBranch(2),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: MechanicShellMetrics.controlSpacing),
-              const SizedBox(width: MechanicShellMetrics.microphoneSize),
-            ],
+                  const Spacer(),
+                  const SizedBox(width: MechanicShellMetrics.microphoneSize),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -223,9 +245,13 @@ class _ShellDestination extends StatelessWidget {
             const SizedBox(height: 1),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.fade,
+              softWrap: false,
               style: TextStyle(
                 color: foreground,
                 fontSize: 10,
+                height: 1,
                 fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
               ),
             ),

@@ -6,15 +6,19 @@
 // =====================================================================
 
 import 'dart:io';
+import 'dart:async';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
 
 import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/bloc/dashboard_event.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/bloc/dashboard_state.dart';
 import 'package:auto_mob_v1/features/dashboard/domain/usecases/calculate_maintenance_cost.dart';
+import 'package:auto_mob_v1/features/dashboard/domain/usecases/get_fuel_cost_for_period.dart';
 import 'package:auto_mob_v1/features/dashboard/domain/entities/maintenance_cost_period.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/maintenance_kpi.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/fuel_cost_averages.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/compute_maintenance_kpis.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/get_vehicles.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/update_vehicle_photo.dart';
@@ -67,11 +71,52 @@ void main() {
     computeKpis: computeKpis,
     updateVehiclePhoto: updateVehiclePhoto,
     calculateMaintenanceCost: const CalculateMaintenanceCost(),
+    getFuelCostForPeriod: const GetFuelCostForPeriod(),
     getLatestOpenFutureWorks: getLatestOpenFutureWorks,
   );
 
   final tVehicle1 = vehicleFixture(id: 'v1');
   final tVehicle2 = vehicleFixture(id: 'v2');
+  final tVehicle3 = vehicleFixture(id: 'v3');
+
+  test(
+    'refresh preserva officina per identità e cambio selezione durante la rete',
+    () async {
+      const a = MechanicSummary(id: 'a', code: 'a', businessName: 'A');
+      const b = MechanicSummary(id: 'b', code: 'b', businessName: 'B');
+      final vehicle = tVehicle1.copyWith(mechanics: [a, b]);
+      when(() => getVehicles()).thenAnswer((_) async => Right([vehicle]));
+      when(() => computeKpis(any())).thenReturn(tKpis);
+      final bloc = buildBloc();
+      addTearDown(bloc.close);
+      final loaded = bloc.stream.firstWhere((s) => s is DashboardLoaded);
+      bloc.add(LoadDashboardData());
+      await loaded;
+      final response = Completer<Either<Failure, List<Vehicle>>>();
+      when(() => getVehicles()).thenAnswer((_) => response.future);
+      final refreshing = bloc.stream.firstWhere(
+        (s) => s is DashboardLoaded && s.isRefreshing,
+      );
+      bloc.add(DashboardRefreshRequested());
+      await refreshing;
+      final selected = bloc.stream.firstWhere(
+        (s) =>
+            s is DashboardLoaded && s.workshopIndexByVehicleId[vehicle.id] == 2,
+      );
+      bloc.add(WorkshopPageChanged(vehicleId: vehicle.id, index: 2));
+      await selected;
+      final refreshed = bloc.stream.firstWhere(
+        (s) => s is DashboardLoaded && !s.isRefreshing,
+      );
+      response.complete(
+        Right([
+          vehicle.copyWith(mechanics: [b, a]),
+        ]),
+      );
+      final result = await refreshed as DashboardLoaded;
+      expect(result.workshopIndexByVehicleId[vehicle.id], 1);
+    },
+  );
 
   final tFutureWork = FutureWorkSummary(
     id: 'item-1',
@@ -134,6 +179,33 @@ void main() {
   );
 
   blocTest<DashboardBloc, DashboardState>(
+    'cambia periodo e restituisce nello stato il costo medio carburante',
+    build: buildBloc,
+    seed: () => DashboardLoaded(
+      vehicles: [
+        vehicleFixture(
+          fuelCostAverages: const FuelCostAverages(
+            dailyCents: 325,
+            monthlyCents: 9891,
+            annualCents: 118690,
+          ),
+        ),
+      ],
+      index: 0,
+      kpis: const [],
+    ),
+    act: (bloc) =>
+        bloc.add(DashboardCostPeriodChanged(MaintenanceCostPeriod.annual)),
+    expect: () => [
+      isA<DashboardLoaded>().having(
+        (state) => state.fuelCostCents,
+        'costo carburante',
+        118690,
+      ),
+    ],
+  );
+
+  blocTest<DashboardBloc, DashboardState>(
     'emette [loading, loaded] con i veicoli e i kpi del primo quando ci sono veicoli',
     build: () {
       when(
@@ -145,7 +217,13 @@ void main() {
     act: (bloc) => bloc.add(LoadDashboardData()),
     expect: () => [
       DashboardLoading(),
-      DashboardLoaded(vehicles: [tVehicle1, tVehicle2], index: 0, kpis: tKpis),
+      DashboardLoaded(
+        vehicles: [tVehicle1, tVehicle2],
+        index: 0,
+        kpis: tKpis,
+        workshopMascotsByVehicleId: const {'v1': [], 'v2': []},
+        workshopIndexByVehicleId: const {'v1': 0, 'v2': 0},
+      ),
     ],
     verify: (_) {
       verify(() => computeKpis(tVehicle1)).called(1);
@@ -221,8 +299,52 @@ void main() {
       isA<DashboardLoaded>().having((s) => s.isRefreshing, 'isRefreshing', true)
       // i veicoli vecchi restano visibili durante il refresh.
       .having((s) => s.vehicles, 'vehicles', [tVehicle1]),
-      DashboardLoaded(vehicles: [tVehicle1, tVehicle2], index: 0, kpis: tKpis),
+      DashboardLoaded(
+        vehicles: [tVehicle1, tVehicle2],
+        index: 0,
+        kpis: tKpis,
+        workshopMascotsByVehicleId: const {'v1': [], 'v2': []},
+        workshopIndexByVehicleId: const {'v1': 0, 'v2': 0},
+      ),
     ],
+  );
+
+  final refreshedVehicle2 = tVehicle2.copyWith(
+    fotoPath: 'vehicle-v2-refreshed.jpg',
+  );
+
+  blocTest<DashboardBloc, DashboardState>(
+    'DashboardRefreshRequested: mantiene il veicolo selezionato per id',
+    build: () {
+      when(() => getVehicles()).thenAnswer(
+        (_) async => Right([tVehicle3, tVehicle1, refreshedVehicle2]),
+      );
+      when(() => computeKpis(refreshedVehicle2)).thenReturn(tKpis);
+      return buildBloc();
+    },
+    seed: () => DashboardLoaded(
+      vehicles: [tVehicle1, tVehicle2],
+      index: 1,
+      kpis: const [],
+    ),
+    act: (bloc) => bloc.add(DashboardRefreshRequested()),
+    expect: () => [
+      isA<DashboardLoaded>().having(
+        (state) => state.isRefreshing,
+        'isRefreshing',
+        true,
+      ),
+      isA<DashboardLoaded>()
+          .having((state) => state.index, 'index', 2)
+          .having(
+            (state) => state.vehicles[state.index].id,
+            'selected vehicle id',
+            tVehicle2.id,
+          ),
+    ],
+    verify: (_) {
+      verify(() => computeKpis(refreshedVehicle2)).called(1);
+    },
   );
 
   blocTest<DashboardBloc, DashboardState>(
@@ -288,6 +410,8 @@ void main() {
       // Niente DashboardLoading: il carosello non viene mai smontato.
       DashboardLoaded(
         vehicles: [tVehicle1, tVehicle2Foto],
+        workshopMascotsByVehicleId: const {'v1': [], 'v2': []},
+        workshopIndexByVehicleId: const {'v1': 0, 'v2': 0},
         index: 1,
         kpis: tKpis,
       ),

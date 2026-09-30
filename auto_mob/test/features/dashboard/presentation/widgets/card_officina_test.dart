@@ -2,6 +2,7 @@ import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/bloc/disconnect_mechanic_cubit.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/widgets/card_officina.dart';
+import 'package:auto_mob_v1/features/dashboard/presentation/widgets/workshop_carousel.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/widgets/mechanic_details_sheet.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/usecases/connect_mechanic.dart';
@@ -105,20 +106,27 @@ void main() {
     expect(find.text('+39 081 1234567'), findsOneWidget);
   });
 
-  testWidgets('lo swiper parte da Aggiungi e apre la card selezionata', (
+  testWidgets('il carosello mette al centro la selezione e apre l’officina', (
     tester,
   ) async {
     var addTaps = 0;
     MechanicSummary? selected;
+    final selectedIndex = ValueNotifier(0);
+    addTearDown(selectedIndex.dispose);
 
     await tester.pumpWidget(
       _TestApp(
         child: SizedBox(
           width: 360,
-          child: AmWorkshopSwiper(
-            mechanics: const [mechanic],
-            onAdd: () => addTaps++,
-            onMechanicTap: (value) => selected = value,
+          child: ValueListenableBuilder<int>(
+            valueListenable: selectedIndex,
+            builder: (context, index, _) => AmWorkshopCarousel(
+              mechanics: const [mechanic],
+              selectedIndex: index,
+              onSelected: (value) => selectedIndex.value = value,
+              onAdd: () => addTaps++,
+              onMechanicTap: (value) => selected = value,
+            ),
           ),
         ),
       ),
@@ -129,8 +137,9 @@ void main() {
     await tester.tap(visibleAdd);
     expect(addTaps, 1);
 
-    await tester.drag(visibleAdd, const Offset(320, 0));
+    await tester.drag(visibleAdd, const Offset(-160, 0));
     await tester.pumpAndSettle();
+    expect(selectedIndex.value, 1);
     final visibleMechanic = find.text('OFFICINA GIORDANO').hitTestable();
     expect(visibleMechanic, findsOneWidget);
 
@@ -138,16 +147,46 @@ void main() {
     expect(selected, mechanic);
   });
 
-  testWidgets('con zero officine mostra solo Add e disabilita lo swipe', (
+  testWidgets('il trascinamento muove lo slot prima di cambiare selezione', (
     tester,
   ) async {
+    int? selectedIndex;
+    await tester.pumpWidget(
+      _TestApp(
+        child: SizedBox(
+          width: 360,
+          child: AmWorkshopCarousel(
+            mechanics: const [mechanic],
+            selectedIndex: 1,
+            onSelected: (value) => selectedIndex = value,
+            onAdd: () {},
+            onMechanicTap: (_) {},
+          ),
+        ),
+      ),
+    );
+    final card = find.byKey(const ValueKey('workshop_tile_1'));
+    final before = tester.getTopLeft(card);
+    final gesture = await tester.startGesture(tester.getCenter(card));
+    await gesture.moveBy(const Offset(30, 0));
+    await tester.pump();
+    await gesture.moveBy(const Offset(30, 0));
+    await tester.pump();
+    expect(tester.getTopLeft(card).dx, greaterThan(before.dx));
+    expect(selectedIndex, isNull);
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(card).dx, closeTo(before.dx, .1));
+  });
+
+  testWidgets('con zero officine mostra solo la tessera Add', (tester) async {
     var addTaps = 0;
 
     await tester.pumpWidget(
       _TestApp(
         child: SizedBox(
           width: 360,
-          child: AmWorkshopSwiper(
+          child: AmWorkshopCarousel(
             mechanics: const [],
             onAdd: () => addTaps++,
             onMechanicTap: (_) {},

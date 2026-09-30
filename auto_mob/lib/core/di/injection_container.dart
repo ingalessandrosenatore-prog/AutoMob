@@ -56,6 +56,7 @@ import '../../features/vehicle/domain/usecases/save_draft_step.dart';
 import '../../features/vehicle/domain/usecases/save_vehicle.dart';
 import '../../features/vehicle/domain/usecases/get_vehicles.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_km.dart';
+import '../../features/vehicle/domain/usecases/add_fuel_expense.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_revision.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_photo.dart';
 import '../../features/vehicle/domain/usecases/compute_maintenance_kpis.dart';
@@ -76,6 +77,7 @@ import '../../features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/disconnect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
 import '../../features/dashboard/domain/usecases/calculate_maintenance_cost.dart';
+import '../../features/dashboard/domain/usecases/get_fuel_cost_for_period.dart';
 
 // Future work
 import '../../features/future_work/data/datasources/future_work_remote_data_source.dart';
@@ -265,6 +267,7 @@ Future<void> _initVehicle() async {
   sl.registerLazySingleton<ClearVehicleDraft>(() => ClearVehicleDraft(sl()));
   sl.registerLazySingleton<GetVehicles>(() => GetVehicles(sl()));
   sl.registerLazySingleton<UpdateVehicleKm>(() => UpdateVehicleKm(sl()));
+  sl.registerLazySingleton<AddFuelExpense>(() => AddFuelExpense(sl()));
   sl.registerLazySingleton<UpdateVehicleRevision>(
     () => UpdateVehicleRevision(sl()),
   );
@@ -273,7 +276,7 @@ Future<void> _initVehicle() async {
   sl.registerLazySingleton<DisconnectMechanic>(() => DisconnectMechanic(sl()));
 
   // Cubit modale "Aggiorna KM" — factory: nuova istanza ad ogni apertura.
-  sl.registerFactory<KmUpdateCubit>(() => KmUpdateCubit(sl()));
+  sl.registerFactory<KmUpdateCubit>(() => KmUpdateCubit(sl(), sl()));
   sl.registerFactory<RevisionUpdateCubit>(() => RevisionUpdateCubit(sl()));
   sl.registerFactory<ConnectMechanicCubit>(() => ConnectMechanicCubit(sl()));
   sl.registerFactory<DisconnectMechanicCubit>(
@@ -327,6 +330,9 @@ Future<void> _initDashboard() async {
   sl.registerLazySingleton<CalculateMaintenanceCost>(
     () => const CalculateMaintenanceCost(),
   );
+  sl.registerLazySingleton<GetFuelCostForPeriod>(
+    () => const GetFuelCostForPeriod(),
+  );
 
   // BLoC — lazySingleton: la stessa istanza sopravvive ai cambi di tab, cosi'
   // i dati restano in cache e non si ricaricano ad ogni apertura della home
@@ -339,6 +345,7 @@ Future<void> _initDashboard() async {
       computeKpis: sl(),
       updateVehiclePhoto: sl(),
       calculateMaintenanceCost: sl(),
+      getFuelCostForPeriod: sl(),
       getLatestOpenFutureWorks: sl(),
     ),
     dispose: (b) => b.close(),

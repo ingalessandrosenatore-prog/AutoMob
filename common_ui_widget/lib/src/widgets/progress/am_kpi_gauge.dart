@@ -16,6 +16,9 @@ class AmKpiGauge extends StatefulWidget {
     this.progress,
     required this.valueFormatter,
     this.compact = false,
+    this.headingFontSize,
+    this.valueFontSize,
+    this.maximumFontSize,
   }) : assert((label == null) != (icon == null)),
        assert(label != null || semanticLabel != null),
        assert(maximum != null || progress != null);
@@ -30,6 +33,9 @@ class AmKpiGauge extends StatefulWidget {
   final double? progress;
   final String Function(num value) valueFormatter;
   final bool compact;
+  final double? headingFontSize;
+  final double? valueFontSize;
+  final double? maximumFontSize;
 
   @override
   State<AmKpiGauge> createState() => _AmKpiGaugeState();
@@ -191,7 +197,7 @@ class _AmKpiGaugeState extends State<AmKpiGauge>
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: colors.textSecondary,
-                              fontSize: 7.5,
+                              fontSize: widget.headingFontSize ?? 7.5,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.7,
                             ),
@@ -212,7 +218,8 @@ class _AmKpiGaugeState extends State<AmKpiGauge>
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: colors.textPrimary,
-                        fontSize: widget.compact ? 9 : 10.5,
+                        fontSize:
+                            widget.valueFontSize ?? (widget.compact ? 9 : 10.5),
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -226,7 +233,9 @@ class _AmKpiGaugeState extends State<AmKpiGauge>
                         widget.valueFormatter(widget.maximum!),
                         style: TextStyle(
                           color: colors.textSecondary,
-                          fontSize: widget.compact ? 7 : 8,
+                          fontSize:
+                              widget.maximumFontSize ??
+                              (widget.compact ? 7 : 8),
                           fontWeight: FontWeight.w700,
                         ),
                       ),

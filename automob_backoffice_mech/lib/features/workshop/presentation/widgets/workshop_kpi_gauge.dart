@@ -22,5 +22,8 @@ class WorkshopKpiGauge extends StatelessWidget {
     value: value,
     maximum: maximum,
     valueFormatter: valueFormatter,
+    headingFontSize: 6.5,
+    valueFontSize: 12.5,
+    maximumFontSize: 10,
   );
 }

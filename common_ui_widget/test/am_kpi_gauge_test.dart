@@ -86,4 +86,34 @@ void main() {
     expect(tester.getSize(find.byType(AmKpiGauge)).height, 108);
     expect(tester.getSemantics(find.byType(AmKpiGauge)).label, 'Carburante');
   });
+
+  testWidgets('permette di personalizzare le dimensioni dei testi', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      buildGauge(
+        AmKpiGauge(
+          label: 'Fatturato',
+          value: 25,
+          maximum: 100,
+          headingFontSize: 6.5,
+          valueFontSize: 12.5,
+          maximumFontSize: 10,
+          valueFormatter: (value) => '€ ${value.round()}',
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Text textWithin(String key) => tester.widget<Text>(
+      find.descendant(
+        of: find.byKey(ValueKey(key)),
+        matching: find.byType(Text),
+      ),
+    );
+
+    expect(textWithin('am_kpi_heading').style?.fontSize, 6.5);
+    expect(textWithin('am_kpi_value').style?.fontSize, 12.5);
+    expect(textWithin('am_kpi_maximum').style?.fontSize, 10);
+  });
 }

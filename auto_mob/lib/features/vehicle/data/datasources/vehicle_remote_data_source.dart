@@ -8,6 +8,7 @@ import '../../../../core/error/exceptions/exceptions.dart';
 import '../../domain/entities/vehicle_draft.dart';
 import '../../domain/entities/mechanic_summary.dart';
 import '../../domain/entities/maintenance_defaults.dart';
+import '../../domain/entities/fuel_expense_draft.dart';
 import '../models/vehicle_model.dart';
 
 abstract class VehicleRemoteDataSource {
@@ -34,6 +35,11 @@ abstract class VehicleRemoteDataSource {
   /// `aggiorna_km_veicolo`. I km salgono solo (mai indietro). Ritorna i km
   /// effettivi salvati sul DB.
   Future<int> updateKm({required String vehicleId, required int newKm});
+
+  Future<String> addFuelExpense({
+    required String vehicleId,
+    required FuelExpenseDraft expense,
+  });
 
   Future<DateTime> updateRevisionDate({
     required String vehicleId,
@@ -247,6 +253,36 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     } catch (e) {
       throw const VehicleDataSourceException(
         'Errore durante l\'aggiornamento dei km',
+      );
+    }
+  }
+
+  @override
+  Future<String> addFuelExpense({
+    required String vehicleId,
+    required FuelExpenseDraft expense,
+  }) async {
+    if (owner_id == null) {
+      throw const ServerException('Utente non autenticato');
+    }
+
+    try {
+      final result = await supabaseClient.rpc(
+        'aggiungi_rifornimento',
+        params: {
+          'p_vehicle_id': vehicleId,
+          'p_liters_milli': expense.litersMilli,
+          'p_cost_cents': expense.costCents,
+        },
+      );
+      return result.toString();
+    } on PostgrestException catch (e) {
+      throw VehicleDataSourceException(e.message, code: e.code);
+    } on SocketException {
+      throw const NetworkException();
+    } catch (_) {
+      throw const VehicleDataSourceException(
+        'Errore durante il salvataggio del rifornimento',
       );
     }
   }

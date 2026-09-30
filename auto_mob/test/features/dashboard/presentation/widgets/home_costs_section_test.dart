@@ -9,6 +9,7 @@ void main() {
     WidgetTester tester, {
     MaintenanceCostPeriod period = MaintenanceCostPeriod.monthly,
     int maintenanceCostCents = 10000,
+    int fuelCostCents = 7500,
     DateTime? now,
     ValueChanged<MaintenanceCostPeriod>? onChanged,
   }) => tester.pumpWidget(
@@ -19,6 +20,7 @@ void main() {
           child: HomeCostsSection(
             selectedPeriod: period,
             maintenanceCostCents: maintenanceCostCents,
+            fuelCostCents: fuelCostCents,
             now: now,
             onPeriodChanged: onChanged,
           ),
@@ -43,7 +45,8 @@ void main() {
     expect(find.byIcon(Icons.local_gas_station_outlined), findsOneWidget);
     expect(find.byIcon(Icons.description_outlined), findsOneWidget);
     expect(find.text('€ 100,00'), findsOneWidget);
-    expect(find.text('-'), findsNWidgets(2));
+    expect(find.text('€ 75,00'), findsOneWidget);
+    expect(find.text('-'), findsOneWidget);
     expect(find.text('Manutenzione'), findsNothing);
     final gaugesBottom = tester.getBottomLeft(find.byType(AmKpiGauge).last);
     final selectorTop = tester.getTopLeft(find.byType(AmGearPeriodSelector));
@@ -99,7 +102,7 @@ void main() {
     await pumpSection(tester, maintenanceCostCents: 0);
     await tester.pumpAndSettle();
 
-    expect(find.text('-'), findsNWidgets(3));
+    expect(find.text('-'), findsNWidgets(2));
   });
 
   testWidgets('inoltra al bloc il nuovo periodo selezionato', (tester) async {

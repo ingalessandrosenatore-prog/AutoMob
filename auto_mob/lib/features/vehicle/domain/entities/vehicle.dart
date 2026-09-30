@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import 'mechanic_summary.dart';
 import 'vehicle_mileage_estimate.dart';
+import 'fuel_cost_averages.dart';
 
 class Vehicle extends Equatable {
   final String id;
@@ -41,6 +42,7 @@ class Vehicle extends Equatable {
   final int maintenanceCostCents;
   final DateTime? firstMaintenanceDate;
   final Map<int, int> maintenanceCostsByYear;
+  final FuelCostAverages fuelCostAverages;
 
   /// Compatibilita' temporanea per i consumer ancora basati su una sola
   /// officina. La lista ordinata resta la fonte di verita'.
@@ -83,6 +85,7 @@ class Vehicle extends Equatable {
     this.maintenanceCostCents = 0,
     this.firstMaintenanceDate,
     this.maintenanceCostsByYear = const {},
+    this.fuelCostAverages = FuelCostAverages.zero,
   });
 
   Vehicle copyWith({String? fotoPath, List<MechanicSummary>? mechanics}) {
@@ -119,6 +122,7 @@ class Vehicle extends Equatable {
       maintenanceCostCents: maintenanceCostCents,
       firstMaintenanceDate: firstMaintenanceDate,
       maintenanceCostsByYear: maintenanceCostsByYear,
+      fuelCostAverages: fuelCostAverages,
     );
   }
 
@@ -189,5 +193,6 @@ class Vehicle extends Equatable {
     maintenanceCostCents,
     firstMaintenanceDate,
     maintenanceCostsByYear,
+    fuelCostAverages,
   ];
 }

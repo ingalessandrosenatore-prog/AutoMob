@@ -7,6 +7,7 @@ import '../entities/vehicle.dart';
 import '../entities/vehicle_draft.dart';
 import '../entities/vehicle_save_outcome.dart';
 import '../entities/mechanic_summary.dart';
+import '../entities/fuel_expense_draft.dart';
 
 abstract class VehicleRepository {
   /// Salva (o aggiorna) il draft corrente in locale (SharedPreferences).
@@ -38,6 +39,11 @@ abstract class VehicleRepository {
   Future<Either<Failure, int>> updateKm({
     required String vehicleId,
     required int newKm,
+  });
+
+  Future<Either<Failure, String>> addFuelExpense({
+    required String vehicleId,
+    required FuelExpenseDraft expense,
   });
 
   Future<Either<Failure, DateTime>> updateRevisionDate({

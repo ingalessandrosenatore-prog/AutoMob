@@ -7,9 +7,10 @@
     <!-- Da Android 13 il sistema chiede questo permesso a runtime. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
-        android:label="auto_mob_v1"
+        android:label="AutoMob"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="io.flutter.embedding.android.EnableFlutterGPU" android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
