@@ -27,6 +27,25 @@
     },
     {
       "client_info": {
+        "mobilesdk_app_id": "1:638928224046:android:5f23577e53a2e49f0f44bf",
+        "android_client_info": {
+          "package_name": "com.infinity.automob"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmQjzSLYMnzg_bY6Evf8xvbuZc9UX5msw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:638928224046:android:a2192fcc9cd037c60f44bf",
         "android_client_info": {
           "package_name": "com.infinty.auto_mob_v1"

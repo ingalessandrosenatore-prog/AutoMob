@@ -1,5 +1,6 @@
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/fuel_cost_averages.dart';
 
 class VehicleModel extends Vehicle {
   const VehicleModel({
@@ -30,7 +31,11 @@ class VehicleModel extends Vehicle {
     super.lastTireRotationDate,
     super.lastRevisionDate,
     super.updatedAt,
-    super.mechanic,
+    super.mechanics,
+    super.maintenanceCostCents,
+    super.firstMaintenanceDate,
+    super.maintenanceCostsByYear,
+    super.fuelCostAverages,
   });
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
@@ -64,17 +69,30 @@ class VehicleModel extends Vehicle {
       return DateTime.tryParse(v.toString());
     }
 
-    final mechanicJson = json['mechanic'];
-    final mechanic = mechanicJson is Map
-        ? MechanicSummary(
-            id: str(mechanicJson['id']),
-            code: str(mechanicJson['mechanic_code']),
-            businessName: str(mechanicJson['business_name']),
-            address: _nullableString(mechanicJson['address']),
-            phone: _nullableString(mechanicJson['number']),
-            email: _nullableString(mechanicJson['email']),
+    MechanicSummary mechanicFromJson(Map<dynamic, dynamic> mechanicJson) =>
+        MechanicSummary(
+          id: str(mechanicJson['id']),
+          code: str(mechanicJson['mechanic_code']),
+          businessName: str(mechanicJson['business_name']),
+          address: _nullableString(mechanicJson['address']),
+          phone: _nullableString(mechanicJson['number']),
+          email: _nullableString(mechanicJson['email']),
+          photoUrl: _nullableString(mechanicJson['photo_url']),
+        );
+
+    final mechanicsJson = json['mechanics'];
+    final mechanics = mechanicsJson is List
+        ? mechanicsJson.whereType<Map>().map(mechanicFromJson).toList()
+        : json['mechanic'] is Map
+        ? [mechanicFromJson(json['mechanic'] as Map)]
+        : const <MechanicSummary>[];
+    final costsByYearJson = json['maintenance_costs_by_year'];
+    final costsByYear = costsByYearJson is Map
+        ? costsByYearJson.map(
+            (year, cents) =>
+                MapEntry(int.parse(year.toString()), intValue(cents)),
           )
-        : null;
+        : const <int, int>{};
 
     return VehicleModel(
       id: str(json['id']),
@@ -99,7 +117,7 @@ class VehicleModel extends Vehicle {
       ),
       tireRotationIntervalKm: intValue(
         json['tire_rotation_interval_km'],
-        fallback: 10000,
+        fallback: 15000,
       ),
       distribuzioneIntervalKm: intOrNull(json['distribution_intervall_km']),
       lastTagliandoKm: intOrNull(json['last_tagliando_km']),
@@ -113,7 +131,15 @@ class VehicleModel extends Vehicle {
       lastRevisionDate: dateOrNull(json['last_revision_date']),
       createdAt: date(json['created_at']),
       updatedAt: dateOrNull(json['updated_at']),
-      mechanic: mechanic,
+      mechanics: mechanics,
+      maintenanceCostCents: intValue(json['maintenance_cost_cents']),
+      firstMaintenanceDate: dateOrNull(json['first_maintenance_date']),
+      maintenanceCostsByYear: costsByYear,
+      fuelCostAverages: FuelCostAverages(
+        dailyCents: intValue(json['fuel_daily_cost_cents']),
+        monthlyCents: intValue(json['fuel_monthly_cost_cents']),
+        annualCents: intValue(json['fuel_annual_cost_cents']),
+      ),
     );
   }
 
@@ -137,19 +163,30 @@ class VehicleModel extends Vehicle {
       'distribution_intervall_km': distribuzioneIntervalKm,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
-      'mechanic': mechanic == null
-          ? null
-          : {
-              'id': mechanic!.id,
-              'mechanic_code': mechanic!.code,
-              'business_name': mechanic!.businessName,
-              'address': mechanic!.address,
-              'number': mechanic!.phone,
-              'email': mechanic!.email,
-            },
+      'mechanics': mechanics.map(_mechanicToJson).toList(),
+      'maintenance_cost_cents': maintenanceCostCents,
+      'first_maintenance_date': firstMaintenanceDate?.toIso8601String(),
+      'maintenance_costs_by_year': maintenanceCostsByYear.map(
+        (year, cents) => MapEntry(year.toString(), cents),
+      ),
+      'fuel_daily_cost_cents': fuelCostAverages.dailyCents,
+      'fuel_monthly_cost_cents': fuelCostAverages.monthlyCents,
+      'fuel_annual_cost_cents': fuelCostAverages.annualCents,
+      // Campo legacy mantenuto durante la migrazione dei consumer.
+      'mechanic': mechanic == null ? null : _mechanicToJson(mechanic!),
     };
   }
 }
+
+Map<String, dynamic> _mechanicToJson(MechanicSummary mechanic) => {
+  'id': mechanic.id,
+  'mechanic_code': mechanic.code,
+  'business_name': mechanic.businessName,
+  'address': mechanic.address,
+  'number': mechanic.phone,
+  'email': mechanic.email,
+  'photo_url': mechanic.photoUrl,
+};
 
 String? _nullableString(dynamic value) {
   final text = value?.toString().trim();

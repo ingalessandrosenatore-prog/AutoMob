@@ -56,17 +56,28 @@ void main() {
     expect(result, isEmpty);
   });
 
-  test('esclude la distribuzione quando l\'intervallo non e\' configurato', () {
-    final vehicle = buildVehicle(distribuzioneIntervalKm: null);
+  test(
+    'Fiat 500 senza storico usa base zero e tutti gli intervalli default',
+    () {
+      final vehicle = buildVehicle(distribuzioneIntervalKm: null);
 
-    final result = usecase(vehicle);
+      final result = usecase(vehicle);
 
-    expect(
-      result.map((k) => k.type),
-      isNot(contains(EnumPopUp.aggiornaDistribuzione)),
-    );
-    expect(result, hasLength(3));
-  });
+      expect(result, hasLength(4));
+      expect(
+        result
+            .firstWhere((k) => k.type == EnumPopUp.aggiornaTagliando)
+            .remainingKm,
+        5000,
+      );
+      expect(
+        result
+            .firstWhere((k) => k.type == EnumPopUp.aggiornaDistribuzione)
+            .remainingKm,
+        90000,
+      );
+    },
+  );
 
   test('include la distribuzione quando l\'intervallo e\' configurato', () {
     final vehicle = buildVehicle(distribuzioneIntervalKm: 20000);
@@ -80,7 +91,7 @@ void main() {
     expect(result, hasLength(4));
   });
 
-  test('senza storico usa i km attuali come base (100% residuo)', () {
+  test('senza storico la base resta zero dopo un aggiornamento dei km', () {
     final vehicle = buildVehicle(
       kmCurrent: 10000,
       tagliandoIntervalKm: 15000,
@@ -92,8 +103,8 @@ void main() {
       (k) => k.type == EnumPopUp.aggiornaTagliando,
     );
 
-    expect(tagliando.remainingKm, 15000);
-    expect(tagliando.percentage, 100.0);
+    expect(tagliando.remainingKm, 5000);
+    expect(tagliando.percentage, closeTo(33.33, 0.01));
   });
 
   test('con storico calcola i km mancanti rispetto all\'ultimo intervento', () {

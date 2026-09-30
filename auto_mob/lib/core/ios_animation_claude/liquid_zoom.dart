@@ -45,7 +45,7 @@ class LiquidZoom extends StatefulWidget {
 
   /// Contenuto di destinazione; `close` esegue la chiusura animata.
   final Widget Function(BuildContext context, VoidCallback close)
-      destinationBuilder;
+  destinationBuilder;
 
   /// Geometria di arrivo: pagina, modale o popup ancorato.
   final LiquidZoomTarget target;
@@ -70,8 +70,7 @@ class LiquidZoom extends StatefulWidget {
   State<LiquidZoom> createState() => _LiquidZoomState();
 }
 
-class _LiquidZoomState extends State<LiquidZoom>
-    with TickerProviderStateMixin {
+class _LiquidZoomState extends State<LiquidZoom> with TickerProviderStateMixin {
   /// Scala del trigger sul press (riposo = 1).
   late final AnimationController pressCtrl;
 
@@ -113,8 +112,7 @@ class _LiquidZoomState extends State<LiquidZoom>
   bool get _isBusy => morphCtrl.isAnimating || morphCtrl.value > 0.05;
 
   void _misuraTrigger() {
-    final box =
-        _triggerKey.currentContext!.findRenderObject() as RenderBox;
+    final box = _triggerKey.currentContext!.findRenderObject() as RenderBox;
     _sourceRect = box.localToGlobal(Offset.zero) & box.size;
   }
 
@@ -123,7 +121,11 @@ class _LiquidZoomState extends State<LiquidZoom>
     _misuraTrigger();
     pressCtrl.animateWith(
       SpringSimulation(
-          _config.pressSpring, pressCtrl.value, _config.pressScale, 0),
+        _config.pressSpring,
+        pressCtrl.value,
+        _config.pressScale,
+        0,
+      ),
     );
     lightCtrl.animateWith(
       SpringSimulation(_config.lightSpring, lightCtrl.value, 0.6, 0),
@@ -199,8 +201,12 @@ class _LiquidZoomState extends State<LiquidZoom>
       onTapUp: (_) => _onRelease(),
       onTapCancel: _onCancel,
       child: AnimatedBuilder(
-        animation:
-            Listenable.merge([pressCtrl, lightCtrl, morphCtrl, liftCtrl]),
+        animation: Listenable.merge([
+          pressCtrl,
+          lightCtrl,
+          morphCtrl,
+          liftCtrl,
+        ]),
         child: widget.child,
         builder: (context, child) {
           // Il trigger sparisce quasi subito (la card gli nasce sopra) e

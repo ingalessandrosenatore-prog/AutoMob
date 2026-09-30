@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// Transizione unica dell'app per le pagine PUSHATE (non le tab, che con
-/// indexedStack cambiano istantanee): fade + un leggero scale, stile iOS.
+import 'am_cover_route_animation.dart';
+
+enum AmPageSlideDirection { fromRight, fromLeft }
+
+/// Transizione in opacità per le pagine pushate.
 ///
-/// E' una [CustomTransitionPage] -> resta una `PageRoute` a tutti gli effetti,
-/// quindi le [Hero] animation continuano a "volare" durante la transizione.
+/// Nome e [direction] restano invariati per compatibilità con i chiamanti.
+/// Le route non traslano superfici Liquid Glass: shader e contenuto devono
+/// rimanere nello stesso sistema di coordinate durante tutta l'animazione.
 class AmFadeThroughPage<T> extends CustomTransitionPage<T> {
   AmFadeThroughPage({
     required super.child,
@@ -13,35 +17,34 @@ class AmFadeThroughPage<T> extends CustomTransitionPage<T> {
     super.name,
     super.arguments,
     super.restorationId,
+    this.direction = AmPageSlideDirection.fromRight,
   }) : super(
-          transitionDuration: const Duration(milliseconds: 420),
-          reverseTransitionDuration: const Duration(milliseconds: 360),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-              _FadeThroughTransition(animation: animation, child: child),
-        );
+         transitionDuration: const Duration(milliseconds: 420),
+         reverseTransitionDuration: const Duration(milliseconds: 360),
+         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+             _OpacityRouteTransition(animation: animation, child: child),
+       );
+
+  final AmPageSlideDirection direction;
 }
 
-/// Il "corpo" della transizione, come widget class (niente funzioni che
-/// ritornano Widget — vedi regole architetturali).
-class _FadeThroughTransition extends StatelessWidget {
+class _OpacityRouteTransition extends StatelessWidget {
+  const _OpacityRouteTransition({required this.animation, required this.child});
+
   final Animation<double> animation;
   final Widget child;
 
-  const _FadeThroughTransition({required this.animation, required this.child});
-
   @override
   Widget build(BuildContext context) {
-    final curved = CurvedAnimation(
+    final progress = CurvedAnimation(
       parent: animation,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
+      curve: const Interval(0, 0.7, curve: Curves.easeOutCubic),
+      reverseCurve: const Interval(0.3, 1, curve: Curves.easeInCubic),
     );
     return FadeTransition(
-      opacity: curved,
-      child: ScaleTransition(
-        scale: Tween<double>(begin: 0.98, end: 1.0).animate(curved),
-        child: child,
-      ),
+      key: const Key('am-route-opacity-transition'),
+      opacity: progress,
+      child: AmCoverRouteAnimationBinding(child: child),
     );
   }
 }

@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "revision": "1790718959031673000",
+  "asset": "automob_mascot.glb",
+  "default": {
+    "pose": "standing",
+    "prop": "wrench"
+  },
+  "poses": {
+    "standing": {
+      "root": "AM_STANDING",
+      "props": [
+        "wrench",
+        "screwdriver",
+        "tablet",
+        "tire"
+      ]
+    },
+    "desk": {
+      "root": "AM_DESK",
+      "props": [
+        "wrench",
+        "screwdriver",
+        "tablet"
+      ]
+    }
+  },
+  "materials": {
+    "base": "AM_Clothes_Base",
+    "accent": "AM_Clothes_Accent"
+  },
+  "clips": [
+    {
+      "name": "standing_wrench_idle",
+      "pose": "standing",
+      "prop": "wrench",
+      "gesture": "idle",
+      "duration": 18,
+      "loop": true
+    },
+    {
+      "name": "standing_wrench_spin",
+      "pose": "standing",
+      "prop": "wrench",
+      "gesture": "spin",
+      "duration": 4,
+      "loop": false
+    },
+    {
+      "name": "standing_screwdriver_idle",
+      "pose": "standing",
+      "prop": "screwdriver",
+      "gesture": "idle",
+      "duration": 18,
+      "loop": true
+    },
+    {
+      "name": "standing_screwdriver_spin",
+      "pose": "standing",
+      "prop": "screwdriver",
+      "gesture": "spin",
+      "duration": 4,
+      "loop": false
+    },
+    {
+      "name": "standing_tablet_idle",
+      "pose": "standing",
+      "prop": "tablet",
+      "gesture": "idle",
+      "duration": 18,
+      "loop": true
+    },
+    {
+      "name": "standing_tablet_tap",
+      "pose": "standing",
+      "prop": "tablet",
+      "gesture": "tap",
+      "duration": 4,
+      "loop": false
+    },
+    {
+      "name": "standing_tire_idle",
+      "pose": "standing",
+      "prop": "tire",
+      "gesture": "idle",
+      "duration": 18,
+      "loop": true
+    },
+    {
+      "name": "standing_tire_dribble",
+      "pose": "standing",
+      "prop": "tire",
+      "gesture": "dribble",
+      "duration": 4,
+      "loop": false
+    },
+    {
+      "name": "desk_wrench_idle",
+      "pose": "desk",
+      "prop": "wrench",
+      "gesture": "idle",
+      "duration": 18,
+      "loop": true
+    },
+    {
+      "name": "desk_wrench_spin",
+      "pose": "desk",
+      "prop": "wrench",
+      "gesture": "spin",
+      "duration": 4,
+      "loop": false
+    },
+    {
+      "name": "desk_screwdriver_idle",
+      "pose": "desk",
+      "prop": "screwdriver",
+      "gesture": "idle",
+      "duration": 18,
+      "loop": true
+    },
+    {
+      "name": "desk_screwdriver_spin",
+      "pose": "desk",
+      "prop": "screwdriver",
+      "gesture": "spin",
+      "duration": 4,
+      "loop": false
+    },
+    {
+      "name": "desk_tablet_idle",
+      "pose": "desk",
+      "prop": "tablet",
+      "gesture": "idle",
+      "duration": 18,
+      "loop": true
+    },
+    {
+      "name": "desk_tablet_tap",
+      "pose": "desk",
+      "prop": "tablet",
+      "gesture": "tap",
+      "duration": 4,
+      "loop": false
+    }
+  ]
+}

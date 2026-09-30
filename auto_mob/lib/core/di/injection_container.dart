@@ -1,13 +1,17 @@
+import '../../features/auth/domain/usecases/resolve_owner_access.dart';
+import '../../features/auth/domain/repositories/owner_access_repository.dart';
+import '../../features/auth/data/repositories/owner_access_repository_impl.dart';
+import '../../features/auth/data/datasources/owner_access_remote_data_source.dart';
 import 'dart:io';
 
 import 'package:get_it/get_it.dart';
+import 'package:automob_work_log/automob_work_log.dart' as shared_work_log;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../theme/theme_cubit.dart';
 import '../theme/theme_preferences.dart';
-import '../types/enum_pop_up.dart';
 
 // Auth
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -52,6 +56,7 @@ import '../../features/vehicle/domain/usecases/save_draft_step.dart';
 import '../../features/vehicle/domain/usecases/save_vehicle.dart';
 import '../../features/vehicle/domain/usecases/get_vehicles.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_km.dart';
+import '../../features/vehicle/domain/usecases/add_fuel_expense.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_revision.dart';
 import '../../features/vehicle/domain/usecases/update_vehicle_photo.dart';
 import '../../features/vehicle/domain/usecases/compute_maintenance_kpis.dart';
@@ -60,6 +65,7 @@ import '../../features/vehicle/domain/usecases/lookup_mechanic_by_code.dart';
 import '../../features/vehicle/domain/usecases/load_vehicle_draft.dart';
 import '../../features/vehicle/domain/usecases/clear_vehicle_draft.dart';
 import '../../features/vehicle/domain/usecases/connect_mechanic.dart';
+import '../../features/vehicle/domain/usecases/disconnect_mechanic.dart';
 import '../../features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
 import '../../features/vehicle/presentation/bloc/km_update_cubit.dart';
 import '../../features/vehicle/presentation/bloc/revision_update_cubit.dart';
@@ -68,17 +74,20 @@ import '../../features/vehicle/presentation/bloc/vehicle_registration_bloc.dart'
 // Dashboard
 import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import '../../features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
+import '../../features/dashboard/presentation/bloc/disconnect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
+import '../../features/dashboard/domain/usecases/calculate_maintenance_cost.dart';
+import '../../features/dashboard/domain/usecases/get_fuel_cost_for_period.dart';
+
+// Future work
+import '../../features/future_work/data/datasources/future_work_remote_data_source.dart';
+import '../../features/future_work/data/repositories/future_work_repository_impl.dart';
+import '../../features/future_work/domain/repositories/future_work_repository.dart';
+import '../../features/future_work/domain/usecases/create_future_work_report.dart';
+import '../../features/future_work/domain/usecases/get_latest_open_future_works.dart';
+import '../../features/future_work/presentation/bloc/future_work_report_cubit.dart';
 
 // WorkLog
-import '../../features/work_log/data/datasources/worklog_remote_data_source.dart';
-import '../../features/work_log/data/repositories/worklog_repository_impl.dart';
-import '../../features/work_log/domain/repositories/worklog_repo.dart';
-import '../../features/work_log/domain/usecases/create_work_log.dart';
-import '../../features/work_log/domain/usecases/get_vehicle_options.dart';
-import '../../features/work_log/domain/usecases/get_vehicle_works.dart';
-import '../../features/work_log/presentation/bloc/work_log_bloc.dart';
-import '../../features/work_log/presentation/bloc/work_log_history_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -89,8 +98,25 @@ Future<void> init({bool firebaseAvailable = false}) async {
   _initNotifications(firebaseAvailable: firebaseAvailable);
   await _initAuth();
   await _initVehicle();
+  _initFutureWork();
   await _initDashboard();
   _initWorkLog();
+}
+
+void _initFutureWork() {
+  sl.registerLazySingleton<FutureWorkRemoteDataSource>(
+    () => SupabaseFutureWorkRemoteDataSource(sl()),
+  );
+  sl.registerLazySingleton<FutureWorkRepository>(
+    () => FutureWorkRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<CreateFutureWorkReport>(
+    () => CreateFutureWorkReport(sl()),
+  );
+  sl.registerLazySingleton<GetLatestOpenFutureWorks>(
+    () => GetLatestOpenFutureWorks(sl()),
+  );
+  sl.registerFactory<FutureWorkReportCubit>(() => FutureWorkReportCubit(sl()));
 }
 
 void _initNotifications({required bool firebaseAvailable}) {
@@ -162,9 +188,17 @@ void _initTheme() {
 }
 
 Future<void> _initAuth() async {
+  sl.registerLazySingleton<OwnerAccessRemoteDataSource>(
+    () => OwnerAccessRemoteDataSource(sl()),
+  );
+  sl.registerLazySingleton<OwnerAccessRepository>(
+    () => OwnerAccessRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<ResolveOwnerAccess>(() => ResolveOwnerAccess(sl()));
   sl.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
       checkSession: sl(),
+      resolveOwnerAccess: sl(),
       getPendingVerificationEmail: sl(),
       loginWithEmail: sl(),
       loginWithGoogle: sl(),
@@ -233,16 +267,21 @@ Future<void> _initVehicle() async {
   sl.registerLazySingleton<ClearVehicleDraft>(() => ClearVehicleDraft(sl()));
   sl.registerLazySingleton<GetVehicles>(() => GetVehicles(sl()));
   sl.registerLazySingleton<UpdateVehicleKm>(() => UpdateVehicleKm(sl()));
+  sl.registerLazySingleton<AddFuelExpense>(() => AddFuelExpense(sl()));
   sl.registerLazySingleton<UpdateVehicleRevision>(
     () => UpdateVehicleRevision(sl()),
   );
   sl.registerLazySingleton<UpdateVehiclePhoto>(() => UpdateVehiclePhoto(sl()));
   sl.registerLazySingleton<ConnectMechanic>(() => ConnectMechanic(sl()));
+  sl.registerLazySingleton<DisconnectMechanic>(() => DisconnectMechanic(sl()));
 
   // Cubit modale "Aggiorna KM" — factory: nuova istanza ad ogni apertura.
-  sl.registerFactory<KmUpdateCubit>(() => KmUpdateCubit(sl()));
+  sl.registerFactory<KmUpdateCubit>(() => KmUpdateCubit(sl(), sl()));
   sl.registerFactory<RevisionUpdateCubit>(() => RevisionUpdateCubit(sl()));
   sl.registerFactory<ConnectMechanicCubit>(() => ConnectMechanicCubit(sl()));
+  sl.registerFactory<DisconnectMechanicCubit>(
+    () => DisconnectMechanicCubit(sl()),
+  );
 
   // Repository
   sl.registerLazySingleton<VehicleRepository>(
@@ -288,6 +327,12 @@ Future<void> _initDashboard() async {
   sl.registerLazySingleton<ComputeMaintenanceKpis>(
     () => ComputeMaintenanceKpis(),
   );
+  sl.registerLazySingleton<CalculateMaintenanceCost>(
+    () => const CalculateMaintenanceCost(),
+  );
+  sl.registerLazySingleton<GetFuelCostForPeriod>(
+    () => const GetFuelCostForPeriod(),
+  );
 
   // BLoC — lazySingleton: la stessa istanza sopravvive ai cambi di tab, cosi'
   // i dati restano in cache e non si ricaricano ad ogni apertura della home
@@ -299,6 +344,9 @@ Future<void> _initDashboard() async {
       getVehicles: sl(),
       computeKpis: sl(),
       updateVehiclePhoto: sl(),
+      calculateMaintenanceCost: sl(),
+      getFuelCostForPeriod: sl(),
+      getLatestOpenFutureWorks: sl(),
     ),
     dispose: (b) => b.close(),
   );
@@ -317,33 +365,34 @@ Future<void> _initDashboard() async {
 
 void _initWorkLog() {
   // Data Source
-  sl.registerLazySingleton<WorklogRemoteDataSource>(
-    () => WorklogRemoteDataSourceImpl(supabaseClient: sl()),
-  );
-
-  // Repository
-  sl.registerLazySingleton<WorklogRepo>(
-    () => WorklogRepositoryImpl(remoteDataSource: sl()),
-  );
-
-  // Use Case
-  sl.registerLazySingleton<CreateWorkLog>(() => CreateWorkLog(sl()));
-  sl.registerLazySingleton<GetVehicleOptions>(() => GetVehicleOptions(sl()));
-  sl.registerLazySingleton<GetVehicleWorks>(() => GetVehicleWorks(sl()));
+  // Il vecchio WorkLog resta nel sorgente per compatibilita, ma non viene piu
+  // registrato: l'unica implementazione attiva e quella del package condiviso.
 
   // BLoC — factory con param (vehicleId passato dal popup all'apertura)
-  sl.registerFactoryParam<WorkLogBloc, String, EnumPopUp>(
-    (vehicleId, initialWorkType) => WorkLogBloc(
-      createWorkLog: sl(),
-      vehicleId: vehicleId,
-      initialWorkType: initialWorkType,
-    ),
-  );
-
   // BLoC storico — lazySingleton: stessa logica di DashboardBloc sopra,
   // cache tra le visite della pagina, guard su Initial/Error, reset al logout.
-  sl.registerLazySingleton<WorkLogHistoryBloc>(
-    () => WorkLogHistoryBloc(getVehicleOptions: sl(), getVehicleWorks: sl()),
-    dispose: (b) => b.close(),
+  sl.registerLazySingleton<shared_work_log.WorkLogRemoteDataSource>(
+    () => shared_work_log.SupabaseWorkLogRemoteDataSource(sl()),
+  );
+  sl.registerLazySingleton<shared_work_log.WorkLogRepository>(
+    () => shared_work_log.WorkLogRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton<shared_work_log.GetVehicleWorkHistory>(
+    () => shared_work_log.GetVehicleWorkHistory(sl()),
+  );
+  sl.registerLazySingleton<shared_work_log.GetWorkLogVehicles>(
+    () => shared_work_log.GetWorkLogVehicles(sl()),
+  );
+  sl.registerFactory<shared_work_log.WorkLogVehiclesCubit>(
+    () => shared_work_log.WorkLogVehiclesCubit(getWorkLogVehicles: sl()),
+  );
+  sl.registerFactory<shared_work_log.WorkLogHistoryBloc>(
+    () => shared_work_log.WorkLogHistoryBloc(getVehicleWorkHistory: sl()),
+  );
+  sl.registerLazySingleton<shared_work_log.CreateWorkLog>(
+    () => shared_work_log.CreateWorkLog(sl()),
+  );
+  sl.registerFactory<shared_work_log.WorkLogEditorCubit>(
+    () => shared_work_log.WorkLogEditorCubit(createWorkLog: sl()),
   );
 }

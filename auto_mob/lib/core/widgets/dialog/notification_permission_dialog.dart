@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-
-import 'am_status_dialog.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 
 /// Dialogo introduttivo mostrato prima del popup nativo Android/iOS.
 /// Spiegare il motivo prima di chiedere il permesso riduce i rifiuti casuali.

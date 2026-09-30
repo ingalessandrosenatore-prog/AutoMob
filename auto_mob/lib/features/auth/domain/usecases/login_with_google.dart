@@ -1,5 +1,4 @@
 ﻿import 'package:fpdart/fpdart.dart';
-import '../entities/app_user.dart';
 import '../repositories/auth_repository.dart';
 import '../../../../core/error/exceptions/exception.dart';
 
@@ -8,7 +7,7 @@ class LoginWithGoogle {
 
   LoginWithGoogle(this.repository);
 
-  Future<Either<Failure, AppAuthUser>> call() {
+  Future<Either<Failure, void>> call() {
     return repository.loginWithGoogle();
   }
 }

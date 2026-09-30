@@ -46,5 +46,80 @@ void main() {
     });
 
     expect(vehicle.mechanic, isNull);
+    expect(vehicle.mechanics, isEmpty);
+  });
+
+  test('mappa tutte le officine mantenendo il getter legacy', () {
+    final vehicle = VehicleModel.fromJson(const {
+      'id': 'vehicle-1',
+      'owner_id': 'owner-1',
+      'plate': 'AB123CD',
+      'brand': 'Fiat',
+      'model': 'Panda',
+      'year': 2020,
+      'fuel': 'benzina',
+      'km_current': 12000,
+      'created_at': '2026-07-16T10:00:00Z',
+      'mechanics': [
+        {
+          'id': 'mechanic-2',
+          'mechanic_code': 'OFF-002',
+          'business_name': 'Elettrauto Rossi',
+        },
+        {
+          'id': 'mechanic-1',
+          'mechanic_code': 'OFF-001',
+          'business_name': 'Officina Giordano',
+        },
+      ],
+    });
+
+    expect(vehicle.mechanics, hasLength(2));
+    expect(vehicle.mechanics.first.businessName, 'Elettrauto Rossi');
+    expect(vehicle.mechanic, vehicle.mechanics.first);
+    expect(vehicle.toJson()['mechanics'], hasLength(2));
+  });
+
+  test('mappa il totale e la prima data dei lavori della dashboard', () {
+    final vehicle = VehicleModel.fromJson(const {
+      'id': 'vehicle-1',
+      'owner_id': 'owner-1',
+      'plate': 'AB123CD',
+      'brand': 'Fiat',
+      'model': 'Panda',
+      'year': 2020,
+      'fuel': 'benzina',
+      'km_current': 12000,
+      'created_at': '2026-07-16T10:00:00Z',
+      'maintenance_cost_cents': 12345,
+      'first_maintenance_date': '2024-03-15',
+      'maintenance_costs_by_year': {'2024': 5000, '2025': 7345},
+    });
+
+    expect(vehicle.maintenanceCostCents, 12345);
+    expect(vehicle.firstMaintenanceDate, DateTime(2024, 3, 15));
+    expect(vehicle.maintenanceCostsByYear, {2024: 5000, 2025: 7345});
+  });
+
+  test('mappa le medie carburante restituite dalla dashboard', () {
+    final vehicle = VehicleModel.fromJson(const {
+      'id': 'vehicle-1',
+      'owner_id': 'owner-1',
+      'plate': 'AB123CD',
+      'brand': 'Fiat',
+      'model': 'Panda',
+      'year': 2020,
+      'fuel': 'benzina',
+      'km_current': 12000,
+      'created_at': '2026-07-16T10:00:00Z',
+      'fuel_daily_cost_cents': 325,
+      'fuel_monthly_cost_cents': 9891,
+      'fuel_annual_cost_cents': 118690,
+    });
+
+    expect(vehicle.fuelCostAverages.dailyCents, 325);
+    expect(vehicle.fuelCostAverages.monthlyCents, 9891);
+    expect(vehicle.fuelCostAverages.annualCents, 118690);
+    expect(vehicle.toJson()['fuel_daily_cost_cents'], 325);
   });
 }

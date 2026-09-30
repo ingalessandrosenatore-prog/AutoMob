@@ -2,6 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/update_vehicle_km.dart';
+import '../../domain/usecases/add_fuel_expense.dart';
+import '../../domain/entities/fuel_expense_draft.dart';
 
 enum KmUpdateStatus { initial, loading, success, failure }
 
@@ -36,17 +38,48 @@ class KmUpdateState extends Equatable {
 /// loading / success / failure, così la UI mostra spinner ed errori.
 class KmUpdateCubit extends Cubit<KmUpdateState> {
   final UpdateVehicleKm updateVehicleKm;
+  final AddFuelExpense addFuelExpense;
 
-  KmUpdateCubit(this.updateVehicleKm) : super(const KmUpdateState());
+  KmUpdateCubit(this.updateVehicleKm, this.addFuelExpense)
+    : super(const KmUpdateState());
 
-  Future<void> aggiorna({required String vehicleId, required int newKm}) async {
+  Future<void> aggiorna({
+    required String vehicleId,
+    required int newKm,
+    FuelExpenseDraft? fuelExpense,
+  }) async {
     emit(state.copyWith(status: KmUpdateStatus.loading, error: null));
-    final res = await updateVehicleKm(vehicleId: vehicleId, newKm: newKm);
-    res.fold(
-      (f) => emit(
-        state.copyWith(status: KmUpdateStatus.failure, error: f.message),
-      ),
-      (km) => emit(state.copyWith(status: KmUpdateStatus.success, savedKm: km)),
-    );
+    final kmResult = await updateVehicleKm(vehicleId: vehicleId, newKm: newKm);
+    final kmFailure = kmResult.getLeft().toNullable();
+    if (kmFailure != null) {
+      emit(
+        state.copyWith(
+          status: KmUpdateStatus.failure,
+          error: kmFailure.message,
+        ),
+      );
+      return;
+    }
+
+    final savedKm = kmResult.toNullable()!;
+    if (fuelExpense != null) {
+      final fuelResult = await addFuelExpense(
+        vehicleId: vehicleId,
+        expense: fuelExpense,
+      );
+      final fuelFailure = fuelResult.getLeft().toNullable();
+      if (fuelFailure != null) {
+        emit(
+          state.copyWith(
+            status: KmUpdateStatus.failure,
+            savedKm: savedKm,
+            error: fuelFailure.message,
+          ),
+        );
+        return;
+      }
+    }
+
+    emit(state.copyWith(status: KmUpdateStatus.success, savedKm: savedKm));
   }
 }

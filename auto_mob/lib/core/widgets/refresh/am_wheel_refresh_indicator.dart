@@ -32,16 +32,23 @@ class AmRefreshControlSliver extends StatelessWidget {
         AmHaptics.action();
         return onRefresh();
       },
-      builder: (context, refreshState, pulledExtent, refreshTriggerPullDistance, refreshIndicatorExtent) {
-        return Center(
-          child: AmWheelRefreshVisual(
-            refreshState: refreshState,
-            pulledExtent: pulledExtent,
-            refreshTriggerPullDistance: refreshTriggerPullDistance,
-            color: color,
-          ),
-        );
-      },
+      builder:
+          (
+            context,
+            refreshState,
+            pulledExtent,
+            refreshTriggerPullDistance,
+            refreshIndicatorExtent,
+          ) {
+            return Center(
+              child: AmWheelRefreshVisual(
+                refreshState: refreshState,
+                pulledExtent: pulledExtent,
+                refreshTriggerPullDistance: refreshTriggerPullDistance,
+                color: color,
+              ),
+            );
+          },
     );
   }
 }
@@ -85,7 +92,10 @@ class _AmWheelRefreshVisualState extends State<AmWheelRefreshVisual>
     final spinning = widget.refreshState == RefreshIndicatorMode.refresh;
     final pullProgress = widget.refreshTriggerPullDistance <= 0
         ? 0.0
-        : (widget.pulledExtent / widget.refreshTriggerPullDistance).clamp(0.0, 1.0);
+        : (widget.pulledExtent / widget.refreshTriggerPullDistance).clamp(
+            0.0,
+            1.0,
+          );
     final active = widget.refreshState != RefreshIndicatorMode.inactive;
 
     return AnimatedBuilder(
@@ -109,11 +119,7 @@ class _AmWheelRefreshVisualState extends State<AmWheelRefreshVisual>
                 opacity: pullProgress,
                 child: Transform.rotate(
                   angle: angle,
-                  child: SvgPicture.asset(
-                    _wheelAsset,
-                    width: 32,
-                    height: 32,
-                  ),
+                  child: SvgPicture.asset(_wheelAsset, width: 32, height: 32),
                 ),
               ),
             ),
@@ -151,7 +157,8 @@ class _DustPainter extends CustomPainter {
       final t = (progress + i / _particleCount) % 1.0;
       final angle = (2 * math.pi / _particleCount) * i + progress * 2 * math.pi;
       final distance = _minRadius + (_maxRadius - _minRadius) * t;
-      final offset = center + Offset(math.cos(angle), math.sin(angle)) * distance;
+      final offset =
+          center + Offset(math.cos(angle), math.sin(angle)) * distance;
       final alpha = (1 - t).clamp(0.0, 1.0) * 0.55;
 
       canvas.drawCircle(

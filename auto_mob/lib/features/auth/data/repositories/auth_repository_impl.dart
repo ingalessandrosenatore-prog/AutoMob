@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:fpdart/fpdart.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/entities/signup_outcome.dart';
@@ -42,11 +43,10 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, AppAuthUser>> loginWithGoogle() async {
+  Future<Either<Failure, void>> loginWithGoogle() async {
     try {
-      final authUser = await remoteDataSource.loginWithGoogle();
-      await localDataSource.clearPendingVerificationEmail();
-      return Right(authUser);
+      await remoteDataSource.loginWithGoogle();
+      return const Right(null);
     } on AuthDataSourceException catch (e) {
       if (e.message.contains('annullato')) {
         return const Left(AuthCancelledFailure());
@@ -82,12 +82,16 @@ class AuthRepositoryImpl implements AuthRepository {
     String name,
     String email,
     String password,
+    String phone,
+    String postalCode,
   ) async {
     try {
       final response = await remoteDataSource.signupWithEmail(
         name,
         email,
         password,
+        phone,
+        postalCode,
       );
       if (response.requiresEmailConfirmation) {
         final sentAt = now();
@@ -185,15 +189,22 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Stream<Either<Failure, AppAuthUser>> observeAuthenticatedUsers() async* {
-    try {
-      await for (final user in remoteDataSource.observeAuthenticatedUsers()) {
-        await localDataSource.clearPendingVerificationEmail();
-        yield Right(user);
-      }
-    } catch (_) {
-      yield const Left(ServerFailure());
-    }
+  Stream<Either<Failure, AppAuthUser?>> observeAuthenticatedUsers() {
+    return remoteDataSource
+        .observeAuthenticatedUsers()
+        .asyncMap<Either<Failure, AppAuthUser?>>((user) async {
+          if (user != null) {
+            await localDataSource.clearPendingVerificationEmail();
+          }
+          return Right(user);
+        })
+        .transform(
+          StreamTransformer.fromHandlers(
+            handleError: (Object error, StackTrace stack, sink) {
+              sink.add(const Left(ServerFailure()));
+            },
+          ),
+        );
   }
 
   // Helper method per mappare le eccezioni auth in failure specifiche

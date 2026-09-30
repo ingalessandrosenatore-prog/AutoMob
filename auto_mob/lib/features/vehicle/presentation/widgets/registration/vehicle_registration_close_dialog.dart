@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-
-import '../../../../../core/widgets/dialog/am_status_dialog.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 
 /// Scelta esplicita effettuata quando l'utente chiude la registrazione.
 enum VehicleRegistrationCloseAction { saveDraft, discardDraft }

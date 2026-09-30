@@ -1,4 +1,5 @@
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/fuel_cost_averages.dart';
 
 /// Fixture riutilizzabile: costruisce un [Vehicle] valido con valori di default,
 /// sovrascrivibili quando servono per il singolo test.
@@ -7,6 +8,10 @@ Vehicle vehicleFixture({
   String plate = 'AB123CD',
   int kmCurrent = 10000,
   String? fotoPath,
+  int maintenanceCostCents = 0,
+  DateTime? firstMaintenanceDate,
+  Map<int, int> maintenanceCostsByYear = const {},
+  FuelCostAverages fuelCostAverages = FuelCostAverages.zero,
 }) {
   return Vehicle(
     id: id,
@@ -22,5 +27,9 @@ Vehicle vehicleFixture({
     tireRotationIntervalKm: 10000,
     createdAt: DateTime(2024, 1, 1),
     fotoPath: fotoPath,
+    maintenanceCostCents: maintenanceCostCents,
+    firstMaintenanceDate: firstMaintenanceDate,
+    maintenanceCostsByYear: maintenanceCostsByYear,
+    fuelCostAverages: fuelCostAverages,
   );
 }

@@ -34,7 +34,7 @@ class LiquidZoomOverlay extends StatefulWidget {
   /// essere usato per chiudere (mai `Navigator.pop` diretto): esegue la
   /// molla di chiusura e solo alla fine fa il pop della route.
   final Widget Function(BuildContext context, VoidCallback close)
-      destinationBuilder;
+  destinationBuilder;
 
   /// Notifica il trigger a route chiusa (fa partire il "riatterraggio").
   final VoidCallback onClosed;
@@ -66,17 +66,12 @@ class _LiquidZoomOverlayState extends State<LiquidZoomOverlay> {
     // appena la molla si assesta entro tolleranza, a card già invisibile.
     widget.morph
         .animateWith(
-          SpringSimulation(
-            widget.config.closeSpring,
-            widget.morph.value,
-            0,
-            0,
-          ),
+          SpringSimulation(widget.config.closeSpring, widget.morph.value, 0, 0),
         )
         .whenComplete(() {
-      if (mounted) Navigator.of(context).pop();
-      widget.onClosed();
-    });
+          if (mounted) Navigator.of(context).pop();
+          widget.onClosed();
+        });
   }
 
   @override
@@ -128,8 +123,9 @@ class _LiquidZoomOverlayState extends State<LiquidZoomOverlay> {
                   onTap: _close,
                   behavior: HitTestBehavior.opaque,
                   child: ColoredBox(
-                    color: config.scrimColor
-                        .withValues(alpha: config.scrimOpacity * tc),
+                    color: config.scrimColor.withValues(
+                      alpha: config.scrimOpacity * tc,
+                    ),
                   ),
                 ),
               ),
@@ -148,8 +144,7 @@ class _LiquidZoomOverlayState extends State<LiquidZoomOverlay> {
                     boxShadow: [
                       for (final s in config.shadow)
                         BoxShadow(
-                          color: s.color
-                              .withValues(alpha: s.color.a * tc),
+                          color: s.color.withValues(alpha: s.color.a * tc),
                           offset: s.offset,
                           blurRadius: s.blurRadius,
                           spreadRadius: s.spreadRadius,

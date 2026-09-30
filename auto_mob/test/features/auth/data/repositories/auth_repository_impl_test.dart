@@ -1,3 +1,4 @@
+import 'dart:async';
 // =====================================================================
 //  GOLDEN TEST — REPOSITORY (layer data)
 // ---------------------------------------------------------------------
@@ -49,6 +50,42 @@ void main() {
   const tEmail = 'test@automob.it';
   const tPassword = 'password123';
   const tName = 'Mario Rossi';
+  const tPhone = '+39 333 1234567';
+  const tPostalCode = '10121';
+
+  test(
+    'auth stream stays alive after a transient error and includes logout',
+    () async {
+      final events = StreamController<AppAuthUserModel?>();
+      when(
+        () => remote.observeAuthenticatedUsers(),
+      ).thenAnswer((_) => events.stream);
+      final resultsFuture = repository
+          .observeAuthenticatedUsers()
+          .take(3)
+          .toList();
+      events.addError(Exception('offline'));
+      events.add(tUserModel);
+      events.add(null);
+      final results = await resultsFuture;
+      expect(results[0].isLeft(), isTrue);
+      expect(results[1].toOption().toNullable(), tUserModel);
+      expect(results[2], const Right<Failure, AppAuthUser?>(null));
+      await events.close();
+    },
+  );
+
+  test(
+    'Google starts the browser without returning an authenticated user',
+    () async {
+      when(() => remote.loginWithGoogle()).thenAnswer((_) async {});
+      expect(
+        await repository.loginWithGoogle(),
+        const Right<Failure, void>(null),
+      );
+      verifyNever(() => remote.checkSession());
+    },
+  );
 
   group('loginWithEmail', () {
     test('ritorna Right con l\'utente quando il datasource risponde', () async {
@@ -106,26 +143,56 @@ void main() {
 
   group('signupWithEmail', () {
     test('ritorna Right con l\'utente quando il datasource risponde', () async {
-      when(() => remote.signupWithEmail(tName, tEmail, tPassword)).thenAnswer(
+      when(
+        () => remote.signupWithEmail(
+          tName,
+          tEmail,
+          tPassword,
+          tPhone,
+          tPostalCode,
+        ),
+      ).thenAnswer(
         (_) async => const SignupResponseModel(
           user: tUserModel,
           requiresEmailConfirmation: false,
         ),
       );
 
-      final result = await repository.signupWithEmail(tName, tEmail, tPassword);
+      final result = await repository.signupWithEmail(
+        tName,
+        tEmail,
+        tPassword,
+        tPhone,
+        tPostalCode,
+      );
 
       expect(
         result,
         const Right<Failure, SignupOutcome>(SignupAuthenticated(tUserModel)),
       );
-      verify(() => remote.signupWithEmail(tName, tEmail, tPassword)).called(1);
+      verify(
+        () => remote.signupWithEmail(
+          tName,
+          tEmail,
+          tPassword,
+          tPhone,
+          tPostalCode,
+        ),
+      ).called(1);
     });
 
     test(
       'salva l\'email e richiede conferma quando manca la sessione',
       () async {
-        when(() => remote.signupWithEmail(tName, tEmail, tPassword)).thenAnswer(
+        when(
+          () => remote.signupWithEmail(
+            tName,
+            tEmail,
+            tPassword,
+            tPhone,
+            tPostalCode,
+          ),
+        ).thenAnswer(
           (_) async => const SignupResponseModel(
             user: tUserModel,
             requiresEmailConfirmation: true,
@@ -139,6 +206,8 @@ void main() {
           tName,
           tEmail,
           tPassword,
+          tPhone,
+          tPostalCode,
         );
 
         expect(
@@ -158,7 +227,15 @@ void main() {
     test(
       'mappa AuthDataSourceException(422 email) in EmailAlreadyInUseFailure',
       () async {
-        when(() => remote.signupWithEmail(tName, tEmail, tPassword)).thenThrow(
+        when(
+          () => remote.signupWithEmail(
+            tName,
+            tEmail,
+            tPassword,
+            tPhone,
+            tPostalCode,
+          ),
+        ).thenThrow(
           const AuthDataSourceException('email già registrata', code: '422'),
         );
 
@@ -166,6 +243,8 @@ void main() {
           tName,
           tEmail,
           tPassword,
+          tPhone,
+          tPostalCode,
         );
 
         expect(
@@ -177,10 +256,22 @@ void main() {
 
     test('mappa NetworkException in NetworkFailure', () async {
       when(
-        () => remote.signupWithEmail(tName, tEmail, tPassword),
+        () => remote.signupWithEmail(
+          tName,
+          tEmail,
+          tPassword,
+          tPhone,
+          tPostalCode,
+        ),
       ).thenThrow(const NetworkException());
 
-      final result = await repository.signupWithEmail(tName, tEmail, tPassword);
+      final result = await repository.signupWithEmail(
+        tName,
+        tEmail,
+        tPassword,
+        tPhone,
+        tPostalCode,
+      );
 
       expect(result, const Left<Failure, SignupOutcome>(NetworkFailure()));
     });

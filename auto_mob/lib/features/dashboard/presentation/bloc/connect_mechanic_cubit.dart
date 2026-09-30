@@ -20,7 +20,8 @@ class ConnectMechanicState extends Equatable {
   });
 
   bool get canSubmit =>
-      code.trim().isNotEmpty && status != ConnectMechanicStatus.loading;
+      RegExp(r'^[0-9]{6}$').hasMatch(code.trim()) &&
+      status != ConnectMechanicStatus.loading;
 
   ConnectMechanicState copyWith({
     String? code,

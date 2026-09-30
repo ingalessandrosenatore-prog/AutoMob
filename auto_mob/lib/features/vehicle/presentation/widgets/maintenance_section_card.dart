@@ -34,53 +34,46 @@ class MaintenanceSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
     return Container(
-      padding: const EdgeInsets.all(20),
-      // height: 180,
+      padding: const EdgeInsets.all(1),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [colors.surfaceHighlight, colors.surfaceRaised],
-        ),
+        gradient: colors.cardBorderGradient,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: colors.cardShadows,
       ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-
-              iconWidget ??
-                  (icon is List
-                      ? HugeIcon(
-                          icon: icon as List<List>,
-                          size: 18,
-                          color: iconColor,
-                          strokeWidth: 2.2,
-                        )
-                      : Icon(icon as IconData, size: 18, color: iconColor)),
-
-              const SizedBox(width: 10),
-              Text(
-                uppercaseTitle ? title.toUpperCase() : title,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: colors.cardGradient,
+          borderRadius: BorderRadius.circular(23),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                iconWidget ??
+                    (icon is List
+                        ? HugeIcon(
+                            icon: icon as List<List>,
+                            size: 18,
+                            color: iconColor,
+                            strokeWidth: 2.2,
+                          )
+                        : Icon(icon as IconData, size: 18, color: iconColor)),
+                const SizedBox(width: 10),
+                Text(
+                  uppercaseTitle ? title.toUpperCase() : title,
+                  style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          ...children,
-        ],
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...children,
+          ],
+        ),
       ),
     );
   }

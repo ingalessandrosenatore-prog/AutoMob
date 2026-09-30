@@ -1,3 +1,4 @@
+import '../../domain/entities/owner_registration.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/app_user.dart';
 
@@ -78,3 +79,20 @@ class AuthError extends AuthState {
 
 // Stato di logout completato
 class AuthLoggedOut extends AuthState {}
+
+class AuthOwnerProfilePending extends AuthState {
+  AuthOwnerProfilePending({
+    required this.user,
+    required this.profile,
+    this.busy = false,
+    this.message,
+  });
+  final AppAuthUser user;
+  final OwnerRegistration profile;
+  final bool busy;
+  final String? message;
+  @override
+  List<Object?> get props => [user, profile, busy, message];
+}
+
+class AuthOAuthWaiting extends AuthState {}

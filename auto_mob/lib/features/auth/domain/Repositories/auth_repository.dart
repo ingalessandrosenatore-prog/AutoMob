@@ -9,12 +9,14 @@ abstract class AuthRepository {
     String email,
     String password,
   );
-  Future<Either<Failure, AppAuthUser>> loginWithGoogle();
+  Future<Either<Failure, void>> loginWithGoogle();
   Future<Either<Failure, AppAuthUser>> loginWithApple();
   Future<Either<Failure, SignupOutcome>> signupWithEmail(
     String name,
     String email,
     String password,
+    String phone,
+    String postalCode,
   );
   Future<Either<Failure, PendingEmailVerification?>>
   getPendingEmailVerification();
@@ -22,5 +24,5 @@ abstract class AuthRepository {
   Future<Either<Failure, void>> clearPendingEmailVerification();
   Future<Either<Failure, void>> logout();
   Future<Either<Failure, AppAuthUser?>> checkSession();
-  Stream<Either<Failure, AppAuthUser>> observeAuthenticatedUsers();
+  Stream<Either<Failure, AppAuthUser?>> observeAuthenticatedUsers();
 }

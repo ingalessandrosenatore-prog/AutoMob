@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:figma_squircle/figma_squircle.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:common_ui_widget/common_ui_widget.dart'
+    show AmRouteBlurTransition;
 
 import '../../theme/am_theme_colors.dart';
 
@@ -24,6 +25,7 @@ class AmMaintenanceKpiCard extends StatelessWidget {
   final int offersCount;
   final int reviewCount;
   final VoidCallback? onTap;
+  final Animation<double>? routeAnimation;
 
   const AmMaintenanceKpiCard({
     super.key,
@@ -35,12 +37,12 @@ class AmMaintenanceKpiCard extends StatelessWidget {
     this.offersCount = 0,
     this.reviewCount = 0,
     this.onTap,
+    this.routeAnimation,
   });
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isCritical = remainingKm <= 0;
     final formattedKm = remainingKm.abs().toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
@@ -48,163 +50,153 @@ class AmMaintenanceKpiCard extends StatelessWidget {
     );
     final kmLabel = remainingKm < 0 ? '-$formattedKm' : formattedKm;
 
-    return Container(
+    final card = Container(
       key: const Key('am-maintenance-kpi-surface'),
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(1.5),
       decoration: ShapeDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [colors.surfaceHighlight, colors.surfaceDeep]
-              : [colors.surfaceDeep, colors.surfaceHighlight],
-        ),
-        shape: _kpiShape().copyWith(side: BorderSide(color: colors.border)),
-        shadows: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.09),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        gradient: colors.cardBorderGradient,
+        shape: _kpiShape(),
+        shadows: colors.cardShadows,
       ),
       child: ClipPath(
         clipper: ShapeBorderClipper(shape: _kpiShape()),
-        child: Stack(
-          children: [
-            Positioned(
-              right: 0,
-              top: 55,
-              child: Transform.rotate(
-                angle: -0.2,
-                child: ShaderMask(
-                  blendMode: BlendMode.srcIn,
-                  shaderCallback: (bounds) => LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      colors.surface.withValues(alpha: 0.26),
-                      color.withValues(alpha: 0.72),
-                    ],
-                  ).createShader(bounds),
-                  child: iconBuilder(84, colors.textPrimary),
-                ),
-              ),
-            ),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                iconBuilder(20, color),
-                                const SizedBox(width: 10),
-                                Text(
-                                  label.toUpperCase(),
-                                  style: TextStyle(
-                                    color: colors.textPrimary.withValues(
-                                      alpha: 0.9,
-                                    ),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.2,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: [
-                                Text(
-                                  '$kmLabel ',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.2,
-                                    color: isCritical
-                                        ? colors.danger
-                                        : colors.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  'KM Rimasti',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _SegmentedProgressBar(
-                              percentage: percentage,
-                              color: color,
-                            ),
-                          ],
-                        ),
-                      ),
-                      HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowRight01,
-                        color: colors.textSecondary.withValues(alpha: 0.45),
-                        size: 28,
-                        strokeWidth: 3,
-                      ),
-                    ],
+        child: DecoratedBox(
+          decoration: BoxDecoration(color: colors.surface),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -18,
+                bottom: -16,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: ShaderMask(
+                    blendMode: BlendMode.srcIn,
+                    shaderCallback: (bounds) => LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        colors.surface.withValues(alpha: 0.26),
+                        color.withValues(alpha: 0.72),
+                      ],
+                    ).createShader(bounds),
+                    child: iconBuilder(76, colors.textPrimary),
                   ),
                 ),
               ),
-            ),
-          ],
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  child: Padding(
+                    padding: const EdgeInsets.all(13),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(13),
+                              ),
+                              alignment: Alignment.center,
+                              child: iconBuilder(22, color),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                label.toUpperCase(),
+                                maxLines: 2,
+                                style: TextStyle(
+                                  color: colors.textPrimary.withValues(
+                                    alpha: 0.9,
+                                  ),
+                                  fontSize: 10,
+                                  height: 1.1,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        Center(
+                          child: SizedBox.square(
+                            key: const Key('maintenance-kpi-percentage-ring'),
+                            dimension: 58,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Positioned.fill(
+                                  child: CircularProgressIndicator(
+                                    value: 1,
+                                    strokeWidth: 8,
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.light
+                                        ? colors.background
+                                        : colors.surfaceRaised,
+                                    strokeCap: StrokeCap.round,
+                                  ),
+                                ),
+                                Positioned.fill(
+                                  child: CircularProgressIndicator(
+                                    value: (percentage / 100).clamp(0, 1),
+                                    strokeWidth: 8,
+                                    color: color,
+                                    strokeCap: StrokeCap.round,
+                                  ),
+                                ),
+                                Text(
+                                  '${percentage.round()}%',
+                                  style: TextStyle(
+                                    color: colors.textPrimary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Center(
+                          child: Column(
+                            children: [
+                              Text(
+                                kmLabel,
+                                style: TextStyle(
+                                  fontSize: 19,
+                                  fontWeight: FontWeight.w900,
+                                  color: isCritical
+                                      ? colors.danger
+                                      : colors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                'KM rimasti',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
-  }
-}
-
-class _SegmentedProgressBar extends StatelessWidget {
-  final double percentage;
-  final Color color;
-
-  const _SegmentedProgressBar({required this.percentage, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(4, (index) {
-        final threshold = (index + 1) * 25;
-        final isActive = percentage >= threshold - 12;
-
-        return Expanded(
-          child: Container(
-            height: 10,
-            margin: EdgeInsets.only(right: index == 3 ? 0 : 8),
-            decoration: BoxDecoration(
-              color: isActive ? color : color.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(5),
-              boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.16),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : null,
-            ),
-          ),
-        );
-      }),
-    );
+    return AmRouteBlurTransition(animation: routeAnimation, child: card);
   }
 }

@@ -1,0 +1,12 @@
+# =====================================================================
+#  BASELINE ARCHITETTURALE — app meccanico (automob_backoffice_mech)
+# ---------------------------------------------------------------------
+# Le firme non contengono numeri di linea: restano stabili quando il file
+# viene formattato o cambia per motivi non collegati alla violazione.
+#
+# Formato:
+#   REGOLA|file relativo a lib/|messaggio normalizzato
+#
+# Non aggiungere nuove righe per far passare una feature nuova.
+# Quando il debito viene corretto, eliminare la relativa firma.
+# =====================================================================

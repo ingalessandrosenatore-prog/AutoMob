@@ -14,7 +14,7 @@ void main() {
 
   const mechanic = MechanicSummary(
     id: 'mechanic-1',
-    code: 'OFF-001',
+    code: '482913',
     businessName: 'Officina Giordano',
   );
 
@@ -23,27 +23,27 @@ void main() {
   blocTest<ConnectMechanicCubit, ConnectMechanicState>(
     'aggiorna il codice inserito',
     build: () => ConnectMechanicCubit(connectMechanic),
-    act: (cubit) => cubit.codeChanged('OFF-001'),
-    expect: () => const [ConnectMechanicState(code: 'OFF-001')],
+    act: (cubit) => cubit.codeChanged('482913'),
+    expect: () => const [ConnectMechanicState(code: '482913')],
   );
 
   blocTest<ConnectMechanicCubit, ConnectMechanicState>(
     'emette caricamento e successo quando il collegamento riesce',
     setUp: () {
       when(
-        () => connectMechanic(vehicleId: 'vehicle-1', mechanicCode: 'OFF-001'),
+        () => connectMechanic(vehicleId: 'vehicle-1', mechanicCode: '482913'),
       ).thenAnswer((_) async => const Right(mechanic));
     },
     build: () => ConnectMechanicCubit(connectMechanic),
-    seed: () => const ConnectMechanicState(code: 'OFF-001'),
+    seed: () => const ConnectMechanicState(code: '482913'),
     act: (cubit) => cubit.submit(vehicleId: 'vehicle-1'),
     expect: () => const [
       ConnectMechanicState(
-        code: 'OFF-001',
+        code: '482913',
         status: ConnectMechanicStatus.loading,
       ),
       ConnectMechanicState(
-        code: 'OFF-001',
+        code: '482913',
         status: ConnectMechanicStatus.success,
         mechanic: mechanic,
       ),
@@ -54,22 +54,22 @@ void main() {
     'emette caricamento ed errore quando il collegamento fallisce',
     setUp: () {
       when(
-        () => connectMechanic(vehicleId: 'vehicle-1', mechanicCode: 'ERRATO'),
+        () => connectMechanic(vehicleId: 'vehicle-1', mechanicCode: '000000'),
       ).thenAnswer(
         (_) async =>
             const Left(ValidationFailure('Codice meccanico non valido.')),
       );
     },
     build: () => ConnectMechanicCubit(connectMechanic),
-    seed: () => const ConnectMechanicState(code: 'ERRATO'),
+    seed: () => const ConnectMechanicState(code: '000000'),
     act: (cubit) => cubit.submit(vehicleId: 'vehicle-1'),
     expect: () => const [
       ConnectMechanicState(
-        code: 'ERRATO',
+        code: '000000',
         status: ConnectMechanicStatus.loading,
       ),
       ConnectMechanicState(
-        code: 'ERRATO',
+        code: '000000',
         status: ConnectMechanicStatus.failure,
         error: 'Codice meccanico non valido.',
       ),

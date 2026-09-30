@@ -89,8 +89,7 @@ class LiquidZoomPopupTarget extends LiquidZoomTarget {
       left = margin;
     } else {
       final apreVersoSinistra = source.left + width > screen.width - margin;
-      final naturale =
-          apreVersoSinistra ? source.right - width : source.left;
+      final naturale = apreVersoSinistra ? source.right - width : source.left;
       left = naturale.clamp(margin, screen.width - width - margin);
     }
 

@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import 'mechanic_summary.dart';
 import 'vehicle_mileage_estimate.dart';
+import 'fuel_cost_averages.dart';
 
 class Vehicle extends Equatable {
   final String id;
@@ -37,7 +38,15 @@ class Vehicle extends Equatable {
 
   final DateTime createdAt;
   final DateTime? updatedAt;
-  final MechanicSummary? mechanic;
+  final List<MechanicSummary> mechanics;
+  final int maintenanceCostCents;
+  final DateTime? firstMaintenanceDate;
+  final Map<int, int> maintenanceCostsByYear;
+  final FuelCostAverages fuelCostAverages;
+
+  /// Compatibilita' temporanea per i consumer ancora basati su una sola
+  /// officina. La lista ordinata resta la fonte di verita'.
+  MechanicSummary? get mechanic => mechanics.isEmpty ? null : mechanics.first;
 
   /// Path locale della foto del veicolo (es. /data/.../foto_veicoli/veicolo_AB123CD.jpg).
   /// Null se la foto non è stata salvata. Non viene persistito su DB.
@@ -72,10 +81,14 @@ class Vehicle extends Equatable {
     this.lastRevisionDate,
     this.updatedAt,
     this.fotoPath,
-    this.mechanic,
+    this.mechanics = const [],
+    this.maintenanceCostCents = 0,
+    this.firstMaintenanceDate,
+    this.maintenanceCostsByYear = const {},
+    this.fuelCostAverages = FuelCostAverages.zero,
   });
 
-  Vehicle copyWith({String? fotoPath, MechanicSummary? mechanic}) {
+  Vehicle copyWith({String? fotoPath, List<MechanicSummary>? mechanics}) {
     return Vehicle(
       id: id,
       ownerId: ownerId,
@@ -105,7 +118,11 @@ class Vehicle extends Equatable {
       lastRevisionDate: lastRevisionDate,
       updatedAt: updatedAt,
       fotoPath: fotoPath ?? this.fotoPath,
-      mechanic: mechanic ?? this.mechanic,
+      mechanics: mechanics ?? this.mechanics,
+      maintenanceCostCents: maintenanceCostCents,
+      firstMaintenanceDate: firstMaintenanceDate,
+      maintenanceCostsByYear: maintenanceCostsByYear,
+      fuelCostAverages: fuelCostAverages,
     );
   }
 
@@ -172,6 +189,10 @@ class Vehicle extends Equatable {
     createdAt,
     updatedAt,
     fotoPath,
-    mechanic,
+    mechanics,
+    maintenanceCostCents,
+    firstMaintenanceDate,
+    maintenanceCostsByYear,
+    fuelCostAverages,
   ];
 }

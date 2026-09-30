@@ -7,17 +7,19 @@ import '../models/signup_response_model.dart';
 
 abstract class AuthRemoteDataSource {
   Future<AppAuthUserModel> loginWithEmail(String email, String password);
-  Future<AppAuthUserModel> loginWithGoogle();
+  Future<void> loginWithGoogle();
   Future<AppAuthUserModel> loginWithApple();
   Future<SignupResponseModel> signupWithEmail(
     String name,
     String email,
     String password,
+    String phone,
+    String postalCode,
   );
   Future<void> resendConfirmationEmail(String email);
   Future<void> logout();
   Future<AppAuthUserModel?> checkSession();
-  Stream<AppAuthUserModel> observeAuthenticatedUsers();
+  Stream<AppAuthUserModel?> observeAuthenticatedUsers();
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -57,22 +59,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<AppAuthUserModel> loginWithGoogle() async {
+  Future<void> loginWithGoogle() async {
     try {
-      final response = await supabaseClient.auth.signInWithOAuth(
+      final launched = await supabaseClient.auth.signInWithOAuth(
         OAuthProvider.google,
+        redirectTo: _emailConfirmationRedirect,
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
-
-      if (response == false) {
-        throw const AuthDataSourceException('Google login annullato');
+      if (!launched) {
+        throw const AuthDataSourceException(
+          'Impossibile aprire Google. Riprova.',
+        );
       }
-
-      final session = supabaseClient.auth.currentSession;
-      if (session?.user == null) {
-        throw const AuthDataSourceException('Sessione non disponibile');
-      }
-
-      return AppAuthUserModel.fromSupabaseUser(session!.user);
+      // The browser launch is not a completed login: the auth stream owns completion.
     } on AuthException catch (e) {
       throw AuthDataSourceException(e.message, code: e.code ?? e.statusCode);
     } on SocketException {
@@ -113,12 +112,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String name,
     String email,
     String password,
+    String phone,
+    String postalCode,
   ) async {
     try {
       final response = await supabaseClient.auth.signUp(
         email: email,
         password: password,
-        data: {'role': 'proprietario', 'full_name': name},
+        data: {
+          'role': 'proprietario',
+          'full_name': name,
+          'phone': phone,
+          'postal_code': postalCode,
+        },
         emailRedirectTo: _emailConfirmationRedirect,
       );
 
@@ -184,11 +190,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Stream<AppAuthUserModel> observeAuthenticatedUsers() {
+  Stream<AppAuthUserModel?> observeAuthenticatedUsers() {
     return supabaseClient.auth.onAuthStateChange
-        .where((change) => change.session?.user != null)
+        .where(
+          (change) =>
+              change.event == AuthChangeEvent.signedIn ||
+              change.event == AuthChangeEvent.signedOut ||
+              change.event == AuthChangeEvent.initialSession ||
+              change.event == AuthChangeEvent.tokenRefreshed,
+        )
         .map(
-          (change) => AppAuthUserModel.fromSupabaseUser(change.session!.user),
+          (change) => change.session == null
+              ? null
+              : AppAuthUserModel.fromSupabaseUser(change.session!.user),
         );
   }
 }

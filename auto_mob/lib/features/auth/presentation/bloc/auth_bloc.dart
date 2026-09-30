@@ -1,5 +1,6 @@
+import '../../domain/entities/owner_registration.dart';
+import '../../domain/usecases/resolve_owner_access.dart';
 import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/exceptions/exception.dart';
@@ -18,7 +19,14 @@ import '../../domain/usecases/resend_confirmation_email.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
+part 'auth_bloc_google.dart';
+
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  final ResolveOwnerAccess resolveOwnerAccess;
+  OwnerRegistration? _googleDraft;
+  String? _resolvingUser;
+  int _authGeneration = 0;
+  bool _loggingOut = false;
   final CheckSession checkSession;
   final GetPendingVerificationEmail getPendingVerificationEmail;
   final LoginWithEmail loginWithEmail;
@@ -30,11 +38,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LeaveEmailVerification leaveEmailVerification;
   final ObserveAuthenticatedUsers observeAuthenticatedUsers;
   final DateTime Function() now;
-  late final StreamSubscription<Either<Failure, AppAuthUser>>
+  late final StreamSubscription<Either<Failure, AppAuthUser?>>
   _sessionSubscription;
-
   AuthBloc({
     required this.checkSession,
+    required this.resolveOwnerAccess,
     required this.getPendingVerificationEmail,
     required this.loginWithEmail,
     required this.loginWithGoogle,
@@ -49,45 +57,56 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
        super(AuthInitial()) {
     // Evento per controllare la sessione all'avvio (SplashScreen)
     on<CheckSessionEvent>(_onCheckSession);
-
     // Eventi di login
     on<LoginWithEmailEvent>(_onLoginWithEmail);
     on<LoginWithGoogleEvent>(_onLoginWithGoogle);
+    on<CompleteOwnerProfileEvent>(_onCompleteOwnerProfile);
+    on<AuthSessionEndedEvent>((event, emit) {
+      _authGeneration++;
+      _googleDraft = null;
+      emit(AuthUnauthenticated());
+    });
+    on<AuthStreamFailedEvent>((event, emit) {
+      if (!_loggingOut) {
+        emit(AuthError(message: 'Accesso interrotto. Riprova.'));
+      }
+    });
     on<LoginWithAppleEvent>(_onLoginWithApple);
-
     // Eventi di registrazione
     on<SignupWithEmailEvent>(_onSignupWithEmail);
     on<ResendConfirmationEmailEvent>(_onResendConfirmationEmail);
     on<CheckEmailConfirmationEvent>(_onCheckEmailConfirmation);
     on<LeaveEmailVerificationEvent>(_onLeaveEmailVerification);
     on<AuthSessionEstablishedEvent>(_onAuthSessionEstablished);
-
     // Evento di logout
     on<LogoutEvent>(_onLogout);
-
     // Eventi di navigazione (pura UI, no API)
-    _sessionSubscription = observeAuthenticatedUsers().listen((result) {
-      result.fold(
-        (_) {},
-        (user) => add(AuthSessionEstablishedEvent(user: user)),
-      );
-    });
+    _sessionSubscription = observeAuthenticatedUsers().listen(
+      (result) {
+        result.fold((_) => add(AuthStreamFailedEvent()), (user) {
+          if (_loggingOut) return;
+          add(
+            user == null
+                ? AuthSessionEndedEvent()
+                : AuthSessionEstablishedEvent(user: user),
+          );
+        });
+      },
+      onError: (Object error, StackTrace stack) => add(AuthStreamFailedEvent()),
+    );
   }
 
   // Check della sessione all'avvio app
   void _onCheckSession(CheckSessionEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
-
     final result = await checkSession();
-
     await result.fold((failure) async => emit(AuthUnauthenticated()), (
       user,
     ) async {
       if (user != null) {
-        emit(AuthAuthenticated(user: user));
+        await _acceptUser(user, emit);
         return;
       }
-
       final pendingResult = await getPendingVerificationEmail();
       pendingResult.fold(
         (_) => emit(AuthUnauthenticated()),
@@ -109,17 +128,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-
     final result = await loginWithEmail(event.email, event.password);
-
-    result.fold(
-      (failure) => emit(
+    await result.fold<Future<void>>(
+      (failure) async => emit(
         AuthError(
           message: failure.message,
           emailNotConfirmed: failure is EmailNotConfirmedFailure,
         ),
       ),
-      (user) => emit(AuthAuthenticated(user: user)),
+      (user) => _acceptUser(user, emit),
     );
   }
 
@@ -129,7 +146,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final current = state;
     if (current is! AuthEmailVerificationPending || current.isBusy) return;
-
     emit(
       current.copyWith(
         status: EmailVerificationStatus.resending,
@@ -160,7 +176,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final current = state;
     if (current is! AuthEmailVerificationPending || current.isBusy) return;
-
     emit(
       current.copyWith(
         status: EmailVerificationStatus.checking,
@@ -168,24 +183,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ),
     );
     final result = await checkSession();
-    result.fold(
-      (failure) => emit(
+    await result.fold<Future<void>>(
+      (failure) async => emit(
         current.copyWith(
           status: EmailVerificationStatus.error,
           message: failure.message,
         ),
       ),
-      (user) => emit(
-        user == null
-            ? current.copyWith(
-                status: EmailVerificationStatus.error,
-                message:
-                    'La sessione non e arrivata all app. Apri il link '
-                    'ricevuto sullo stesso dispositivo oppure accedi con '
-                    'email e password.',
-              )
-            : AuthAuthenticated(user: user),
-      ),
+      (user) async {
+        if (user == null) {
+          emit(
+            current.copyWith(
+              status: EmailVerificationStatus.error,
+              message:
+                  'La sessione non è arrivata. Apri il link sullo stesso dispositivo o accedi con email e password.',
+            ),
+          );
+        } else {
+          await _acceptUser(user, emit);
+        }
+      },
     );
   }
 
@@ -207,26 +224,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
   }
 
-  void _onAuthSessionEstablished(
+  Future<void> _onAuthSessionEstablished(
     AuthSessionEstablishedEvent event,
     Emitter<AuthState> emit,
-  ) {
-    emit(AuthAuthenticated(user: event.user));
-  }
-
-  // Login con Google
-  void _onLoginWithGoogle(
-    LoginWithGoogleEvent event,
-    Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
-
-    final result = await loginWithGoogle();
-
-    result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
-      (user) => emit(AuthAuthenticated(user: user)),
-    );
+    if (_loggingOut) return;
+    if (state is AuthAuthenticated &&
+        (state as AuthAuthenticated).user.id == event.user.id) {
+      return;
+    }
+    if (state is AuthOwnerProfilePending &&
+        (state as AuthOwnerProfilePending).user.id == event.user.id) {
+      return;
+    }
+    await _acceptUser(event.user, emit);
   }
 
   // Login con Apple
@@ -235,12 +246,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-
     final result = await loginWithApple();
-
-    result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
-      (user) => emit(AuthAuthenticated(user: user)),
+    await result.fold<Future<void>>(
+      (failure) async => emit(AuthError(message: failure.message)),
+      (user) => _acceptUser(user, emit),
     );
   }
 
@@ -250,33 +259,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-
     final result = await signupWithEmail(
       event.name,
       event.email,
       event.password,
+      event.passwordConfirmation,
+      event.phone,
+      event.postalCode,
     );
-
-    result.fold(
-      (failure) => emit(AuthError(message: failure.message)),
-      (outcome) => switch (outcome) {
-        SignupAuthenticated(:final user) => emit(AuthAuthenticated(user: user)),
-        SignupConfirmationRequired(:final pendingVerification) => emit(
-          AuthEmailVerificationPending(
-            email: pendingVerification.email,
-            countdownSeconds: pendingVerification.secondsRemainingAt(now()),
-          ),
-        ),
+    await result.fold<Future<void>>(
+      (failure) async => emit(AuthError(message: failure.message)),
+      (outcome) async {
+        switch (outcome) {
+          case SignupAuthenticated(:final user):
+            await _acceptUser(user, emit);
+          case SignupConfirmationRequired(:final pendingVerification):
+            emit(
+              AuthEmailVerificationPending(
+                email: pendingVerification.email,
+                countdownSeconds: pendingVerification.secondsRemainingAt(now()),
+              ),
+            );
+        }
       },
     );
   }
 
   // Logout
   void _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
+    _authGeneration++;
+    _loggingOut = true;
+    _googleDraft = null;
     emit(AuthLoading());
-
     final result = await logout();
-
+    _loggingOut = false;
     result.fold(
       (failure) => emit(AuthError(message: failure.message)),
       (_) => emit(AuthLoggedOut()),

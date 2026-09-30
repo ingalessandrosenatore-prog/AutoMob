@@ -18,6 +18,14 @@ class InvalidPlateLookupFailure extends VehicleLookupFailure {
   bool get consumesAttempt => false;
 }
 
+class InvalidMechanicCodeLookupFailure extends VehicleLookupFailure {
+  const InvalidMechanicCodeLookupFailure()
+    : super('Il codice del meccanico deve contenere 6 cifre.');
+
+  @override
+  bool get consumesAttempt => false;
+}
+
 class NetworkLookupFailure extends VehicleLookupFailure {
   const NetworkLookupFailure()
     : super('Connessione assente. Controlla la rete e riprova.');

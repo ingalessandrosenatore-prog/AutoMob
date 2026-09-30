@@ -1,4 +1,4 @@
-import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
+import 'package:common_ui_widget/common_ui_widget.dart' show AmSoftButton;
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 

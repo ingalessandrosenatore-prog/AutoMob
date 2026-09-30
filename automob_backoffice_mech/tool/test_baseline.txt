@@ -1,0 +1,10 @@
+# =====================================================================
+#  BASELINE COPERTURA TEST — app meccanico (automob_backoffice_mech)
+# ---------------------------------------------------------------------
+#  Questi file di logica (usecase/repository/bloc) NON avevano un test
+#  quando e' stato introdotto tool/check_test_coverage.dart. Il gate
+#  blocca solo i file NUOVI senza test: questo debito non deve crescere.
+#  Quando scrivi il test per uno di questi, CANCELLA la riga corrispondente.
+#
+#  Formato: path relativo a lib/
+# =====================================================================

@@ -1,6 +1,4 @@
-import 'package:auto_mob_v1/core/theme/am_theme.dart';
-import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
-import 'package:auto_mob_v1/core/widgets/input/textfield.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -2,15 +2,16 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
-import 'package:auto_mob_v1/core/widgets/buttons/am_pull_down_lg.dart';
-import 'package:auto_mob_v1/core/widgets/buttons/soft_button.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
-import 'package:auto_mob_v1/core/widgets/dialog/am_status_dialog.dart';
+import '../widgets/home_workshop_carousel.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/notification_permission_dialog.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:auto_mob_v1/core/router/app_session_actions.dart';
+import 'package:auto_mob_v1/features/auth/domain/entities/app_user.dart';
+import 'package:auto_mob_v1/features/vehicle/domain/entities/maintenance_kpi.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -18,10 +19,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
 import 'package:auto_mob_v1/core/config/performance_flags.dart';
-import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
-import 'package:auto_mob_v1/core/widgets/smart/smart_edge.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 import '../../../../core/services/haptic_service.dart';
 import '../bloc/dashboard_bloc.dart';
@@ -30,29 +28,63 @@ import '../bloc/dashboard_state.dart';
 import '../bloc/notification_prompt_bloc.dart';
 import '../bloc/notification_prompt_event.dart';
 import '../bloc/notification_prompt_state.dart';
+import '../maintenance_kpi_work_log_launch.dart';
 import '../widgets/card_auto.dart';
-import '../widgets/card_officina.dart';
+import '../widgets/dashboard_scroll_activity.dart';
+import '../widgets/home_costs_section.dart';
+import '../widgets/home_future_work_timeline.dart';
+import '../widgets/vehicle_card_page_view.dart';
+
+const _homeControlGlassSettings = OCLiquidGlassSettings(
+  refractStrength: -0.08,
+  blurRadiusPx: 2,
+  specStrength: 1,
+  specWidth: 0.5,
+  specAngle: 145,
+  specPower: 10,
+  lightbandOffsetPx: 7,
+  lightbandStrength: 0.5,
+);
 
 class HomeView extends StatelessWidget {
-  const HomeView({super.key, this.initialVehicleId});
+  const HomeView({
+    super.key,
+    required this.authenticatedUser,
+    this.initialVehicleId,
+    this.routeAnimation,
+  });
 
+  final AppAuthUser authenticatedUser;
   final String? initialVehicleId;
+  final Listenable? routeAnimation;
 
   @override
-  Widget build(BuildContext context) =>
-      _HomeViewBody(initialVehicleId: initialVehicleId);
+  Widget build(BuildContext context) => _HomeViewBody(
+    authenticatedUser: authenticatedUser,
+    initialVehicleId: initialVehicleId,
+    routeAnimation: routeAnimation,
+  );
 }
 
 class _HomeViewBody extends StatefulWidget {
-  const _HomeViewBody({this.initialVehicleId});
+  const _HomeViewBody({
+    required this.authenticatedUser,
+    this.initialVehicleId,
+    this.routeAnimation,
+  });
 
+  final AppAuthUser authenticatedUser;
   final String? initialVehicleId;
+  final Listenable? routeAnimation;
   @override
   State<_HomeViewBody> createState() => _HomeViewBodyState();
 }
 
 class _HomeViewBodyState extends State<_HomeViewBody> {
-  late final PageController _pageController;
+  late final AmLiquidGlassRepaintController _appBarGlassRepaint;
+  late final PageController _vehiclePageController;
+  late final ScrollController _homeScrollController;
+  final _scrollActivity = DashboardScrollActivity();
 
   // Tiene traccia se un pop-up di stato e' attualmente aperto, per poterlo
   // chiudere prima di mostrarne un altro (evita pop-up sovrapposti).
@@ -69,7 +101,16 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    _appBarGlassRepaint = AmLiquidGlassRepaintController();
+    _appBarGlassRepaint.bindExternalRepaint(widget.routeAnimation);
+    _vehiclePageController = PageController(
+      onAttach: _scrollActivity.attach,
+      onDetach: _scrollActivity.detach,
+    );
+    _homeScrollController = ScrollController(
+      onAttach: _scrollActivity.attach,
+      onDetach: _scrollActivity.detach,
+    );
     // Carica solo se non e' gia' stato fatto: il bloc e' un singleton che
     // sopravvive ai cambi di tab, quindi rientrando in Home i dati sono
     // gia' li'. Riprova anche da DashboardError: e' l'unico modo per
@@ -88,15 +129,28 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
       // Home: in quel caso eseguiamo qui gli effetti iniziali, compresa la
       // richiesta del permesso notifiche.
       if (s is DashboardLoaded) {
-        _selectInitialVehicle(s);
+        if (!_selectInitialVehicle(s)) {
+          _syncVehiclePage(s.index);
+        }
         _checkNotificationPrompt(s);
       }
     });
   }
 
   @override
+  void didUpdateWidget(_HomeViewBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.routeAnimation != widget.routeAnimation) {
+      _appBarGlassRepaint.bindExternalRepaint(widget.routeAnimation);
+    }
+  }
+
+  @override
   void dispose() {
-    _pageController.dispose();
+    _appBarGlassRepaint.dispose();
+    _vehiclePageController.dispose();
+    _homeScrollController.dispose();
+    _scrollActivity.dispose();
     super.dispose();
   }
 
@@ -185,24 +239,33 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     }
 
     if (s is DashboardLoaded) {
-      _selectInitialVehicle(s);
+      if (!_selectInitialVehicle(s)) {
+        _syncVehiclePage(s.index);
+      }
       _checkNotificationPrompt(s);
     }
   }
 
-  void _selectInitialVehicle(DashboardLoaded state) {
+  bool _selectInitialVehicle(DashboardLoaded state) {
     final vehicleId = widget.initialVehicleId;
-    if (_initialVehicleHandled || vehicleId == null) return;
+    if (_initialVehicleHandled || vehicleId == null) return false;
     _initialVehicleHandled = true;
 
     final index = state.vehicles.indexWhere(
       (vehicle) => vehicle.id == vehicleId,
     );
-    if (index < 0) return;
+    if (index < 0) return false;
     context.read<DashboardBloc>().add(DashboardPageChanged(index));
+    _syncVehiclePage(index);
+    return true;
+  }
+
+  void _syncVehiclePage(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && _pageController.hasClients) {
-        _pageController.jumpToPage(index);
+      if (!mounted || !_vehiclePageController.hasClients) return;
+      final currentPage = _vehiclePageController.page?.round();
+      if (currentPage != index) {
+        _vehiclePageController.jumpToPage(index);
       }
     });
   }
@@ -260,64 +323,90 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    // Contenuto dell'app bar (pull-down + pill centrale + bottone +).
-    // Il gruppo liquid glass lo avvolge SOLO sui top di gamma (kHeavyEffects):
-    // un UNICO gruppo esterno così le forme vicine si fondono. Quando è false
-    // niente gruppo => niente backdrop filter.
-    final Widget appBarContent = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Expanded(
-            child: Align(
-              alignment: AlignmentGeometry.centerLeft,
-              child: AmPullDownLG(
-                brand: '',
-                lable: '',
-                onTap: () {},
-                backgroundColor: kHeavyEffects
-                    ? colors.surfaceRaised.withValues(alpha: 0.2)
-                    : colors.surfaceRaised,
-                popupBackgroundColor: kHeavyEffects
-                    ? colors.surfaceRaised.withValues(alpha: 0.5)
-                    : colors.surfaceRaised,
-                buttonIcons: HugeIcons.strokeRoundedMoreHorizontalCircle02,
-                buttonIconsSize: 26,
-                iconColor: colors.textPrimary,
-                textColor: colors.textPrimary,
-                buttonLableStyle: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  color: colors.textPrimary,
-                ),
-                arrow: false,
-                children: [
-                  ItemMorphPopUp(
-                    icon: HugeIcons.strokeRoundedLogout01,
-                    text: "LOGOUT",
-                    onTap: AppSessionActions.logout,
-                    iconColor: colors.info,
-                    textColor: colors.textPrimary,
-                    iconSize: 22,
-                    iconsWheight: FontWeight.w400,
-                  ),
-                  ItemMorphPopUp(
-                    icon: HugeIcons.strokeRoundedSettings01,
-                    text: "SETTINGS",
-                    onTap: () => context.push('/settings'),
-                    iconColor: colors.info,
-                    textColor: colors.textPrimary,
-                    iconSize: 22,
-                    iconsWheight: FontWeight.w400,
-                  ),
-                ],
+    final addVehicleControl = AmSoftButton(
+      width: AmControlMetrics.circularButtonVisualSize,
+      height: AmControlMetrics.circularButtonVisualSize,
+      color: colors.accent,
+      colorOpacity: 0.8,
+      iconSize: AmControlMetrics.circularButtonIconSize,
+      icon: HugeIcons.strokeRoundedAdd01,
+      iconWeight: 2.8,
+      liquidGlassEnabled: kHeavyEffects,
+      liquidGlassRepaint: _appBarGlassRepaint,
+      onPressed: _openVehicleRegistration,
+    );
+    final appBarLayout = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            AmPullDownLG(
+              brand: '',
+              lable: "",
+              larghezza: 160, //AmControlMetrics.pullDownWidth,
+              onTap: () {},
+              popupShadow: Theme.of(context).brightness == Brightness.light
+                  ? const BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 78,
+                      offset: Offset(0, 2),
+                    )
+                  : null,
+
+              backgroundColor: AmControlMetrics.pullDownFill(
+                Theme.of(context).brightness,
               ),
+              popupBackgroundColor: AmControlMetrics.pullDownPopupFill(
+                Theme.of(context).brightness,
+              ),
+              buttonShadow: AmControlMetrics.pullDownShadow(
+                Theme.of(context).brightness,
+              ),
+              buttonIcons: HugeIcons.strokeRoundedMoreHorizontalCircle02,
+              buttonIconsSize: AmControlMetrics.pullDownIconSize,
+              iconColor: colors.textPrimary,
+              textColor: colors.textPrimary,
+              buttonLableStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                color: colors.textPrimary,
+              ),
+              arrow: false,
+              circularTrigger: true,
+              liquidGlassEnabled: kHeavyEffects,
+              ownsLiquidGlassGroup: false,
+              liquidGlassRepaint: _appBarGlassRepaint,
+              children: [
+                ItemMorphPopUp(
+                  icon: HugeIcons.strokeRoundedLogout01,
+                  text: "LOGOUT",
+                  onTap: AppSessionActions.logout,
+                  iconColor: colors.info,
+                  textColor: colors.textPrimary,
+                  iconSize: AmControlMetrics.pullDownIconSize,
+                  textSize: 14,
+
+                  iconsWheight: FontWeight.w600,
+                  textWeight: FontWeight.w600,
+                ),
+                ItemMorphPopUp(
+                  icon: HugeIcons.strokeRoundedSettings01,
+                  text: "SETTINGS",
+                  onTap: () => context.push('/settings'),
+                  iconColor: colors.info,
+                  textColor: colors.textPrimary,
+                  iconSize: AmControlMetrics.pullDownIconSize,
+                  iconsWheight: FontWeight.w900,
+                  textSize: 14,
+                  textWeight: FontWeight.w600,
+                ),
+              ],
             ),
-          ),
-          Expanded(
-            child: Align(
-              alignment: AlignmentGeometry.center,
+
+            Expanded(
               child: Center(
                 child: Text(
                   "VEICOLI",
@@ -337,25 +426,28 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: Align(
-              alignment: AlignmentGeometry.centerRight,
-              child: AmSoftButton(
-                width: 45,
-                height: 45,
-                color: colors.accent,
-                icon: HugeIcons.strokeRoundedAdd01,
-                onPressed: _openVehicleRegistration,
-              ),
-            ),
-          ),
-        ],
+
+            addVehicleControl,
+          ],
+        ),
       ),
     );
+    final Widget appBarContent = kHeavyEffects
+        ? KeyedSubtree(
+            // Una nuova identità del repaint ricrea soltanto il render object
+            // glass quando il branch rientra nel viewport.
+            key: ValueKey(widget.routeAnimation ?? _appBarGlassRepaint),
+            child: OCLiquidGlassGroup(
+              key: const Key('home-app-bar-glass-group'),
+              // repaint: _appBarGlassRepaint,
+              settings: _homeControlGlassSettings,
+              child: appBarLayout,
+            ),
+          )
+        : appBarLayout;
 
-    // Altezza reale del contenuto della Row dell'app bar: Padding(v:12)*2 +
-    // 45 (altezza di pillola/bottoni). Serve per dimensionare lo sliver.
+    // I controlli da 44 px sono centrati nei 45 px residui dell'header; senza
+    // padding orizzontale i relativi touch target arrivano ai bordi fisici.
     const appBarContentHeight = 69.0;
     final topSafeArea = MediaQuery.paddingOf(context).top;
 
@@ -380,7 +472,6 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
         backgroundColor: colors.background,
         body: SmartEdge(
           blur: kHeavyEffects,
-          opacity: 0.96,
           fallbackTint: colors.background,
           edges: [
             EdgeBlur(
@@ -393,21 +484,12 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                 ControlPoint(position: 1.0, type: ControlPointType.transparent),
               ],
             ),
-            EdgeBlur(
-              type: EdgeType.bottomEdge,
-              size: 92,
-              tintColor: colors.background,
-              sigma: 10,
-              controlPoints: [
-                ControlPoint(position: 0.5, type: ControlPointType.visible),
-                ControlPoint(position: 1.0, type: ControlPointType.transparent),
-              ],
-            ),
           ],
           // CustomScrollView + sliver refresh control: a differenza di un
           // overlay, questo spinge fisicamente giu' l'header (sliver dopo di
           // lui) durante il pull e lo tiene giu' finche' il refresh non finisce.
           child: CustomScrollView(
+            controller: _homeScrollController,
             // AlwaysScrollable+Bouncing: CupertinoSliverRefreshControl richiede
             // overscroll per attivarsi, non disponibile con Clamping (default Android).
             physics: const AlwaysScrollableScrollPhysics(
@@ -421,21 +503,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                   height: topSafeArea + appBarContentHeight,
                   child: Padding(
                     padding: EdgeInsets.only(top: topSafeArea),
-                    // Gruppo glass solo sui top di gamma (come da commento
-                    // sopra): con flag off niente backdrop shader da
-                    // ricompilare/ridisegnare ad ogni frame.
-                    child: OCLiquidGlassGroup(
-                      settings: const OCLiquidGlassSettings(
-                        refractStrength: -0.13,
-                        blurRadiusPx: 1.0,
-                        specStrength: 0,
-                        specWidth: 0.0,
-                        specAngle: 145,
-                        blendPx: 20,
-                        specPower: 10,
-                      ),
-                      child: appBarContent,
-                    ),
+                    child: appBarContent,
                   ),
                 ),
               ),
@@ -512,7 +580,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                             sigma: 10,
                                             controlPoints: [
                                               ControlPoint(
-                                                position: 0.5,
+                                                position: 0.3,
                                                 type: ControlPointType.visible,
                                               ),
                                               ControlPoint(
@@ -529,7 +597,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                             sigma: 10,
                                             controlPoints: [
                                               ControlPoint(
-                                                position: 0.5,
+                                                position: 0.3,
                                                 type: ControlPointType.visible,
                                               ),
                                               ControlPoint(
@@ -540,132 +608,139 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                             ],
                                           ),
                                         ],
-                                        child: PageView.builder(
-                                          scrollDirection: Axis.horizontal,
-                                          controller: _pageController,
+                                        child: VehicleCardPageView(
+                                          controller: _vehiclePageController,
                                           onPageChanged: (index) {
                                             context.read<DashboardBloc>().add(
                                               DashboardPageChanged(index),
                                             );
                                           },
-                                          itemCount: vehicles.length,
-                                          itemBuilder: (context, index) {
-                                            final v = vehicles[index];
-                                            final mileageEstimate = v
-                                                .mileageEstimateAt(
-                                                  DateTime.now(),
-                                                );
-                                            // TODO: spostare logica nella UI, spostare in bloc in. futuro
-                                            return RepaintBoundary(
-                                              child: CardAuto(
-                                                marca: v.brand,
-                                                modello: v.model,
-                                                kmTotali: v.isPlaceholder
-                                                    ? '—'
-                                                    : '${v.kmCurrent} km',
-                                                targa: v.plate,
-                                                immaginePath: v.fotoPath,
-                                                anno: v.year,
-                                                kmUpdatedAt: v.kmUpdatedAt,
-                                                estimatedAdditionalKm:
-                                                    mileageEstimate
-                                                        .additionalKm,
-                                                daysSinceKmUpdate:
-                                                    mileageEstimate
-                                                        .daysSinceUpdate,
-                                                nextRevisionDate:
-                                                    v.nextRevisionDate,
-                                                onRevisionTap: v.isPlaceholder
-                                                    ? null
-                                                    : () async {
-                                                        final dashboardBloc =
-                                                            context
-                                                                .read<
-                                                                  DashboardBloc
-                                                                >();
-                                                        final aggiornato =
-                                                            await context.pushNamed(
-                                                              'updateRevision',
-                                                              extra: {
-                                                                'id': v.id,
-                                                                'currentRevisionDate':
-                                                                    v.nextRevisionDate,
-                                                              },
-                                                            );
-                                                        if (aggiornato ==
-                                                            true) {
-                                                          dashboardBloc.add(
-                                                            LoadDashboardData(),
-                                                          );
-                                                        }
-                                                      },
-                                                onKmTap: v.isPlaceholder
-                                                    ? null
-                                                    : () async {
-                                                        final dashboardBloc =
-                                                            context
-                                                                .read<
-                                                                  DashboardBloc
-                                                                >();
-                                                        final aggiornato =
-                                                            await context.pushNamed(
-                                                              'updateKm',
-                                                              extra: {
-                                                                'id': v.id,
-                                                                'currentKm':
-                                                                    '${v.kmCurrent}',
-                                                                'estimatedKm':
-                                                                    mileageEstimate
-                                                                        .estimatedKm,
-                                                              },
-                                                            );
-                                                        // Al ritorno, se i km sono stati
-                                                        // aggiornati, ricarico la dashboard.
-                                                        if (aggiornato ==
-                                                            true) {
-                                                          dashboardBloc.add(
-                                                            LoadDashboardData(),
-                                                          );
-                                                        }
-                                                      },
-                                                onEditPhotoTap: v.isPlaceholder
-                                                    ? null
-                                                    : () async {
-                                                        final dashboardBloc =
-                                                            context
-                                                                .read<
-                                                                  DashboardBloc
-                                                                >();
-                                                        final picker =
-                                                            ImagePicker();
-                                                        final picked = await picker.pickImage(
-                                                          source: ImageSource
-                                                              .gallery,
-                                                          // Ridimensiona/ricomprime a
-                                                          // monte (nativo): una foto card
-                                                          // 2:1 non ha bisogno di 12MP,
-                                                          // ed evita decode enormi sul
-                                                          // main isolate.
-                                                          maxWidth: 1280,
-                                                          maxHeight: 1280,
-                                                          imageQuality: 80,
-                                                        );
-                                                        if (picked == null) {
-                                                          return;
-                                                        }
-                                                        dashboardBloc.add(
-                                                          VehiclePhotoUpdateRequested(
-                                                            targa: v.plate,
-                                                            foto: File(
-                                                              picked.path,
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
+                                          cards: [
+                                            for (final v in vehicles)
+                                              Builder(
+                                                builder: (context) {
+                                                  final mileageEstimate = v
+                                                      .mileageEstimateAt(
+                                                        DateTime.now(),
+                                                      );
+                                                  return RepaintBoundary(
+                                                    child: CardAuto(
+                                                      marca: v.brand,
+                                                      modello: v.model,
+                                                      kmTotali: v.isPlaceholder
+                                                          ? '—'
+                                                          : '${v.kmCurrent} km',
+                                                      targa: v.plate,
+                                                      immaginePath: v.fotoPath,
+                                                      anno: v.year,
+                                                      kmUpdatedAt:
+                                                          v.kmUpdatedAt,
+                                                      estimatedAdditionalKm:
+                                                          mileageEstimate
+                                                              .additionalKm,
+                                                      daysSinceKmUpdate:
+                                                          mileageEstimate
+                                                              .daysSinceUpdate,
+                                                      nextRevisionDate:
+                                                          v.nextRevisionDate,
+                                                      onRevisionTap:
+                                                          v.isPlaceholder
+                                                          ? null
+                                                          : () async {
+                                                              final dashboardBloc =
+                                                                  context
+                                                                      .read<
+                                                                        DashboardBloc
+                                                                      >();
+                                                              final aggiornato =
+                                                                  await context.pushNamed(
+                                                                    'updateRevision',
+                                                                    extra: {
+                                                                      'id':
+                                                                          v.id,
+                                                                      'currentRevisionDate':
+                                                                          v.nextRevisionDate,
+                                                                    },
+                                                                  );
+                                                              if (aggiornato ==
+                                                                  true) {
+                                                                dashboardBloc.add(
+                                                                  DashboardRefreshRequested(),
+                                                                );
+                                                              }
+                                                            },
+                                                      onKmTap: v.isPlaceholder
+                                                          ? null
+                                                          : () async {
+                                                              final dashboardBloc =
+                                                                  context
+                                                                      .read<
+                                                                        DashboardBloc
+                                                                      >();
+                                                              final aggiornato = await context.pushNamed(
+                                                                'updateKm',
+                                                                extra: {
+                                                                  'id': v.id,
+                                                                  'currentKm':
+                                                                      '${v.kmCurrent}',
+                                                                  'estimatedKm':
+                                                                      mileageEstimate
+                                                                          .estimatedKm,
+                                                                },
+                                                              );
+                                                              // Al ritorno, se i km sono stati
+                                                              // aggiornati, ricarico la dashboard.
+                                                              if (aggiornato ==
+                                                                  true) {
+                                                                dashboardBloc.add(
+                                                                  DashboardRefreshRequested(),
+                                                                );
+                                                              }
+                                                            },
+                                                      onEditPhotoTap:
+                                                          v.isPlaceholder
+                                                          ? null
+                                                          : () async {
+                                                              final dashboardBloc =
+                                                                  context
+                                                                      .read<
+                                                                        DashboardBloc
+                                                                      >();
+                                                              final picker =
+                                                                  ImagePicker();
+                                                              final picked = await picker.pickImage(
+                                                                source:
+                                                                    ImageSource
+                                                                        .gallery,
+                                                                // Ridimensiona/ricomprime a
+                                                                // monte (nativo): una foto card
+                                                                // 2:1 non ha bisogno di 12MP,
+                                                                // ed evita decode enormi sul
+                                                                // main isolate.
+                                                                maxWidth: 1280,
+                                                                maxHeight: 1280,
+                                                                imageQuality:
+                                                                    80,
+                                                              );
+                                                              if (picked ==
+                                                                  null) {
+                                                                return;
+                                                              }
+                                                              dashboardBloc.add(
+                                                                VehiclePhotoUpdateRequested(
+                                                                  targa:
+                                                                      v.plate,
+                                                                  foto: File(
+                                                                    picked.path,
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            },
+                                                    ),
+                                                  );
+                                                },
                                               ),
-                                            );
-                                            //fine TODO: spostare logica nella UI, spostare in bloc in. futuro
-                                          },
+                                          ],
                                         ),
                                       ),
                                     ),
@@ -703,48 +778,34 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                       //  logoPath: 'https://images.unsplash.com/photo-1599305090748-36655bc6f571?q=80&w=2070&auto=format&fit=crop', // Placeholder logo
                       onTap: () {},
                     ),*/
-
-                    // lista kpi per il veicolo corrente
                     BlocBuilder<DashboardBloc, DashboardState>(
                       buildWhen: (previous, current) =>
                           previous is! DashboardLoaded ||
                           current is! DashboardLoaded ||
-                          previous.index != current.index ||
-                          previous.vehicles != current.vehicles,
+                          previous.costPeriod != current.costPeriod ||
+                          previous.maintenanceCostCents !=
+                              current.maintenanceCostCents ||
+                          previous.fuelCostCents != current.fuelCostCents,
                       builder: (context, state) {
-                        final vehicle = state is DashboardLoaded
-                            ? state.vehicles[state.index]
-                            : null;
-                        final mechanic = vehicle?.mechanic;
-                        return Padding(
-                          padding: const EdgeInsets.all(9),
-                          child: RepaintBoundary(
-                            child: AmWorkshopCard(
-                              mechanic: mechanic,
-                              onTap: vehicle == null || vehicle.isPlaceholder
-                                  ? null
-                                  : () async {
-                                      AmHaptics.tap();
-                                      final dashboardBloc = context
-                                          .read<DashboardBloc>();
-                                      final connected = await context.pushNamed(
-                                        'mechanicDetails',
-                                        extra: <String, dynamic>{
-                                          'vehicleId': vehicle.id,
-                                          'mechanic': mechanic,
-                                        },
-                                      );
-                                      if (connected == true) {
-                                        AmHaptics.tap();
-                                        dashboardBloc.add(
-                                          DashboardRefreshRequested(),
-                                        );
-                                      }
-                                    },
-                            ),
-                          ),
+                        if (state is! DashboardLoaded) {
+                          return const SizedBox.shrink();
+                        }
+                        return HomeCostsSection(
+                          selectedPeriod: state.costPeriod,
+                          maintenanceCostCents: state.maintenanceCostCents,
+                          fuelCostCents: state.fuelCostCents,
+                          onPeriodChanged: (period) => context
+                              .read<DashboardBloc>()
+                              .add(DashboardCostPeriodChanged(period)),
                         );
                       },
+                    ),
+                    const SizedBox(height: 12),
+
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _scrollActivity,
+                      builder: (context, scrolling, _) =>
+                          HomeWorkshopCarousel(isScrolling: scrolling),
                     ),
 
                     Padding(
@@ -791,28 +852,62 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
 
                           final kpis = state.kpis;
 
-                          // ListView.builder: una card per ogni KPI calcolato.
-                          // shrinkWrap + NeverScrollable perche' siamo gia' dentro
-                          // un SingleChildScrollView (niente scroll annidato).
-                          return ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: EdgeInsets.zero,
-                            itemCount: kpis.length,
-                            itemBuilder: (context, i) {
-                              final kpi = kpis[i];
-                              return RepaintBoundary(
-                                child: AmMaintenanceKpiCard(
-                                  iconBuilder: kpi.type.kpiIconBuilder,
-                                  color: choseColor(kpi.percentage),
-                                  label: kpi.type.kpiLabel,
-                                  remainingKm: kpi.remainingKm,
-                                  percentage: kpi.percentage,
-                                  onTap: () =>
-                                      _pushFunctional(context, kpi.type),
-                                ),
-                              );
-                            },
+                          return Column(
+                            children: [
+                              GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                padding: EdgeInsets.zero,
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      crossAxisSpacing: 10,
+                                      mainAxisSpacing: 10,
+                                      childAspectRatio: 1,
+                                    ),
+                                itemCount: kpis.length,
+                                itemBuilder: (context, i) {
+                                  final kpi = kpis[i];
+                                  return RepaintBoundary(
+                                    child: AmMaintenanceKpiCard(
+                                      iconBuilder: kpi.type.kpiIconBuilder,
+                                      color: choseColor(kpi.percentage),
+                                      label: kpi.type.kpiLabel,
+                                      remainingKm: kpi.remainingKm,
+                                      percentage: kpi.percentage,
+                                      onTap: () =>
+                                          _openMaintenanceDetail(context, kpi),
+                                    ),
+                                  );
+                                },
+                              ),
+                              HomeFutureWorkTimeline.fromSummaries(
+                                summaries: state.selectedVehicleFutureWorks,
+                                onReportProblem: () async {
+                                  final vehicle = state.vehicles[state.index];
+                                  final saved = await context.pushNamed<bool>(
+                                    'segnala_problema',
+                                    extra: {
+                                      'vehicleId': vehicle.id,
+                                      'vehicleName':
+                                          '${vehicle.brand} ${vehicle.model}',
+                                    },
+                                  );
+                                  if (saved == true && context.mounted) {
+                                    context.read<DashboardBloc>().add(
+                                      DashboardRefreshRequested(),
+                                    );
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Segnalazione salvata correttamente.',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
                           );
                         },
                       ),
@@ -985,23 +1080,22 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     );
   }
 
-  Future<void> _pushFunctional(BuildContext context, EnumPopUp type) async {
+  Future<void> _openMaintenanceDetail(
+    BuildContext context,
+    MaintenanceKpi kpi,
+  ) async {
     final s = context.read<DashboardBloc>().state;
     AmHaptics.tap();
     if (s is DashboardLoaded) {
       final v = s.vehicles[s.index];
       final dashboardBloc = context.read<DashboardBloc>();
       final salvato = await context.pushNamed(
-        'aggiungi_lavoro',
-        extra: {
-          'vehicleId': v.id,
-          'currentKm': v.kmCurrent,
-          'initialWorkType': type,
-        },
+        'dettaglio_lavoro',
+        extra: maintenanceKpiWorkLogLaunch(v, kpi).toRouteExtra(),
       );
       // Al ritorno, se il lavoro e' stato salvato, ricarico la dashboard.
       if (salvato == true) {
-        dashboardBloc.add(LoadDashboardData());
+        dashboardBloc.add(DashboardRefreshRequested());
       }
     }
   }

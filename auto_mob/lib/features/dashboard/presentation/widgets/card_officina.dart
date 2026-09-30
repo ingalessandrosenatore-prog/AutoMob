@@ -1,116 +1,85 @@
-import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:figma_squircle/figma_squircle.dart';
 import 'package:hugeicons/hugeicons.dart';
-
-const _workshopCardSmoothing = 0.8;
-
-SmoothRectangleBorder _workshopShape({double radius = 22}) =>
-    SmoothRectangleBorder(
-      borderRadius: SmoothBorderRadius(
-        cornerRadius: radius,
-        cornerSmoothing: _workshopCardSmoothing,
-      ),
-    );
 
 /// Card dell'officina collegata al veicolo attualmente selezionato.
 class AmWorkshopCard extends StatelessWidget {
   final MechanicSummary? mechanic;
   final VoidCallback? onTap;
+  final bool isAdd;
 
-  const AmWorkshopCard({super.key, required this.mechanic, this.onTap});
+  const AmWorkshopCard({
+    super.key,
+    required this.mechanic,
+    this.onTap,
+    this.isAdd = false,
+  });
+
+  const AmWorkshopCard.add({super.key, this.onTap})
+    : mechanic = null,
+      isAdd = true;
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    final currentMechanic = mechanic;
-    final connected = currentMechanic != null;
-    final accent = connected ? colors.info : colors.danger;
+    final isLight = Theme.of(context).brightness == Brightness.light;
+    final effectiveBackgroundColor = isLight
+        ? colors.surface
+        : colors.background;
 
-    return Semantics(
-      button: onTap != null,
-      label: connected
-          ? 'Dettagli meccanico ${currentMechanic.businessName}'
-          : 'Nessun meccanico collegato',
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          customBorder: _workshopShape(),
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: ShapeDecoration(
-              color: colors.surface,
-              shape: _workshopShape().copyWith(
-                side: BorderSide(color: colors.border),
-              ),
-              shadows: [
-                BoxShadow(
-                  color: colors.shadow.withValues(alpha: 0.09),
-                  blurRadius: 14,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: ShapeDecoration(
-                    color: accent.withValues(alpha: 0.12),
-                    shape: _workshopShape(radius: 14),
-                  ),
-                  child: HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowRight01,
-                    color: accent,
-                    size: 24,
-                    strokeWidth: 2.2,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Il tuo meccanico',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colors.textSecondary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        currentMechanic?.businessName ??
-                            'Nessun meccanico collegato',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: colors.textPrimary,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (onTap != null) ...[
-                  const SizedBox(width: 12),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: colors.textSecondary,
-                    size: 24,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
+    final titleStyle = TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w600,
+      color: colors.textPrimary,
+    );
+    final descriptionStyle = TextStyle(fontSize: 11, color: colors.textPrimary);
+    final superTitleStyle = TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
+      color: colors.textPrimary,
+    );
+
+    if (isAdd) {
+      return Swipercard(
+        titoloSuperiore: "",
+        titolo: "Aggiungi officina",
+        descrizione: "Collega un officina al tuo Veicolo",
+        radius: 40,
+        borderColor: colors.accent,
+        backGroundColor: effectiveBackgroundColor,
+        iconButton: HugeIcons.strokeRoundedAdd01,
+        iconColor: colors.textPrimary,
+        radiusButton: 100,
+        imageWidth: 150,
+        imageHeight: 120,
+        imagePath: 'lib/assets/images/meccanico_ombra.png',
+        titoloSuperioreStyle: superTitleStyle,
+        titoloStyle: titleStyle,
+        descrizioneStyle: descriptionStyle,
+        onTap: onTap ?? () {},
+      );
+    }
+
+    return Swipercard(
+      titoloSuperiore: "",
+      titolo: mechanic?.businessName.toUpperCase() ?? "Meccanico",
+      descrizione:
+          "Questa officina puo gestire"
+          " il tuo veicolo",
+      radius: 40,
+      borderColor: colors.info,
+      backGroundColor: effectiveBackgroundColor,
+      iconButton: HugeIcons.strokeRoundedArrowRight01,
+      iconColor: colors.textPrimary,
+      radiusButton: 100,
+      imageWidth: 150,
+      imageHeight: 120,
+      imagePath: 'lib/assets/images/auto.png',
+      titoloSuperioreStyle: superTitleStyle,
+      titoloStyle: titleStyle,
+      descrizioneStyle: descriptionStyle,
+      onTap: onTap ?? () {},
     );
   }
 }

@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 
-import '../../../../../core/widgets/blur/am_edge_blur.dart';
-import '../../../../../core/widgets/input/textfield.dart';
 import '../../bloc/vehicle_registration_bloc.dart';
 import '../../bloc/vehicle_registration_event.dart';
 import '../../bloc/vehicle_registration_state.dart';
 
-/// Step 1 — codice del meccanico di fiducia (opzionale). Per ora solo il
-/// percorso "ho un meccanico" e' abilitato: il bottone "Non ho meccanico"
-/// resta visibile ma disattivato (mock, in attesa di un vero servizio di
-/// ricerca officine).
+/// Step 1 — codice del meccanico di fiducia (opzionale).
 ///
 /// Il bottone "Continua" vive nella barra fissa della pagina root
 /// ([VehicleRegistrationPage]), non qui: questo widget espone [submit]
@@ -95,11 +90,11 @@ class MechanicStepViewState extends State<MechanicStepView> {
               children: [
                 AmTextField(
                   label: 'Codice meccanico',
-                  placeholder: 'MECH-XXXX',
+                  placeholder: '123456',
                   controller: _codiceController,
                   isRequired: false,
                   obscureText: false,
-                  keyboardType: TextInputType.text,
+                  keyboardType: TextInputType.number,
                   height: 52,
                 ),
               ],

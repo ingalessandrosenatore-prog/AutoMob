@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/maintenance_cost_period.dart';
+
 sealed class DashboardEvent extends Equatable {
   @override
   List<Object?> get props => [];
@@ -14,6 +16,16 @@ class LoadDashboardData extends DashboardEvent {}
 class DashboardPageChanged extends DashboardEvent {
   final int newIndex;
   DashboardPageChanged(this.newIndex);
+}
+
+class WorkshopPageChanged extends DashboardEvent {
+  WorkshopPageChanged({required this.vehicleId, required this.index});
+
+  final String vehicleId;
+  final int index;
+
+  @override
+  List<Object?> get props => [vehicleId, index];
 }
 
 /// Pull-to-refresh esplicito: ricarica i veicoli SENZA passare per
@@ -31,4 +43,13 @@ class VehiclePhotoUpdateRequested extends DashboardEvent {
 
   @override
   List<Object?> get props => [targa, foto.path];
+}
+
+class DashboardCostPeriodChanged extends DashboardEvent {
+  DashboardCostPeriodChanged(this.period);
+
+  final MaintenanceCostPeriod period;
+
+  @override
+  List<Object?> get props => [period];
 }
