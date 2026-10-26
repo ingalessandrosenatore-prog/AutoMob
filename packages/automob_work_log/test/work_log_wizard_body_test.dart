@@ -5,6 +5,56 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fpdart/fpdart.dart';
 
 void main() {
+  testWidgets('precompila nome e note e mantiene il report nel salvataggio', (
+    tester,
+  ) async {
+    final repository = _Repository();
+    final cubit = WorkLogEditorCubit(createWorkLog: CreateWorkLog(repository));
+    addTearDown(cubit.close);
+    await tester.pumpWidget(
+      _wizardApp(
+        cubit: cubit,
+        launch: const WorkLogLaunchContext(
+          vehicleId: 'vehicle-1',
+          vehicleName: 'Auto',
+          currentKm: 1000,
+          initialCustomName: 'Avaria motore',
+          initialNotes: 'Controllare motore',
+          sourceReportId: 'report-1',
+        ),
+      ),
+    );
+    expect(cubit.state.type, 'altro');
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('work-log-custom-name')),
+      240,
+      scrollable: find
+          .descendant(
+            of: find.byKey(const PageStorageKey('work-log-data-step')),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    expect(find.text('Avaria motore'), findsOneWidget);
+    expect(cubit.state.notes, 'Controllare motore');
+    await cubit.submit();
+    expect(repository.saved?.customName, 'Avaria motore');
+    expect(repository.saved?.notes, 'Controllare motore');
+    expect(repository.saved?.sourceReportId, 'report-1');
+    expect(cubit.state.status, WorkLogEditorStatus.success);
+    // Reusing an editor for a normal work must clear the source report.
+    cubit.initialize(
+      const WorkLogLaunchContext(
+        vehicleId: 'v2',
+        vehicleName: 'Auto',
+        currentKm: 0,
+      ),
+    );
+    cubit.changeCustomName('Controllo');
+    await cubit.submit();
+    expect(repository.saved?.sourceReportId, isNull);
+  });
+
   testWidgets('mantiene la UI originale e salva il ricambio', (tester) async {
     final repository = _Repository();
     final cubit = WorkLogEditorCubit(createWorkLog: CreateWorkLog(repository));
@@ -144,6 +194,7 @@ void main() {
 Widget _wizardApp({
   required WorkLogEditorCubit cubit,
   double keyboardInset = 0,
+  WorkLogLaunchContext? launch,
   ValueChanged<WorkLogSaveResult>? onSaved,
 }) => MaterialApp(
   theme: AmTheme.dark,
@@ -155,12 +206,14 @@ Widget _wizardApp({
     child: Scaffold(
       resizeToAvoidBottomInset: false,
       body: WorkLogWizardBody(
-        context: const WorkLogLaunchContext(
-          vehicleId: 'vehicle-1',
-          vehicleName: 'Alfa Romeo Giulia',
-          currentKm: 1000,
-          initialWorkType: 'tagliando',
-        ),
+        context:
+            launch ??
+            const WorkLogLaunchContext(
+              vehicleId: 'vehicle-1',
+              vehicleName: 'Alfa Romeo Giulia',
+              currentKm: 1000,
+              initialWorkType: 'tagliando',
+            ),
         cubit: cubit,
         onSaved: onSaved ?? (_) {},
       ),

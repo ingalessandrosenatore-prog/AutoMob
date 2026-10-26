@@ -1,3 +1,4 @@
+import 'package:auto_mob_v1/features/future_work/domain/usecases/mark_future_work_done.dart';
 // =====================================================================
 //  GOLDEN TEST — CUBIT / BLoC (layer presentation)
 // ---------------------------------------------------------------------
@@ -41,9 +42,12 @@ class MockUpdateVehiclePhoto extends Mock implements UpdateVehiclePhoto {}
 class MockGetLatestOpenFutureWorks extends Mock
     implements GetLatestOpenFutureWorks {}
 
+class MockMarkFutureWorkDone extends Mock implements MarkFutureWorkDone {}
+
 class FakeFile extends Fake implements File {}
 
 void main() {
+  late MockMarkFutureWorkDone markDone;
   late MockGetVehicles getVehicles;
   late MockComputeMaintenanceKpis computeKpis;
   late MockUpdateVehiclePhoto updateVehiclePhoto;
@@ -57,6 +61,7 @@ void main() {
   });
 
   setUp(() {
+    markDone = MockMarkFutureWorkDone();
     getVehicles = MockGetVehicles();
     computeKpis = MockComputeMaintenanceKpis();
     updateVehiclePhoto = MockUpdateVehiclePhoto();
@@ -73,7 +78,142 @@ void main() {
     calculateMaintenanceCost: const CalculateMaintenanceCost(),
     getFuelCostForPeriod: const GetFuelCostForPeriod(),
     getLatestOpenFutureWorks: getLatestOpenFutureWorks,
+    markFutureWorkDone: markDone,
   );
+
+  test(
+    'saved work removes the source report without a second completion request',
+    () async {
+      final report = FutureWorkSummary(
+        id: 'i1',
+        recordId: 'r1',
+        vehicleId: 'v1',
+        description: 'ABS',
+        registeredAt: DateTime(2026),
+        reminderDate: DateTime(2027),
+      );
+      when(
+        () => getVehicles(),
+      ).thenAnswer((_) async => Right([vehicleFixture(id: 'v1')]));
+      when(() => computeKpis(any())).thenReturn(tKpis);
+      // Simulate a stale refresh after the atomic wizard save.
+      when(
+        () => getLatestOpenFutureWorks(),
+      ).thenAnswer((_) async => Right([report]));
+      final bloc = buildBloc();
+      addTearDown(bloc.close);
+      final loaded = bloc.stream.firstWhere((s) => s is DashboardLoaded);
+      bloc.add(LoadDashboardData());
+      await loaded;
+      final refreshed = bloc.stream
+          .firstWhere((s) => s is DashboardLoaded && s.isRefreshing)
+          .then(
+            (_) => bloc.stream.firstWhere(
+              (s) => s is DashboardLoaded && !s.isRefreshing,
+            ),
+          );
+      bloc.add(FutureWorkResolvedWithWork('r1'));
+      await refreshed;
+      expect(
+        (bloc.state as DashboardLoaded).selectedVehicleFutureWorks,
+        isEmpty,
+      );
+      verifyNever(() => markDone(any()));
+    },
+  );
+
+  test('done removes only that report after the server confirms', () async {
+    final report = FutureWorkSummary(
+      id: 'i1',
+      recordId: 'r1',
+      vehicleId: 'v1',
+      description: 'ABS',
+      registeredAt: DateTime(2026),
+      reminderDate: DateTime(2027),
+    );
+    final other = FutureWorkSummary(
+      id: 'i2',
+      recordId: 'r2',
+      vehicleId: 'v1',
+      description: 'Olio',
+      registeredAt: DateTime(2026),
+      reminderDate: DateTime(2027),
+    );
+    when(
+      () => getVehicles(),
+    ).thenAnswer((_) async => Right([vehicleFixture(id: 'v1')]));
+    when(() => computeKpis(any())).thenReturn(tKpis);
+    when(
+      () => getLatestOpenFutureWorks(),
+    ).thenAnswer((_) async => Right([report, other]));
+    final pending = Completer<Either<Failure, void>>();
+    when(() => markDone('r1')).thenAnswer((_) => pending.future);
+    final bloc = buildBloc();
+    addTearDown(bloc.close);
+    final loaded = bloc.stream.firstWhere((s) => s is DashboardLoaded);
+    bloc.add(LoadDashboardData());
+    await loaded;
+    final saving = bloc.stream.firstWhere(
+      (s) => s is DashboardLoaded && s.isUpdatingReport,
+    );
+    bloc.add(FutureWorkDoneRequested('r1'));
+    await saving;
+    expect((bloc.state as DashboardLoaded).selectedVehicleFutureWorks, [
+      report,
+      other,
+    ]);
+    final done = bloc.stream.firstWhere(
+      (s) => s is DashboardLoaded && !s.isUpdatingReport,
+    );
+    pending.complete(const Right(null));
+    await done;
+    expect((bloc.state as DashboardLoaded).selectedVehicleFutureWorks, [other]);
+    // A stale response from an overlapping refresh must not revive the report.
+    final refreshDone = bloc.stream
+        .firstWhere((s) => s is DashboardLoaded && s.isRefreshing)
+        .then(
+          (_) => bloc.stream.firstWhere(
+            (s) => s is DashboardLoaded && !s.isRefreshing,
+          ),
+        );
+    bloc.add(DashboardRefreshRequested());
+    await refreshDone;
+    expect((bloc.state as DashboardLoaded).selectedVehicleFutureWorks, [other]);
+  });
+
+  test('failed completion preserves the report and exposes an error', () async {
+    final report = FutureWorkSummary(
+      id: 'i1',
+      recordId: 'r1',
+      vehicleId: 'v1',
+      description: 'ABS',
+      registeredAt: DateTime(2026),
+      reminderDate: DateTime(2027),
+    );
+    when(
+      () => getVehicles(),
+    ).thenAnswer((_) async => Right([vehicleFixture(id: 'v1')]));
+    when(() => computeKpis(any())).thenReturn(tKpis);
+    when(
+      () => getLatestOpenFutureWorks(),
+    ).thenAnswer((_) async => Right([report]));
+    when(
+      () => markDone('r1'),
+    ).thenAnswer((_) async => const Left(NetworkFailure()));
+    final bloc = buildBloc();
+    addTearDown(bloc.close);
+    final loaded = bloc.stream.firstWhere((s) => s is DashboardLoaded);
+    bloc.add(LoadDashboardData());
+    await loaded;
+    final failed = bloc.stream.firstWhere(
+      (s) => s is DashboardLoaded && s.reportUpdateError != null,
+    );
+    bloc.add(FutureWorkDoneRequested('r1'));
+    await failed;
+    expect((bloc.state as DashboardLoaded).selectedVehicleFutureWorks, [
+      report,
+    ]);
+  });
 
   final tVehicle1 = vehicleFixture(id: 'v1');
   final tVehicle2 = vehicleFixture(id: 'v2');

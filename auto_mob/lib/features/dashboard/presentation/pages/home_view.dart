@@ -1,24 +1,23 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:auto_mob_v1/core/config/performance_flags.dart';
+import 'package:auto_mob_v1/core/router/app_session_actions.dart';
 import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
-import '../widgets/home_workshop_carousel.dart';
-import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/notification_permission_dialog.dart';
+import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
-import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
-import 'package:auto_mob_v1/core/router/app_session_actions.dart';
 import 'package:auto_mob_v1/features/auth/domain/entities/app_user.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/maintenance_kpi.dart';
+import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:oc_liquid_glass/oc_liquid_glass.dart';
-import 'package:auto_mob_v1/core/config/performance_flags.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../../../../core/services/haptic_service.dart';
@@ -33,6 +32,8 @@ import '../widgets/card_auto.dart';
 import '../widgets/dashboard_scroll_activity.dart';
 import '../widgets/home_costs_section.dart';
 import '../widgets/home_future_work_timeline.dart';
+import '../widgets/resolve_future_work.dart';
+import '../widgets/home_workshop_carousel.dart';
 import '../widgets/vehicle_card_page_view.dart';
 
 const _homeControlGlassSettings = OCLiquidGlassSettings(
@@ -174,6 +175,12 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
     }
     _closeDialogIfOpen();
 
+    if (s is DashboardLoaded && s.reportUpdateError != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(s.reportUpdateError!)));
+      return;
+    }
     // Errore one-shot dell'aggiornamento foto: lo mostro senza toccare i dati.
     if (s is DashboardLoaded && s.photoUpdateError != null) {
       _dialogOpen = true;
@@ -458,7 +465,8 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
             if (previous.runtimeType != current.runtimeType) return true;
             if (previous is DashboardLoaded && current is DashboardLoaded) {
               return previous.vehicles != current.vehicles ||
-                  previous.photoUpdateError != current.photoUpdateError;
+                  previous.photoUpdateError != current.photoUpdateError ||
+                  previous.reportUpdateError != current.reportUpdateError;
             }
             return false;
           },
@@ -625,6 +633,26 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                                       );
                                                   return RepaintBoundary(
                                                     child: CardAuto(
+                                                      warningLights: [
+                                                        for (final report
+                                                            in state.futureWorksByVehicleId[v
+                                                                    .id] ??
+                                                                const [])
+                                                          for (final light
+                                                              in report
+                                                                  .warningLights)
+                                                            AmWarningLightData(
+                                                              onboardMessage: report
+                                                                  .onboardMessage,
+                                                              description: report
+                                                                  .description,
+                                                              code: light.code,
+                                                              color:
+                                                                  light.color,
+                                                              flashing: light
+                                                                  .flashing,
+                                                            ),
+                                                      ],
                                                       marca: v.brand,
                                                       modello: v.model,
                                                       kmTotali: v.isPlaceholder
@@ -883,6 +911,22 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                               ),
                               HomeFutureWorkTimeline.fromSummaries(
                                 summaries: state.selectedVehicleFutureWorks,
+                                isUpdating: state.isUpdatingReport,
+                                onDone: (recordId) => resolveFutureWork(
+                                  context,
+                                  report: state.selectedVehicleFutureWorks
+                                      .firstWhere(
+                                        (report) => report.recordId == recordId,
+                                      ),
+                                  vehicle: state.vehicles[state.index],
+                                  onDisappeared: () => context
+                                      .read<DashboardBloc>()
+                                      .add(FutureWorkDoneRequested(recordId)),
+                                  onWorkSaved: () =>
+                                      context.read<DashboardBloc>().add(
+                                        FutureWorkResolvedWithWork(recordId),
+                                      ),
+                                ),
                                 onReportProblem: () async {
                                   final vehicle = state.vehicles[state.index];
                                   final saved = await context.pushNamed<bool>(

@@ -28,3 +28,6 @@ export 'src/widgets/input/am_gear_period_selector.dart';
 export 'src/widgets/progress/am_wizard_progress.dart';
 export 'src/widgets/progress/am_kpi_gauge.dart';
 export 'src/widgets/card/swiper_card.dart';
+
+export 'src/widgets/warnings/am_warning_light.dart';
+export 'src/widgets/warnings/am_warning_light_catalog.dart';

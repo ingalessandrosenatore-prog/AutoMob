@@ -46,6 +46,8 @@ class _WorkLogWizardBodyState extends State<WorkLogWizardBody> {
     super.initState();
     _pages = PageController();
     _km = TextEditingController(text: widget.context.currentKm.toString());
+    _customName.text = widget.context.initialCustomName;
+    _notes.text = widget.context.initialNotes;
     widget.cubit.initialize(widget.context);
     FocusManager.instance.addListener(_keepFocusedFieldVisible);
   }

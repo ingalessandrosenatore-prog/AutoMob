@@ -53,3 +53,18 @@ class DashboardCostPeriodChanged extends DashboardEvent {
   @override
   List<Object?> get props => [period];
 }
+
+class FutureWorkDoneRequested extends DashboardEvent {
+  FutureWorkDoneRequested(this.recordId);
+  final String recordId;
+  @override
+  List<Object> get props => [recordId];
+}
+
+/// The WorkLog route has already saved the work and resolved its source report.
+class FutureWorkResolvedWithWork extends DashboardEvent {
+  FutureWorkResolvedWithWork(this.recordId);
+  final String recordId;
+  @override
+  List<Object> get props => [recordId];
+}

@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
 import 'package:auto_mob_v1/features/future_work/data/datasources/future_work_remote_data_source.dart';
-import 'package:auto_mob_v1/features/future_work/data/repositories/future_work_repository_impl.dart';
 import 'package:auto_mob_v1/features/future_work/data/models/future_work_summary_model.dart';
+import 'package:auto_mob_v1/features/future_work/data/repositories/future_work_repository_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -19,6 +19,21 @@ void main() {
     dataSource = _MockFutureWorkRemoteDataSource();
     repository = FutureWorkRepositoryImpl(dataSource);
   });
+
+  test(
+    'completion persists before succeeding and reports network failure',
+    () async {
+      when(() => dataSource.markDone('r1')).thenAnswer((_) async {});
+      expect((await repository.markDone('r1')).isRight(), isTrue);
+      when(
+        () => dataSource.markDone('r1'),
+      ).thenThrow(const SocketException('offline'));
+      expect(
+        (await repository.markDone('r1')).getLeft().toNullable(),
+        isA<NetworkFailure>(),
+      );
+    },
+  );
 
   test('restituisce il report creato dal datasource', () async {
     when(

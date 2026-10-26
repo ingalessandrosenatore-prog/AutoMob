@@ -14,8 +14,10 @@ class MechanicVehicleCardData {
     required this.year,
     required this.kilometers,
     this.status = MechanicVehicleStatus.connected,
+    this.warningLights = const [],
   });
 
+  final List<AmWarningLightData> warningLights;
   final String id;
   final String name;
   final String plate;
@@ -74,10 +76,17 @@ class MechanicVehicleCard extends StatelessWidget {
                         ),
                       ),
                       Center(
-                        child: MechanicVehicleWorkBadge(
-                          requiresWork:
-                              vehicle.status != MechanicVehicleStatus.connected,
-                        ),
+                        child: vehicle.warningLights.isNotEmpty
+                            ? AmWarningLights(
+                                lights: vehicle.warningLights,
+                                compact: true,
+                                size: 20,
+                              )
+                            : MechanicVehicleWorkBadge(
+                                requiresWork:
+                                    vehicle.status !=
+                                    MechanicVehicleStatus.connected,
+                              ),
                       ),
                       Center(
                         child: DecoratedBox(

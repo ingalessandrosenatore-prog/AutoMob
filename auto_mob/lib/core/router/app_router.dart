@@ -190,6 +190,9 @@ class AppRouter {
                 vehicleId: extra['vehicleId'] as String,
                 vehicleName: (extra['vehicleName'] as String?) ?? 'Veicolo',
                 currentKm: extra['currentKm'] as int,
+                initialCustomName: extra['initialCustomName'] as String? ?? '',
+                initialNotes: extra['initialNotes'] as String? ?? '',
+                sourceReportId: extra['sourceReportId'] as String?,
                 initialWorkType: switch (extra['initialWorkType']) {
                   final EnumPopUp value => value.dbValue,
                   final String value => value,

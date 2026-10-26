@@ -16,6 +16,37 @@ void main() {
 
   setUp(() => createReport = _MockCreateFutureWorkReport());
 
+  test(
+    'collects independent observations and updates/removes a selected light',
+    () async {
+      final cubit = FutureWorkReportCubit(createReport);
+      addTearDown(cubit.close);
+      cubit.toggleWarning('S03', color: 'red', flashing: true);
+      cubit.onboardMessageChanged('ABS non disponibile');
+      cubit.reminderDateChanged(deadline);
+      expect(cubit.state.description, '');
+      expect(cubit.state.canSubmit, isTrue);
+      expect(cubit.state.warningLights.single.color, 'red');
+      expect(cubit.state.warningLights.single.flashing, isTrue);
+      cubit.toggleWarning('S03', color: 'red', flashing: true);
+      expect(cubit.state.warningLights, isEmpty);
+      expect(cubit.state.onboardMessage, 'ABS non disponibile');
+      expect(cubit.state.canSubmit, isTrue);
+    },
+  );
+
+  test('keeps fixed and flashing variants independent', () async {
+    final cubit = FutureWorkReportCubit(createReport);
+    addTearDown(cubit.close);
+    cubit.toggleWarning('S10', color: 'amber');
+    cubit.toggleWarning('S10', color: 'amber', flashing: true);
+    expect(cubit.state.warningLights.length, 2);
+    cubit.toggleWarning('S10', color: 'amber');
+    expect(cubit.state.warningLights.single.flashing, isTrue);
+    cubit.toggleWarning('S10', color: 'amber', flashing: true);
+    expect(cubit.state.warningLights, isEmpty);
+  });
+
   blocTest<FutureWorkReportCubit, FutureWorkReportState>(
     'raccoglie descrizione e data, poi emette submitting e success',
     build: () {

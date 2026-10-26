@@ -5,6 +5,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../../../core/error/exceptions/exception.dart';
 import '../../domain/entities/future_work_report.dart';
 import '../../domain/entities/future_work_summary.dart';
+import '../../domain/entities/warning_light_observation.dart';
 import '../../domain/repositories/future_work_repository.dart';
 import '../datasources/future_work_remote_data_source.dart';
 
@@ -12,6 +13,20 @@ class FutureWorkRepositoryImpl implements FutureWorkRepository {
   const FutureWorkRepositoryImpl(this.remoteDataSource);
 
   final FutureWorkRemoteDataSource remoteDataSource;
+
+  @override
+  Future<Either<Failure, void>> markDone(String recordId) async {
+    try {
+      await remoteDataSource.markDone(recordId);
+      return const Right(null);
+    } on SocketException {
+      return const Left(NetworkFailure());
+    } on FutureWorkDataSourceException catch (error) {
+      return Left(RemoteFailure(error.message, code: error.code));
+    } catch (_) {
+      return const Left(ServerFailure());
+    }
+  }
 
   @override
   Future<Either<Failure, List<FutureWorkSummary>>> getLatestOpen() async {
@@ -30,12 +45,16 @@ class FutureWorkRepositoryImpl implements FutureWorkRepository {
   Future<Either<Failure, FutureWorkReport>> createReport({
     required String vehicleId,
     required String description,
+    String onboardMessage = '',
+    List<WarningLightObservation> warningLights = const [],
     required DateTime reminderDate,
   }) async {
     try {
       final id = await remoteDataSource.createReport(
         vehicleId: vehicleId,
         description: description,
+        onboardMessage: onboardMessage,
+        warningLights: warningLights,
         reminderDate: reminderDate,
       );
       return Right(
@@ -43,6 +62,8 @@ class FutureWorkRepositoryImpl implements FutureWorkRepository {
           id: id,
           vehicleId: vehicleId,
           description: description,
+          onboardMessage: onboardMessage,
+          warningLights: warningLights,
           reminderDate: reminderDate,
         ),
       );

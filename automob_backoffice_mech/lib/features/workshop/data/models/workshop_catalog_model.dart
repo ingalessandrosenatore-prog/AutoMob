@@ -1,3 +1,4 @@
+import '../../../service_requests/domain/entities/warning_light_observation.dart';
 import '../../domain/entities/workshop_catalog.dart';
 
 final class WorkshopCatalogModel {
@@ -58,6 +59,7 @@ final class WorkshopVehicleModel {
     required this.year,
     required this.kmCurrent,
     required this.tagliandoIntervalKm,
+    this.warningLights = const [],
     this.fuel,
     this.powerCv,
     this.displacementCc,
@@ -75,6 +77,18 @@ final class WorkshopVehicleModel {
     Map<String, dynamic> json,
   ) => WorkshopVehicleModel(
     id: _string(json['id']),
+    warningLights: json['warning_lights'] is List
+        ? (json['warning_lights'] as List)
+              .map((item) {
+                final row = Map<String, dynamic>.from(item as Map);
+                return WarningLightObservation(
+                  code: row['code'] as String,
+                  color: row['color'] as String,
+                  flashing: row['flashing'] as bool? ?? false,
+                );
+              })
+              .toList(growable: false)
+        : const [],
     plate: _string(json['plate']),
     brand: _string(json['brand']),
     model: _string(json['model']),
@@ -97,6 +111,7 @@ final class WorkshopVehicleModel {
     updatedAt: _date(json['updated_at']),
   );
 
+  final List<WarningLightObservation> warningLights;
   final String id;
   final String plate;
   final String brand;
@@ -136,6 +151,7 @@ final class WorkshopVehicleModel {
     createdAt: createdAt,
     updatedAt: updatedAt,
     requiresMaintenance: false,
+    warningLights: warningLights,
   );
 }
 

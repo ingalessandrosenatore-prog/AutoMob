@@ -3,8 +3,55 @@ import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:auto_mob_v1/features/future_work/domain/entities/future_work_summary.dart';
+import 'package:auto_mob_v1/features/future_work/domain/entities/warning_light_observation.dart';
 
 void main() {
+  testWidgets('data e km precedono il messaggio di bordo e le spie', (
+    tester,
+  ) async {
+    final summary = FutureWorkSummary(
+      id: 'i1',
+      recordId: 'r1',
+      vehicleId: 'v1',
+      description: 'Percezione utente',
+      onboardMessage: 'Messaggio di bordo',
+      reportedKm: 189598,
+      warningLights: const [
+        WarningLightObservation(code: 'S03', color: 'amber'),
+      ],
+      registeredAt: DateTime(2026, 10, 26),
+      reminderDate: DateTime(2027),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AmTheme.dark,
+        home: Scaffold(
+          body: HomeFutureWorkTimeline.fromSummaries(
+            summaries: [summary],
+            onDone: (_) {},
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Percezione utente'), findsNothing);
+    final header = find.byKey(const ValueKey('report-date-km-r1'));
+    final title = find.text('Messaggio di bordo');
+    final lights = find.byType(AmWarningLights);
+    expect(
+      tester.getTopLeft(title).dy,
+      greaterThan(tester.getBottomLeft(header).dy),
+    );
+    expect(
+      tester.getTopLeft(lights).dy,
+      greaterThan(tester.getBottomLeft(title).dy),
+    );
+    expect(
+      tester.getTopLeft(find.text('Segna come risolta')).dy,
+      greaterThan(tester.getBottomLeft(lights).dy),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('mostra i lavori futuri su una timeline allineata', (
     tester,
   ) async {
@@ -30,11 +77,8 @@ void main() {
     expect(find.text('LAVORI FUTURI'), findsOneWidget);
     expect(find.text('Cambio pastiglie posteriori'), findsOneWidget);
     expect(
-      find.text(
-        '13 SET 2026  ·  DA EFFETTUARE ENTRO 18 SET 2026',
-        findRichText: true,
-      ),
-      findsOneWidget,
+      find.text('13 SET 2026  ·  km non rilevati', findRichText: true),
+      findsNWidgets(2),
     );
     expect(find.text('Tagliando periodico'), findsOneWidget);
     expect(find.text('Segnala problema'), findsOneWidget);
@@ -67,6 +111,7 @@ void main() {
         recordId: 'r1',
         vehicleId: 'v1',
         description: 'Controllare la batteria',
+        reportedKm: 189598,
         registeredAt: DateTime(2026, 9, 17),
         reminderDate: DateTime(2026, 10, 2),
       );
@@ -82,10 +127,7 @@ void main() {
 
       expect(find.text('Controllare la batteria'), findsOneWidget);
       expect(
-        find.text(
-          '17 SET 2026  ·  DA EFFETTUARE ENTRO 02 OTT 2026',
-          findRichText: true,
-        ),
+        find.text('17 SET 2026  ·  189.598 km', findRichText: true),
         findsOneWidget,
       );
 

@@ -126,41 +126,53 @@ class WorkshopHomeView extends StatelessWidget {
                       ],
                     ),
                   ],
-                  child: CustomScrollView(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    physics: const AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics(),
-                    ),
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: SizedBox(height: appBarExtent + 18),
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      final bloc = context.read<WorkshopBloc>();
+                      final loaded = bloc.stream.firstWhere(
+                        (state) =>
+                            state is WorkshopReady ||
+                            state is WorkshopLoadFailure,
+                      );
+                      bloc.add(const WorkshopRetryRequested());
+                      await loaded;
+                    },
+                    child: CustomScrollView(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
                       ),
-                      const SliverPadding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        sliver: SliverToBoxAdapter(
-                          child: WorkshopOverviewSection(),
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: SizedBox(height: appBarExtent + 18),
                         ),
-                      ),
-                      SliverPadding(
-                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 18),
-                        sliver: SliverToBoxAdapter(
-                          child: WorkshopClientListHeading(
-                            total: totalVehicles,
+                        const SliverPadding(
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          sliver: SliverToBoxAdapter(
+                            child: WorkshopOverviewSection(),
                           ),
                         ),
-                      ),
-                      ..._contentSlivers(context),
-                      // Let the final card clear the search and navigation overlays.
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height:
-                              searchBottom +
-                              MechanicShellMetrics.searchHeight +
-                              16,
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(24, 20, 24, 18),
+                          sliver: SliverToBoxAdapter(
+                            child: WorkshopClientListHeading(
+                              total: totalVehicles,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                        ..._contentSlivers(context),
+                        // Let the final card clear the search and navigation overlays.
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            height:
+                                searchBottom +
+                                MechanicShellMetrics.searchHeight +
+                                16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -287,6 +299,14 @@ class WorkshopHomeView extends StatelessWidget {
             return MechanicVehicleCard(
               vehicle: MechanicVehicleCardData(
                 id: vehicles[index].id,
+                warningLights: [
+                  for (final light in vehicles[index].warningLights)
+                    AmWarningLightData(
+                      code: light.code,
+                      color: light.color,
+                      flashing: light.flashing,
+                    ),
+                ],
                 name: vehicles[index].displayName,
                 plate: vehicles[index].plate,
                 year: vehicles[index].year,

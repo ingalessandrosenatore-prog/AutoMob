@@ -119,18 +119,25 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
 
   final CreateWorkLog createWorkLog;
 
-  void initialize(WorkLogLaunchContext context) => emit(
-    WorkLogEditorState(
-      vehicleId: context.vehicleId,
-      minimumKm: context.currentKm,
-      type: context.initialWorkType,
-      partsCategory: workLogPartCategoryForType(
-        WorkLogType.tryFromWire(context.initialWorkType),
+  String? _sourceReportId;
+
+  void initialize(WorkLogLaunchContext context) {
+    _sourceReportId = context.sourceReportId;
+    emit(
+      WorkLogEditorState(
+        vehicleId: context.vehicleId,
+        minimumKm: context.currentKm,
+        type: context.initialWorkType,
+        customName: context.initialCustomName,
+        notes: context.initialNotes,
+        partsCategory: workLogPartCategoryForType(
+          WorkLogType.tryFromWire(context.initialWorkType),
+        ),
+        serviceKm: context.currentKm,
+        serviceDate: DateTime.now(),
       ),
-      serviceKm: context.currentKm,
-      serviceDate: DateTime.now(),
-    ),
-  );
+    );
+  }
 
   void changeStep(int step) => emit(state.copyWith(step: step.clamp(0, 2)));
   void previousStep() => changeStep(state.step - 1);
@@ -241,6 +248,7 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
     final workType = WorkLogType.tryFromWire(state.type);
     final draft = WorkLogDraft(
       vehicleId: state.vehicleId,
+      sourceReportId: _sourceReportId,
       type: state.type,
       customName:
           workType?.allowsCustomName == true &&

@@ -1,5 +1,6 @@
 import 'package:auto_mob_v1/core/error/exceptions/exception.dart';
 import 'package:auto_mob_v1/features/future_work/domain/entities/future_work_report.dart';
+import 'package:auto_mob_v1/features/future_work/domain/entities/warning_light_observation.dart';
 import 'package:auto_mob_v1/features/future_work/domain/repositories/future_work_repository.dart';
 import 'package:auto_mob_v1/features/future_work/domain/usecases/create_future_work_report.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +19,108 @@ void main() {
       repository,
       now: () => DateTime(2026, 9, 17, 15),
     );
+  });
+
+  test('accepts a light-only report and keeps onboard text separate', () async {
+    const lights = [
+      WarningLightObservation(code: 'S03', color: 'amber', flashing: true),
+    ];
+    final deadline = DateTime(2026, 9, 20);
+    when(
+      () => repository.createReport(
+        vehicleId: 'v1',
+        description: '',
+        onboardMessage: 'ABS non disponibile',
+        warningLights: lights,
+        reminderDate: deadline,
+      ),
+    ).thenAnswer(
+      (_) async => Right(
+        FutureWorkReport(
+          id: 'r1',
+          vehicleId: 'v1',
+          description: '',
+          onboardMessage: 'ABS non disponibile',
+          warningLights: lights,
+          reminderDate: deadline,
+        ),
+      ),
+    );
+    final result = await useCase(
+      vehicleId: 'v1',
+      description: '',
+      onboardMessage: '  ABS non disponibile  ',
+      warningLights: lights,
+      reminderDate: deadline,
+    );
+    expect(result.toNullable()?.description, '');
+    expect(result.toNullable()?.onboardMessage, 'ABS non disponibile');
+    expect(result.toNullable()?.warningLights, lights);
+  });
+
+  test(
+    'rejects duplicate lights, unknown codes, colors and oversized messages',
+    () async {
+      const light = WarningLightObservation(code: 'S03', color: 'amber');
+      for (final lights in [
+        const [light, light],
+        const [WarningLightObservation(code: 'S99', color: 'red')],
+        const [WarningLightObservation(code: 'S03', color: 'purple')],
+      ]) {
+        expect(
+          (await useCase(
+            vehicleId: 'v1',
+            description: 'ABS',
+            warningLights: lights,
+            reminderDate: DateTime(2026, 9, 20),
+          )).isLeft(),
+          isTrue,
+        );
+      }
+      expect(
+        (await useCase(
+          vehicleId: 'v1',
+          description: '',
+          onboardMessage: 'x' * 1001,
+          reminderDate: DateTime(2026, 9, 20),
+        )).isLeft(),
+        isTrue,
+      );
+      verifyZeroInteractions(repository);
+    },
+  );
+
+  test('persists fixed and flashing appearances of the same symbol', () async {
+    const lights = [
+      WarningLightObservation(code: 'S10', color: 'amber'),
+      WarningLightObservation(code: 'S10', color: 'amber', flashing: true),
+    ];
+    final deadline = DateTime(2026, 9, 20);
+    when(
+      () => repository.createReport(
+        vehicleId: 'v1',
+        description: '',
+        warningLights: lights,
+        reminderDate: deadline,
+      ),
+    ).thenAnswer(
+      (_) async => Right(
+        FutureWorkReport(
+          id: 'r1',
+          vehicleId: 'v1',
+          description: '',
+          warningLights: lights,
+          reminderDate: deadline,
+        ),
+      ),
+    );
+    final result = await useCase(
+      vehicleId: 'v1',
+      description: '',
+      warningLights: lights,
+      reminderDate: deadline,
+    );
+    expect(result.toNullable()?.warningLights, lights);
   });
 
   test('normalizza i dati e crea la segnalazione valida', () async {

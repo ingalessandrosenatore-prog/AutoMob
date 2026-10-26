@@ -1,3 +1,4 @@
+import '../../features/future_work/domain/usecases/mark_future_work_done.dart';
 import '../../features/auth/domain/usecases/resolve_owner_access.dart';
 import '../../features/auth/domain/repositories/owner_access_repository.dart';
 import '../../features/auth/data/repositories/owner_access_repository_impl.dart';
@@ -104,6 +105,7 @@ Future<void> init({bool firebaseAvailable = false}) async {
 }
 
 void _initFutureWork() {
+  sl.registerLazySingleton<MarkFutureWorkDone>(() => MarkFutureWorkDone(sl()));
   sl.registerLazySingleton<FutureWorkRemoteDataSource>(
     () => SupabaseFutureWorkRemoteDataSource(sl()),
   );
@@ -347,6 +349,7 @@ Future<void> _initDashboard() async {
       calculateMaintenanceCost: sl(),
       getFuelCostForPeriod: sl(),
       getLatestOpenFutureWorks: sl(),
+      markFutureWorkDone: sl(),
     ),
     dispose: (b) => b.close(),
   );

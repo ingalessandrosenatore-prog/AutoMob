@@ -19,11 +19,26 @@ class WorkshopHomePage extends StatefulWidget {
   State<WorkshopHomePage> createState() => _WorkshopHomePageState();
 }
 
-class _WorkshopHomePageState extends State<WorkshopHomePage> {
+class _WorkshopHomePageState extends State<WorkshopHomePage>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<WorkshopBloc>().add(const WorkshopRetryRequested());
+    }
+  }
+
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     super.dispose();
   }

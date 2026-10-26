@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:auto_mob_v1/core/config/performance_flags.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
-import 'package:flutter/material.dart';
 import 'package:figma_squircle/figma_squircle.dart';
+import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 const _vehicleCardRadius = 28.0;
@@ -18,6 +18,7 @@ SmoothRectangleBorder _vehicleShape({double radius = _vehicleCardRadius}) =>
 /// Card del veicolo nello stack della home.
 /// Superficie HSL con luce superiore e doppia ombra corta.
 class CardAuto extends StatelessWidget {
+  final List<AmWarningLightData> warningLights;
   final String marca;
   final String modello;
   final String kmTotali;
@@ -47,6 +48,7 @@ class CardAuto extends StatelessWidget {
     required this.kmTotali,
     required this.targa,
     required this.anno,
+    this.warningLights = const [],
     this.immaginePath,
     this.kmUpdatedAt,
     this.estimatedAdditionalKm = 0,
@@ -183,6 +185,7 @@ class CardAuto extends StatelessWidget {
                         ],
                       ),
                       _VehicleInfoPanel(
+                        warningLights: warningLights,
                         marca: marca,
                         modello: modello,
                         kmTotali: kmTotali,
@@ -276,6 +279,7 @@ Vecchi widget grafici della card conservati intenzionalmente come riferimento.
 Erano usati dal layout a due pulsanti rettangolari commentato sopra.
 /// Dati del veicolo integrati alla foto: brand e km, poi modello e anno.
 class _InfoTile extends StatelessWidget {
+  final List<AmWarningLightData> warningLights;
   final String marca;
   final String modello;
   final String kmTotali;
@@ -504,6 +508,7 @@ class _RevisionStatusPill extends StatelessWidget {
 
 class _VehicleInfoPanel extends StatelessWidget {
   const _VehicleInfoPanel({
+    required this.warningLights,
     required this.marca,
     required this.modello,
     required this.kmTotali,
@@ -516,6 +521,7 @@ class _VehicleInfoPanel extends StatelessWidget {
     required this.onRevisionTap,
   });
 
+  final List<AmWarningLightData> warningLights;
   final String marca;
   final String modello;
   final String kmTotali;
@@ -577,7 +583,27 @@ class _VehicleInfoPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _LicensePlate(plate: targa),
+          Row(
+            key: const Key('vehicle-plate-and-warnings'),
+            children: [
+              _LicensePlate(plate: targa),
+              if (warningLights.isNotEmpty) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 38,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: AmWarningLights(
+                        lights: warningLights,
+                        compact: true,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
           const SizedBox(height: 8),
           _MileageSection(
             kmTotali: kmTotali,

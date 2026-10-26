@@ -2,7 +2,9 @@ import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../domain/entities/warning_light_observation.dart';
 import '../models/future_work_summary_model.dart';
+import '../models/warning_light_observation_model.dart';
 
 class FutureWorkDataSourceException implements Exception {
   const FutureWorkDataSourceException(this.message, {this.code});
@@ -12,11 +14,14 @@ class FutureWorkDataSourceException implements Exception {
 }
 
 abstract class FutureWorkRemoteDataSource {
+  Future<void> markDone(String recordId);
   Future<List<FutureWorkSummaryModel>> getLatestOpen();
 
   Future<String> createReport({
     required String vehicleId,
     required String description,
+    String onboardMessage = '',
+    List<WarningLightObservation> warningLights = const [],
     required DateTime reminderDate,
   });
 }
@@ -27,9 +32,21 @@ class SupabaseFutureWorkRemoteDataSource implements FutureWorkRemoteDataSource {
   final SupabaseClient client;
 
   @override
+  Future<void> markDone(String recordId) async {
+    try {
+      await client.rpc(
+        'complete_future_work_report',
+        params: {'p_record_id': recordId},
+      );
+    } on PostgrestException catch (error) {
+      throw FutureWorkDataSourceException(error.message, code: error.code);
+    }
+  }
+
+  @override
   Future<List<FutureWorkSummaryModel>> getLatestOpen() async {
     try {
-      final result = await client.rpc('get_owner_dashboard_future_works');
+      final result = await client.rpc('get_owner_active_reports');
       return (result as List)
           .map(
             (row) => FutureWorkSummaryModel.fromJson(
@@ -50,6 +67,8 @@ class SupabaseFutureWorkRemoteDataSource implements FutureWorkRemoteDataSource {
   Future<String> createReport({
     required String vehicleId,
     required String description,
+    String onboardMessage = '',
+    List<WarningLightObservation> warningLights = const [],
     required DateTime reminderDate,
   }) async {
     try {
@@ -58,6 +77,8 @@ class SupabaseFutureWorkRemoteDataSource implements FutureWorkRemoteDataSource {
         params: {
           'p_vehicle_id': vehicleId,
           'p_description': description,
+          'p_onboard_message': onboardMessage,
+          'p_warning_lights': serializeWarningLights(warningLights),
           'p_reminder_date': _dateParam(reminderDate),
         },
       );

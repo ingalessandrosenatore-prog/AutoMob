@@ -8,12 +8,18 @@ class WorkLogLaunchContext extends Equatable {
     required this.vehicleName,
     required this.currentKm,
     this.initialWorkType = 'altro',
+    this.initialCustomName = '',
+    this.initialNotes = '',
+    this.sourceReportId,
   });
 
   final String vehicleId;
   final String vehicleName;
   final int currentKm;
   final String initialWorkType;
+  final String initialCustomName;
+  final String initialNotes;
+  final String? sourceReportId;
 
   @override
   List<Object?> get props => [
@@ -21,6 +27,9 @@ class WorkLogLaunchContext extends Equatable {
     vehicleName,
     currentKm,
     initialWorkType,
+    initialCustomName,
+    initialNotes,
+    sourceReportId,
   ];
 }
 

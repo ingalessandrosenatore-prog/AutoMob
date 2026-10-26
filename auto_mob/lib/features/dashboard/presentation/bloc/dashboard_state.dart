@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../future_work/domain/entities/future_work_summary.dart';
 import '../../../vehicle/domain/entities/maintenance_kpi.dart';
 import '../../../vehicle/domain/entities/vehicle.dart';
-import '../../../future_work/domain/entities/future_work_summary.dart';
 import '../../domain/entities/maintenance_cost_period.dart';
 import '../../domain/entities/workshop_mascot.dart';
 
@@ -38,6 +38,8 @@ class DashboardLoaded extends DashboardState {
   /// FOTO). Non e' preservato da [copyWith]: viene consumato dalla UI (dialog)
   /// e sparisce alla emissione successiva. Null = nessun errore.
   final String? photoUpdateError;
+  final String? reportUpdateError;
+  final bool isUpdatingReport;
   final MaintenanceCostPeriod costPeriod;
   final int maintenanceCostCents;
   final int fuelCostCents;
@@ -56,6 +58,8 @@ class DashboardLoaded extends DashboardState {
     required this.kpis,
     this.isRefreshing = false,
     this.photoUpdateError,
+    this.reportUpdateError,
+    this.isUpdatingReport = false,
     this.costPeriod = MaintenanceCostPeriod.monthly,
     this.maintenanceCostCents = 0,
     this.fuelCostCents = 0,
@@ -69,6 +73,8 @@ class DashboardLoaded extends DashboardState {
     int? index,
     List<MaintenanceKpi>? kpis,
     bool? isRefreshing,
+    String? reportUpdateError,
+    bool? isUpdatingReport,
     MaintenanceCostPeriod? costPeriod,
     int? maintenanceCostCents,
     int? fuelCostCents,
@@ -81,6 +87,8 @@ class DashboardLoaded extends DashboardState {
       index: index ?? this.index,
       kpis: kpis ?? this.kpis,
       isRefreshing: isRefreshing ?? this.isRefreshing,
+      reportUpdateError: reportUpdateError,
+      isUpdatingReport: isUpdatingReport ?? this.isUpdatingReport,
       costPeriod: costPeriod ?? this.costPeriod,
       maintenanceCostCents: maintenanceCostCents ?? this.maintenanceCostCents,
       fuelCostCents: fuelCostCents ?? this.fuelCostCents,
@@ -101,6 +109,8 @@ class DashboardLoaded extends DashboardState {
     kpis,
     isRefreshing,
     photoUpdateError,
+    reportUpdateError,
+    isUpdatingReport,
     costPeriod,
     maintenanceCostCents,
     fuelCostCents,

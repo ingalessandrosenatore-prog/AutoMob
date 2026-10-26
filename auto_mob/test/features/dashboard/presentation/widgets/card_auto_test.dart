@@ -1,13 +1,42 @@
 import 'package:auto_mob_v1/core/theme/am_theme.dart';
 import 'package:auto_mob_v1/core/theme/am_theme_colors.dart';
 import 'package:auto_mob_v1/features/dashboard/presentation/widgets/card_auto.dart';
-import 'package:common_ui_widget/common_ui_widget.dart' show AmPullDownLG;
+import 'package:common_ui_widget/common_ui_widget.dart'
+    show AmPullDownLG, AmWarningLightData, AmWarningLight;
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 void main() {
+  testWidgets(
+    'warning icons sit next to the plate and open their message on tap',
+    (tester) async {
+      await _pumpCard(
+        tester,
+        warningLights: const [
+          AmWarningLightData(
+            code: 'S10',
+            color: 'amber',
+            onboardMessage: 'Controllare motore',
+          ),
+        ],
+      );
+      await tester.pumpAndSettle();
+      final plate = tester.getRect(
+        find.byKey(const Key('vehicle-license-plate')),
+      );
+      final warning = tester.getRect(find.byType(AmWarningLight));
+      expect(warning.left, greaterThan(plate.right));
+      expect(warning.center.dy, closeTo(plate.center.dy, 1));
+      expect(find.textContaining('Controllare motore'), findsNothing);
+      await tester.tap(find.byType(AmWarningLight));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Controllare motore'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('mostra targa, km, stima e revisione dentro la card', (
     tester,
   ) async {
@@ -228,6 +257,7 @@ Future<void> _pumpCard(
   VoidCallback? onRevisionTap,
   DateTime? nextRevisionDate,
   bool revisionUnavailable = false,
+  List<AmWarningLightData> warningLights = const [],
 }) async {
   tester.view.physicalSize = const Size(390, 1000);
   tester.view.devicePixelRatio = 1;
@@ -240,6 +270,7 @@ Future<void> _pumpCard(
       home: Scaffold(
         body: SingleChildScrollView(
           child: CardAuto(
+            warningLights: warningLights,
             marca: 'Alfa Romeo',
             modello: 'Stelvio',
             kmTotali: '166600 km',

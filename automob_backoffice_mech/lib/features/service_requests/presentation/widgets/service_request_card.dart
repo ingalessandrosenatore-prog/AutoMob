@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/mechanic_shapes.dart';
 import '../../domain/entities/service_request.dart';
+import 'service_request_report_details.dart';
 
 class ServiceRequestCard extends StatelessWidget {
   const ServiceRequestCard({
@@ -84,13 +85,18 @@ class ServiceRequestCard extends StatelessWidget {
                   ],
                 ),
                 _TimelineConnector(color: colors.accent),
-                ...request.issues.indexed.map(
-                  (entry) => _IssueStep(
-                    index: entry.$1,
-                    issue: entry.$2,
-                    continues: entry.$1 < request.issues.length - 1,
+                if (request.reports.isNotEmpty)
+                  ...request.reports.map(
+                    (report) => ServiceRequestReportDetails(report: report),
+                  )
+                else
+                  ...request.issues.indexed.map(
+                    (entry) => _IssueStep(
+                      index: entry.$1,
+                      issue: entry.$2,
+                      continues: entry.$1 < request.issues.length - 1,
+                    ),
                   ),
-                ),
                 const SizedBox(height: 8),
                 Center(
                   child: SizedBox(

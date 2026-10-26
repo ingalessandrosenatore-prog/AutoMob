@@ -141,8 +141,11 @@ class SupabaseWorkLogRemoteDataSource implements WorkLogRemoteDataSource {
   @override
   Future<void> createWorkLog(WorkLogDraft draft) async {
     await _client.rpc(
-      'crea_sessione_manutenzione',
+      draft.sourceReportId == null
+          ? 'crea_sessione_manutenzione'
+          : 'create_work_log_for_report',
       params: {
+        if (draft.sourceReportId != null) 'p_report_id': draft.sourceReportId,
         'p_payload': {
           'vehicle_id': draft.vehicleId,
           'type': draft.type,

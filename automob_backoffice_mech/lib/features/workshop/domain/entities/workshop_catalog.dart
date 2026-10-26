@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../service_requests/domain/entities/warning_light_observation.dart';
+
 final class WorkshopMechanic extends Equatable {
   const WorkshopMechanic({
     required this.displayName,
@@ -25,6 +27,7 @@ final class WorkshopVehicle extends Equatable {
     required this.kmCurrent,
     required this.tagliandoIntervalKm,
     required this.requiresMaintenance,
+    this.warningLights = const [],
     this.fuel,
     this.powerCv,
     this.displacementCc,
@@ -57,6 +60,7 @@ final class WorkshopVehicle extends Equatable {
   final DateTime? createdAt;
   final DateTime? updatedAt;
   final bool requiresMaintenance;
+  final List<WarningLightObservation> warningLights;
 
   String get displayName => '$brand $model'.trim();
 
@@ -80,6 +84,7 @@ final class WorkshopVehicle extends Equatable {
     createdAt: createdAt,
     updatedAt: updatedAt,
     requiresMaintenance: requiresMaintenance ?? this.requiresMaintenance,
+    warningLights: warningLights,
   );
 
   @override
@@ -103,6 +108,7 @@ final class WorkshopVehicle extends Equatable {
     createdAt,
     updatedAt,
     requiresMaintenance,
+    warningLights,
   ];
 }
 

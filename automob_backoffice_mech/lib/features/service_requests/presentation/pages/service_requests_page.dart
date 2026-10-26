@@ -10,8 +10,33 @@ import '../../domain/entities/service_request.dart';
 import '../bloc/service_requests_cubit.dart';
 import '../widgets/service_request_card.dart';
 
-class ServiceRequestsPage extends StatelessWidget {
+class ServiceRequestsPage extends StatefulWidget {
   const ServiceRequestsPage({super.key});
+  @override
+  State<ServiceRequestsPage> createState() => _ServiceRequestsPageState();
+}
+
+class _ServiceRequestsPageState extends State<ServiceRequestsPage>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<ServiceRequestsCubit>().refresh();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);

@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/entities/service_request.dart';
 import '../../domain/usecases/get_service_requests.dart';
 
@@ -56,7 +57,7 @@ class ServiceRequestsCubit extends Cubit<ServiceRequestsState> {
         : _requests
               .where((request) {
                 final searchable = _normalize(
-                  '${request.vehicleModel} ${request.plate} ${request.issues.join(' ')}',
+                  '${request.vehicleModel} ${request.plate} ${request.issues.join(' ')} ${request.reports.map((r) => r.onboardMessage).join(' ')}',
                 );
                 final compact = searchable.replaceAll(' ', '');
                 return tokens.every(

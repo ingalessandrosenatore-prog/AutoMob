@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/widgets/input/date_picker_field.dart';
 import '../bloc/future_work_report_cubit.dart';
+import '../widgets/warning_light_selector.dart';
 
 class FutureWorkReportPage extends StatefulWidget {
   const FutureWorkReportPage({
@@ -24,11 +25,13 @@ class FutureWorkReportPage extends StatefulWidget {
 
 class _FutureWorkReportPageState extends State<FutureWorkReportPage> {
   final _descriptionController = TextEditingController();
+  final _onboardController = TextEditingController();
   final _dateController = TextEditingController();
 
   @override
   void dispose() {
     _descriptionController.dispose();
+    _onboardController.dispose();
     _dateController.dispose();
     super.dispose();
   }
@@ -71,7 +74,7 @@ class _FutureWorkReportPageState extends State<FutureWorkReportPage> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Descrivi il lavoro da ricordare e indica entro quando va effettuato.',
+                      'Aggiungi le spie che hai visto, il messaggio del computer di bordo o ciò che hai notato.',
                       style: TextStyle(
                         color: colors.textSecondary,
                         fontSize: 14,
@@ -79,6 +82,26 @@ class _FutureWorkReportPageState extends State<FutureWorkReportPage> {
                       ),
                     ),
                     const SizedBox(height: 28),
+                    const WarningLightSelector(),
+                    const SizedBox(height: 24),
+                    TextField(
+                      key: const ValueKey('future-work-onboard-message'),
+                      controller: _onboardController,
+                      enabled: !isSubmitting,
+                      minLines: 2,
+                      maxLines: 4,
+                      maxLength: 1000,
+                      onChanged: context
+                          .read<FutureWorkReportCubit>()
+                          .onboardMessageChanged,
+                      decoration: const InputDecoration(
+                        labelText: 'Messaggio del computer di bordo',
+                        hintText:
+                            'Facoltativo · Riporta il testo mostrato dall’auto',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
                     TextField(
                       key: const ValueKey('future-work-description'),
                       controller: _descriptionController,
@@ -91,8 +114,9 @@ class _FutureWorkReportPageState extends State<FutureWorkReportPage> {
                           .descriptionChanged,
                       style: TextStyle(color: colors.textPrimary),
                       decoration: InputDecoration(
-                        labelText: 'Problema o lavoro futuro',
-                        hintText: 'Es. Controllare le pastiglie posteriori',
+                        labelText: 'Anomalia che hai notato',
+                        hintText:
+                            'Facoltativo · Es. Sento un rumore quando freno',
                         alignLabelWithHint: true,
                         filled: true,
                         fillColor: colors.surface,

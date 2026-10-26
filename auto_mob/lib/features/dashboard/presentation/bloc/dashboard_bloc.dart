@@ -3,16 +3,17 @@ import 'dart:async';
 import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../future_work/domain/entities/future_work_summary.dart';
+import '../../../future_work/domain/usecases/get_latest_open_future_works.dart';
+import '../../../future_work/domain/usecases/mark_future_work_done.dart';
 import '../../../vehicle/domain/entities/vehicle.dart';
 import '../../../vehicle/domain/usecases/compute_maintenance_kpis.dart';
 import '../../../vehicle/domain/usecases/get_vehicles.dart';
 import '../../../vehicle/domain/usecases/update_vehicle_photo.dart';
-import '../../../future_work/domain/entities/future_work_summary.dart';
-import '../../../future_work/domain/usecases/get_latest_open_future_works.dart';
-import '../../domain/usecases/calculate_maintenance_cost.dart';
-import '../../domain/usecases/get_fuel_cost_for_period.dart';
 import '../../domain/entities/maintenance_cost_period.dart';
 import '../../domain/usecases/assign_workshop_mascots.dart';
+import '../../domain/usecases/calculate_maintenance_cost.dart';
+import '../../domain/usecases/get_fuel_cost_for_period.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
@@ -23,6 +24,10 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   final CalculateMaintenanceCost calculateMaintenanceCost;
   final GetFuelCostForPeriod getFuelCostForPeriod;
   final GetLatestOpenFutureWorks getLatestOpenFutureWorks;
+  final MarkFutureWorkDone markFutureWorkDone;
+  // Session-local confirmations prevent an older in-flight refresh from
+  // reviving reports that the server has already marked as done.
+  final Set<String> _completedReports = {};
   final AssignWorkshopMascots assignWorkshopMascots;
 
   DashboardBloc({
@@ -32,9 +37,17 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     required this.calculateMaintenanceCost,
     required this.getFuelCostForPeriod,
     required this.getLatestOpenFutureWorks,
+    required this.markFutureWorkDone,
     AssignWorkshopMascots? assignWorkshopMascots,
   }) : assignWorkshopMascots = assignWorkshopMascots ?? AssignWorkshopMascots(),
        super(DashboardInitial()) {
+    on<FutureWorkDoneRequested>(_onFutureWorkDone, transformer: droppable());
+    on<FutureWorkResolvedWithWork>((event, emit) {
+      final current = state;
+      if (current is! DashboardLoaded) return;
+      _removeCompletedReport(event.recordId, current, emit);
+      add(DashboardRefreshRequested());
+    });
     on<LoadDashboardData>(_onLoadDashboardData);
     on<DashboardPageChanged>(_onVehicleChange);
     on<WorkshopPageChanged>(_onWorkshopChange);
@@ -43,6 +56,46 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<DashboardRefreshRequested>(
       _onDashboardRefreshRequested,
       transformer: droppable(),
+    );
+  }
+
+  Future<void> _onFutureWorkDone(
+    FutureWorkDoneRequested event,
+    Emitter<DashboardState> emit,
+  ) async {
+    final before = state;
+    if (before is! DashboardLoaded || before.isUpdatingReport) return;
+    emit(before.copyWith(isUpdatingReport: true));
+    final result = await markFutureWorkDone(event.recordId);
+    final current = state;
+    if (current is! DashboardLoaded) return;
+    result.fold(
+      (failure) => emit(
+        current.copyWith(
+          reportUpdateError: failure.message,
+          isUpdatingReport: false,
+        ),
+      ),
+      (_) => _removeCompletedReport(event.recordId, current, emit),
+    );
+  }
+
+  void _removeCompletedReport(
+    String recordId,
+    DashboardLoaded current,
+    Emitter<DashboardState> emit,
+  ) {
+    _completedReports.add(recordId);
+    emit(
+      current.copyWith(
+        futureWorksByVehicleId: {
+          for (final entry in current.futureWorksByVehicleId.entries)
+            entry.key: entry.value
+                .where((item) => item.recordId != recordId)
+                .toList(growable: false),
+        },
+        isUpdatingReport: false,
+      ),
     );
   }
 
@@ -326,6 +379,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) {
     final grouped = <String, List<FutureWorkSummary>>{};
     for (final item in items) {
+      if (_completedReports.contains(item.recordId)) continue;
       grouped.putIfAbsent(item.vehicleId, () => []).add(item);
     }
     return grouped;

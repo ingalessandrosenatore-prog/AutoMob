@@ -3,64 +3,58 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../../future_work/domain/entities/future_work_summary.dart';
+import 'home_future_work_item_data.dart';
+import 'home_future_work_timeline_item.dart';
 
-class HomeFutureWorkItemData {
-  const HomeFutureWorkItemData({
-    required this.title,
-    required this.registeredDateLabel,
-    required this.reminderDateLabel,
-  });
-
-  final String title;
-  final String registeredDateLabel;
-  final String reminderDateLabel;
-
-  factory HomeFutureWorkItemData.fromSummary(FutureWorkSummary summary) =>
-      HomeFutureWorkItemData(
-        title: summary.description,
-        registeredDateLabel: _formatDate(summary.registeredAt),
-        reminderDateLabel: _formatDate(summary.reminderDate),
-      );
-}
+export 'home_future_work_item_data.dart';
 
 class HomeFutureWorkTimeline extends StatelessWidget {
   const HomeFutureWorkTimeline({
     required this.items,
     this.onReportProblem,
+    this.onDone,
+    this.isUpdating = false,
     super.key,
   });
 
-  const HomeFutureWorkTimeline.demo({this.onReportProblem, super.key})
-    : items = const [
-        HomeFutureWorkItemData(
-          title: 'Cambio pastiglie posteriori',
-          registeredDateLabel: '13 SET 2026',
-          reminderDateLabel: '18 SET 2026',
-        ),
-        HomeFutureWorkItemData(
-          title: 'Controllo dischi freno',
-          registeredDateLabel: '13 SET 2026',
-          reminderDateLabel: '04 OTT 2026',
-        ),
-        HomeFutureWorkItemData(
-          title: 'Tagliando periodico',
-          registeredDateLabel: '12 SET 2026',
-          reminderDateLabel: '22 NOV 2026',
-        ),
-      ];
+  const HomeFutureWorkTimeline.demo({
+    this.onReportProblem,
+    this.onDone,
+    this.isUpdating = false,
+    super.key,
+  }) : items = const [
+         HomeFutureWorkItemData(
+           title: 'Cambio pastiglie posteriori',
+           registeredDateLabel: '13 SET 2026',
+         ),
+         HomeFutureWorkItemData(
+           title: 'Controllo dischi freno',
+           registeredDateLabel: '13 SET 2026',
+         ),
+         HomeFutureWorkItemData(
+           title: 'Tagliando periodico',
+           registeredDateLabel: '12 SET 2026',
+         ),
+       ];
 
   factory HomeFutureWorkTimeline.fromSummaries({
     required List<FutureWorkSummary> summaries,
     VoidCallback? onReportProblem,
+    ValueChanged<String>? onDone,
+    bool isUpdating = false,
     Key? key,
   }) => HomeFutureWorkTimeline(
     key: key,
     items: summaries.map(HomeFutureWorkItemData.fromSummary).toList(),
     onReportProblem: onReportProblem,
+    onDone: onDone,
+    isUpdating: isUpdating,
   );
 
   final List<HomeFutureWorkItemData> items;
   final VoidCallback? onReportProblem;
+  final ValueChanged<String>? onDone;
+  final bool isUpdating;
 
   @override
   Widget build(BuildContext context) {
@@ -118,9 +112,13 @@ class HomeFutureWorkTimeline extends StatelessWidget {
                     )
                   else
                     for (final (index, item) in items.indexed)
-                      _FutureWorkTimelineItem(
+                      HomeFutureWorkTimelineItem(
                         index: index,
+                        isUpdating: isUpdating,
                         item: item,
+                        onDone: item.recordId != null && onDone != null
+                            ? () => onDone!(item.recordId!)
+                            : null,
                         isFirst: index == 0,
                         isLast: index == items.length - 1,
                       ),
@@ -154,142 +152,4 @@ class HomeFutureWorkTimeline extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatDate(DateTime value) {
-  const months = [
-    'GEN',
-    'FEB',
-    'MAR',
-    'APR',
-    'MAG',
-    'GIU',
-    'LUG',
-    'AGO',
-    'SET',
-    'OTT',
-    'NOV',
-    'DIC',
-  ];
-  final day = value.day.toString().padLeft(2, '0');
-  return '$day ${months[value.month - 1]} ${value.year}';
-}
-
-class _FutureWorkTimelineItem extends StatelessWidget {
-  const _FutureWorkTimelineItem({
-    required this.index,
-    required this.item,
-    required this.isFirst,
-    required this.isLast,
-  });
-
-  final int index;
-  final HomeFutureWorkItemData item;
-  final bool isFirst;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = AmThemeColors.of(context);
-    final markerColor = isFirst ? colors.accent : colors.textSecondary;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 72),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              key: ValueKey('future-work-marker-$index'),
-              width: 22,
-              child: CustomPaint(
-                painter: _TimelineMarkerPainter(
-                  color: markerColor,
-                  lineColor: colors.borderHighlight,
-                  isFirst: isFirst,
-                  isLast: isLast,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(top: 1, bottom: isLast ? 8 : 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(text: item.registeredDateLabel),
-                          const TextSpan(text: '  ·  '),
-                          TextSpan(
-                            text:
-                                'DA EFFETTUARE ENTRO ${item.reminderDateLabel}',
-                            style: TextStyle(color: colors.accent),
-                          ),
-                        ],
-                      ),
-                      style: TextStyle(
-                        color: colors.textSecondary.withValues(alpha: 0.78),
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.45,
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      item.title,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        height: 1.25,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TimelineMarkerPainter extends CustomPainter {
-  const _TimelineMarkerPainter({
-    required this.color,
-    required this.lineColor,
-    required this.isFirst,
-    required this.isLast,
-  });
-
-  final Color color;
-  final Color lineColor;
-  final bool isFirst;
-  final bool isLast;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const center = Offset(6, 7);
-    final linePaint = Paint()
-      ..color = lineColor.withValues(alpha: 0.72)
-      ..strokeWidth = 1.5
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(
-      Offset(center.dx, isFirst ? center.dy : 0),
-      Offset(center.dx, isLast ? center.dy : size.height),
-      linePaint,
-    );
-    canvas.drawCircle(center, isFirst ? 5 : 4, Paint()..color = color);
-  }
-
-  @override
-  bool shouldRepaint(covariant _TimelineMarkerPainter oldDelegate) =>
-      color != oldDelegate.color ||
-      lineColor != oldDelegate.lineColor ||
-      isFirst != oldDelegate.isFirst ||
-      isLast != oldDelegate.isLast;
 }
