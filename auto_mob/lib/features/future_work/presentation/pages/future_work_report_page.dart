@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/widgets/input/date_picker_field.dart';
+import '../../../../core/config/performance_flags.dart';
+import '../../../../core/widgets/app_bar/am_wizard_app_bar.dart';
 import '../bloc/future_work_report_cubit.dart';
-import '../widgets/warning_light_selector.dart';
+import '../widgets/future_work_report_form.dart';
 
 class FutureWorkReportPage extends StatefulWidget {
   const FutureWorkReportPage({
@@ -51,144 +52,99 @@ class _FutureWorkReportPageState extends State<FutureWorkReportPage> {
           final colors = AmThemeColors.of(context);
           final isSubmitting =
               state.status == FutureWorkReportStatus.submitting;
+          final topInset = MediaQuery.paddingOf(context).top;
           return Scaffold(
             backgroundColor: colors.background,
-            appBar: AppBar(
-              backgroundColor: colors.background,
-              foregroundColor: colors.textPrimary,
-              title: const Text('Segnala problema'),
+            extendBodyBehindAppBar: true,
+            resizeToAvoidBottomInset: false,
+            appBar: PreferredSize(
+              preferredSize: const Size.fromHeight(AmWizardAppBar.height),
+              child: SafeArea(
+                bottom: false,
+                child: AmWizardAppBar(
+                  title: 'SEGNALA PROBLEMA',
+                  backButtonKey: const Key('future-work-back'),
+                  onBackPressed: () => context.pop(false),
+                ),
+              ),
             ),
-            body: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      widget.vehicleName,
-                      style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Aggiungi le spie che hai visto, il messaggio del computer di bordo o ciò che hai notato.',
-                      style: TextStyle(
-                        color: colors.textSecondary,
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    const WarningLightSelector(),
-                    const SizedBox(height: 24),
-                    TextField(
-                      key: const ValueKey('future-work-onboard-message'),
-                      controller: _onboardController,
-                      enabled: !isSubmitting,
-                      minLines: 2,
-                      maxLines: 4,
-                      maxLength: 1000,
-                      onChanged: context
-                          .read<FutureWorkReportCubit>()
-                          .onboardMessageChanged,
-                      decoration: const InputDecoration(
-                        labelText: 'Messaggio del computer di bordo',
-                        hintText:
-                            'Facoltativo · Riporta il testo mostrato dall’auto',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    TextField(
-                      key: const ValueKey('future-work-description'),
-                      controller: _descriptionController,
-                      enabled: !isSubmitting,
-                      minLines: 4,
-                      maxLines: 7,
-                      maxLength: 1000,
-                      onChanged: context
-                          .read<FutureWorkReportCubit>()
-                          .descriptionChanged,
-                      style: TextStyle(color: colors.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: 'Anomalia che hai notato',
-                        hintText:
-                            'Facoltativo · Es. Sento un rumore quando freno',
-                        alignLabelWithHint: true,
-                        filled: true,
-                        fillColor: colors.surface,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        AmDatePickerField(
-                          key: const ValueKey('future-work-reminder-date'),
-                          label: 'Da effettuare entro',
-                          placeholder: 'Seleziona una data',
-                          controller: _dateController,
-                          isRequired: true,
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime(DateTime.now().year + 10),
-                          onDateSelected: context
-                              .read<FutureWorkReportCubit>()
-                              .reminderDateChanged,
-                        ),
-                      ],
-                    ),
-                    if (state.error != null) ...[
-                      const SizedBox(height: 14),
-                      Text(
-                        state.error!,
-                        key: const ValueKey('future-work-error'),
-                        style: TextStyle(
-                          color: colors.danger,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 28),
-                    SizedBox(
-                      height: 54,
-                      child: FilledButton(
-                        key: const ValueKey('future-work-submit'),
-                        onPressed: state.canSubmit
-                            ? () => context
-                                  .read<FutureWorkReportCubit>()
-                                  .submit(widget.vehicleId)
-                            : null,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: colors.accent,
-                          foregroundColor: colors.onMedia,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: isSubmitting
-                            ? SizedBox(
-                                width: 22,
-                                height: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.4,
-                                  color: colors.onMedia,
-                                ),
-                              )
-                            : const Text(
-                                'Salva segnalazione',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                      ),
+            body: SmartEdge(
+              blur: kHeavyEffects,
+              fallbackTint: colors.background,
+              edges: [
+                EdgeBlur(
+                  type: EdgeType.topEdge,
+                  size: topInset + AmWizardAppBar.height + 20,
+                  sigma: 10,
+                  tintColor: colors.background,
+                  controlPoints: [
+                    ControlPoint(position: 0.8, type: ControlPointType.visible),
+                    ControlPoint(
+                      position: 1,
+                      type: ControlPointType.transparent,
                     ),
                   ],
+                ),
+                EdgeBlur(
+                  type: EdgeType.bottomEdge,
+                  size: 24,
+                  sigma: 10,
+                  tintColor: colors.background,
+                  controlPoints: [
+                    ControlPoint(position: 0, type: ControlPointType.visible),
+                    ControlPoint(
+                      position: 1,
+                      type: ControlPointType.transparent,
+                    ),
+                  ],
+                ),
+              ],
+              child: SingleChildScrollView(
+                key: const Key('future-work-form-scroll'),
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  topInset + AmWizardAppBar.height + 16,
+                  20,
+                  28,
+                ),
+                child: FutureWorkReportForm(
+                  vehicleName: widget.vehicleName,
+                  descriptionController: _descriptionController,
+                  onboardController: _onboardController,
+                  dateController: _dateController,
+                  state: state,
+                ),
+              ),
+            ),
+            bottomNavigationBar: Padding(
+              // Keep the action reachable while editing multiline fields.
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.viewInsetsOf(context).bottom,
+              ),
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.only(bottom: 20),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: SmallPrincipal(
+                    key: const ValueKey('future-work-submit'),
+                    label: 'SALVA SEGNALAZIONE',
+                    color: colors.accent,
+                    width: double.infinity,
+                    height: 52,
+                    fontSize: 16,
+                    isLoading: isSubmitting,
+                    onPressed: state.canSubmit
+                        ? () {
+                            FocusScope.of(context).unfocus();
+                            context.read<FutureWorkReportCubit>().submit(
+                              widget.vehicleId,
+                            );
+                          }
+                        : null,
+                  ),
                 ),
               ),
             ),

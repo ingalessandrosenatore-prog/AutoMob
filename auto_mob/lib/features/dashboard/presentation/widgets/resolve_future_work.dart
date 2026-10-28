@@ -1,6 +1,7 @@
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../../future_work/domain/entities/future_work_summary.dart';
 import '../../../vehicle/domain/entities/vehicle.dart';
@@ -14,37 +15,34 @@ Future<void> resolveFutureWork(
   required VoidCallback onDisappeared,
   required VoidCallback onWorkSaved,
 }) async {
-  final choice = await showDialog<_ReportResolution>(
-    context: context,
-    builder: (dialogContext) => AlertDialog(
-      title: const Text('Come hai risolto?'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.build_outlined),
-            title: const Text('Ho eseguito il lavoro'),
-            onTap: () =>
-                Navigator.pop(dialogContext, _ReportResolution.workPerformed),
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.check_circle_outline),
-            title: const Text('La spia / il problema è scomparso'),
-            onTap: () =>
-                Navigator.pop(dialogContext, _ReportResolution.disappeared),
-          ),
-        ],
+  final colors = AmThemeColors.of(context);
+  final navigator = Navigator.of(context, rootNavigator: true);
+  final choice = await showAmStatusDialog<_ReportResolution>(
+    context,
+    icon: HugeIcons.strokeRoundedAlert02,
+    iconColor: colors.accent,
+    title: 'Come hai risolto?',
+    actionsAxis: Axis.vertical,
+    width: 320,
+    barrierDismissible: true,
+    actions: [
+      AmDialogAction(
+        label: 'Ho eseguito il lavoro',
+        color: colors.accent,
+        filled: true,
+        onPressed: () => navigator.pop(_ReportResolution.workPerformed),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Annulla'),
-        ),
-      ],
-    ),
+      AmDialogAction(
+        label: 'La spia / il problema è scomparso',
+        color: colors.accent,
+        onPressed: () => navigator.pop(_ReportResolution.disappeared),
+      ),
+      AmDialogAction(
+        label: 'Annulla',
+        color: colors.textSecondary,
+        onPressed: () => navigator.pop(),
+      ),
+    ],
   );
   if (!context.mounted || choice == null) return;
   if (choice == _ReportResolution.disappeared) {

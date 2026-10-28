@@ -68,6 +68,8 @@ void main() {
       await tester.tap(find.text('Risolvi'));
       await tester.pumpAndSettle();
       expect(resolved, 0);
+      expect(find.byType(AmStatusDialog), findsOneWidget);
+      expect(find.byType(AlertDialog), findsNothing);
       await tester.tap(find.text('Ho eseguito il lavoro'));
       await tester.pumpAndSettle();
       expect(extra?['initialWorkType'], 'altro');

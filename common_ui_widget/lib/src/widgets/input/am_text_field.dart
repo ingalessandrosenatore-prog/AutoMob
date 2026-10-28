@@ -16,6 +16,8 @@ class AmTextField extends StatefulWidget {
   final TextEditingController controller;
   final bool isRequired;
   final bool obscureText;
+  final bool enabled;
+  final int? maxLength;
   final TextInputType keyboardType;
   final Widget? suffixIcon;
   final ValueChanged<dynamic>? onChanged;
@@ -47,6 +49,8 @@ class AmTextField extends StatefulWidget {
     required this.isRequired,
     required this.obscureText,
     required this.keyboardType,
+    this.enabled = true,
+    this.maxLength,
     this.suffixIcon,
     this.onChanged,
     this.onEditingComplete,
@@ -149,6 +153,8 @@ class _AmTextFieldState extends State<AmTextField> {
               ),
               child: TextFormField(
                 controller: widget.controller,
+                enabled: widget.enabled,
+                maxLength: widget.maxLength,
                 obscureText: obscured,
                 keyboardType: widget.keyboardType,
                 // I campi oscurati devono restare rigorosamente su una riga:

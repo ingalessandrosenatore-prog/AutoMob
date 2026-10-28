@@ -4,6 +4,79 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('dispone le azioni lunghe in verticale nello stesso popup', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const labels = [
+      'Ho eseguito il lavoro',
+      'La spia / il problema è scomparso',
+      'Annulla',
+    ];
+    String? selected;
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AmTheme.dark,
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              child: const Text('Apri'),
+              onPressed: () async {
+                selected = await showAmStatusDialog<String>(
+                  context,
+                  title: 'Come hai risolto?',
+                  width: 320,
+                  actionsAxis: Axis.vertical,
+                  actions: [
+                    for (final label in labels)
+                      AmDialogAction(
+                        label: label,
+                        color: Colors.orange,
+                        onPressed: () => Navigator.of(
+                          context,
+                          rootNavigator: true,
+                        ).pop(label),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Apri'));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .getSize(find.byKey(const Key('am-status-dialog-static-surface')))
+          .width,
+      310,
+    );
+    final buttons = [
+      for (final label in labels)
+        find.ancestor(of: find.text(label), matching: find.byType(InkWell)),
+    ];
+    for (var i = 0; i < buttons.length - 1; i++) {
+      expect(
+        tester.getBottomLeft(buttons[i]).dy,
+        lessThan(tester.getTopLeft(buttons[i + 1]).dy),
+      );
+      expect(
+        tester.getSize(buttons[i]).width,
+        tester.getSize(buttons[i + 1]).width,
+      );
+    }
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text(labels[1]));
+    await tester.pumpAndSettle();
+    expect(selected, labels[1]);
+    expect(find.byType(AmStatusDialog), findsNothing);
+  });
+
   testWidgets('usa la superficie statica light con misure e colori richiesti', (
     tester,
   ) async {

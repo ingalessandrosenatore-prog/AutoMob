@@ -52,6 +52,8 @@ class AmStatusDialog extends StatelessWidget {
   final String? message;
   final List<AmDialogAction> actions;
   final bool showSpinner;
+  final Axis actionsAxis;
+  final double width;
 
   const AmStatusDialog({
     super.key,
@@ -61,6 +63,8 @@ class AmStatusDialog extends StatelessWidget {
     this.message,
     this.actions = const [],
     this.showSpinner = false,
+    this.actionsAxis = Axis.horizontal,
+    this.width = _dialogWidth,
   });
 
   @override
@@ -70,9 +74,9 @@ class AmStatusDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 40),
-      constraints: const BoxConstraints.tightFor(width: _dialogWidth),
+      constraints: BoxConstraints.tightFor(width: width),
       child: SizedBox(
-        width: _dialogWidth,
+        width: width,
         child: _DialogSurface(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
@@ -128,14 +132,25 @@ class AmStatusDialog extends StatelessWidget {
                 ],
                 if (actions.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      for (var i = 0; i < actions.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 12),
-                        Expanded(child: _ActionButton(action: actions[i])),
+                  if (actionsAxis == Axis.vertical)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = 0; i < actions.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 12),
+                          _ActionButton(action: actions[i]),
+                        ],
                       ],
-                    ],
-                  ),
+                    )
+                  else
+                    Row(
+                      children: [
+                        for (var i = 0; i < actions.length; i++) ...[
+                          if (i > 0) const SizedBox(width: 12),
+                          Expanded(child: _ActionButton(action: actions[i])),
+                        ],
+                      ],
+                    ),
                 ],
               ],
             ),
@@ -207,6 +222,8 @@ Future<T?> showAmStatusDialog<T>(
   String? message,
   List<AmDialogAction> actions = const [],
   bool showSpinner = false,
+  Axis actionsAxis = Axis.horizontal,
+  double width = _dialogWidth,
   bool barrierDismissible = false,
 }) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -231,6 +248,8 @@ Future<T?> showAmStatusDialog<T>(
             message: message,
             actions: actions,
             showSpinner: showSpinner,
+            actionsAxis: actionsAxis,
+            width: width,
           ),
         ),
       ],
