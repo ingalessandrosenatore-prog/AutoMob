@@ -1,5 +1,6 @@
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../domain/work_log_draft.dart';
@@ -16,6 +17,7 @@ class WorkLogPartsPicker extends StatelessWidget {
     required this.onQueryChanged,
     required this.onCategoryChanged,
     required this.onPartToggled,
+    this.topPadding = 0,
     super.key,
   });
 
@@ -25,6 +27,7 @@ class WorkLogPartsPicker extends StatelessWidget {
   final ValueChanged<String> onQueryChanged;
   final ValueChanged<WorkLogPartCategory> onCategoryChanged;
   final ValueChanged<int> onPartToggled;
+  final double topPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -41,73 +44,18 @@ class WorkLogPartsPicker extends StatelessWidget {
         })
         .toList(growable: false);
 
-    return Column(
+    return Stack(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'CERCA RICAMBIO',
-                style: TextStyle(
-                  color: colors.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.1,
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                key: const Key('work-log-parts-search'),
-                onChanged: onQueryChanged,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: colors.surface,
-                  prefixIcon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedSearch01,
-                    color: colors.textSecondary,
-                    size: 16,
-                    strokeWidth: 1.5,
-                  ),
-                  hintText: 'Nome del ricambio',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: colors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide(color: colors.accent),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              WorkLogPartCategoryFilter(
-                selectedCategory: selectedCategory,
-                onChanged: onCategoryChanged,
-              ),
-            ],
-          ),
-        ),
-        Expanded(
+        Positioned.fill(
           child: GridView.builder(
             key: const Key('work-log-parts-grid'),
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 100),
+            padding: EdgeInsets.fromLTRB(16, topPadding + 110, 16, 100),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: 6,
-              mainAxisSpacing: 6,
-              childAspectRatio: .82,
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 2.15,
             ),
             itemCount: parts.length,
             itemBuilder: (_, index) {
@@ -116,10 +64,79 @@ class WorkLogPartsPicker extends StatelessWidget {
                 key: ValueKey('work-log-part-${part.key}'),
                 label: part.value.name,
                 icon: workLogPartIcon(part.key),
+                svgAsset: workLogPartSvgAsset(part.key),
                 selected: selectedIds.contains(part.key),
                 onTap: () => onPartToggled(part.key),
               );
             },
+          ),
+        ),
+        Positioned(
+          top: topPadding + 6,
+          left: 16,
+          right: 16,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                key: const Key('work-log-parts-search'),
+                onChanged: onQueryChanged,
+                textAlignVertical: TextAlignVertical.center,
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: colors.surfaceRaised,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 46,
+                    minHeight: 42,
+                  ),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 14, right: 10),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedSearch01,
+                      color: colors.textPrimary.withValues(alpha: 0.85),
+                      size: 20,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                  hintText: 'Nome del ricambio',
+                  hintStyle: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide(
+                      color: colors.border.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide(color: colors.accent, width: 1.4),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              WorkLogPartCategoryFilter(
+                selectedCategory: selectedCategory,
+                onChanged: onCategoryChanged,
+              ),
+            ],
           ),
         ),
       ],
@@ -133,11 +150,13 @@ class _PartTile extends StatelessWidget {
     required this.icon,
     required this.selected,
     required this.onTap,
+    this.svgAsset,
     super.key,
   });
 
   final String label;
   final List<List<dynamic>> icon;
+  final String? svgAsset;
   final bool selected;
   final VoidCallback onTap;
 
@@ -148,45 +167,70 @@ class _PartTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
             color: selected
-                ? colors.accent.withValues(alpha: .22)
+                ? colors.accent.withValues(alpha: .16)
                 : colors.surface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? colors.accent : colors.border,
-              width: selected ? 2 : 1,
+              color: selected
+                  ? colors.accent
+                  : colors.border.withValues(alpha: 0.55),
+              width: selected ? 1.8 : 1,
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(5),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+            padding: const EdgeInsets.fromLTRB(14, 8, 8, 8),
+            child: Row(
               children: [
-                AnimatedScale(
-                  duration: const Duration(milliseconds: 180),
-                  scale: selected ? 1.12 : 1,
-                  child: HugeIcon(
-                    icon: icon,
-                    color: selected ? colors.accent : colors.textSecondary,
-                    size: 22,
-                    strokeWidth: 2,
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.left,
+                    style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 13.5,
+                      height: 1.2,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 5),
-                Text(
-                  label,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: selected ? colors.textPrimary : colors.textSecondary,
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w700,
+                const SizedBox(width: 8),
+                Container(
+                  width: 56,
+                  height: 56,
+                  padding: EdgeInsets.all(svgAsset != null ? 4 : 8),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? colors.accent.withValues(alpha: 0.2)
+                        : colors.surfaceRaised,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 180),
+                      scale: selected ? 1.08 : 1,
+                      child: svgAsset != null
+                          ? SvgPicture.asset(
+                              svgAsset!,
+                              package: 'automob_work_log',
+                              fit: BoxFit.contain,
+                            )
+                          : HugeIcon(
+                              icon: icon,
+                              color: selected
+                                  ? colors.accent
+                                  : colors.textPrimary.withValues(alpha: 0.85),
+                              size: 26,
+                              strokeWidth: 1.9,
+                            ),
+                    ),
                   ),
                 ),
               ],

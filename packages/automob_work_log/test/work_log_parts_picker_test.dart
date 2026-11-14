@@ -63,9 +63,9 @@ void main() {
       );
       final delegate =
           grid.gridDelegate as SliverGridDelegateWithFixedCrossAxisCount;
-      expect(delegate.crossAxisCount, 4);
-      expect(delegate.crossAxisSpacing, 6);
-      expect(delegate.mainAxisSpacing, 6);
+      expect(delegate.crossAxisCount, 2);
+      expect(delegate.crossAxisSpacing, 10);
+      expect(delegate.mainAxisSpacing, 10);
       expect(tester.takeException(), isNull);
     },
   );
@@ -78,4 +78,22 @@ void main() {
     final duplicates = partIdsByIcon.values.where((ids) => ids.length > 1);
     expect(duplicates, isEmpty, reason: 'Icone duplicate: $duplicates');
   });
+
+  test(
+    'associa gli asset SVG vettoriali ai ricambi Candele, Candelette e Filtro olio',
+    () {
+      expect(
+        workLogPartSvgAsset(7),
+        'assets/parts/automob_candela_vettoriale.svg',
+      );
+      expect(
+        workLogPartSvgAsset(8),
+        'assets/parts/automob_candeletta_vettoriale.svg',
+      );
+      expect(
+        workLogPartSvgAsset(15),
+        'assets/parts/automob_filtro_olio_vettoriale.svg',
+      );
+    },
+  );
 }

@@ -719,8 +719,10 @@ class _WorkLogWizardPage extends StatelessWidget {
         final colors = AmThemeColors.of(context);
         return Scaffold(
           backgroundColor: colors.background,
+          extendBodyBehindAppBar: true,
           resizeToAvoidBottomInset: false,
           appBar: WorkLogTopAppBar(
+            height: WorkLogTopAppBar.wizardHeight,
             leading: WorkLogGlassControl(
               child: AmSoftButton(
                 key: const Key('work-log-wizard-back'),
@@ -737,6 +739,8 @@ class _WorkLogWizardPage extends StatelessWidget {
             title: Text(
               'AGGIUNGI LAVORO',
               key: const Key('work-log-wizard-title'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: colors.textPrimary,
@@ -745,12 +749,18 @@ class _WorkLogWizardPage extends StatelessWidget {
                 letterSpacing: 1.2,
               ),
             ),
+            bottom: BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
+              buildWhen: (previous, current) => previous.step != current.step,
+              builder: (context, state) =>
+                  WorkLogWizardProgressHeader(step: state.step),
+            ),
             trailing: const SizedBox.shrink(),
           ),
           body: SafeArea(
             top: false,
             bottom: false,
             child: WorkLogWizardBody(
+              showHeaderProgress: false,
               context: WorkLogLaunchContext(
                 vehicleId: vehicle.id,
                 vehicleName: vehicle.name,

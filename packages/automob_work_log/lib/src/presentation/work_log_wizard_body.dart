@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:common_ui_widget/common_ui_widget.dart';
+import 'package:common_ui_widget/performance_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -14,7 +15,23 @@ import 'work_log_spare_part_card.dart';
 import 'work_log_type_selection_grid.dart';
 
 const _orange = Color(0xFFFF6B00);
-const _steps = ['Dati', 'Ricambi', 'Costi'];
+const workLogWizardSteps = ['Dati', 'Ricambi', 'Costi'];
+
+/// Barra di avanzamento compatta per l'AppBar o l'header del wizard WorkLog.
+class WorkLogWizardProgressHeader extends StatelessWidget {
+  const WorkLogWizardProgressHeader({required this.step, super.key});
+
+  final int step;
+
+  @override
+  Widget build(BuildContext context) => AmWizardProgress(
+    steps: workLogWizardSteps,
+    currentStep: step,
+    color: _orange,
+    compact: true,
+    indicatorAsset: 'packages/automob_work_log/assets/icons/car_red.svg',
+  );
+}
 
 /// Il wizard originale AutoMob adattato al Cubit condiviso.
 /// Le app possiedono soltanto app bar, route e callback di chiusura.
@@ -23,12 +40,14 @@ class WorkLogWizardBody extends StatefulWidget {
     required this.context,
     required this.cubit,
     required this.onSaved,
+    this.showHeaderProgress = true,
     super.key,
   });
 
   final WorkLogLaunchContext context;
   final WorkLogEditorCubit cubit;
   final ValueChanged<WorkLogSaveResult> onSaved;
+  final bool showHeaderProgress;
 
   @override
   State<WorkLogWizardBody> createState() => _WorkLogWizardBodyState();
@@ -91,49 +110,81 @@ class _WorkLogWizardBodyState extends State<WorkLogWizardBody> {
           0.0,
           MediaQuery.viewInsetsOf(context).bottom - _BottomBar.extent(context),
         );
+        final colors = AmThemeColors.of(context);
+        final mediaTop = MediaQuery.paddingOf(context).top;
+        final topPadding = mediaTop + (widget.showHeaderProgress ? 36.0 : 0.0);
         return SafeArea(
           top: false,
           bottom: false,
-          child: Column(
+          child: Stack(
             children: [
-              AmWizardProgress(
-                steps: _steps,
-                currentStep: state.step,
-                color: _orange,
-                indicatorAsset:
-                    'packages/automob_work_log/assets/icons/car_red.svg',
-              ),
-              Expanded(
-                child: AnimatedPadding(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  padding: EdgeInsets.only(bottom: keyboardOverlap),
-                  child: PageView(
-                    controller: _pages,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      _DataStep(
-                        km: _km,
-                        customName: _customName,
-                        notes: _notes,
-                      ),
-                      const _PartsStep(),
-                      const _CostsStep(),
-                    ],
+              Positioned.fill(
+                child: SmartEdge(
+                  blur: kHeavyEffects,
+                  opacity: 0.96,
+                  fallbackTint: colors.background,
+                  edges: [
+                    EdgeBlur(
+                      type: EdgeType.topEdge,
+                      size: topPadding > 0 ? topPadding + 12 : 84,
+                      tintColor: colors.background,
+                      sigma: 10,
+                      controlPoints: [
+                        ControlPoint(
+                          position: 0.5,
+                          type: ControlPointType.visible,
+                        ),
+                        ControlPoint(
+                          position: 1,
+                          type: ControlPointType.transparent,
+                        ),
+                      ],
+                    ),
+                  ],
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    padding: EdgeInsets.only(bottom: keyboardOverlap),
+                    child: PageView(
+                      controller: _pages,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _DataStep(
+                          km: _km,
+                          customName: _customName,
+                          notes: _notes,
+                          topPadding: topPadding,
+                        ),
+                        _PartsStep(topPadding: topPadding),
+                        _CostsStep(topPadding: topPadding),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              _BottomBar(
-                step: state.step,
-                isLoading: state.isSaving,
-                onBack: state.step == 0 || state.isSaving
-                    ? null
-                    : widget.cubit.previousStep,
-                onNext: state.isSaving
-                    ? () {}
-                    : state.step == 2
-                    ? widget.cubit.submit
-                    : widget.cubit.nextStep,
+              if (widget.showHeaderProgress)
+                Positioned(
+                  top: mediaTop + 4,
+                  left: 20,
+                  right: 20,
+                  child: WorkLogWizardProgressHeader(step: state.step),
+                ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: _BottomBar(
+                  step: state.step,
+                  isLoading: state.isSaving,
+                  onBack: state.step == 0 || state.isSaving
+                      ? null
+                      : widget.cubit.previousStep,
+                  onNext: state.isSaving
+                      ? () {}
+                      : state.step == 2
+                      ? widget.cubit.submit
+                      : widget.cubit.nextStep,
+                ),
               ),
             ],
           ),
@@ -212,172 +263,182 @@ class _DataStep extends StatelessWidget {
     required this.km,
     required this.customName,
     required this.notes,
+    required this.topPadding,
   });
 
   final TextEditingController km;
   final TextEditingController customName;
   final TextEditingController notes;
+  final double topPadding;
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    return AmEdgeBlur(
-      child: ListView(
-        key: const PageStorageKey('work-log-data-step'),
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 120),
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: colors.info.withValues(alpha: .08),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colors.info.withValues(alpha: .2)),
-            ),
-            child: Row(
-              children: [
-                HugeIcon(
-                  icon: HugeIcons.strokeRoundedAlertCircle,
-                  color: colors.info,
-                  strokeWidth: 2.2,
+    return ListView(
+      key: const PageStorageKey('work-log-data-step'),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      padding: EdgeInsets.fromLTRB(24, topPadding + 12, 24, 120),
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colors.info.withValues(alpha: .08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: colors.info.withValues(alpha: .2)),
+          ),
+          child: Row(
+            children: [
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedAlertCircle,
+                color: colors.info,
+                strokeWidth: 2.2,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Inserisci i dati principali dell’intervento.',
+                  style: TextStyle(color: colors.textSecondary),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Inserisci i dati principali dell’intervento.',
-                    style: TextStyle(color: colors.textSecondary),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
+          buildWhen: (previous, current) =>
+              previous.serviceKm != current.serviceKm ||
+              previous.minimumKm != current.minimumKm,
+          builder: (context, state) => _Field(
+            key: const Key('work-log-km-field'),
+            label: 'CHILOMETRI ATTUALI',
+            controller: km,
+            keyboardType: TextInputType.number,
+            suffix: 'km',
+            error: state.serviceKm < state.minimumKm
+                ? 'Inserisci almeno ${state.minimumKm} km.'
+                : null,
+            onChanged: context.read<WorkLogEditorCubit>().changeKm,
+          ),
+        ),
+        const SizedBox(height: 20),
+        BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
+          buildWhen: (previous, current) => previous.type != current.type,
+          builder: (context, state) => WorkLogTypeSelectionGrid(
+            selectedType: state.type,
+            onChanged: context.read<WorkLogEditorCubit>().changeType,
+          ),
+        ),
+        BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
+          buildWhen: (previous, current) => previous.type != current.type,
+          builder: (context, state) =>
+              WorkLogType.tryFromWire(state.type)?.allowsCustomName != true
+              ? const SizedBox.shrink()
+              : Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: _Field(
+                    key: const Key('work-log-custom-name'),
+                    label: 'NOME INTERVENTO',
+                    controller: customName,
+                    onChanged: context
+                        .read<WorkLogEditorCubit>()
+                        .changeCustomName,
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
-            buildWhen: (previous, current) =>
-                previous.serviceKm != current.serviceKm ||
-                previous.minimumKm != current.minimumKm,
-            builder: (context, state) => _Field(
-              key: const Key('work-log-km-field'),
-              label: 'CHILOMETRI ATTUALI',
-              controller: km,
-              keyboardType: TextInputType.number,
-              suffix: 'km',
-              error: state.serviceKm < state.minimumKm
-                  ? 'Inserisci almeno ${state.minimumKm} km.'
-                  : null,
-              onChanged: context.read<WorkLogEditorCubit>().changeKm,
-            ),
-          ),
-          const SizedBox(height: 20),
-          BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
-            buildWhen: (previous, current) => previous.type != current.type,
-            builder: (context, state) => WorkLogTypeSelectionGrid(
-              selectedType: state.type,
-              onChanged: context.read<WorkLogEditorCubit>().changeType,
-            ),
-          ),
-          BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
-            buildWhen: (previous, current) => previous.type != current.type,
-            builder: (context, state) =>
-                WorkLogType.tryFromWire(state.type)?.allowsCustomName != true
-                ? const SizedBox.shrink()
-                : Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: _Field(
-                      key: const Key('work-log-custom-name'),
-                      label: 'NOME INTERVENTO',
-                      controller: customName,
-                      onChanged: context
-                          .read<WorkLogEditorCubit>()
-                          .changeCustomName,
-                    ),
-                  ),
-          ),
-          const SizedBox(height: 20),
-          _Field(
-            key: const Key('work-log-notes'),
-            label: 'NOTE',
-            controller: notes,
-            maxLines: 4,
-            onChanged: context.read<WorkLogEditorCubit>().changeNotes,
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 20),
+        _Field(
+          key: const Key('work-log-notes'),
+          label: 'NOTE',
+          controller: notes,
+          maxLines: 4,
+          onChanged: context.read<WorkLogEditorCubit>().changeNotes,
+        ),
+      ],
     );
   }
 }
 
 class _PartsStep extends StatelessWidget {
-  const _PartsStep();
+  const _PartsStep({required this.topPadding});
+
+  final double topPadding;
 
   @override
-  Widget build(BuildContext context) => AmEdgeBlur(
-    child: BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
-      buildWhen: (previous, current) =>
-          previous.parts != current.parts ||
-          previous.partsQuery != current.partsQuery ||
-          previous.partsCategory != current.partsCategory,
-      builder: (context, state) => WorkLogPartsPicker(
-        selectedParts: state.parts,
-        query: state.partsQuery,
-        selectedCategory: state.partsCategory,
-        onQueryChanged: context.read<WorkLogEditorCubit>().changePartsQuery,
-        onCategoryChanged: context
-            .read<WorkLogEditorCubit>()
-            .changePartsCategory,
-        onPartToggled: context.read<WorkLogEditorCubit>().togglePart,
-      ),
-    ),
-  );
+  Widget build(BuildContext context) =>
+      BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
+        buildWhen: (previous, current) =>
+            previous.parts != current.parts ||
+            previous.partsQuery != current.partsQuery ||
+            previous.partsCategory != current.partsCategory,
+        builder: (context, state) => WorkLogPartsPicker(
+          topPadding: topPadding,
+          selectedParts: state.parts,
+          query: state.partsQuery,
+          selectedCategory: state.partsCategory,
+          onQueryChanged: context.read<WorkLogEditorCubit>().changePartsQuery,
+          onCategoryChanged: context
+              .read<WorkLogEditorCubit>()
+              .changePartsCategory,
+          onPartToggled: context.read<WorkLogEditorCubit>().togglePart,
+        ),
+      );
 }
 
 class _CostsStep extends StatelessWidget {
-  const _CostsStep();
+  const _CostsStep({required this.topPadding});
+
+  final double topPadding;
 
   @override
-  Widget build(BuildContext context) => AmEdgeBlur(
-    child: BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
-      buildWhen: (previous, current) => previous.parts != current.parts,
-      builder: (context, state) => Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 8),
-            child: _TotalBar(total: state.partsTotal),
-          ),
-          Expanded(
-            child: state.parts.isEmpty
-                ? Center(
-                    child: Text(
-                      'Nessun ricambio selezionato',
-                      style: TextStyle(
-                        color: AmThemeColors.of(context).textSecondary,
+  Widget build(BuildContext context) =>
+      BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
+        buildWhen: (previous, current) => previous.parts != current.parts,
+        builder: (context, state) => Stack(
+          children: [
+            Positioned.fill(
+              child: state.parts.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Nessun ricambio selezionato',
+                        style: TextStyle(
+                          color: AmThemeColors.of(context).textSecondary,
+                        ),
                       ),
+                    )
+                  : ListView.builder(
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.fromLTRB(
+                        24,
+                        topPadding + 76,
+                        24,
+                        120,
+                      ),
+                      itemCount: state.parts.length,
+                      itemBuilder: (_, index) {
+                        final item = state.parts[index];
+                        return WorkLogSparePartCard(
+                          item: item,
+                          name: kPartsCatalog[item.partId] ?? 'Ricambio',
+                          onRemove: () => context
+                              .read<WorkLogEditorCubit>()
+                              .removePart(item.partId),
+                          onItemChanged: context
+                              .read<WorkLogEditorCubit>()
+                              .updatePart,
+                        );
+                      },
                     ),
-                  )
-                : ListView.builder(
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: const EdgeInsets.fromLTRB(24, 4, 24, 120),
-                    itemCount: state.parts.length,
-                    itemBuilder: (_, index) {
-                      final item = state.parts[index];
-                      return WorkLogSparePartCard(
-                        item: item,
-                        name: kPartsCatalog[item.partId] ?? 'Ricambio',
-                        onRemove: () => context
-                            .read<WorkLogEditorCubit>()
-                            .removePart(item.partId),
-                        onItemChanged: context
-                            .read<WorkLogEditorCubit>()
-                            .updatePart,
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    ),
-  );
+            ),
+            Positioned(
+              top: topPadding + 12,
+              left: 24,
+              right: 24,
+              child: _TotalBar(total: state.partsTotal),
+            ),
+          ],
+        ),
+      );
 }
 
 class _TotalBar extends StatelessWidget {
@@ -438,36 +499,35 @@ class _BottomBar extends StatelessWidget {
   final VoidCallback onNext;
 
   static double _bottomPadding(BuildContext context) =>
-      math.max(20.0, MediaQuery.viewPaddingOf(context).bottom + 8);
+      math.max(14.0, MediaQuery.viewPaddingOf(context).bottom + 6);
   static double extent(BuildContext context) =>
-      20 + 52 + _bottomPadding(context);
+      10 + 34 + _bottomPadding(context);
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
     final showBack = onBack != null;
-    final label = step == 2 ? 'COMPLETA' : 'CONTINUA';
+    final label = step == 2 ? 'Completa' : 'Continua';
     return Container(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, _bottomPadding(context)),
+      padding: EdgeInsets.fromLTRB(20, 10, 20, _bottomPadding(context)),
       child: SizedBox(
-        height: 52,
+        height: 34,
         child: Row(
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 320),
               curve: Curves.easeInOutCubic,
-              width: showBack ? 52 : 0,
-              margin: EdgeInsets.only(right: showBack ? 16 : 0),
+              width: showBack ? 34 : 0,
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 200),
                 opacity: showBack ? 1 : 0,
                 child: SizedBox(
-                  width: 52,
-                  height: 52,
+                  width: 34,
+                  height: 34,
                   child: AmIconButton(
-                    width: 52,
-                    height: 52,
-                    radius: 26,
+                    width: 34,
+                    height: 34,
+                    radius: 17,
                     showShadow: true,
                     shadowColor: colors.shadow.withValues(alpha: 0.18),
                     shadowBlurRadius: 8,
@@ -476,7 +536,7 @@ class _BottomBar extends StatelessWidget {
                     iconColor: colors.accent,
                     icon: HugeIcons.strokeRoundedArrowRight01,
                     iconTurns: 0.5,
-                    iconSize: 28,
+                    iconSize: 20,
                     strokeWidth: 2.2,
                     tooltip: 'Indietro',
                     onPressed: onBack ?? () {},
@@ -484,20 +544,31 @@ class _BottomBar extends StatelessWidget {
                 ),
               ),
             ),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                child: AmMainFab(
-                  key: const Key('work-log-next'),
-                  label: label,
-                  height: 52,
-                  width: double.infinity,
-                  color: colors.accent,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  isLoading: isLoading,
-                  onPressed: isLoading ? () {} : onNext,
+            const Spacer(),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 240),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(
+                  scale: Tween<double>(begin: 0.96, end: 1).animate(animation),
+                  child: child,
                 ),
+              ),
+              child: AmMainFab(
+                key: const Key('work-log-next'),
+                label: label,
+                height: 34,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 4,
+                ),
+                color: colors.accent,
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                trailingIcon: HugeIcons.strokeRoundedArrowRight01,
+                iconSize: 15,
+                isLoading: isLoading,
+                onPressed: isLoading ? () {} : onNext,
               ),
             ),
           ],

@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hugeicons/hugeicons.dart';
 
 import '../../theme/am_theme_colors.dart';
 
@@ -12,6 +11,7 @@ class AmWizardProgress extends StatefulWidget {
   final int currentStep;
   final Color color;
   final String? indicatorAsset;
+  final bool compact;
 
   const AmWizardProgress({
     super.key,
@@ -19,6 +19,7 @@ class AmWizardProgress extends StatefulWidget {
     required this.currentStep,
     this.indicatorAsset,
     this.color = const Color(0xFFE85A1A),
+    this.compact = false,
   });
 
   @override
@@ -57,38 +58,57 @@ class _AmWizardProgressState extends State<AmWizardProgress>
     super.dispose();
   }
 
+  double _stepFraction(int index, int count) {
+    if (count <= 1) return 1.0;
+    if (index <= 0) return 0.18;
+    if (index >= count - 1) return 0.94;
+    return 0.18 + (0.94 - 0.18) * (index / (count - 1));
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
     final count = widget.steps.length;
-    final percent = count <= 1 ? 1.0 : widget.currentStep / (count - 1);
+    final int clampedStep = widget.currentStep.clamp(0, math.max(0, count - 1));
+    final carFraction = _stepFraction(clampedStep, count);
+    final barPercent = count <= 1 || clampedStep >= count - 1
+        ? 1.0
+        : carFraction;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final outerPadding = widget.compact
+        ? EdgeInsets.zero
+        : const EdgeInsets.fromLTRB(20, 4, 20, 2);
+    final innerPadding = widget.compact
+        ? const EdgeInsets.symmetric(vertical: 2)
+        : const EdgeInsets.symmetric(horizontal: 8, vertical: 6);
+    final dotSize = widget.compact ? 11.0 : 12.0;
+    final barBoxHeight = widget.compact ? 24.0 : 26.0;
+    final trackTop = widget.compact ? 9.0 : 10.0;
+    const trackHeight = 6.0;
+
     return Semantics(
       container: true,
       label:
-          'Passaggio ${widget.currentStep + 1} di $count: '
-          '${widget.steps[widget.currentStep]}',
+          'Passaggio ${clampedStep + 1} di $count: '
+          '${widget.steps[clampedStep]}',
       child: ExcludeSemantics(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 6, 20, 4),
+          padding: outerPadding,
           child: Container(
             key: const Key('am-wizard-progress-surface'),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colors.surface,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: colors.border),
-            ),
+            padding: innerPadding,
+            decoration: const BoxDecoration(color: Colors.transparent),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  height: 30,
+                  height: barBoxHeight,
                   child: TweenAnimationBuilder<double>(
                     duration: reduceMotion
                         ? Duration.zero
                         : const Duration(milliseconds: 380),
-                    curve: Curves.linear,
-                    tween: Tween<double>(end: percent),
+                    curve: Curves.easeOutCubic,
+                    tween: Tween<double>(end: barPercent),
                     builder: (context, animatedPercent, child) {
                       return AnimatedBuilder(
                         animation: _controller,
@@ -96,20 +116,32 @@ class _AmWizardProgressState extends State<AmWizardProgress>
                           return LayoutBuilder(
                             builder: (context, constraints) {
                               final slot = constraints.maxWidth / count;
-                              final inset = slot / 2;
-                              final trackWidth = constraints.maxWidth - slot;
-                              final x =
-                                  slot / 2 +
-                                  (constraints.maxWidth - slot) *
-                                      animatedPercent;
+                              final inset = widget.compact ? 0.0 : slot / 2;
+                              final trackWidth = widget.compact
+                                  ? constraints.maxWidth
+                                  : constraints.maxWidth - slot;
+                              final carSize = widget.compact ? 24.0 : 28.0;
+                              final carTarget =
+                                  inset +
+                                  trackWidth *
+                                      (clampedStep >= count - 1
+                                          ? carFraction * animatedPercent
+                                          : animatedPercent);
+                              final clampedX = carTarget.clamp(
+                                carSize / 2,
+                                math.max(
+                                  carSize / 2,
+                                  constraints.maxWidth - carSize / 2,
+                                ),
+                              );
                               return Stack(
                                 clipBehavior: Clip.none,
                                 children: [
                                   Positioned(
-                                    top: 12,
+                                    top: trackTop,
                                     left: inset,
                                     width: trackWidth,
-                                    height: 6,
+                                    height: trackHeight,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(3),
                                       child: CustomPaint(
@@ -122,23 +154,55 @@ class _AmWizardProgressState extends State<AmWizardProgress>
                                       ),
                                     ),
                                   ),
+                                  for (var index = 0; index < count; index++)
+                                    Positioned(
+                                      left:
+                                          inset +
+                                          trackWidth *
+                                              _stepFraction(index, count) -
+                                          dotSize / 2,
+                                      top:
+                                          trackTop +
+                                          (trackHeight - dotSize) / 2,
+                                      child: AnimatedContainer(
+                                        duration: const Duration(
+                                          milliseconds: 250,
+                                        ),
+                                        width: dotSize,
+                                        height: dotSize,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: index <= clampedStep
+                                              ? widget.color
+                                              : colors.surfaceRaised,
+                                          border: Border.all(
+                                            color: index <= clampedStep
+                                                ? Colors.white.withValues(
+                                                    alpha: 0.85,
+                                                  )
+                                                : colors.border,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                   Positioned(
-                                    left: x - 16,
+                                    left: clampedX - carSize / 2,
                                     top: reduceMotion
-                                        ? -1
+                                        ? 0
                                         : math.sin(
                                             _controller.value * math.pi * 8,
                                           ),
                                     child: widget.indicatorAsset == null
                                         ? Icon(
                                             Icons.build_circle_outlined,
-                                            size: 30,
+                                            size: carSize,
                                             color: widget.color,
                                           )
                                         : SvgPicture.asset(
                                             widget.indicatorAsset!,
-                                            width: 32,
-                                            height: 32,
+                                            width: carSize,
+                                            height: carSize,
                                           ),
                                   ),
                                 ],
@@ -150,61 +214,31 @@ class _AmWizardProgressState extends State<AmWizardProgress>
                     },
                   ),
                 ),
-                const SizedBox(height: 8),
-                Row(
-                  children: List.generate(count, (index) {
-                    final current = index == widget.currentStep;
-                    final done = index < widget.currentStep;
-                    return Expanded(
-                      child: Column(
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 250),
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: done ? widget.color : Colors.transparent,
-                              border: Border.all(
-                                color: current || done
-                                    ? widget.color
-                                    : colors.surfaceRaised,
-                                width: 2,
-                              ),
-                            ),
-                            child: done
-                                ? HugeIcon(
-                                    // La versione 1.1.7 non espone
-                                    // `strokeRoundedCheck`: `strokeRoundedValidation`
-                                    // e' la spunta semplice equivalente.
-                                    icon:
-                                        HugeIcons.strokeRoundedCheckmarkBadge01,
-                                    size: 12,
-                                    color: colors.onMedia,
-                                    strokeWidth: 1.5,
-                                  )
-                                : null,
+                if (!widget.compact) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: List.generate(count, (index) {
+                      final current = index == clampedStep;
+                      return Expanded(
+                        child: Text(
+                          widget.steps[index],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: current
+                                ? colors.textPrimary
+                                : colors.textSecondary,
+                            fontSize: 11,
+                            fontWeight: current
+                                ? FontWeight.w700
+                                : FontWeight.w500,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            widget.steps[index],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: current
-                                  ? colors.textPrimary
-                                  : colors.textSecondary,
-                              fontSize: 11,
-                              fontWeight: current
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                ),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ],
             ),
           ),

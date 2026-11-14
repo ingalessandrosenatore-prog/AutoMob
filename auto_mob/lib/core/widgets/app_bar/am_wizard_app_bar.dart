@@ -9,14 +9,17 @@ class AmWizardAppBar extends StatelessWidget {
   const AmWizardAppBar({
     required this.title,
     required this.onBackPressed,
+    this.bottom,
     this.backButtonKey,
     super.key,
   });
 
   static const height = 69.0;
+  static const heightWithBottom = 76.0;
 
   final String title;
   final VoidCallback onBackPressed;
+  final Widget? bottom;
   final Key? backButtonKey;
 
   @override
@@ -58,30 +61,64 @@ class AmWizardAppBar extends StatelessWidget {
         : button;
 
     return SizedBox(
-      height: height,
+      height: bottom == null ? height : heightWithBottom,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Center(
-              child: Text(
-                title,
-                key: const Key('wizard-app-bar-title'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: colors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
-                ),
+        child: bottom == null
+            ? Stack(
+                alignment: Alignment.center,
+                children: [
+                  Center(
+                    child: Text(
+                      title,
+                      key: const Key('wizard-app-bar-title'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                  Align(alignment: Alignment.centerLeft, child: backButton),
+                ],
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  backButton,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Center(
+                          child: Text(
+                            title,
+                            key: const Key('wizard-app-bar-title'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: colors.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        bottom!,
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 56),
+                ],
               ),
-            ),
-            Align(alignment: Alignment.centerLeft, child: backButton),
-          ],
-        ),
       ),
     );
   }

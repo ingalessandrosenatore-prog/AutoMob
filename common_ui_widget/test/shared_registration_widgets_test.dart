@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('il soft edge usa fasce da 20 px e punti 0.5 e 1', (
+  testWidgets('il soft edge usa fasce da 10 px e punti 0.5 e 1', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -21,7 +21,7 @@ void main() {
     );
     final edges = tester.widgetList<Positioned>(edgeFinder).toList();
     expect(edges, hasLength(2));
-    expect(edges.map((edge) => edge.height), everyElement(20));
+    expect(edges.map((edge) => edge.height), everyElement(10));
 
     final decoratedBoxes = tester
         .widgetList<DecoratedBox>(
@@ -63,10 +63,7 @@ void main() {
     final surface = tester.widget<Container>(
       find.byKey(const Key('am-wizard-progress-surface')),
     );
-    expect(
-      (surface.decoration as BoxDecoration).color,
-      AmThemeColors.light.surface,
-    );
+    expect((surface.decoration as BoxDecoration).color, Colors.transparent);
   });
 
   testWidgets('il campo password cambia visibilita senza stato della pagina', (

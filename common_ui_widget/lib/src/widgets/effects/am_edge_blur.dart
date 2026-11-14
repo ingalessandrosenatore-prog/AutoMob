@@ -11,7 +11,7 @@ class AmEdgeBlur extends StatelessWidget {
   const AmEdgeBlur({
     required this.child,
     super.key,
-    this.edgeExtent = 20,
+    this.edgeExtent = 10,
     this.opacity = 0.96,
   });
 

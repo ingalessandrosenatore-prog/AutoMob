@@ -65,7 +65,7 @@ void main() {
     );
 
     expect(find.byType(AmWizardProgress), findsOneWidget);
-    expect(find.byType(AmEdgeBlur), findsWidgets);
+    expect(find.byType(AmEdgeBlur), findsNothing);
 
     await tester.tap(find.byKey(const Key('work-log-next')));
     await tester.pumpAndSettle();

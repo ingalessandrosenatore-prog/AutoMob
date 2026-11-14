@@ -56,29 +56,38 @@ class _CategoryChip extends StatelessWidget {
   final ValueChanged<WorkLogPartCategory> onChanged;
 
   @override
-  Widget build(BuildContext context) => ChoiceChip(
-    key: ValueKey('work-log-part-category-${category.wireValue}'),
-    selected: selected,
-    showCheckmark: false,
-    visualDensity: VisualDensity.compact,
-    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-    avatar: HugeIcon(
-      icon: workLogPartCategoryIcon(category),
-      color: selected ? colors.accent : colors.textSecondary,
-      size: 15,
-      strokeWidth: 2,
-    ),
-    label: Text(category.label),
-    labelStyle: TextStyle(
-      color: selected ? colors.accent : colors.textSecondary,
-      fontSize: 11,
-      fontWeight: FontWeight.w700,
-    ),
-    labelPadding: const EdgeInsets.only(left: 2, right: 5),
-    backgroundColor: colors.surface,
-    selectedColor: colors.accent.withValues(alpha: 0.16),
-    side: BorderSide(color: selected ? colors.accent : colors.border),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    onSelected: (_) => onChanged(category),
-  );
+  Widget build(BuildContext context) {
+    final foreground = selected
+        ? colors.onMedia
+        : colors.textPrimary.withValues(alpha: 0.9);
+    return ChoiceChip(
+      key: ValueKey('work-log-part-category-${category.wireValue}'),
+      selected: selected,
+      showCheckmark: false,
+      visualDensity: const VisualDensity(horizontal: -1, vertical: -1),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      avatar: HugeIcon(
+        icon: workLogPartCategoryIcon(category),
+        color: foreground,
+        size: 16,
+        strokeWidth: 1.9,
+      ),
+      label: Text(category.label),
+      labelStyle: TextStyle(
+        color: foreground,
+        fontSize: 12.5,
+        fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+      ),
+      labelPadding: const EdgeInsets.only(left: 4, right: 4),
+      backgroundColor: colors.surfaceRaised,
+      selectedColor: colors.accent.withValues(alpha: 0.32),
+      side: BorderSide(
+        color: selected ? colors.accent : colors.border.withValues(alpha: 0.6),
+        width: selected ? 1.2 : 1,
+      ),
+      shape: const StadiumBorder(),
+      onSelected: (_) => onChanged(category),
+    );
+  }
 }

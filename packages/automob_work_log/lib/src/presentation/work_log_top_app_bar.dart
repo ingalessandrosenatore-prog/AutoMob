@@ -7,6 +7,8 @@ class WorkLogTopAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.leading,
     required this.title,
     required this.trailing,
+    this.bottom,
+    this.height = contentHeight,
     this.leadingWidth = 48,
     this.liquidGlassRepaint,
     this.liquidGlassGeneration,
@@ -14,41 +16,78 @@ class WorkLogTopAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   static const contentHeight = 69.0;
+  static const wizardHeight = 76.0;
 
   final Widget leading;
   final Widget title;
   final Widget trailing;
+  final Widget? bottom;
+  final double height;
   final double? leadingWidth;
   final Listenable? liquidGlassRepaint;
   final Object? liquidGlassGeneration;
 
   @override
-  Size get preferredSize => const Size.fromHeight(contentHeight);
+  Size get preferredSize => Size.fromHeight(height);
 
   @override
   Widget build(BuildContext context) {
-    Widget contentWith(Widget trailingChild) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      width: double.infinity,
-      child: Row(
-        children: [
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              // Il Center interno dei controlli non deve espandersi nella colonna.
-              child: SizedBox(width: leadingWidth, height: 48, child: leading),
-            ),
+    Widget contentWith(Widget trailingChild) {
+      if (bottom != null) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          width: double.infinity,
+          height: height,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(width: leadingWidth ?? 48, height: 48, child: leading),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Center(child: title),
+                    const SizedBox(height: 2),
+                    bottom!,
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(width: 48, height: 48, child: trailingChild),
+            ],
           ),
-          Expanded(child: Center(child: title)),
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: SizedBox(width: 48, height: 48, child: trailingChild),
+        );
+      }
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        width: double.infinity,
+        child: Row(
+          children: [
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                // Il Center interno dei controlli non deve espandersi nella colonna.
+                child: SizedBox(
+                  width: leadingWidth,
+                  height: 48,
+                  child: leading,
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+            Expanded(child: Center(child: title)),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: SizedBox(width: 48, height: 48, child: trailingChild),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final content = contentWith(trailing);
     final groupedContent = liquidGlassRepaint == null
         ? content

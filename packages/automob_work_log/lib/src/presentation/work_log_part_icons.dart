@@ -5,6 +5,15 @@ import '../domain/work_log_parts_catalog.dart';
 List<List<dynamic>> workLogPartIcon(int partId) =>
     _partIcons[partId] ?? HugeIcons.strokeRoundedTools;
 
+/// Restituisce l'asset SVG associato al ricambio, se presente nel package.
+String? workLogPartSvgAsset(int partId) => _partSvgAssets[partId];
+
+const Map<int, String> _partSvgAssets = {
+  7: 'assets/parts/automob_candela_vettoriale.svg',
+  8: 'assets/parts/automob_candeletta_vettoriale.svg',
+  15: 'assets/parts/automob_filtro_olio_vettoriale.svg',
+};
+
 List<List<dynamic>> workLogPartCategoryIcon(WorkLogPartCategory category) =>
     switch (category) {
       WorkLogPartCategory.engine => HugeIcons.strokeRoundedEngine,

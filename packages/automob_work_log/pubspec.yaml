@@ -16,6 +16,7 @@ dependencies:
   equatable: '>=2.0.5 <3.0.0'
   figma_squircle: ^0.6.3
   flutter_bloc: '>=8.1.5 <10.0.0'
+  flutter_svg: ^2.0.10+1
   fpdart: '>=1.1.0 <2.0.0'
   hugeicons: ^1.1.7
   oc_liquid_glass: ^0.3.0
@@ -40,6 +41,9 @@ flutter:
     - assets/images/electronics_check.png
     - assets/images/brakes_check.png
     - assets/images/gearbox_check.png
+    - assets/parts/automob_candela_vettoriale.svg
+    - assets/parts/automob_candeletta_vettoriale.svg
+    - assets/parts/automob_filtro_olio_vettoriale.svg
 
   # To add assets to your package, add an assets section, like this:
   # assets:
