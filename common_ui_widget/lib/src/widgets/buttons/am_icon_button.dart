@@ -16,6 +16,8 @@ class AmIconButton extends StatelessWidget {
   final double shadowSpreadRadius;
   final Offset shadowOffset;
   final Color backgroundColor;
+  final Color borderColor;
+  final double borderWidth;
   final Color iconColor;
   final Object icon;
   final double iconSize;
@@ -35,6 +37,8 @@ class AmIconButton extends StatelessWidget {
     required this.iconColor,
     required this.icon,
     required this.onPressed,
+    this.borderColor = Colors.transparent,
+    this.borderWidth = 1,
     this.shadowBlurRadius = 10,
     this.shadowSpreadRadius = 0,
     this.shadowOffset = const Offset(0, 3),
@@ -51,7 +55,7 @@ class AmIconButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: borderRadius,
-        border: Border.all(color: Colors.transparent),
+        border: Border.all(color: borderColor, width: borderWidth),
         boxShadow: showShadow
             ? [
                 BoxShadow(

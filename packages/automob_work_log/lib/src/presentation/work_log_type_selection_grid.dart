@@ -32,6 +32,7 @@ class WorkLogTypeSelectionGrid extends StatelessWidget {
         const SizedBox(height: 10),
         GridView.builder(
           key: const Key('work-log-type-selection-grid'),
+          padding: EdgeInsets.zero,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: _workTypes.length,

@@ -81,10 +81,16 @@ class _AmWizardProgressState extends State<AmWizardProgress>
     final innerPadding = widget.compact
         ? const EdgeInsets.symmetric(vertical: 2)
         : const EdgeInsets.symmetric(horizontal: 8, vertical: 6);
-    final dotSize = widget.compact ? 11.0 : 12.0;
+    final dotRadius = widget.compact ? 7.0 : 7.5;
     final barBoxHeight = widget.compact ? 24.0 : 26.0;
-    final trackTop = widget.compact ? 9.0 : 10.0;
     const trackHeight = 6.0;
+    final paintHeight = dotRadius * 2;
+    final paintTop = (barBoxHeight - paintHeight) / 2;
+    final stepFractions = List<double>.generate(
+      count,
+      (index) => _stepFraction(index, count),
+      growable: false,
+    );
 
     return Semantics(
       container: true,
@@ -138,54 +144,21 @@ class _AmWizardProgressState extends State<AmWizardProgress>
                                 clipBehavior: Clip.none,
                                 children: [
                                   Positioned(
-                                    top: trackTop,
+                                    top: paintTop,
                                     left: inset,
                                     width: trackWidth,
-                                    height: trackHeight,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(3),
-                                      child: CustomPaint(
-                                        painter: _ProgressPainter(
-                                          progress: animatedPercent,
-                                          phase:
-                                              _controller.value * math.pi * 2,
-                                          color: widget.color,
-                                        ),
+                                    height: paintHeight,
+                                    child: CustomPaint(
+                                      painter: _ProgressPainter(
+                                        progress: animatedPercent,
+                                        phase: _controller.value * math.pi * 2,
+                                        color: widget.color,
+                                        trackHeight: trackHeight,
+                                        dotRadius: dotRadius,
+                                        stepFractions: stepFractions,
                                       ),
                                     ),
                                   ),
-                                  for (var index = 0; index < count; index++)
-                                    Positioned(
-                                      left:
-                                          inset +
-                                          trackWidth *
-                                              _stepFraction(index, count) -
-                                          dotSize / 2,
-                                      top:
-                                          trackTop +
-                                          (trackHeight - dotSize) / 2,
-                                      child: AnimatedContainer(
-                                        duration: const Duration(
-                                          milliseconds: 250,
-                                        ),
-                                        width: dotSize,
-                                        height: dotSize,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: index <= clampedStep
-                                              ? widget.color
-                                              : colors.surfaceRaised,
-                                          border: Border.all(
-                                            color: index <= clampedStep
-                                                ? Colors.white.withValues(
-                                                    alpha: 0.85,
-                                                  )
-                                                : colors.border,
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
                                   Positioned(
                                     left: clampedX - carSize / 2,
                                     top: reduceMotion
@@ -252,35 +225,73 @@ class _ProgressPainter extends CustomPainter {
   final double progress;
   final double phase;
   final Color color;
+  final double trackHeight;
+  final double dotRadius;
+  final List<double> stepFractions;
+
   const _ProgressPainter({
     required this.progress,
     required this.phase,
     required this.color,
+    required this.trackHeight,
+    required this.dotRadius,
+    required this.stepFractions,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    final cy = size.height / 2;
+    final trackRRect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, cy - trackHeight / 2, size.width, trackHeight),
+      Radius.circular(trackHeight / 2),
+    );
+    var combinedPath = Path()..addRRect(trackRRect);
+    for (final fraction in stepFractions) {
+      final dotPath = Path()
+        ..addOval(
+          Rect.fromCircle(
+            center: Offset(size.width * fraction, cy),
+            radius: dotRadius,
+          ),
+        );
+      combinedPath = Path.combine(PathOperation.union, combinedPath, dotPath);
+    }
+
+    canvas.save();
+    canvas.clipPath(combinedPath);
+
     canvas.drawRect(
       Offset.zero & size,
       Paint()..color = color.withValues(alpha: 0.18),
     );
-    final width = size.width * progress;
+    final width = progress <= 0
+        ? 0.0
+        : (size.width * progress + dotRadius).clamp(0.0, size.width);
     canvas.drawRect(
       Rect.fromLTWH(0, 0, width, size.height),
       Paint()..color = color,
     );
-    if (width == 0) return;
-    final path = Path()..moveTo(0, size.height);
-    for (var x = 0.0; x <= width; x += 3) {
-      path.lineTo(x, size.height * .5 + math.sin(x * .06 + phase) * 2);
+    if (width > 0) {
+      final path = Path()..moveTo(0, size.height);
+      for (var x = 0.0; x <= width; x += 3) {
+        path.lineTo(x, cy + math.sin(x * .06 + phase) * 2);
+      }
+      path
+        ..lineTo(width, size.height)
+        ..close();
+      canvas.drawPath(
+        path,
+        Paint()..color = Colors.white.withValues(alpha: .16),
+      );
     }
-    path
-      ..lineTo(width, size.height)
-      ..close();
-    canvas.drawPath(path, Paint()..color = Colors.white.withValues(alpha: .16));
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant _ProgressPainter old) =>
-      old.progress != progress || old.phase != phase || old.color != color;
+      old.progress != progress ||
+      old.phase != phase ||
+      old.color != color ||
+      old.trackHeight != trackHeight ||
+      old.dotRadius != dotRadius;
 }

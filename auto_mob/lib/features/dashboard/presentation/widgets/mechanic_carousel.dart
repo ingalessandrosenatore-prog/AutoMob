@@ -292,16 +292,26 @@ class _MechanicCarouselState extends State<MechanicCarousel>
                             final scene = snapshot.data!;
                             return IgnorePointer(
                               child: RepaintBoundary(
-                                child: SceneView(
-                                  scene.scene,
-                                  camera: scene.camera,
-                                  autoTick: !widget.isScrolling,
-                                  // 90% on each axis: 19% fewer 3D pixels; UI stays native.
-                                  pixelRatio:
-                                      MediaQuery.devicePixelRatioOf(context) *
-                                      .9,
-                                  onTick: (_, deltaSeconds) =>
-                                      scene.tick(deltaSeconds),
+                                // `SceneView` usa `SingleTickerProviderStateMixin` ma in
+                                // `didUpdateWidget` ricrea il Ticker senza liberare il
+                                // precedente se `autoTick` torna a `true`. `TickerMode`
+                                // mette in pausa il Ticker esistente durante lo scroll.
+                                child: TickerMode(
+                                  enabled: !widget.isScrolling,
+                                  child: SceneView(
+                                    scene.scene,
+                                    camera: scene.camera,
+                                    autoTick: true,
+                                    // 90% on each axis: 19% fewer 3D pixels; UI stays native.
+                                    pixelRatio:
+                                        MediaQuery.devicePixelRatioOf(context) *
+                                        .9,
+                                    onTick: (_, deltaSeconds) {
+                                      if (!widget.isScrolling) {
+                                        scene.tick(deltaSeconds);
+                                      }
+                                    },
+                                  ),
                                 ),
                               ),
                             );
