@@ -31,8 +31,38 @@ final class GetWorkshopCatalog {
       lastServiceKm: vehicle.lastDistributionKm,
       intervalKm: vehicle.distributionIntervalKm,
     );
+    final mandatoryWorks = <WorkshopMandatoryWork>[
+      if (tagliandoDue)
+        WorkshopMandatoryWork(
+          type: WorkshopMandatoryWorkType.tagliando,
+          title: 'Tagliando periodico',
+          dueKm: vehicle.lastTagliandoKm! + vehicle.tagliandoIntervalKm,
+          currentKm: vehicle.kmCurrent,
+        ),
+      if (distributionDue)
+        WorkshopMandatoryWork(
+          type: WorkshopMandatoryWorkType.distribution,
+          title: 'Distribuzione',
+          dueKm: vehicle.lastDistributionKm! + vehicle.distributionIntervalKm!,
+          currentKm: vehicle.kmCurrent,
+        ),
+    ];
+    final userProblems = vehicle.userProblems.isNotEmpty
+        ? vehicle.userProblems
+        : vehicle.warningLights.isNotEmpty
+        ? [
+            WorkshopUserProblem(
+              id: 'lights-${vehicle.id}',
+              description: '',
+              warningLights: vehicle.warningLights,
+            ),
+          ]
+        : const <WorkshopUserProblem>[];
+
     return vehicle.copyWith(
-      requiresMaintenance: tagliandoDue || distributionDue,
+      mandatoryWorks: mandatoryWorks,
+      userProblems: userProblems,
+      requiresMaintenance: mandatoryWorks.isNotEmpty || userProblems.isNotEmpty,
     );
   }
 

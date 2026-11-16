@@ -20,6 +20,8 @@ import 'workshop_header.dart';
 import 'workshop_overview_section.dart';
 import 'workshop_home_placeholders.dart';
 import 'workshop_search_controls.dart';
+import 'workshop_status_filter_bar.dart';
+import 'workshop_vehicle_card_mapper.dart';
 import 'workshop_voice_button.dart';
 
 /// Composizione visuale della Home dell'officina.
@@ -34,6 +36,8 @@ class WorkshopHomeView extends StatelessWidget {
     required this.searchController,
     required this.onVoicePressed,
     this.totalVehicles = 0,
+    this.okVehicles = 0,
+    this.dueVehicles = 0,
     this.vehicles = const [],
     this.hasLinkedVehicles = false,
     this.hasSearchResults = false,
@@ -50,6 +54,8 @@ class WorkshopHomeView extends StatelessWidget {
   final TextEditingController searchController;
   final ValueChanged<VoiceSearchState> onVoicePressed;
   final int totalVehicles;
+  final int okVehicles;
+  final int dueVehicles;
   final List<WorkshopVehicle> vehicles;
   final bool hasLinkedVehicles;
   final bool hasSearchResults;
@@ -154,10 +160,24 @@ class WorkshopHomeView extends StatelessWidget {
                           ),
                         ),
                         SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(24, 20, 24, 18),
+                          padding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
                           sliver: SliverToBoxAdapter(
                             child: WorkshopClientListHeading(
                               total: totalVehicles,
+                            ),
+                          ),
+                        ),
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                          sliver: SliverToBoxAdapter(
+                            child: WorkshopStatusFilterBar(
+                              selectedFilter: filter,
+                              totalCount: totalVehicles,
+                              okCount: okVehicles,
+                              dueCount: dueVehicles,
+                              onFilterSelected: (selected) => context
+                                  .read<WorkshopBloc>()
+                                  .add(WorkshopVehicleFilterChanged(selected)),
                             ),
                           ),
                         ),
@@ -198,14 +218,10 @@ class WorkshopHomeView extends StatelessWidget {
                 childBuilder: (repaint) => WorkshopSearchControls(
                   enabled: !isLoading && !hasLoadFailure,
                   controller: searchController,
-                  filter: filter,
                   repaint: repaint,
                   gradient: controlsGradient,
                   onSearchChanged: (value) => context.read<WorkshopBloc>().add(
                     WorkshopSearchChanged(value),
-                  ),
-                  onFilterChanged: (filter) => context.read<WorkshopBloc>().add(
-                    WorkshopVehicleFilterChanged(filter),
                   ),
                 ),
               ),
@@ -281,15 +297,10 @@ class WorkshopHomeView extends StatelessWidget {
     }
     return [
       SliverPadding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
-        sliver: SliverGrid.builder(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+        sliver: SliverList.separated(
           itemCount: vehicles.length,
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 240,
-            mainAxisExtent: 164,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-          ),
+          separatorBuilder: (_, _) => const SizedBox(height: 14),
           itemBuilder: (context, index) {
             if (hasMore && index == math.max(0, vehicles.length - 5)) {
               context.read<WorkshopBloc>().add(
@@ -297,24 +308,7 @@ class WorkshopHomeView extends StatelessWidget {
               );
             }
             return MechanicVehicleCard(
-              vehicle: MechanicVehicleCardData(
-                id: vehicles[index].id,
-                warningLights: [
-                  for (final light in vehicles[index].warningLights)
-                    AmWarningLightData(
-                      code: light.code,
-                      color: light.color,
-                      flashing: light.flashing,
-                    ),
-                ],
-                name: vehicles[index].displayName,
-                plate: vehicles[index].plate,
-                year: vehicles[index].year,
-                kilometers: vehicles[index].kmCurrent,
-                status: vehicles[index].requiresMaintenance
-                    ? MechanicVehicleStatus.attention
-                    : MechanicVehicleStatus.connected,
-              ),
+              vehicle: mapWorkshopVehicleToCardData(vehicles[index]),
               onPressed: () => context.pushNamed(
                 'vehicleConfiguration',
                 pathParameters: {'vehicleId': vehicles[index].id},

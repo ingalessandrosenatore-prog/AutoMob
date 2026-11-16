@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../domain/work_log_draft.dart';
 import '../domain/work_log_launch_context.dart';
 import '../domain/work_log_parts_catalog.dart';
+import '../domain/work_log_report.dart';
 import '../domain/work_log_type.dart';
 import '../domain/work_log_use_cases.dart';
+import 'work_log_report_notes.dart';
 
 enum WorkLogEditorStatus { editing, saving, success, failure }
 
@@ -21,6 +25,10 @@ class WorkLogEditorState extends Equatable {
     this.serviceKm = 0,
     required this.serviceDate,
     this.notes = '',
+    this.openReports = const [],
+    this.selectedReportIds = const {},
+    this.loadingReports = false,
+    this.reportsError,
     this.intervalKm,
     this.parts = const [],
     this.partsQuery = '',
@@ -41,6 +49,10 @@ class WorkLogEditorState extends Equatable {
   final int serviceKm;
   final DateTime serviceDate;
   final String notes;
+  final List<WorkLogReport> openReports;
+  final Set<String> selectedReportIds;
+  final bool loadingReports;
+  final String? reportsError;
   final int? intervalKm;
   final List<WorkLogPartDraft> parts;
   final String partsQuery;
@@ -52,6 +64,18 @@ class WorkLogEditorState extends Equatable {
   double get partsTotal =>
       parts.fold(0, (total, part) => total + part.subtotal);
   bool get isSaving => status == WorkLogEditorStatus.saving;
+  bool get canSave =>
+      status == WorkLogEditorStatus.editing &&
+      !loadingReports &&
+      (reportsError == null || selectedReportIds.isEmpty);
+
+  Iterable<WorkLogReport> get selectedReports =>
+      openReports.where((report) => selectedReportIds.contains(report.id));
+
+  String get composedNotes =>
+      appendResolvedProblemsNotes(notes.trim(), resolvedProblemsNotes);
+  String get resolvedProblemsNotes =>
+      composeResolvedProblemsNotes(selectedReports);
 
   WorkLogEditorState copyWith({
     String? vehicleId,
@@ -62,6 +86,10 @@ class WorkLogEditorState extends Equatable {
     int? serviceKm,
     DateTime? serviceDate,
     String? notes,
+    List<WorkLogReport>? openReports,
+    Set<String>? selectedReportIds,
+    bool? loadingReports,
+    Object? reportsError = _unset,
     Object? intervalKm = _unset,
     List<WorkLogPartDraft>? parts,
     String? partsQuery,
@@ -78,6 +106,12 @@ class WorkLogEditorState extends Equatable {
     serviceKm: serviceKm ?? this.serviceKm,
     serviceDate: serviceDate ?? this.serviceDate,
     notes: notes ?? this.notes,
+    openReports: openReports ?? this.openReports,
+    selectedReportIds: selectedReportIds ?? this.selectedReportIds,
+    loadingReports: loadingReports ?? this.loadingReports,
+    reportsError: identical(reportsError, _unset)
+        ? this.reportsError
+        : reportsError as String?,
     intervalKm: identical(intervalKm, _unset)
         ? this.intervalKm
         : intervalKm as int?,
@@ -103,6 +137,10 @@ class WorkLogEditorState extends Equatable {
     serviceKm,
     serviceDate,
     notes,
+    openReports,
+    selectedReportIds,
+    loadingReports,
+    reportsError,
     intervalKm,
     parts,
     partsQuery,
@@ -114,15 +152,15 @@ class WorkLogEditorState extends Equatable {
 }
 
 class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
-  WorkLogEditorCubit({required this.createWorkLog})
-    : super(WorkLogEditorState.initial());
+  WorkLogEditorCubit({
+    required this.createWorkLog,
+    required this.getOpenReports,
+  }) : super(WorkLogEditorState.initial());
 
   final CreateWorkLog createWorkLog;
-
-  String? _sourceReportId;
+  final GetOpenWorkLogReports getOpenReports;
 
   void initialize(WorkLogLaunchContext context) {
-    _sourceReportId = context.sourceReportId;
     emit(
       WorkLogEditorState(
         vehicleId: context.vehicleId,
@@ -130,6 +168,7 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
         type: context.initialWorkType,
         customName: context.initialCustomName,
         notes: context.initialNotes,
+        selectedReportIds: {?context.sourceReportId},
         partsCategory: workLogPartCategoryForType(
           WorkLogType.tryFromWire(context.initialWorkType),
         ),
@@ -137,6 +176,44 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
         serviceDate: DateTime.now(),
       ),
     );
+    unawaited(loadReports());
+  }
+
+  Future<void> loadReports() async {
+    if (state.loadingReports || state.isSaving) return;
+    final vehicleId = state.vehicleId;
+    emit(state.copyWith(loadingReports: true, reportsError: null));
+    final response = await getOpenReports(vehicleId);
+    if (isClosed || state.vehicleId != vehicleId) return;
+    response.fold(
+      (message) =>
+          emit(state.copyWith(loadingReports: false, reportsError: message)),
+      (reports) => emit(
+        state.copyWith(
+          openReports: List.unmodifiable(reports),
+          selectedReportIds: Set.unmodifiable({
+            for (final report in reports)
+              if (state.selectedReportIds.contains(report.id)) report.id,
+          }),
+          loadingReports: false,
+        ),
+      ),
+    );
+  }
+
+  void selectReport(String id, bool selected) {
+    if (state.isSaving ||
+        state.loadingReports ||
+        !state.openReports.any((report) => report.id == id)) {
+      return;
+    }
+    final ids = {...state.selectedReportIds};
+    if (selected) {
+      ids.add(id);
+    } else {
+      ids.remove(id);
+    }
+    emit(state.copyWith(selectedReportIds: Set.unmodifiable(ids)));
   }
 
   void changeStep(int step) => emit(state.copyWith(step: step.clamp(0, 2)));
@@ -232,7 +309,7 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
   }
 
   Future<void> submit() async {
-    if (state.isSaving) return;
+    if (!state.canSave) return;
     final validation = validateData();
     if (validation != null) {
       emit(
@@ -246,9 +323,12 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
 
     emit(state.copyWith(status: WorkLogEditorStatus.saving, message: null));
     final workType = WorkLogType.tryFromWire(state.type);
+    final notes = state.composedNotes;
     final draft = WorkLogDraft(
       vehicleId: state.vehicleId,
-      sourceReportId: _sourceReportId,
+      resolvedReportIds: state.selectedReports
+          .map((report) => report.id)
+          .toList(growable: false),
       type: state.type,
       customName:
           workType?.allowsCustomName == true &&
@@ -257,21 +337,26 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
           : null,
       serviceKm: state.serviceKm,
       serviceDate: state.serviceDate,
-      notes: state.notes.trim().isEmpty ? null : state.notes.trim(),
+      notes: notes.isEmpty ? null : notes,
       intervalKm: state.intervalKm,
       parts: state.parts,
     );
     final response = await createWorkLog(draft);
+    if (isClosed) return;
     response.fold(
-      (message) => emit(
-        state.copyWith(status: WorkLogEditorStatus.failure, message: message),
-      ),
+      (message) {
+        emit(
+          state.copyWith(status: WorkLogEditorStatus.failure, message: message),
+        );
+        if (draft.resolvedReportIds.isNotEmpty) unawaited(loadReports());
+      },
       (_) => emit(
         state.copyWith(
           status: WorkLogEditorStatus.success,
           result: WorkLogSaveResult(
             vehicleId: state.vehicleId,
             serviceKm: state.serviceKm,
+            resolvedReportIds: draft.resolvedReportIds,
           ),
         ),
       ),

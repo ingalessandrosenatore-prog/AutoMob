@@ -9,6 +9,7 @@ export 'src/domain/work_log_draft.dart';
 export 'src/domain/work_log_launch_context.dart';
 export 'src/domain/work_log_part.dart';
 export 'src/domain/work_log_parts_catalog.dart';
+export 'src/domain/work_log_report.dart';
 export 'src/domain/work_log_repository.dart';
 export 'src/domain/work_log_use_cases.dart';
 export 'src/domain/work_log_type.dart';

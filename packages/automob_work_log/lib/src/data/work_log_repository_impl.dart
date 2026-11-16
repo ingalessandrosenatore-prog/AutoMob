@@ -1,6 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import '../domain/work_log_entry.dart';
 import '../domain/work_log_draft.dart';
+import '../domain/work_log_report.dart';
 import '../domain/work_log_repository.dart';
 import '../domain/work_log_vehicle.dart';
 import 'work_log_remote_data_source.dart';
@@ -14,6 +15,17 @@ class WorkLogRepositoryImpl implements WorkLogRepository {
       return right(await _remote.getVehicles());
     } catch (_) {
       return left('Impossibile caricare i veicoli.');
+    }
+  }
+
+  @override
+  Future<Either<String, List<WorkLogReport>>> getOpenReports(
+    String vehicleId,
+  ) async {
+    try {
+      return right(await _remote.getOpenReports(vehicleId));
+    } catch (_) {
+      return left('Impossibile caricare le segnalazioni aperte.');
     }
   }
 
@@ -37,6 +49,10 @@ class WorkLogRepositoryImpl implements WorkLogRepository {
     try {
       await _remote.createWorkLog(draft);
       return right(unit);
+    } on WorkLogReportsChanged catch (_) {
+      return left(
+        'Le segnalazioni aperte sono cambiate. Verifica la selezione e riprova.',
+      );
     } catch (_) {
       return left('Impossibile salvare il lavoro.');
     }

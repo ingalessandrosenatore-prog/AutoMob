@@ -1,6 +1,7 @@
 import 'package:auto_mob_v1/features/dashboard/presentation/widgets/resolve_future_work.dart';
 import 'package:auto_mob_v1/features/future_work/domain/entities/future_work_summary.dart';
 import 'package:auto_mob_v1/features/future_work/domain/entities/warning_light_observation.dart';
+import 'package:automob_work_log/automob_work_log.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -40,7 +41,10 @@ void main() {
                   report: report,
                   vehicle: vehicleFixture(id: 'v1'),
                   onDisappeared: () => fail('Percorso errato'),
-                  onWorkSaved: () => resolved++,
+                  onWorkSaved: (saved) {
+                    expect(saved.resolvedReportIds, ['r2']);
+                    resolved++;
+                  },
                 ),
                 child: const Text('Risolvi'),
               ),
@@ -53,7 +57,15 @@ void main() {
               extra = state.extra as Map<String, dynamic>;
               return Scaffold(
                 body: TextButton(
-                  onPressed: () => context.pop(result),
+                  onPressed: () => context.pop(
+                    result
+                        ? const WorkLogSaveResult(
+                            vehicleId: 'v1',
+                            serviceKm: 100,
+                            resolvedReportIds: ['r2'],
+                          )
+                        : null,
+                  ),
                   child: const Text('Termina'),
                 ),
               );
@@ -74,7 +86,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(extra?['initialWorkType'], 'altro');
       expect(extra?['initialCustomName'], 'Avaria motore');
-      expect(extra?['initialNotes'], 'Controllare motore');
+      expect(extra?.containsKey('initialNotes'), isFalse);
       expect(extra?['sourceReportId'], 'r1');
       expect(resolved, 0);
       await tester.tap(find.text('Termina'));
@@ -98,7 +110,7 @@ void main() {
                 report: report,
                 vehicle: vehicleFixture(id: 'v1'),
                 onDisappeared: () => disappeared++,
-                onWorkSaved: () => fail('Nessun lavoro eseguito'),
+                onWorkSaved: (_) => fail('Nessun lavoro eseguito'),
               ),
               child: const Text('Risolvi'),
             ),

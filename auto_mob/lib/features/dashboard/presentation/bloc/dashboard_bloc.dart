@@ -45,7 +45,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<FutureWorkResolvedWithWork>((event, emit) {
       final current = state;
       if (current is! DashboardLoaded) return;
-      _removeCompletedReport(event.recordId, current, emit);
+      if (event.recordIds.isNotEmpty) {
+        _removeCompletedReports(event.recordIds, current, emit);
+      }
       add(DashboardRefreshRequested());
     });
     on<LoadDashboardData>(_onLoadDashboardData);
@@ -55,7 +57,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     on<VehiclePhotoUpdateRequested>(_onVehiclePhotoUpdateRequested);
     on<DashboardRefreshRequested>(
       _onDashboardRefreshRequested,
-      transformer: droppable(),
+      transformer: restartable(),
     );
   }
 
@@ -76,22 +78,22 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
           isUpdatingReport: false,
         ),
       ),
-      (_) => _removeCompletedReport(event.recordId, current, emit),
+      (_) => _removeCompletedReports([event.recordId], current, emit),
     );
   }
 
-  void _removeCompletedReport(
-    String recordId,
+  void _removeCompletedReports(
+    Iterable<String> recordIds,
     DashboardLoaded current,
     Emitter<DashboardState> emit,
   ) {
-    _completedReports.add(recordId);
+    _completedReports.addAll(recordIds);
     emit(
       current.copyWith(
         futureWorksByVehicleId: {
           for (final entry in current.futureWorksByVehicleId.entries)
             entry.key: entry.value
-                .where((item) => item.recordId != recordId)
+                .where((item) => !_completedReports.contains(item.recordId))
                 .toList(growable: false),
         },
         isUpdatingReport: false,

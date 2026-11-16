@@ -3,10 +3,16 @@ import '../domain/work_log_entry.dart';
 import '../domain/work_log_draft.dart';
 import '../domain/work_log_part.dart';
 import '../domain/work_log_parts_catalog.dart';
+import '../domain/work_log_report.dart';
 import '../domain/work_log_vehicle.dart';
+
+class WorkLogReportsChanged implements Exception {
+  const WorkLogReportsChanged();
+}
 
 abstract interface class WorkLogRemoteDataSource {
   Future<List<WorkLogVehicle>> getVehicles();
+  Future<List<WorkLogReport>> getOpenReports(String vehicleId);
   Future<List<WorkLogEntry>> getVehicleWorks(
     String vehicleId, {
     required int from,
@@ -18,6 +24,26 @@ abstract interface class WorkLogRemoteDataSource {
 class SupabaseWorkLogRemoteDataSource implements WorkLogRemoteDataSource {
   const SupabaseWorkLogRemoteDataSource(this._client);
   final SupabaseClient _client;
+
+  @override
+  Future<List<WorkLogReport>> getOpenReports(String vehicleId) async {
+    final rows = await _client.rpc<List<dynamic>>(
+      'get_vehicle_open_work_log_reports',
+      params: {'p_vehicle_id': vehicleId},
+    );
+    return [
+      for (final row in rows.cast<Map<String, dynamic>>())
+        WorkLogReport(
+          id: row['id'] as String,
+          description: row['description'] as String,
+          warningLightCodes: [
+            for (final light in (row['warning_lights'] as List<dynamic>))
+              (light as Map<String, dynamic>)['code'] as String,
+          ],
+        ),
+    ];
+  }
+
   @override
   Future<List<WorkLogVehicle>> getVehicles() async {
     final rows = await _client
@@ -140,32 +166,41 @@ class SupabaseWorkLogRemoteDataSource implements WorkLogRemoteDataSource {
 
   @override
   Future<void> createWorkLog(WorkLogDraft draft) async {
-    await _client.rpc(
-      draft.sourceReportId == null
-          ? 'crea_sessione_manutenzione'
-          : 'create_work_log_for_report',
-      params: {
-        if (draft.sourceReportId != null) 'p_report_id': draft.sourceReportId,
-        'p_payload': {
-          'vehicle_id': draft.vehicleId,
-          'type': draft.type,
-          'custom_name': draft.customName,
-          'service_km': draft.serviceKm,
-          'service_date': draft.serviceDate.toIso8601String().split('T').first,
-          'notes': draft.notes,
-          'interval_km': draft.intervalKm,
-          'parts': draft.parts
-              .map(
-                (part) => {
-                  'part_id': part.partId,
-                  'quantity': part.quantity,
-                  'unit_price': part.unitPrice,
-                  'notes': part.notes,
-                },
-              )
-              .toList(),
+    try {
+      await _client.rpc(
+        draft.resolvedReportIds.isEmpty
+            ? 'crea_sessione_manutenzione'
+            : 'create_work_log_for_reports',
+        params: {
+          if (draft.resolvedReportIds.isNotEmpty)
+            'p_report_ids': draft.resolvedReportIds,
+          'p_payload': {
+            'vehicle_id': draft.vehicleId,
+            'type': draft.type,
+            'custom_name': draft.customName,
+            'service_km': draft.serviceKm,
+            'service_date': draft.serviceDate
+                .toIso8601String()
+                .split('T')
+                .first,
+            'notes': draft.notes,
+            'interval_km': draft.intervalKm,
+            'parts': draft.parts
+                .map(
+                  (part) => {
+                    'part_id': part.partId,
+                    'quantity': part.quantity,
+                    'unit_price': part.unitPrice,
+                    'notes': part.notes,
+                  },
+                )
+                .toList(),
+          },
         },
-      },
-    );
+      );
+    } on PostgrestException catch (error) {
+      if (error.code == 'PT409') throw const WorkLogReportsChanged();
+      rethrow;
+    }
   }
 }

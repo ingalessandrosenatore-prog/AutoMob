@@ -53,6 +53,7 @@ void main() {
   test('il cubit conserva il nome solo per i tipi che lo supportano', () {
     final cubit = WorkLogEditorCubit(
       createWorkLog: CreateWorkLog(_WorkLogRepository()),
+      getOpenReports: GetOpenWorkLogReports(_WorkLogRepository()),
     );
 
     cubit.changeType(WorkLogType.brakes.wireValue);
@@ -67,6 +68,7 @@ void main() {
   test('il cubit preseleziona una sola categoria dal tipo intervento', () {
     final cubit = WorkLogEditorCubit(
       createWorkLog: CreateWorkLog(_WorkLogRepository()),
+      getOpenReports: GetOpenWorkLogReports(_WorkLogRepository()),
     );
 
     cubit.initialize(
@@ -105,6 +107,7 @@ void main() {
     () async {
       final cubit = WorkLogEditorCubit(
         createWorkLog: CreateWorkLog(_WorkLogRepository()),
+        getOpenReports: GetOpenWorkLogReports(_WorkLogRepository()),
       );
       cubit.initialize(
         const WorkLogLaunchContext(
@@ -115,6 +118,7 @@ void main() {
         ),
       );
       cubit.changeKm('999');
+      await cubit.stream.firstWhere((state) => !state.loadingReports);
       await cubit.submit();
 
       expect(cubit.state.status, WorkLogEditorStatus.failure);
@@ -124,7 +128,10 @@ void main() {
 
   test('il cubit emette successo dopo il salvataggio del repository', () async {
     final repository = _WorkLogRepository();
-    final cubit = WorkLogEditorCubit(createWorkLog: CreateWorkLog(repository));
+    final cubit = WorkLogEditorCubit(
+      createWorkLog: CreateWorkLog(repository),
+      getOpenReports: GetOpenWorkLogReports(repository),
+    );
     cubit.initialize(
       const WorkLogLaunchContext(
         vehicleId: 'vehicle-1',
@@ -138,6 +145,7 @@ void main() {
     cubit.updatePart(
       const WorkLogPartDraft(partId: 7, quantity: 2, unitPrice: 12.50),
     );
+    await cubit.stream.firstWhere((state) => !state.loadingReports);
     await cubit.submit();
 
     expect(cubit.state.status, WorkLogEditorStatus.success);
@@ -184,7 +192,10 @@ void main() {
 
   test('il submit concorrente viene ignorato mentre il cubit salva', () async {
     final repository = _PendingSaveRepository();
-    final cubit = WorkLogEditorCubit(createWorkLog: CreateWorkLog(repository));
+    final cubit = WorkLogEditorCubit(
+      createWorkLog: CreateWorkLog(repository),
+      getOpenReports: GetOpenWorkLogReports(repository),
+    );
     cubit.initialize(
       const WorkLogLaunchContext(
         vehicleId: 'vehicle-1',
@@ -194,6 +205,7 @@ void main() {
       ),
     );
 
+    await cubit.stream.firstWhere((state) => !state.loadingReports);
     final first = cubit.submit();
     final second = cubit.submit();
     expect(repository.saveCalls, 1);
@@ -229,6 +241,11 @@ void main() {
 }
 
 class _WorkLogRepository implements WorkLogRepository {
+  @override
+  Future<Either<String, List<WorkLogReport>>> getOpenReports(
+    String vehicleId,
+  ) async => right(const []);
+
   WorkLogDraft? savedDraft;
   List<WorkLogVehicle> vehicles = const [];
 

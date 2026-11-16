@@ -60,6 +60,7 @@ final class WorkshopVehicleModel {
     required this.kmCurrent,
     required this.tagliandoIntervalKm,
     this.warningLights = const [],
+    this.userProblems = const [],
     this.fuel,
     this.powerCv,
     this.displacementCc,
@@ -77,14 +78,18 @@ final class WorkshopVehicleModel {
     Map<String, dynamic> json,
   ) => WorkshopVehicleModel(
     id: _string(json['id']),
-    warningLights: json['warning_lights'] is List
-        ? (json['warning_lights'] as List)
+    warningLights: _parseWarningLights(json['warning_lights']),
+    userProblems: json['reports'] is List
+        ? (json['reports'] as List)
               .map((item) {
-                final row = Map<String, dynamic>.from(item as Map);
-                return WarningLightObservation(
-                  code: row['code'] as String,
-                  color: row['color'] as String,
-                  flashing: row['flashing'] as bool? ?? false,
+                final row = _map(item);
+                return WorkshopUserProblem(
+                  id: _string(row['record_id'], fallback: _string(row['id'])),
+                  description: _string(row['description']),
+                  onboardMessage: _string(row['onboard_message']),
+                  warningLights: _parseWarningLights(row['warning_lights']),
+                  registeredAt: _date(row['registered_at']),
+                  reportedKm: _nullableInteger(row['reported_km']),
                 );
               })
               .toList(growable: false)
@@ -112,6 +117,7 @@ final class WorkshopVehicleModel {
   );
 
   final List<WarningLightObservation> warningLights;
+  final List<WorkshopUserProblem> userProblems;
   final String id;
   final String plate;
   final String brand;
@@ -152,8 +158,22 @@ final class WorkshopVehicleModel {
     updatedAt: updatedAt,
     requiresMaintenance: false,
     warningLights: warningLights,
+    userProblems: userProblems,
   );
 }
+
+List<WarningLightObservation> _parseWarningLights(Object? raw) => raw is List
+    ? raw
+          .map((item) {
+            final row = _map(item);
+            return WarningLightObservation(
+              code: _string(row['code']),
+              color: _string(row['color']),
+              flashing: row['flashing'] as bool? ?? false,
+            );
+          })
+          .toList(growable: false)
+    : const [];
 
 Map<String, dynamic> _map(Object? value) => value is Map
     ? value.map((key, item) => MapEntry(key.toString(), item))

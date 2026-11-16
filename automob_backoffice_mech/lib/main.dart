@@ -127,6 +127,7 @@ class _MainAppState extends State<MainApp> {
           };
           return WorkLogFeature(
             launch: launch,
+            onWorkSaved: (_) => _refreshWorkshop(),
             onNotificationsPressed: () => showMechanicNotificationDialog(
               context,
               vehicleName: [
@@ -152,6 +153,7 @@ class _MainAppState extends State<MainApp> {
                   currentKm: 0,
                 ),
           cubit: getIt<WorkLogEditorCubit>(),
+          onWorkSaved: _refreshWorkshop,
         ),
         workDetail: (_, vehicleId, workId, extra) => extra is WorkLogEntry
             ? MechanicWorkLogDetailPage(entry: extra)
@@ -162,6 +164,9 @@ class _MainAppState extends State<MainApp> {
       ),
     );
   }
+
+  void _refreshWorkshop() =>
+      getIt<WorkshopBloc>().add(const WorkshopWorkSaved());
 
   @override
   void dispose() {

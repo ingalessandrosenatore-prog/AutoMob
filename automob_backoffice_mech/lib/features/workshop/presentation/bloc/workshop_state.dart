@@ -44,6 +44,12 @@ final class WorkshopReady extends WorkshopState {
       .take(visibleCount.clamp(0, filteredVehicles.length))
       .toList(growable: false);
 
+  int get okVehiclesCount =>
+      allVehicles.where((vehicle) => !vehicle.hasPendingWorks).length;
+
+  int get dueVehiclesCount =>
+      allVehicles.where((vehicle) => vehicle.hasPendingWorks).length;
+
   bool get hasMore => visibleCount < filteredVehicles.length;
 
   WorkshopReady copyWith({

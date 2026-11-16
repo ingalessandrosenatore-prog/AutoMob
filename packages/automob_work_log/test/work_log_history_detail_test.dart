@@ -444,6 +444,11 @@ int _activeProgressMarks(WidgetTester tester) {
 }
 
 class _Repository implements WorkLogRepository {
+  @override
+  Future<Either<String, List<WorkLogReport>>> getOpenReports(
+    String vehicleId,
+  ) async => right(const []);
+
   _Repository({required this.entries});
 
   final List<WorkLogEntry> entries;

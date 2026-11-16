@@ -1,3 +1,4 @@
+import 'package:automob_work_log/automob_work_log.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +14,7 @@ Future<void> resolveFutureWork(
   required FutureWorkSummary report,
   required Vehicle vehicle,
   required VoidCallback onDisappeared,
-  required VoidCallback onWorkSaved,
+  required ValueChanged<WorkLogSaveResult> onWorkSaved,
 }) async {
   final colors = AmThemeColors.of(context);
   final navigator = Navigator.of(context, rootNavigator: true);
@@ -53,7 +54,7 @@ Future<void> resolveFutureWork(
   final names = report.warningLights
       .map((light) => amWarningLightCatalog[light.code]?.$1 ?? 'Altra spia')
       .toSet();
-  final saved = await context.pushNamed<bool>(
+  final saved = await context.pushNamed<WorkLogSaveResult>(
     'aggiungi_lavoro',
     extra: {
       'vehicleId': vehicle.id,
@@ -61,10 +62,8 @@ Future<void> resolveFutureWork(
       'currentKm': vehicle.kmCurrent,
       'initialWorkType': 'altro',
       'initialCustomName': names.isEmpty ? report.message : names.join(', '),
-      'initialNotes': report.message,
       'sourceReportId': report.recordId,
     },
   );
-  // The wizard only returns success after the atomic save-and-resolve RPC.
-  if (saved == true && context.mounted) onWorkSaved();
+  if (saved != null && context.mounted) onWorkSaved(saved);
 }

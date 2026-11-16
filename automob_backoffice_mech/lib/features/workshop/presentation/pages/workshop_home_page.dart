@@ -87,6 +87,8 @@ class _WorkshopHomePageState extends State<WorkshopHomePage>
         WorkshopReady ready => WorkshopHomeView(
           mechanicName: ready.mechanic.displayName,
           totalVehicles: ready.allVehicles.length,
+          okVehicles: ready.okVehiclesCount,
+          dueVehicles: ready.dueVehiclesCount,
           vehicles: ready.visibleVehicles,
           hasLinkedVehicles: ready.allVehicles.isNotEmpty,
           hasSearchResults: ready.filteredVehicles.isNotEmpty,

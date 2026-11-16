@@ -1,7 +1,9 @@
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 
-/// The catalog exposes maintenance status, not an exact job count.
+/// Badge circolare flottante a cavallo del bordo sinistro della card
+/// (nella posizione del cerchio "75%" del design di riferimento), con
+/// triangolino arancione o spunta blu.
 class MechanicVehicleWorkBadge extends StatelessWidget {
   const MechanicVehicleWorkBadge({required this.requiresWork, super.key});
 
@@ -10,38 +12,42 @@ class MechanicVehicleWorkBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
-    final color = requiresWork ? colors.accent : colors.info;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 4,
-      children: [
-        DecoratedBox(
+    final accentColor = requiresWork ? colors.accent : colors.info;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: colors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.22),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: DecoratedBox(
           key: const Key('mechanic-vehicle-status-circle'),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withValues(alpha: 0.08),
-            border: Border.all(color: color.withValues(alpha: 0.25), width: 3),
+            color: accentColor.withValues(alpha: 0.10),
+            border: Border.all(
+              color: accentColor.withValues(alpha: 0.55),
+              width: 2.5,
+            ),
           ),
           child: SizedBox.square(
-            dimension: 44,
+            dimension: 42,
             child: Icon(
               requiresWork ? Icons.warning_amber_rounded : Icons.check_rounded,
               key: const Key('mechanic-vehicle-status-icon'),
-              color: color,
-              size: 22,
+              color: accentColor,
+              size: 21,
             ),
           ),
         ),
-        Text(
-          requiresWork ? 'Lavori da fare' : '0 lavori da fare',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: color,
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

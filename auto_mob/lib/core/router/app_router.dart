@@ -16,6 +16,7 @@ import '../../features/auth/presentation/pages/login_view.dart';
 import '../../features/auth/presentation/pages/registration_view.dart';
 import '../../features/auth/presentation/pages/email_verification_page.dart';
 import '../../features/dashboard/presentation/bloc/dashboard_bloc.dart';
+import '../../features/dashboard/presentation/bloc/dashboard_event.dart';
 import '../../features/dashboard/presentation/bloc/connect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/disconnect_mechanic_cubit.dart';
 import '../../features/dashboard/presentation/bloc/notification_prompt_bloc.dart';
@@ -143,6 +144,9 @@ class AppRouter {
                     repository: di.sl<shared_work_log.WorkLogRepository>(),
                   ),
                   routeAnimation: AmShellBranchRepaintScope.maybeOf(context),
+                  onWorkSaved: (result) => di.sl<DashboardBloc>().add(
+                    FutureWorkResolvedWithWork(result.resolvedReportIds),
+                  ),
                 ),
               ),
             ],
@@ -235,17 +239,23 @@ class AppRouter {
                 entry: detailLaunch.entry,
                 currentKm: detailLaunch.currentKm,
                 onAddPressed: (type) async {
-                  final saved = await context.pushNamed(
-                    'aggiungi_lavoro',
-                    extra: {
-                      'vehicleId': detailLaunch.entry.vehicleId,
-                      'vehicleName': detailLaunch.vehicleName,
-                      'currentKm': detailLaunch.currentKm,
-                      'initialWorkType': type.wireValue,
-                      'slideFromLeft': true,
-                    },
-                  );
-                  if (saved == true && context.mounted) context.pop(true);
+                  final saved = await context
+                      .pushNamed<shared_work_log.WorkLogSaveResult>(
+                        'aggiungi_lavoro',
+                        extra: {
+                          'vehicleId': detailLaunch.entry.vehicleId,
+                          'vehicleName': detailLaunch.vehicleName,
+                          'currentKm': detailLaunch.currentKm,
+                          'initialWorkType': type.wireValue,
+                          'slideFromLeft': true,
+                        },
+                      );
+                  if (saved != null && context.mounted) {
+                    di.sl<DashboardBloc>().add(
+                      FutureWorkResolvedWithWork(saved.resolvedReportIds),
+                    );
+                    context.pop(true);
+                  }
                 },
               ),
             );

@@ -11,7 +11,10 @@ void main() {
     tester,
   ) async {
     final repository = _Repository();
-    final cubit = WorkLogEditorCubit(createWorkLog: CreateWorkLog(repository));
+    final cubit = WorkLogEditorCubit(
+      createWorkLog: CreateWorkLog(repository),
+      getOpenReports: GetOpenWorkLogReports(repository),
+    );
     addTearDown(cubit.close);
 
     await tester.pumpWidget(
@@ -54,6 +57,11 @@ void main() {
 }
 
 class _Repository implements WorkLogRepository {
+  @override
+  Future<Either<String, List<WorkLogReport>>> getOpenReports(
+    String vehicleId,
+  ) async => right(const []);
+
   @override
   Future<Either<String, Unit>> createWorkLog(WorkLogDraft draft) async =>
       right(unit);

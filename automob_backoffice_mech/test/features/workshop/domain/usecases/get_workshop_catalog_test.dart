@@ -30,7 +30,9 @@ void main() {
 
       expect(vehicles.map((vehicle) => vehicle.id), ['due', 'ok']);
       expect(vehicles.first.requiresMaintenance, isTrue);
+      expect(vehicles.first.mandatoryWorks.single.title, 'Tagliando periodico');
       expect(vehicles.last.requiresMaintenance, isFalse);
+      expect(vehicles.last.mandatoryWorks, isEmpty);
     },
   );
 

@@ -81,7 +81,8 @@ class _HomeViewBody extends StatefulWidget {
   State<_HomeViewBody> createState() => _HomeViewBodyState();
 }
 
-class _HomeViewBodyState extends State<_HomeViewBody> {
+class _HomeViewBodyState extends State<_HomeViewBody>
+    with WidgetsBindingObserver {
   late final AmLiquidGlassRepaintController _appBarGlassRepaint;
   late final PageController _vehiclePageController;
   late final ScrollController _homeScrollController;
@@ -102,6 +103,7 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _appBarGlassRepaint = AmLiquidGlassRepaintController();
     _appBarGlassRepaint.bindExternalRepaint(widget.routeAnimation);
     _vehiclePageController = PageController(
@@ -148,11 +150,19 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _appBarGlassRepaint.dispose();
     _vehiclePageController.dispose();
     _homeScrollController.dispose();
     _scrollActivity.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<DashboardBloc>().add(DashboardRefreshRequested());
+    }
   }
 
   void _closeDialogIfOpen() {
@@ -922,9 +932,11 @@ class _HomeViewBodyState extends State<_HomeViewBody> {
                                   onDisappeared: () => context
                                       .read<DashboardBloc>()
                                       .add(FutureWorkDoneRequested(recordId)),
-                                  onWorkSaved: () =>
+                                  onWorkSaved: (result) =>
                                       context.read<DashboardBloc>().add(
-                                        FutureWorkResolvedWithWork(recordId),
+                                        FutureWorkResolvedWithWork(
+                                          result.resolvedReportIds,
+                                        ),
                                       ),
                                 ),
                                 onReportProblem: () async {

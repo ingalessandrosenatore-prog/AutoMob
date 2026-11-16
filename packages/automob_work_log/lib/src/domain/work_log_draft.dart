@@ -37,7 +37,7 @@ class WorkLogDraft extends Equatable {
     required this.serviceKm,
     required this.serviceDate,
     this.customName,
-    this.sourceReportId,
+    this.resolvedReportIds = const [],
     this.notes,
     this.intervalKm,
     this.parts = const [],
@@ -45,7 +45,7 @@ class WorkLogDraft extends Equatable {
   final String vehicleId;
   final String type;
   final String? customName;
-  final String? sourceReportId;
+  final List<String> resolvedReportIds;
   final int serviceKm;
   final DateTime serviceDate;
   final String? notes;
@@ -56,7 +56,7 @@ class WorkLogDraft extends Equatable {
     vehicleId,
     type,
     customName,
-    sourceReportId,
+    resolvedReportIds,
     serviceKm,
     serviceDate,
     notes,

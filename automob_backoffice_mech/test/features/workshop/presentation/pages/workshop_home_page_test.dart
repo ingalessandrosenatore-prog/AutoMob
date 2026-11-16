@@ -101,68 +101,144 @@ void main() {
     );
   });
 
-  testWidgets('renderizza status blu/arancione e abilita la ricerca', (
-    tester,
-  ) async {
-    final bloc = _MockWorkshopBloc();
-    when(() => bloc.state).thenReturn(
-      _ready(
-        vehicles: [
-          _vehicle(id: 'due', due: true),
-          _vehicle(id: 'ok', brand: 'Alfa'),
-        ],
-      ),
-    );
+  testWidgets(
+    'renderizza status blu/arancione e abilita la ricerca senza filtri nella barra',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final bloc = _MockWorkshopBloc();
+      when(() => bloc.state).thenReturn(
+        _ready(
+          vehicles: [
+            _vehicle(id: 'due', due: true),
+            _vehicle(id: 'ok', brand: 'Alfa'),
+          ],
+        ),
+      );
 
-    await _pump(tester, bloc: bloc);
-    await tester.enterText(find.byType(TextField), 'panda AB-123-CD');
+      await _pump(tester, bloc: bloc);
+      await tester.enterText(find.byType(TextField), 'panda AB-123-CD');
 
-    expect(find.byType(MechanicVehicleCard), findsNWidgets(2));
-    expect(
-      tester.widget<TextField>(find.byType(TextField)).onChanged,
-      isNotNull,
-    );
-    expect(find.byTooltip('Filtra veicoli'), findsOneWidget);
-    expect(
-      find.descendant(
-        of: find.byType(MechanicVehicleCard),
-        matching: find.byType(InkWell),
-      ),
-      findsNWidgets(2),
-    );
-  });
+      expect(find.byType(MechanicVehicleCard), findsNWidgets(2));
+      expect(
+        tester.widget<TextField>(find.byType(TextField)).onChanged,
+        isNotNull,
+      );
+      expect(find.byTooltip('Filtra veicoli'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('workshop_filter_button')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('workshop_status_filter_bar')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const ValueKey('workshop_filter_all')), findsOneWidget);
+      expect(find.byKey(const ValueKey('workshop_filter_ok')), findsOneWidget);
+      expect(find.byKey(const ValueKey('workshop_filter_due')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(MechanicVehicleCard),
+          matching: find.byType(InkWell),
+        ),
+        findsNWidgets(2),
+      );
+    },
+  );
 
-  testWidgets('il menu filtro invia la selezione al WorkshopBloc', (
-    tester,
-  ) async {
-    final bloc = _MockWorkshopBloc();
-    when(
-      () => bloc.state,
-    ).thenReturn(_ready(vehicles: [_vehicle(id: 'due', due: true)]));
+  testWidgets(
+    'i filtri sopra la lista mostrano lo stato attivo e inviano la selezione al WorkshopBloc',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final bloc = _MockWorkshopBloc();
+      when(() => bloc.state).thenReturn(
+        _ready(
+          vehicles: [
+            _vehicle(id: 'due', due: true),
+            _vehicle(id: 'ok', brand: 'Alfa'),
+          ],
+        ),
+      );
 
-    await _pump(tester, bloc: bloc);
-    final button = tester.widget<AmPullDownLG>(
-      find.byKey(const ValueKey('workshop_filter_button')),
-    );
-    button.children
-        .singleWhere(
-          (item) => item.text == WorkshopVehicleFilter.maintenanceDue.label,
-        )
-        .onTap();
-    await tester.pump();
+      await _pump(tester, bloc: bloc);
 
-    verify(
-      () => bloc.add(
-        any(
-          that: isA<WorkshopVehicleFilterChanged>().having(
-            (event) => event.filter,
-            'filter',
-            WorkshopVehicleFilter.maintenanceDue,
+      final allTile = find.byKey(const ValueKey('workshop_filter_all'));
+      final allLabel = find.descendant(
+        of: allTile,
+        matching: find.text('Tutti'),
+      );
+      final allCount = find.descendant(of: allTile, matching: find.text('2'));
+      expect(
+        tester.getCenter(allCount).dx,
+        greaterThan(tester.getCenter(allLabel).dx),
+      );
+      expect(
+        tester.getCenter(allCount).dy,
+        closeTo(tester.getCenter(allLabel).dy, 1),
+      );
+      expect(tester.getSize(allTile).height, mechanicMinimumTouchTarget);
+      final decoration = tester
+          .widgetList<DecoratedBox>(
+            find.descendant(of: allTile, matching: find.byType(DecoratedBox)),
+          )
+          .map((box) => box.decoration)
+          .whereType<ShapeDecoration>()
+          .first;
+      expect(
+        (decoration.gradient as LinearGradient).colors.first,
+        Color.lerp(AmThemeColors.dark.accentSecondary, Colors.white, 0.12),
+      );
+
+      expect(
+        tester
+            .widget<Semantics>(
+              find
+                  .descendant(
+                    of: find.byKey(const ValueKey('workshop_filter_all')),
+                    matching: find.byType(Semantics),
+                  )
+                  .first,
+            )
+            .properties
+            .selected,
+        isTrue,
+      );
+      expect(
+        tester
+            .widget<Semantics>(
+              find
+                  .descendant(
+                    of: find.byKey(const ValueKey('workshop_filter_due')),
+                    matching: find.byType(Semantics),
+                  )
+                  .first,
+            )
+            .properties
+            .selected,
+        isFalse,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('workshop_filter_due')));
+      await tester.pump();
+
+      verify(
+        () => bloc.add(
+          any(
+            that: isA<WorkshopVehicleFilterChanged>().having(
+              (event) => event.filter,
+              'filter',
+              WorkshopVehicleFilter.maintenanceDue,
+            ),
           ),
         ),
-      ),
-    ).called(1);
-  });
+      ).called(1);
+    },
+  );
 
   testWidgets('allinea microfono alla navigation e ricerca subito sopra', (
     tester,

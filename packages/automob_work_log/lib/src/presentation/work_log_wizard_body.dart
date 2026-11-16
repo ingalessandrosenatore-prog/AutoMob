@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:common_ui_widget/performance_flags.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -10,6 +11,8 @@ import '../domain/work_log_launch_context.dart';
 import '../domain/work_log_type.dart';
 import '../domain/work_log_parts_catalog.dart';
 import 'work_log_editor_cubit.dart';
+import 'work_log_notes_input.dart';
+import 'work_log_report_checklist.dart';
 import 'work_log_parts_picker.dart';
 import 'work_log_spare_part_card.dart';
 import 'work_log_type_selection_grid.dart';
@@ -57,7 +60,7 @@ class _WorkLogWizardBodyState extends State<WorkLogWizardBody> {
   late final PageController _pages;
   late final TextEditingController _km;
   final _customName = TextEditingController();
-  final _notes = TextEditingController();
+  final _notes = WorkLogNotesInput();
   bool _dialogVisible = false;
 
   @override
@@ -66,8 +69,11 @@ class _WorkLogWizardBodyState extends State<WorkLogWizardBody> {
     _pages = PageController();
     _km = TextEditingController(text: widget.context.currentKm.toString());
     _customName.text = widget.context.initialCustomName;
-    _notes.text = widget.context.initialNotes;
     widget.cubit.initialize(widget.context);
+    _notes.showNotes(
+      widget.cubit.state.notes,
+      widget.cubit.state.resolvedProblemsNotes,
+    );
     FocusManager.instance.addListener(_keepFocusedFieldVisible);
   }
 
@@ -103,7 +109,10 @@ class _WorkLogWizardBodyState extends State<WorkLogWizardBody> {
       listenWhen: (previous, current) =>
           previous.step != current.step ||
           previous.status != current.status ||
-          previous.message != current.message,
+          previous.message != current.message ||
+          previous.notes != current.notes ||
+          previous.openReports != current.openReports ||
+          previous.selectedReportIds != current.selectedReportIds,
       listener: _onStateChanged,
       builder: (context, state) {
         final keyboardOverlap = math.max(
@@ -179,7 +188,7 @@ class _WorkLogWizardBodyState extends State<WorkLogWizardBody> {
                   onBack: state.step == 0 || state.isSaving
                       ? null
                       : widget.cubit.previousStep,
-                  onNext: state.isSaving
+                  onNext: state.isSaving || (state.step == 2 && !state.canSave)
                       ? () {}
                       : state.step == 2
                       ? widget.cubit.submit
@@ -194,6 +203,7 @@ class _WorkLogWizardBodyState extends State<WorkLogWizardBody> {
   );
 
   void _onStateChanged(BuildContext context, WorkLogEditorState state) {
+    _notes.showNotes(state.notes, state.resolvedProblemsNotes);
     if (_pages.hasClients && _pages.page?.round() != state.step) {
       _pages.animateToPage(
         state.step,
@@ -268,7 +278,7 @@ class _DataStep extends StatelessWidget {
 
   final TextEditingController km;
   final TextEditingController customName;
-  final TextEditingController notes;
+  final WorkLogNotesInput notes;
   final double topPadding;
 
   @override
@@ -346,12 +356,15 @@ class _DataStep extends StatelessWidget {
                 ),
         ),
         const SizedBox(height: 20),
+        const WorkLogReportChecklist(),
         _Field(
           key: const Key('work-log-notes'),
           label: 'NOTE',
           controller: notes,
           maxLines: 4,
-          onChanged: context.read<WorkLogEditorCubit>().changeNotes,
+          inputFormatters: [notes.formatter],
+          onChanged: (_) =>
+              context.read<WorkLogEditorCubit>().changeNotes(notes.manualNotes),
         ),
       ],
     );
@@ -390,55 +403,46 @@ class _CostsStep extends StatelessWidget {
   final double topPadding;
 
   @override
-  Widget build(BuildContext context) =>
-      BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
-        buildWhen: (previous, current) => previous.parts != current.parts,
-        builder: (context, state) => Stack(
-          children: [
-            Positioned.fill(
-              child: state.parts.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Nessun ricambio selezionato',
-                        style: TextStyle(
-                          color: AmThemeColors.of(context).textSecondary,
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.fromLTRB(
-                        24,
-                        topPadding + 76,
-                        24,
-                        120,
-                      ),
-                      itemCount: state.parts.length,
-                      itemBuilder: (_, index) {
-                        final item = state.parts[index];
-                        return WorkLogSparePartCard(
-                          item: item,
-                          name: kPartsCatalog[item.partId] ?? 'Ricambio',
-                          onRemove: () => context
-                              .read<WorkLogEditorCubit>()
-                              .removePart(item.partId),
-                          onItemChanged: context
-                              .read<WorkLogEditorCubit>()
-                              .updatePart,
-                        );
-                      },
-                    ),
-            ),
-            Positioned(
-              top: topPadding + 12,
-              left: 24,
-              right: 24,
-              child: _TotalBar(total: state.partsTotal),
-            ),
-          ],
+  Widget build(
+    BuildContext context,
+  ) => BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
+    buildWhen: (previous, current) => previous.parts != current.parts,
+    builder: (context, state) => Stack(
+      children: [
+        Positioned.fill(
+          child: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.fromLTRB(24, topPadding + 76, 24, 120),
+            children: [
+              if (state.parts.isEmpty)
+                Text(
+                  'Nessun ricambio selezionato',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AmThemeColors.of(context).textSecondary,
+                  ),
+                ),
+              for (final item in state.parts)
+                WorkLogSparePartCard(
+                  item: item,
+                  name: kPartsCatalog[item.partId] ?? 'Ricambio',
+                  onRemove: () => context.read<WorkLogEditorCubit>().removePart(
+                    item.partId,
+                  ),
+                  onItemChanged: context.read<WorkLogEditorCubit>().updatePart,
+                ),
+            ],
+          ),
         ),
-      );
+        Positioned(
+          top: topPadding + 12,
+          left: 24,
+          right: 24,
+          child: _TotalBar(total: state.partsTotal),
+        ),
+      ],
+    ),
+  );
 }
 
 class _TotalBar extends StatelessWidget {
@@ -590,6 +594,7 @@ class _Field extends StatelessWidget {
     this.error,
     this.maxLines = 1,
     this.onChanged,
+    this.inputFormatters,
     super.key,
   });
   final String label;
@@ -599,6 +604,7 @@ class _Field extends StatelessWidget {
   final String? error;
   final int maxLines;
   final ValueChanged<String>? onChanged;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -613,6 +619,7 @@ class _Field extends StatelessWidget {
           keyboardType: keyboardType,
           maxLines: maxLines,
           onChanged: onChanged,
+          inputFormatters: inputFormatters,
           style: TextStyle(
             color: colors.textPrimary,
             fontSize: 16,

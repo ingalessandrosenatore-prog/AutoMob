@@ -68,9 +68,7 @@ class MechanicSearchBar extends StatelessWidget {
                   height: MechanicShellMetrics.searchHeight - 2,
                   child: DecoratedBox(
                     key: const ValueKey('mechanic-search-shared-fill'),
-                    decoration: BoxDecoration(
-                      color: translucentSurface,
-                    ),
+                    decoration: BoxDecoration(color: translucentSurface),
                     child: Row(
                       children: [
                         Expanded(
@@ -80,16 +78,23 @@ class MechanicSearchBar extends StatelessWidget {
                             onChanged: onChanged,
                             textInputAction: TextInputAction.search,
                             hintText: hintText,
+                            constraints: const BoxConstraints(
+                              minHeight: MechanicShellMetrics.searchHeight - 2,
+                              maxHeight: MechanicShellMetrics.searchHeight - 2,
+                            ),
+                            padding: const WidgetStatePropertyAll(
+                              EdgeInsets.symmetric(horizontal: 14),
+                            ),
                             hintStyle: WidgetStatePropertyAll(
                               TextStyle(
                                 color: colors.textPrimary,
-                                fontSize: 15,
+                                fontSize: 14,
                               ),
                             ),
                             textStyle: WidgetStatePropertyAll(
                               TextStyle(
                                 color: colors.textPrimary,
-                                fontSize: 15,
+                                fontSize: 14,
                               ),
                             ),
                             trailing: const <Widget>[],

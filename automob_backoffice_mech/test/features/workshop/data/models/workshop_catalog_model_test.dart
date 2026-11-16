@@ -27,6 +27,16 @@ void main() {
           'tire_rotation_interval_km': 10000,
           'last_tagliando_km': 110000,
           'last_distribuzione_km': 50000,
+          'reports': [
+            {
+              'record_id': 'rep-1',
+              'description': 'rumore porta destra',
+              'onboard_message': '',
+              'warning_lights': [
+                {'code': 'S10', 'color': 'amber', 'flashing': false},
+              ],
+            },
+          ],
           'created_at': '2026-01-01T10:00:00Z',
           'updated_at': '2026-07-01T10:00:00Z',
         },
@@ -39,6 +49,10 @@ void main() {
     expect(catalog.vehicles.single.displayName, 'Fiat Panda');
     expect(catalog.vehicles.single.lastTagliandoKm, 110000);
     expect(catalog.vehicles.single.lastDistributionKm, 50000);
+    expect(
+      catalog.vehicles.single.userProblems.single.description,
+      'rumore porta destra',
+    );
     expect(catalog.vehicles.single.requiresMaintenance, isFalse);
   });
 

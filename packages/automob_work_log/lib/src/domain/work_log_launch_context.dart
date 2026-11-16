@@ -35,11 +35,16 @@ class WorkLogLaunchContext extends Equatable {
 
 /// Risultato ritornato dal wizard al router chiamante dopo un salvataggio.
 class WorkLogSaveResult extends Equatable {
-  const WorkLogSaveResult({required this.vehicleId, required this.serviceKm});
+  const WorkLogSaveResult({
+    required this.vehicleId,
+    required this.serviceKm,
+    this.resolvedReportIds = const [],
+  });
 
   final String vehicleId;
   final int serviceKm;
+  final List<String> resolvedReportIds;
 
   @override
-  List<Object?> get props => [vehicleId, serviceKm];
+  List<Object?> get props => [vehicleId, serviceKm, resolvedReportIds];
 }

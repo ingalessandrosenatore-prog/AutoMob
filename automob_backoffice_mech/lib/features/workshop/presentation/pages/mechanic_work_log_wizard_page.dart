@@ -6,11 +6,13 @@ class MechanicWorkLogWizardPage extends StatelessWidget {
   const MechanicWorkLogWizardPage({
     required this.workLogContext,
     required this.cubit,
+    this.onWorkSaved,
     super.key,
   });
 
   final WorkLogLaunchContext workLogContext;
   final WorkLogEditorCubit cubit;
+  final VoidCallback? onWorkSaved;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -22,7 +24,10 @@ class MechanicWorkLogWizardPage extends StatelessWidget {
       child: WorkLogWizardBody(
         context: workLogContext,
         cubit: cubit,
-        onSaved: (_) => Navigator.of(context).pop(true),
+        onSaved: (_) {
+          onWorkSaved?.call();
+          Navigator.of(context).pop(true);
+        },
       ),
     ),
   );

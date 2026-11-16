@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../service_requests/domain/entities/warning_light_observation.dart';
+import 'workshop_vehicle_work_item.dart';
+
+export 'workshop_vehicle_work_item.dart';
 
 final class WorkshopMechanic extends Equatable {
   const WorkshopMechanic({
@@ -28,6 +31,9 @@ final class WorkshopVehicle extends Equatable {
     required this.tagliandoIntervalKm,
     required this.requiresMaintenance,
     this.warningLights = const [],
+    this.mandatoryWorks = const [],
+    this.userProblems = const [],
+    this.estimatedRevenueEuro = defaultEstimatedRevenueEuro,
     this.fuel,
     this.powerCv,
     this.displacementCc,
@@ -40,6 +46,8 @@ final class WorkshopVehicle extends Equatable {
     this.createdAt,
     this.updatedAt,
   });
+
+  static const int defaultEstimatedRevenueEuro = 150;
 
   final String id;
   final String plate;
@@ -61,10 +69,25 @@ final class WorkshopVehicle extends Equatable {
   final DateTime? updatedAt;
   final bool requiresMaintenance;
   final List<WarningLightObservation> warningLights;
+  final List<WorkshopMandatoryWork> mandatoryWorks;
+  final List<WorkshopUserProblem> userProblems;
+  final int estimatedRevenueEuro;
 
   String get displayName => '$brand $model'.trim();
 
-  WorkshopVehicle copyWith({bool? requiresMaintenance}) => WorkshopVehicle(
+  int get totalPendingWorksCount => mandatoryWorks.length + userProblems.length;
+
+  bool get hasPendingWorks =>
+      requiresMaintenance ||
+      mandatoryWorks.isNotEmpty ||
+      userProblems.isNotEmpty;
+
+  WorkshopVehicle copyWith({
+    bool? requiresMaintenance,
+    List<WorkshopMandatoryWork>? mandatoryWorks,
+    List<WorkshopUserProblem>? userProblems,
+    int? estimatedRevenueEuro,
+  }) => WorkshopVehicle(
     id: id,
     plate: plate,
     brand: brand,
@@ -85,6 +108,9 @@ final class WorkshopVehicle extends Equatable {
     updatedAt: updatedAt,
     requiresMaintenance: requiresMaintenance ?? this.requiresMaintenance,
     warningLights: warningLights,
+    mandatoryWorks: mandatoryWorks ?? this.mandatoryWorks,
+    userProblems: userProblems ?? this.userProblems,
+    estimatedRevenueEuro: estimatedRevenueEuro ?? this.estimatedRevenueEuro,
   );
 
   @override
@@ -109,6 +135,9 @@ final class WorkshopVehicle extends Equatable {
     updatedAt,
     requiresMaintenance,
     warningLights,
+    mandatoryWorks,
+    userProblems,
+    estimatedRevenueEuro,
   ];
 }
 

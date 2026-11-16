@@ -395,7 +395,13 @@ void _initWorkLog() {
   sl.registerLazySingleton<shared_work_log.CreateWorkLog>(
     () => shared_work_log.CreateWorkLog(sl()),
   );
+  sl.registerLazySingleton<shared_work_log.GetOpenWorkLogReports>(
+    () => shared_work_log.GetOpenWorkLogReports(sl()),
+  );
   sl.registerFactory<shared_work_log.WorkLogEditorCubit>(
-    () => shared_work_log.WorkLogEditorCubit(createWorkLog: sl()),
+    () => shared_work_log.WorkLogEditorCubit(
+      createWorkLog: sl(),
+      getOpenReports: sl(),
+    ),
   );
 }

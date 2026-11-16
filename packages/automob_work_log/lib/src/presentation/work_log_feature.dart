@@ -31,6 +31,7 @@ class WorkLogFeature extends StatelessWidget {
     super.key,
     this.onNotificationsPressed,
     this.onCloseRequested,
+    this.onWorkSaved,
     this.routeAnimation,
   });
 
@@ -38,6 +39,7 @@ class WorkLogFeature extends StatelessWidget {
   final WorkLogDependencies dependencies;
   final VoidCallback? onNotificationsPressed;
   final VoidCallback? onCloseRequested;
+  final ValueChanged<WorkLogSaveResult>? onWorkSaved;
   // L'app owner passa l'animazione della shell per sincronizzare soltanto il
   // repaint del glass durante lo slide; le route interne restano indipendenti.
   final Listenable? routeAnimation;
@@ -66,6 +68,7 @@ class WorkLogFeature extends StatelessWidget {
       dependencies: dependencies,
       onNotificationsPressed: onNotificationsPressed,
       onCloseRequested: onCloseRequested,
+      onWorkSaved: onWorkSaved,
       routeAnimation: routeAnimation,
     ),
   );
@@ -78,6 +81,7 @@ class _WorkLogFeatureView extends StatefulWidget {
     super.key,
     this.onNotificationsPressed,
     this.onCloseRequested,
+    this.onWorkSaved,
     this.routeAnimation,
   });
 
@@ -85,6 +89,7 @@ class _WorkLogFeatureView extends StatefulWidget {
   final WorkLogDependencies dependencies;
   final VoidCallback? onNotificationsPressed;
   final VoidCallback? onCloseRequested;
+  final ValueChanged<WorkLogSaveResult>? onWorkSaved;
   final Listenable? routeAnimation;
 
   @override
@@ -244,6 +249,7 @@ class _WorkLogFeatureViewState extends State<_WorkLogFeatureView> {
       builder: (_, _) => _WorkLogWizardPage(
         vehicle: vehicle,
         createWorkLog: CreateWorkLog(widget.dependencies.repository),
+        getOpenReports: GetOpenWorkLogReports(widget.dependencies.repository),
         initialType: initialType,
       ),
     );
@@ -255,6 +261,7 @@ class _WorkLogFeatureViewState extends State<_WorkLogFeatureView> {
     context.read<WorkLogHistoryBloc>().add(
       const WorkLogHistoryRefreshRequested(),
     );
+    widget.onWorkSaved?.call(result);
   }
 
   Future<void> _openDetail(WorkLogEntry entry) {
@@ -704,16 +711,21 @@ class _WorkLogWizardPage extends StatelessWidget {
   const _WorkLogWizardPage({
     required this.vehicle,
     required this.createWorkLog,
+    required this.getOpenReports,
     required this.initialType,
   });
 
   final WorkLogVehicle vehicle;
   final CreateWorkLog createWorkLog;
+  final GetOpenWorkLogReports getOpenReports;
   final WorkLogType initialType;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) => WorkLogEditorCubit(createWorkLog: createWorkLog),
+    create: (_) => WorkLogEditorCubit(
+      createWorkLog: createWorkLog,
+      getOpenReports: getOpenReports,
+    ),
     child: Builder(
       builder: (context) {
         final colors = AmThemeColors.of(context);

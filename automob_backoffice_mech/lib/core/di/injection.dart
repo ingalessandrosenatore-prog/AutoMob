@@ -127,7 +127,10 @@ Future<void> configureDependencies() async {
     ..registerLazySingleton(() => GetVehicleWorkHistory(getIt()))
     ..registerFactory(() => WorkLogHistoryBloc(getVehicleWorkHistory: getIt()))
     ..registerLazySingleton(() => CreateWorkLog(getIt()))
-    ..registerFactory(() => WorkLogEditorCubit(createWorkLog: getIt()))
+    ..registerLazySingleton(() => GetOpenWorkLogReports(getIt()))
+    ..registerFactory(
+      () => WorkLogEditorCubit(createWorkLog: getIt(), getOpenReports: getIt()),
+    )
     ..registerLazySingleton(() => WorkshopBloc(getWorkshopCatalog: getIt()))
     ..registerSingleton<AuthBloc>(
       AuthBloc(

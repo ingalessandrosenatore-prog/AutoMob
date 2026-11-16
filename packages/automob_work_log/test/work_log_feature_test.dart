@@ -750,6 +750,11 @@ List<WorkLogEntry> _entries(int count, String vehicleId) => List.generate(
 );
 
 class _Repository implements WorkLogRepository {
+  @override
+  Future<Either<String, List<WorkLogReport>>> getOpenReports(
+    String vehicleId,
+  ) async => right(const []);
+
   _Repository({required this.vehicles, this.entries = const []});
 
   final List<WorkLogVehicle> vehicles;

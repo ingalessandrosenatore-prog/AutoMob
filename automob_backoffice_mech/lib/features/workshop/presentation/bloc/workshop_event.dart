@@ -12,6 +12,10 @@ final class WorkshopRetryRequested extends WorkshopEvent {
   const WorkshopRetryRequested();
 }
 
+final class WorkshopWorkSaved extends WorkshopEvent {
+  const WorkshopWorkSaved();
+}
+
 final class WorkshopSearchChanged extends WorkshopEvent {
   const WorkshopSearchChanged(this.query);
 

@@ -8,7 +8,7 @@ abstract final class MechanicShellMetrics {
   static const navigationHorizontalPadding = 6.0;
   static const microphoneSize = 62.0;
   static const minimumControlSpacing = 8.0;
-  static const searchHeight = 52.0;
+  static const searchHeight = 42.0;
   static const searchNavigationGap = 6.0;
   static const bottomMargin = 10.0;
 

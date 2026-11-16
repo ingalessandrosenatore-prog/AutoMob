@@ -11,12 +11,14 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
     : super(const WorkshopInitial()) {
     on<WorkshopStarted>(_onStarted);
     on<WorkshopRetryRequested>(_onRetryRequested);
+    on<WorkshopWorkSaved>((_, emit) => _load(emit, keepFilters: true));
     on<WorkshopSearchChanged>(_onSearchChanged);
     on<WorkshopVehicleFilterChanged>(_onVehicleFilterChanged);
     on<WorkshopVisibleWindowRequested>(_onVisibleWindowRequested);
   }
 
   final GetWorkshopCatalog getWorkshopCatalog;
+  int _loadVersion = 0;
 
   Future<void> _onStarted(
     WorkshopStarted event,
@@ -31,19 +33,29 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
     Emitter<WorkshopState> emit,
   ) => _load(emit);
 
-  Future<void> _load(Emitter<WorkshopState> emit) async {
-    emit(const WorkshopLoading());
+  Future<void> _load(
+    Emitter<WorkshopState> emit, {
+    bool keepFilters = false,
+  }) async {
+    final loadVersion = ++_loadVersion;
+    if (!keepFilters || state is! WorkshopReady) emit(const WorkshopLoading());
     final result = await getWorkshopCatalog();
+    if (loadVersion != _loadVersion) return;
+
+    final current = state;
+    final ready = keepFilters && current is WorkshopReady ? current : null;
+    final query = ready?.query ?? '';
+    final filter = ready?.filter ?? WorkshopVehicleFilter.all;
     result.match(
       (failure) => emit(WorkshopLoadFailure(failure.message)),
       (catalog) => emit(
         WorkshopReady(
           mechanic: catalog.mechanic,
           allVehicles: catalog.vehicles,
-          filteredVehicles: catalog.vehicles,
-          query: '',
-          filter: WorkshopVehicleFilter.all,
-          visibleCount: WorkshopReady.pageSize,
+          filteredVehicles: _applyFilters(catalog.vehicles, query, filter),
+          query: query,
+          filter: filter,
+          visibleCount: ready?.visibleCount ?? WorkshopReady.pageSize,
         ),
       ),
     );
@@ -99,8 +111,8 @@ class WorkshopBloc extends Bloc<WorkshopEvent, WorkshopState> {
               tokens.isEmpty || tokens.every(_searchableText(vehicle).contains);
           final matchesStatus = switch (filter) {
             WorkshopVehicleFilter.all => true,
-            WorkshopVehicleFilter.connected => !vehicle.requiresMaintenance,
-            WorkshopVehicleFilter.maintenanceDue => vehicle.requiresMaintenance,
+            WorkshopVehicleFilter.connected => !vehicle.hasPendingWorks,
+            WorkshopVehicleFilter.maintenanceDue => vehicle.hasPendingWorks,
           };
           return matchesQuery && matchesStatus;
         })

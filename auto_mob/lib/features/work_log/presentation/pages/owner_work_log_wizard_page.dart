@@ -28,7 +28,7 @@ class OwnerWorkLogWizardPage extends StatelessWidget {
         child: AmWizardAppBar(
           title: 'AGGIUNGI LAVORO',
           backButtonKey: const Key('owner-work-log-wizard-back-frame'),
-          onBackPressed: () => context.pop(false),
+          onBackPressed: () => context.pop(),
           bottom: BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
             bloc: cubit,
             buildWhen: (previous, current) => previous.step != current.step,
@@ -42,7 +42,7 @@ class OwnerWorkLogWizardPage extends StatelessWidget {
       showHeaderProgress: false,
       context: workLogContext,
       cubit: cubit,
-      onSaved: (_) => context.pop(true),
+      onSaved: (result) => context.pop(result),
     ),
   );
 }

@@ -112,7 +112,7 @@ void main() {
               (s) => s is DashboardLoaded && !s.isRefreshing,
             ),
           );
-      bloc.add(FutureWorkResolvedWithWork('r1'));
+      bloc.add(FutureWorkResolvedWithWork(const ['r1']));
       await refreshed;
       expect(
         (bloc.state as DashboardLoaded).selectedVehicleFutureWorks,

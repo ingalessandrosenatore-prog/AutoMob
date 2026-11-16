@@ -61,10 +61,10 @@ class FutureWorkDoneRequested extends DashboardEvent {
   List<Object> get props => [recordId];
 }
 
-/// The WorkLog route has already saved the work and resolved its source report.
+/// The WorkLog route saved the work and completed the selected reports.
 class FutureWorkResolvedWithWork extends DashboardEvent {
-  FutureWorkResolvedWithWork(this.recordId);
-  final String recordId;
+  FutureWorkResolvedWithWork(this.recordIds);
+  final List<String> recordIds;
   @override
-  List<Object> get props => [recordId];
+  List<Object> get props => [recordIds];
 }
