@@ -3,10 +3,7 @@ import 'dart:io';
 
 import 'package:auto_mob_v1/core/config/performance_flags.dart';
 import 'package:auto_mob_v1/core/router/app_session_actions.dart';
-import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
-import 'package:auto_mob_v1/core/widgets/card/kpi_service.dart';
 import 'package:auto_mob_v1/core/widgets/dialog/notification_permission_dialog.dart';
-import 'package:auto_mob_v1/core/widgets/icons/am_engine_icon.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart';
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/features/auth/domain/entities/app_user.dart';
@@ -33,6 +30,7 @@ import '../widgets/dashboard_scroll_activity.dart';
 import '../widgets/home_costs_section.dart';
 import '../widgets/home_future_work_timeline.dart';
 import '../widgets/resolve_future_work.dart';
+import '../widgets/vehicle_hero/home_vehicle_hero.dart';
 import '../widgets/home_workshop_carousel.dart';
 import '../widgets/vehicle_card_page_view.dart';
 
@@ -846,34 +844,19 @@ class _HomeViewBodyState extends State<_HomeViewBody>
                           HomeWorkshopCarousel(isScrolling: scrolling),
                     ),
 
-                    Padding(
-                      padding: const EdgeInsets.all(9.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "STATO VEICOLO",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2,
-                              color: colors.textPrimary,
-                              shadows: [
-                                Shadow(
-                                  color: colors.shadow,
-                                  offset: const Offset(1, 1),
-                                  blurRadius: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                          HugeIcon(
-                            icon: HugeIcons.strokeRoundedCarAlert,
-                            color: colors.accent,
-                            size: 24,
-                            strokeWidth: 2.2,
-                          ),
-                        ],
+                    BlocSelector<
+                      DashboardBloc,
+                      DashboardState,
+                      List<MaintenanceKpi>
+                    >(
+                      selector: (state) => switch (state) {
+                        DashboardLoaded(:final kpis) => kpis,
+                        _ => const [],
+                      },
+                      builder: (context, kpis) => HomeVehicleHero(
+                        kpis: kpis,
+                        topObstruction: topSafeArea + appBarContentHeight,
+                        onKpiTap: (kpi) => _openMaintenanceDetail(context, kpi),
                       ),
                     ),
 
@@ -881,89 +864,54 @@ class _HomeViewBodyState extends State<_HomeViewBody>
                       padding: const EdgeInsets.symmetric(horizontal: 9.0),
                       child: BlocBuilder<DashboardBloc, DashboardState>(
                         builder: (BuildContext context, state) {
-                          // I KPI sono gia' pronti nello stato: il calcolo lo fa il
-                          // BLoC (use case ComputeMaintenanceKpis). Qui mi limito a
-                          // disegnarli, niente logica di business nella UI.
-                          if (state is! DashboardLoaded || state.kpis.isEmpty) {
+                          if (state is! DashboardLoaded ||
+                              state.vehicles.isEmpty ||
+                              state.vehicles[state.index].isPlaceholder) {
                             return const SizedBox.shrink();
                           }
-
-                          final kpis = state.kpis;
-
-                          return Column(
-                            children: [
-                              GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                padding: EdgeInsets.zero,
-                                gridDelegate:
-                                    const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      crossAxisSpacing: 10,
-                                      mainAxisSpacing: 10,
-                                      childAspectRatio: 1,
+                          return HomeFutureWorkTimeline.fromSummaries(
+                            summaries: state.selectedVehicleFutureWorks,
+                            isUpdating: state.isUpdatingReport,
+                            onDone: (recordId) => resolveFutureWork(
+                              context,
+                              report: state.selectedVehicleFutureWorks
+                                  .firstWhere(
+                                    (report) => report.recordId == recordId,
+                                  ),
+                              vehicle: state.vehicles[state.index],
+                              onDisappeared: () => context
+                                  .read<DashboardBloc>()
+                                  .add(FutureWorkDoneRequested(recordId)),
+                              onWorkSaved: (result) =>
+                                  context.read<DashboardBloc>().add(
+                                    FutureWorkResolvedWithWork(
+                                      result.resolvedReportIds,
                                     ),
-                                itemCount: kpis.length,
-                                itemBuilder: (context, i) {
-                                  final kpi = kpis[i];
-                                  return RepaintBoundary(
-                                    child: AmMaintenanceKpiCard(
-                                      iconBuilder: kpi.type.kpiIconBuilder,
-                                      color: choseColor(kpi.percentage),
-                                      label: kpi.type.kpiLabel,
-                                      remainingKm: kpi.remainingKm,
-                                      percentage: kpi.percentage,
-                                      onTap: () =>
-                                          _openMaintenanceDetail(context, kpi),
+                                  ),
+                            ),
+                            onReportProblem: () async {
+                              final vehicle = state.vehicles[state.index];
+                              final saved = await context.pushNamed<bool>(
+                                'segnala_problema',
+                                extra: {
+                                  'vehicleId': vehicle.id,
+                                  'vehicleName':
+                                      '${vehicle.brand} ${vehicle.model}',
+                                },
+                              );
+                              if (saved == true && context.mounted) {
+                                context.read<DashboardBloc>().add(
+                                  DashboardRefreshRequested(),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Segnalazione salvata correttamente.',
                                     ),
-                                  );
-                                },
-                              ),
-                              HomeFutureWorkTimeline.fromSummaries(
-                                summaries: state.selectedVehicleFutureWorks,
-                                isUpdating: state.isUpdatingReport,
-                                onDone: (recordId) => resolveFutureWork(
-                                  context,
-                                  report: state.selectedVehicleFutureWorks
-                                      .firstWhere(
-                                        (report) => report.recordId == recordId,
-                                      ),
-                                  vehicle: state.vehicles[state.index],
-                                  onDisappeared: () => context
-                                      .read<DashboardBloc>()
-                                      .add(FutureWorkDoneRequested(recordId)),
-                                  onWorkSaved: (result) =>
-                                      context.read<DashboardBloc>().add(
-                                        FutureWorkResolvedWithWork(
-                                          result.resolvedReportIds,
-                                        ),
-                                      ),
-                                ),
-                                onReportProblem: () async {
-                                  final vehicle = state.vehicles[state.index];
-                                  final saved = await context.pushNamed<bool>(
-                                    'segnala_problema',
-                                    extra: {
-                                      'vehicleId': vehicle.id,
-                                      'vehicleName':
-                                          '${vehicle.brand} ${vehicle.model}',
-                                    },
-                                  );
-                                  if (saved == true && context.mounted) {
-                                    context.read<DashboardBloc>().add(
-                                      DashboardRefreshRequested(),
-                                    );
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Segnalazione salvata correttamente.',
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                            ],
+                                  ),
+                                );
+                              }
+                            },
                           );
                         },
                       ),
@@ -1155,65 +1103,4 @@ class _HomeViewBodyState extends State<_HomeViewBody>
       }
     }
   }
-
-  Color choseColor(double perc) {
-    if (perc <= 0) {
-      return const Color(0xFFFF453A);
-    }
-    if (perc >= 50) {
-      return const Color(0xFF3192F3);
-    }
-    return const Color(0xFFFF6B00);
-  }
-}
-
-/// Mapping di sola presentazione: dal tipo di manutenzione all'icona e
-/// all'etichetta mostrate nella card KPI. Sta qui (UI) e non nel dominio.
-extension _KpiPresentation on EnumPopUp {
-  Widget Function(double size, Color color) get kpiIconBuilder =>
-      switch (this) {
-        EnumPopUp.aggiornaTagliando => (s, c) => HugeIcon(
-          icon: HugeIcons.strokeRoundedTools,
-          size: s,
-          color: c,
-          strokeWidth: 2.2,
-        ),
-        EnumPopUp.aggiornaDistribuzione => (s, c) => AmEngineIcon(
-          size: s,
-          color: c,
-        ),
-        EnumPopUp.aggiornaCambioGomme => (s, c) => HugeIcon(
-          icon: HugeIcons.strokeRoundedTire,
-          size: s,
-          color: c,
-          strokeWidth: 2.2,
-        ),
-        EnumPopUp.pneumaticiInversione => (s, c) => HugeIcon(
-          icon: HugeIcons.strokeRoundedRefresh,
-          size: s,
-          color: c,
-          strokeWidth: 2.2,
-        ),
-        EnumPopUp.revisione => (s, c) => HugeIcon(
-          icon: HugeIcons.strokeRoundedValidation,
-          size: s,
-          color: c,
-          strokeWidth: 2.2,
-        ),
-        EnumPopUp.altro => (s, c) => HugeIcon(
-          icon: HugeIcons.strokeRoundedTools,
-          size: s,
-          color: c,
-          strokeWidth: 2.2,
-        ),
-      };
-
-  String get kpiLabel => switch (this) {
-    EnumPopUp.aggiornaTagliando => 'tagliando',
-    EnumPopUp.aggiornaDistribuzione => 'distribuzione',
-    EnumPopUp.aggiornaCambioGomme => 'cambio gomme',
-    EnumPopUp.pneumaticiInversione => 'inversione gomme',
-    EnumPopUp.revisione => 'revisione',
-    EnumPopUp.altro => 'altro',
-  };
 }

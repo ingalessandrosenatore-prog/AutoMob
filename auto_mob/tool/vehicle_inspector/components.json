@@ -1,0 +1,1766 @@
+{
+  "schemaVersion": 1,
+  "model": "automob_vehicle.glb",
+  "root": "AutoMob_Vehicle",
+  "axes": {
+    "forward": "+X",
+    "up": "+Y",
+    "left": "-Z",
+    "unit": "meter"
+  },
+  "dimensionsMeters": {
+    "length": 4.2,
+    "width": 1.8,
+    "height": 1.39,
+    "wheelbase": 2.6
+  },
+  "materials": {
+    "shell": "MAT_BODY_XRAY",
+    "internal": "MAT_INTERNAL",
+    "interactive": "MAT_INTERACTIVE",
+    "selected": "MAT_SELECTED",
+    "selectedColor": "#FF6A00"
+  },
+  "cameraPresets": {
+    "vehicle_overview": {
+      "label": "Vista generale",
+      "position": [
+        4.5,
+        3.3,
+        -5.0
+      ],
+      "target": [
+        0,
+        0.68,
+        0
+      ],
+      "distance": 7.21903,
+      "verticalFovDeg": 35
+    },
+    "engine_overview": {
+      "label": "Vano motore",
+      "position": [
+        2.42,
+        2.11,
+        -0.67
+      ],
+      "target": [
+        1.34,
+        0.53,
+        -0.01
+      ],
+      "distance": 2.02445,
+      "verticalFovDeg": 41
+    },
+    "timing_system_closeup": {
+      "label": "Distribuzione",
+      "position": [
+        1.78,
+        1.03,
+        -1.11
+      ],
+      "target": [
+        1.35,
+        0.593,
+        -0.462
+      ],
+      "distance": 0.89206,
+      "verticalFovDeg": 36
+    },
+    "oil_filter_closeup": {
+      "label": "Filtro olio",
+      "position": [
+        2.22,
+        0.82,
+        -0.94
+      ],
+      "target": [
+        1.51,
+        0.445,
+        -0.29
+      ],
+      "distance": 1.03307,
+      "verticalFovDeg": 38
+    },
+    "gearbox_closeup": {
+      "label": "Cambio e differenziale",
+      "position": [
+        2.0,
+        1.21,
+        1.26
+      ],
+      "target": [
+        1.32,
+        0.435,
+        0.32
+      ],
+      "distance": 1.39522,
+      "verticalFovDeg": 39
+    },
+    "underbody": {
+      "label": "Sottoscocca",
+      "position": [
+        -2.78,
+        -1.65,
+        -2.92
+      ],
+      "target": [
+        -0.32,
+        0.25,
+        0.01
+      ],
+      "distance": 4.27159,
+      "verticalFovDeg": 42
+    },
+    "front_left_wheel": {
+      "label": "Ruota anteriore sinistra",
+      "position": [
+        1.73,
+        0.83,
+        -2.0
+      ],
+      "target": [
+        1.3,
+        0.43,
+        -0.68
+      ],
+      "distance": 1.44475,
+      "verticalFovDeg": 40
+    },
+    "front_left_wheel_suspension": {
+      "label": "Sospensione anteriore sinistra",
+      "position": [
+        0.85,
+        0.87,
+        -1.85
+      ],
+      "target": [
+        1.25,
+        0.61,
+        -0.56
+      ],
+      "distance": 1.37539,
+      "verticalFovDeg": 38
+    },
+    "front_right_wheel": {
+      "label": "Ruota anteriore destra",
+      "position": [
+        1.73,
+        0.83,
+        2.0
+      ],
+      "target": [
+        1.3,
+        0.43,
+        0.68
+      ],
+      "distance": 1.44475,
+      "verticalFovDeg": 40
+    },
+    "front_right_wheel_suspension": {
+      "label": "Sospensione anteriore destra",
+      "position": [
+        0.85,
+        0.87,
+        1.85
+      ],
+      "target": [
+        1.25,
+        0.61,
+        0.56
+      ],
+      "distance": 1.37539,
+      "verticalFovDeg": 38
+    },
+    "rear_left_wheel": {
+      "label": "Ruota posteriore sinistra",
+      "position": [
+        -1.73,
+        0.83,
+        -2.0
+      ],
+      "target": [
+        -1.3,
+        0.43,
+        -0.68
+      ],
+      "distance": 1.44475,
+      "verticalFovDeg": 40
+    },
+    "rear_left_wheel_suspension": {
+      "label": "Sospensione posteriore sinistra",
+      "position": [
+        -0.85,
+        0.87,
+        -1.85
+      ],
+      "target": [
+        -1.35,
+        0.61,
+        -0.56
+      ],
+      "distance": 1.40773,
+      "verticalFovDeg": 38
+    },
+    "rear_right_wheel": {
+      "label": "Ruota posteriore destra",
+      "position": [
+        -1.73,
+        0.83,
+        2.0
+      ],
+      "target": [
+        -1.3,
+        0.43,
+        0.68
+      ],
+      "distance": 1.44475,
+      "verticalFovDeg": 40
+    },
+    "rear_right_wheel_suspension": {
+      "label": "Sospensione posteriore destra",
+      "position": [
+        -0.85,
+        0.87,
+        1.85
+      ],
+      "target": [
+        -1.35,
+        0.61,
+        0.56
+      ],
+      "distance": 1.40773,
+      "verticalFovDeg": 38
+    }
+  },
+  "components": [
+    {
+      "id": "engine_block",
+      "label": "Blocco motore · 4 cilindri in linea",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        1.35,
+        0.505,
+        -0.168
+      ],
+      "target": [
+        1.35,
+        0.505,
+        -0.168
+      ],
+      "cameraPreset": "engine_overview",
+      "highlightGroup": "engine_block",
+      "meshNames": [
+        "block_casting",
+        "cylinder_boss_front_1",
+        "cylinder_boss_front_2",
+        "cylinder_boss_front_3",
+        "cylinder_boss_front_4",
+        "cylinder_boss_rear_1",
+        "cylinder_boss_rear_2",
+        "cylinder_boss_rear_3",
+        "cylinder_boss_rear_4"
+      ],
+      "anchor": "anchor_engine_block",
+      "pickRadiusMeters": 0.215,
+      "assembly": "engine"
+    },
+    {
+      "id": "cylinder_head",
+      "label": "Testata e coperchio punterie",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        1.344,
+        0.687,
+        -0.168
+      ],
+      "target": [
+        1.344,
+        0.687,
+        -0.168
+      ],
+      "cameraPreset": "engine_overview",
+      "highlightGroup": "cylinder_head",
+      "meshNames": [
+        "cam_cover",
+        "head_casting",
+        "ignition_coil_1",
+        "ignition_coil_2",
+        "ignition_coil_3",
+        "ignition_coil_4",
+        "oil_fill_cap"
+      ],
+      "anchor": "anchor_cylinder_head",
+      "pickRadiusMeters": 0.14,
+      "assembly": "engine"
+    },
+    {
+      "id": "oil_pan",
+      "label": "Coppa dell’olio",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        1.322,
+        0.354,
+        -0.16
+      ],
+      "target": [
+        1.322,
+        0.354,
+        -0.16
+      ],
+      "cameraPreset": "oil_filter_closeup",
+      "highlightGroup": "oil_pan",
+      "meshNames": [
+        "oil_pan"
+      ],
+      "anchor": "anchor_oil_pan",
+      "pickRadiusMeters": 0.12,
+      "assembly": "engine"
+    },
+    {
+      "id": "oil_filter",
+      "label": "Filtro olio",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        1.543,
+        0.447,
+        -0.31
+      ],
+      "target": [
+        1.543,
+        0.447,
+        -0.31
+      ],
+      "cameraPreset": "oil_filter_closeup",
+      "highlightGroup": "oil_filter",
+      "meshNames": [
+        "oil_filter_canister",
+        "oil_filter_flange"
+      ],
+      "anchor": "anchor_oil_filter",
+      "pickRadiusMeters": 0.075,
+      "assembly": "engine"
+    },
+    {
+      "id": "timing_pulley",
+      "label": "Pulegge distribuzione",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        1.34,
+        0.664,
+        -0.457
+      ],
+      "target": [
+        1.24,
+        0.69,
+        -0.48
+      ],
+      "cameraPreset": "timing_system_closeup",
+      "highlightGroup": "timing_pulley",
+      "meshNames": [
+        "timing_sprocket_1",
+        "timing_sprocket_2",
+        "timing_sprocket_3"
+      ],
+      "anchor": "anchor_timing_pulley",
+      "pickRadiusMeters": 0.08,
+      "assembly": "engine"
+    },
+    {
+      "id": "timing_tensioner",
+      "label": "Tendicinghia",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        1.376,
+        0.55,
+        -0.457
+      ],
+      "target": [
+        1.376,
+        0.55,
+        -0.457
+      ],
+      "cameraPreset": "timing_system_closeup",
+      "highlightGroup": "timing_tensioner",
+      "meshNames": [
+        "timing_tensioner"
+      ],
+      "anchor": "anchor_timing_tensioner",
+      "pickRadiusMeters": 0.043,
+      "assembly": "engine"
+    },
+    {
+      "id": "water_pump",
+      "label": "Pompa dell’acqua",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        1.492,
+        0.574,
+        -0.457
+      ],
+      "target": [
+        1.492,
+        0.574,
+        -0.457
+      ],
+      "cameraPreset": "timing_system_closeup",
+      "highlightGroup": "water_pump",
+      "meshNames": [
+        "water_pump_housing",
+        "water_pump_sprocket"
+      ],
+      "anchor": "anchor_water_pump",
+      "pickRadiusMeters": 0.06,
+      "assembly": "engine"
+    },
+    {
+      "id": "timing_belt",
+      "label": "Cinghia di distribuzione",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        0.0,
+        0.0,
+        -0.0
+      ],
+      "target": [
+        1.34,
+        0.769,
+        -0.477
+      ],
+      "cameraPreset": "timing_system_closeup",
+      "highlightGroup": "timing_belt",
+      "meshNames": [
+        "timing_belt"
+      ],
+      "anchor": "anchor_timing_belt",
+      "pickRadiusMeters": 0.062,
+      "assembly": "engine"
+    },
+    {
+      "id": "intake_manifold",
+      "label": "Collettore di aspirazione",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        1.08,
+        0.674,
+        -0.174
+      ],
+      "target": [
+        1.08,
+        0.674,
+        -0.174
+      ],
+      "cameraPreset": "engine_overview",
+      "highlightGroup": "intake_manifold",
+      "meshNames": [
+        "intake_plenum",
+        "intake_runner_1",
+        "intake_runner_2",
+        "intake_runner_3",
+        "intake_runner_4"
+      ],
+      "anchor": "anchor_intake_manifold",
+      "pickRadiusMeters": 0.125,
+      "assembly": "engine"
+    },
+    {
+      "id": "air_intake",
+      "label": "Aspirazione e scatola filtro aria",
+      "category": "engine",
+      "selectable": true,
+      "position": [
+        1.23,
+        0.676,
+        0.538
+      ],
+      "target": [
+        1.23,
+        0.676,
+        0.538
+      ],
+      "cameraPreset": "engine_overview",
+      "highlightGroup": "air_intake",
+      "meshNames": [
+        "air_box",
+        "air_duct"
+      ],
+      "anchor": "anchor_air_intake",
+      "pickRadiusMeters": 0.11,
+      "assembly": "engine"
+    },
+    {
+      "id": "battery",
+      "label": "Batteria 12 V",
+      "category": "electrical",
+      "selectable": true,
+      "position": [
+        1.639,
+        0.611,
+        0.53
+      ],
+      "target": [
+        1.639,
+        0.611,
+        0.53
+      ],
+      "cameraPreset": "engine_overview",
+      "highlightGroup": "battery",
+      "meshNames": [
+        "battery_case",
+        "battery_lid",
+        "battery_terminal_negative",
+        "battery_terminal_positive"
+      ],
+      "anchor": "anchor_battery",
+      "pickRadiusMeters": 0.12,
+      "assembly": "engine"
+    },
+    {
+      "id": "radiator",
+      "label": "Radiatore e manicotto",
+      "category": "cooling",
+      "selectable": true,
+      "position": [
+        1.863,
+        0.485,
+        -0.0
+      ],
+      "target": [
+        1.863,
+        0.485,
+        -0.0
+      ],
+      "cameraPreset": "engine_overview",
+      "highlightGroup": "radiator",
+      "meshNames": [
+        "coolant_hose",
+        "radiator_core",
+        "radiator_fin_01",
+        "radiator_fin_02",
+        "radiator_fin_03",
+        "radiator_fin_04",
+        "radiator_fin_05",
+        "radiator_fin_06",
+        "radiator_fin_07",
+        "radiator_fin_08",
+        "radiator_fin_09",
+        "radiator_fin_10",
+        "radiator_fin_11",
+        "radiator_fin_12",
+        "radiator_fin_13",
+        "radiator_fin_14",
+        "radiator_fin_15",
+        "radiator_fin_16"
+      ],
+      "anchor": "anchor_radiator",
+      "pickRadiusMeters": 0.135,
+      "assembly": "engine"
+    },
+    {
+      "id": "clutch",
+      "label": "Frizione",
+      "category": "transmission",
+      "selectable": true,
+      "position": [
+        1.345,
+        0.505,
+        0.145
+      ],
+      "target": [
+        1.345,
+        0.505,
+        0.145
+      ],
+      "cameraPreset": "gearbox_closeup",
+      "highlightGroup": "clutch",
+      "meshNames": [
+        "clutch"
+      ],
+      "anchor": "anchor_clutch",
+      "pickRadiusMeters": 0.115,
+      "assembly": "engine"
+    },
+    {
+      "id": "gearbox",
+      "label": "Cambio manuale",
+      "category": "transmission",
+      "selectable": true,
+      "position": [
+        1.344,
+        0.493,
+        0.365
+      ],
+      "target": [
+        1.344,
+        0.493,
+        0.365
+      ],
+      "cameraPreset": "gearbox_closeup",
+      "highlightGroup": "gearbox",
+      "meshNames": [
+        "gearbox"
+      ],
+      "anchor": "anchor_gearbox",
+      "pickRadiusMeters": 0.115,
+      "assembly": "engine"
+    },
+    {
+      "id": "differential",
+      "label": "Differenziale anteriore",
+      "category": "transmission",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.33,
+        0.309
+      ],
+      "target": [
+        1.3,
+        0.33,
+        0.309
+      ],
+      "cameraPreset": "gearbox_closeup",
+      "highlightGroup": "differential",
+      "meshNames": [
+        "differential"
+      ],
+      "anchor": "anchor_differential",
+      "pickRadiusMeters": 0.115,
+      "assembly": "engine"
+    },
+    {
+      "id": "driveshaft_L",
+      "label": "Semiasse sinistro",
+      "category": "transmission",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.3295,
+        -0.2665
+      ],
+      "target": [
+        1.3,
+        0.3295,
+        -0.2665
+      ],
+      "cameraPreset": "gearbox_closeup",
+      "highlightGroup": "driveshaft_L",
+      "meshNames": [
+        "cv_boot_inner_L",
+        "cv_boot_outer_L",
+        "shaft_L"
+      ],
+      "anchor": "anchor_driveshaft_L",
+      "pickRadiusMeters": 0.086,
+      "assembly": "engine"
+    },
+    {
+      "id": "driveshaft_R",
+      "label": "Semiasse destro",
+      "category": "transmission",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.3295,
+        0.573
+      ],
+      "target": [
+        1.3,
+        0.3295,
+        0.573
+      ],
+      "cameraPreset": "gearbox_closeup",
+      "highlightGroup": "driveshaft_R",
+      "meshNames": [
+        "cv_boot_inner_R",
+        "cv_boot_outer_R",
+        "shaft_R"
+      ],
+      "anchor": "anchor_driveshaft_R",
+      "pickRadiusMeters": 0.086,
+      "assembly": "engine"
+    },
+    {
+      "id": "wheel_FL",
+      "label": "Gruppo ruota anteriore sinistro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        -0.784
+      ],
+      "target": [
+        1.3,
+        0.329,
+        -0.784
+      ],
+      "cameraPreset": "front_left_wheel",
+      "highlightGroup": "wheel_FL",
+      "meshNames": [
+        "lug_FL_1",
+        "lug_FL_2",
+        "lug_FL_3",
+        "lug_FL_4",
+        "lug_FL_5",
+        "rim_barrel_FL",
+        "rim_cap_FL",
+        "spoke_FL_1A",
+        "spoke_FL_1B",
+        "spoke_FL_2A",
+        "spoke_FL_2B",
+        "spoke_FL_3A",
+        "spoke_FL_3B",
+        "spoke_FL_4A",
+        "spoke_FL_4B",
+        "spoke_FL_5A",
+        "spoke_FL_5B",
+        "tire_FL"
+      ],
+      "anchor": "anchor_wheel_FL",
+      "pickRadiusMeters": 0.3,
+      "assembly": "wheel_FL"
+    },
+    {
+      "id": "tire_FL",
+      "label": "Pneumatico anteriore sinistro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        -0.784
+      ],
+      "target": [
+        1.3,
+        0.329,
+        -0.784
+      ],
+      "cameraPreset": "front_left_wheel",
+      "highlightGroup": "tire_FL",
+      "meshNames": [
+        "tire_FL"
+      ],
+      "anchor": "anchor_tire_FL",
+      "pickRadiusMeters": 0.2,
+      "assembly": "wheel_FL"
+    },
+    {
+      "id": "rim_FL",
+      "label": "Cerchione anteriore sinistro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        -0.784
+      ],
+      "target": [
+        1.3,
+        0.329,
+        -0.784
+      ],
+      "cameraPreset": "front_left_wheel",
+      "highlightGroup": "rim_FL",
+      "meshNames": [
+        "lug_FL_1",
+        "lug_FL_2",
+        "lug_FL_3",
+        "lug_FL_4",
+        "lug_FL_5",
+        "rim_barrel_FL",
+        "rim_cap_FL",
+        "spoke_FL_1A",
+        "spoke_FL_1B",
+        "spoke_FL_2A",
+        "spoke_FL_2B",
+        "spoke_FL_3A",
+        "spoke_FL_3B",
+        "spoke_FL_4A",
+        "spoke_FL_4B",
+        "spoke_FL_5A",
+        "spoke_FL_5B"
+      ],
+      "anchor": "anchor_rim_FL",
+      "pickRadiusMeters": 0.14,
+      "assembly": "wheel_FL"
+    },
+    {
+      "id": "hub_FL",
+      "label": "Mozzo anteriore sinistro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        -0.732
+      ],
+      "target": [
+        1.3,
+        0.329,
+        -0.732
+      ],
+      "cameraPreset": "front_left_wheel",
+      "highlightGroup": "hub_FL",
+      "meshNames": [
+        "hub_FL"
+      ],
+      "anchor": "anchor_hub_FL",
+      "pickRadiusMeters": 0.06,
+      "assembly": "wheel_FL"
+    },
+    {
+      "id": "brake_disc_FL",
+      "label": "Disco freno anteriore sinistro",
+      "category": "brakes",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        -0.816
+      ],
+      "target": [
+        1.3,
+        0.329,
+        -0.816
+      ],
+      "cameraPreset": "front_left_wheel",
+      "highlightGroup": "brake_disc_FL",
+      "meshNames": [
+        "brake_disc_FL"
+      ],
+      "anchor": "anchor_brake_disc_FL",
+      "pickRadiusMeters": 0.105,
+      "assembly": "wheel_FL"
+    },
+    {
+      "id": "brake_caliper_FL",
+      "label": "Pinza freno anteriore sinistro",
+      "category": "brakes",
+      "selectable": true,
+      "position": [
+        1.169,
+        0.376,
+        -0.815
+      ],
+      "target": [
+        1.169,
+        0.376,
+        -0.815
+      ],
+      "cameraPreset": "front_left_wheel",
+      "highlightGroup": "brake_caliper_FL",
+      "meshNames": [
+        "caliper_bridge_FL",
+        "caliper_piston_FL"
+      ],
+      "anchor": "anchor_brake_caliper_FL",
+      "pickRadiusMeters": 0.075,
+      "assembly": "wheel_FL"
+    },
+    {
+      "id": "shock_absorber_FL",
+      "label": "Ammortizzatore anteriore sinistro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        1.22985,
+        0.56908,
+        -0.58996
+      ],
+      "target": [
+        1.22985,
+        0.56908,
+        -0.58996
+      ],
+      "cameraPreset": "front_left_wheel_suspension",
+      "highlightGroup": "shock_absorber_FL",
+      "meshNames": [
+        "damper_body_FL",
+        "damper_rod_FL"
+      ],
+      "anchor": "anchor_shock_absorber_FL",
+      "pickRadiusMeters": 0.105,
+      "assembly": "wheel_FL"
+    },
+    {
+      "id": "spring_FL",
+      "label": "Molla anteriore sinistro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        1.2249,
+        0.60912,
+        -0.57544
+      ],
+      "target": [
+        1.2249,
+        0.60912,
+        -0.57544
+      ],
+      "cameraPreset": "front_left_wheel_suspension",
+      "highlightGroup": "spring_FL",
+      "meshNames": [
+        "spring_coil_FL",
+        "spring_seat_lower_FL",
+        "spring_seat_upper_FL"
+      ],
+      "anchor": "anchor_spring_FL",
+      "pickRadiusMeters": 0.1,
+      "assembly": "wheel_FL"
+    },
+    {
+      "id": "control_arm_FL",
+      "label": "Braccio sospensione anteriore sinistro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.235,
+        -0.498
+      ],
+      "target": [
+        1.3,
+        0.235,
+        -0.498
+      ],
+      "cameraPreset": "front_left_wheel_suspension",
+      "highlightGroup": "control_arm_FL",
+      "meshNames": [
+        "arm_bushing_front_FL",
+        "arm_bushing_rear_FL",
+        "arm_link_front_FL",
+        "arm_link_rear_FL"
+      ],
+      "anchor": "anchor_control_arm_FL",
+      "pickRadiusMeters": 0.095,
+      "assembly": "wheel_FL"
+    },
+    {
+      "id": "wheel_FR",
+      "label": "Gruppo ruota anteriore destro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        0.784
+      ],
+      "target": [
+        1.3,
+        0.329,
+        0.784
+      ],
+      "cameraPreset": "front_right_wheel",
+      "highlightGroup": "wheel_FR",
+      "meshNames": [
+        "lug_FR_1",
+        "lug_FR_2",
+        "lug_FR_3",
+        "lug_FR_4",
+        "lug_FR_5",
+        "rim_barrel_FR",
+        "rim_cap_FR",
+        "spoke_FR_1A",
+        "spoke_FR_1B",
+        "spoke_FR_2A",
+        "spoke_FR_2B",
+        "spoke_FR_3A",
+        "spoke_FR_3B",
+        "spoke_FR_4A",
+        "spoke_FR_4B",
+        "spoke_FR_5A",
+        "spoke_FR_5B",
+        "tire_FR"
+      ],
+      "anchor": "anchor_wheel_FR",
+      "pickRadiusMeters": 0.3,
+      "assembly": "wheel_FR"
+    },
+    {
+      "id": "tire_FR",
+      "label": "Pneumatico anteriore destro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        0.784
+      ],
+      "target": [
+        1.3,
+        0.329,
+        0.784
+      ],
+      "cameraPreset": "front_right_wheel",
+      "highlightGroup": "tire_FR",
+      "meshNames": [
+        "tire_FR"
+      ],
+      "anchor": "anchor_tire_FR",
+      "pickRadiusMeters": 0.2,
+      "assembly": "wheel_FR"
+    },
+    {
+      "id": "rim_FR",
+      "label": "Cerchione anteriore destro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        0.784
+      ],
+      "target": [
+        1.3,
+        0.329,
+        0.784
+      ],
+      "cameraPreset": "front_right_wheel",
+      "highlightGroup": "rim_FR",
+      "meshNames": [
+        "lug_FR_1",
+        "lug_FR_2",
+        "lug_FR_3",
+        "lug_FR_4",
+        "lug_FR_5",
+        "rim_barrel_FR",
+        "rim_cap_FR",
+        "spoke_FR_1A",
+        "spoke_FR_1B",
+        "spoke_FR_2A",
+        "spoke_FR_2B",
+        "spoke_FR_3A",
+        "spoke_FR_3B",
+        "spoke_FR_4A",
+        "spoke_FR_4B",
+        "spoke_FR_5A",
+        "spoke_FR_5B"
+      ],
+      "anchor": "anchor_rim_FR",
+      "pickRadiusMeters": 0.14,
+      "assembly": "wheel_FR"
+    },
+    {
+      "id": "hub_FR",
+      "label": "Mozzo anteriore destro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        0.732
+      ],
+      "target": [
+        1.3,
+        0.329,
+        0.732
+      ],
+      "cameraPreset": "front_right_wheel",
+      "highlightGroup": "hub_FR",
+      "meshNames": [
+        "hub_FR"
+      ],
+      "anchor": "anchor_hub_FR",
+      "pickRadiusMeters": 0.06,
+      "assembly": "wheel_FR"
+    },
+    {
+      "id": "brake_disc_FR",
+      "label": "Disco freno anteriore destro",
+      "category": "brakes",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.329,
+        0.816
+      ],
+      "target": [
+        1.3,
+        0.329,
+        0.816
+      ],
+      "cameraPreset": "front_right_wheel",
+      "highlightGroup": "brake_disc_FR",
+      "meshNames": [
+        "brake_disc_FR"
+      ],
+      "anchor": "anchor_brake_disc_FR",
+      "pickRadiusMeters": 0.105,
+      "assembly": "wheel_FR"
+    },
+    {
+      "id": "brake_caliper_FR",
+      "label": "Pinza freno anteriore destro",
+      "category": "brakes",
+      "selectable": true,
+      "position": [
+        1.169,
+        0.376,
+        0.815
+      ],
+      "target": [
+        1.169,
+        0.376,
+        0.815
+      ],
+      "cameraPreset": "front_right_wheel",
+      "highlightGroup": "brake_caliper_FR",
+      "meshNames": [
+        "caliper_bridge_FR",
+        "caliper_piston_FR"
+      ],
+      "anchor": "anchor_brake_caliper_FR",
+      "pickRadiusMeters": 0.075,
+      "assembly": "wheel_FR"
+    },
+    {
+      "id": "shock_absorber_FR",
+      "label": "Ammortizzatore anteriore destro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        1.22985,
+        0.56908,
+        0.58996
+      ],
+      "target": [
+        1.22985,
+        0.56908,
+        0.58996
+      ],
+      "cameraPreset": "front_right_wheel_suspension",
+      "highlightGroup": "shock_absorber_FR",
+      "meshNames": [
+        "damper_body_FR",
+        "damper_rod_FR"
+      ],
+      "anchor": "anchor_shock_absorber_FR",
+      "pickRadiusMeters": 0.105,
+      "assembly": "wheel_FR"
+    },
+    {
+      "id": "spring_FR",
+      "label": "Molla anteriore destro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        1.2249,
+        0.60912,
+        0.57544
+      ],
+      "target": [
+        1.2249,
+        0.60912,
+        0.57544
+      ],
+      "cameraPreset": "front_right_wheel_suspension",
+      "highlightGroup": "spring_FR",
+      "meshNames": [
+        "spring_coil_FR",
+        "spring_seat_lower_FR",
+        "spring_seat_upper_FR"
+      ],
+      "anchor": "anchor_spring_FR",
+      "pickRadiusMeters": 0.1,
+      "assembly": "wheel_FR"
+    },
+    {
+      "id": "control_arm_FR",
+      "label": "Braccio sospensione anteriore destro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        1.3,
+        0.235,
+        0.498
+      ],
+      "target": [
+        1.3,
+        0.235,
+        0.498
+      ],
+      "cameraPreset": "front_right_wheel_suspension",
+      "highlightGroup": "control_arm_FR",
+      "meshNames": [
+        "arm_bushing_front_FR",
+        "arm_bushing_rear_FR",
+        "arm_link_front_FR",
+        "arm_link_rear_FR"
+      ],
+      "anchor": "anchor_control_arm_FR",
+      "pickRadiusMeters": 0.095,
+      "assembly": "wheel_FR"
+    },
+    {
+      "id": "wheel_RL",
+      "label": "Gruppo ruota posteriore sinistro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        -0.784
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        -0.784
+      ],
+      "cameraPreset": "rear_left_wheel",
+      "highlightGroup": "wheel_RL",
+      "meshNames": [
+        "lug_RL_1",
+        "lug_RL_2",
+        "lug_RL_3",
+        "lug_RL_4",
+        "lug_RL_5",
+        "rim_barrel_RL",
+        "rim_cap_RL",
+        "spoke_RL_1A",
+        "spoke_RL_1B",
+        "spoke_RL_2A",
+        "spoke_RL_2B",
+        "spoke_RL_3A",
+        "spoke_RL_3B",
+        "spoke_RL_4A",
+        "spoke_RL_4B",
+        "spoke_RL_5A",
+        "spoke_RL_5B",
+        "tire_RL"
+      ],
+      "anchor": "anchor_wheel_RL",
+      "pickRadiusMeters": 0.3,
+      "assembly": "wheel_RL"
+    },
+    {
+      "id": "tire_RL",
+      "label": "Pneumatico posteriore sinistro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        -0.784
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        -0.784
+      ],
+      "cameraPreset": "rear_left_wheel",
+      "highlightGroup": "tire_RL",
+      "meshNames": [
+        "tire_RL"
+      ],
+      "anchor": "anchor_tire_RL",
+      "pickRadiusMeters": 0.2,
+      "assembly": "wheel_RL"
+    },
+    {
+      "id": "rim_RL",
+      "label": "Cerchione posteriore sinistro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        -0.784
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        -0.784
+      ],
+      "cameraPreset": "rear_left_wheel",
+      "highlightGroup": "rim_RL",
+      "meshNames": [
+        "lug_RL_1",
+        "lug_RL_2",
+        "lug_RL_3",
+        "lug_RL_4",
+        "lug_RL_5",
+        "rim_barrel_RL",
+        "rim_cap_RL",
+        "spoke_RL_1A",
+        "spoke_RL_1B",
+        "spoke_RL_2A",
+        "spoke_RL_2B",
+        "spoke_RL_3A",
+        "spoke_RL_3B",
+        "spoke_RL_4A",
+        "spoke_RL_4B",
+        "spoke_RL_5A",
+        "spoke_RL_5B"
+      ],
+      "anchor": "anchor_rim_RL",
+      "pickRadiusMeters": 0.14,
+      "assembly": "wheel_RL"
+    },
+    {
+      "id": "hub_RL",
+      "label": "Mozzo posteriore sinistro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        -0.732
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        -0.732
+      ],
+      "cameraPreset": "rear_left_wheel",
+      "highlightGroup": "hub_RL",
+      "meshNames": [
+        "hub_RL"
+      ],
+      "anchor": "anchor_hub_RL",
+      "pickRadiusMeters": 0.06,
+      "assembly": "wheel_RL"
+    },
+    {
+      "id": "brake_disc_RL",
+      "label": "Disco freno posteriore sinistro",
+      "category": "brakes",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        -0.816
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        -0.816
+      ],
+      "cameraPreset": "rear_left_wheel",
+      "highlightGroup": "brake_disc_RL",
+      "meshNames": [
+        "brake_disc_RL"
+      ],
+      "anchor": "anchor_brake_disc_RL",
+      "pickRadiusMeters": 0.105,
+      "assembly": "wheel_RL"
+    },
+    {
+      "id": "brake_caliper_RL",
+      "label": "Pinza freno posteriore sinistro",
+      "category": "brakes",
+      "selectable": true,
+      "position": [
+        -1.431,
+        0.376,
+        -0.815
+      ],
+      "target": [
+        -1.431,
+        0.376,
+        -0.815
+      ],
+      "cameraPreset": "rear_left_wheel",
+      "highlightGroup": "brake_caliper_RL",
+      "meshNames": [
+        "caliper_bridge_RL",
+        "caliper_piston_RL"
+      ],
+      "anchor": "anchor_brake_caliper_RL",
+      "pickRadiusMeters": 0.075,
+      "assembly": "wheel_RL"
+    },
+    {
+      "id": "shock_absorber_RL",
+      "label": "Ammortizzatore posteriore sinistro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        -1.26015,
+        0.65556,
+        -0.58996
+      ],
+      "target": [
+        -1.26015,
+        0.65556,
+        -0.58996
+      ],
+      "cameraPreset": "rear_left_wheel_suspension",
+      "highlightGroup": "shock_absorber_RL",
+      "meshNames": [
+        "damper_body_RL",
+        "damper_rod_RL"
+      ],
+      "anchor": "anchor_shock_absorber_RL",
+      "pickRadiusMeters": 0.105,
+      "assembly": "wheel_RL"
+    },
+    {
+      "id": "spring_RL",
+      "label": "Molla posteriore sinistro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        -1.2651,
+        0.71584,
+        -0.57544
+      ],
+      "target": [
+        -1.2651,
+        0.71584,
+        -0.57544
+      ],
+      "cameraPreset": "rear_left_wheel_suspension",
+      "highlightGroup": "spring_RL",
+      "meshNames": [
+        "spring_coil_RL",
+        "spring_seat_lower_RL",
+        "spring_seat_upper_RL"
+      ],
+      "anchor": "anchor_spring_RL",
+      "pickRadiusMeters": 0.1,
+      "assembly": "wheel_RL"
+    },
+    {
+      "id": "control_arm_RL",
+      "label": "Braccio sospensione posteriore sinistro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.235,
+        -0.498
+      ],
+      "target": [
+        -1.3,
+        0.235,
+        -0.498
+      ],
+      "cameraPreset": "rear_left_wheel_suspension",
+      "highlightGroup": "control_arm_RL",
+      "meshNames": [
+        "arm_bushing_front_RL",
+        "arm_bushing_rear_RL",
+        "arm_link_front_RL",
+        "arm_link_rear_RL"
+      ],
+      "anchor": "anchor_control_arm_RL",
+      "pickRadiusMeters": 0.095,
+      "assembly": "wheel_RL"
+    },
+    {
+      "id": "wheel_RR",
+      "label": "Gruppo ruota posteriore destro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        0.784
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        0.784
+      ],
+      "cameraPreset": "rear_right_wheel",
+      "highlightGroup": "wheel_RR",
+      "meshNames": [
+        "lug_RR_1",
+        "lug_RR_2",
+        "lug_RR_3",
+        "lug_RR_4",
+        "lug_RR_5",
+        "rim_barrel_RR",
+        "rim_cap_RR",
+        "spoke_RR_1A",
+        "spoke_RR_1B",
+        "spoke_RR_2A",
+        "spoke_RR_2B",
+        "spoke_RR_3A",
+        "spoke_RR_3B",
+        "spoke_RR_4A",
+        "spoke_RR_4B",
+        "spoke_RR_5A",
+        "spoke_RR_5B",
+        "tire_RR"
+      ],
+      "anchor": "anchor_wheel_RR",
+      "pickRadiusMeters": 0.3,
+      "assembly": "wheel_RR"
+    },
+    {
+      "id": "tire_RR",
+      "label": "Pneumatico posteriore destro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        0.784
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        0.784
+      ],
+      "cameraPreset": "rear_right_wheel",
+      "highlightGroup": "tire_RR",
+      "meshNames": [
+        "tire_RR"
+      ],
+      "anchor": "anchor_tire_RR",
+      "pickRadiusMeters": 0.2,
+      "assembly": "wheel_RR"
+    },
+    {
+      "id": "rim_RR",
+      "label": "Cerchione posteriore destro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        0.784
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        0.784
+      ],
+      "cameraPreset": "rear_right_wheel",
+      "highlightGroup": "rim_RR",
+      "meshNames": [
+        "lug_RR_1",
+        "lug_RR_2",
+        "lug_RR_3",
+        "lug_RR_4",
+        "lug_RR_5",
+        "rim_barrel_RR",
+        "rim_cap_RR",
+        "spoke_RR_1A",
+        "spoke_RR_1B",
+        "spoke_RR_2A",
+        "spoke_RR_2B",
+        "spoke_RR_3A",
+        "spoke_RR_3B",
+        "spoke_RR_4A",
+        "spoke_RR_4B",
+        "spoke_RR_5A",
+        "spoke_RR_5B"
+      ],
+      "anchor": "anchor_rim_RR",
+      "pickRadiusMeters": 0.14,
+      "assembly": "wheel_RR"
+    },
+    {
+      "id": "hub_RR",
+      "label": "Mozzo posteriore destro",
+      "category": "wheels",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        0.732
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        0.732
+      ],
+      "cameraPreset": "rear_right_wheel",
+      "highlightGroup": "hub_RR",
+      "meshNames": [
+        "hub_RR"
+      ],
+      "anchor": "anchor_hub_RR",
+      "pickRadiusMeters": 0.06,
+      "assembly": "wheel_RR"
+    },
+    {
+      "id": "brake_disc_RR",
+      "label": "Disco freno posteriore destro",
+      "category": "brakes",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.329,
+        0.816
+      ],
+      "target": [
+        -1.3,
+        0.329,
+        0.816
+      ],
+      "cameraPreset": "rear_right_wheel",
+      "highlightGroup": "brake_disc_RR",
+      "meshNames": [
+        "brake_disc_RR"
+      ],
+      "anchor": "anchor_brake_disc_RR",
+      "pickRadiusMeters": 0.105,
+      "assembly": "wheel_RR"
+    },
+    {
+      "id": "brake_caliper_RR",
+      "label": "Pinza freno posteriore destro",
+      "category": "brakes",
+      "selectable": true,
+      "position": [
+        -1.431,
+        0.376,
+        0.815
+      ],
+      "target": [
+        -1.431,
+        0.376,
+        0.815
+      ],
+      "cameraPreset": "rear_right_wheel",
+      "highlightGroup": "brake_caliper_RR",
+      "meshNames": [
+        "caliper_bridge_RR",
+        "caliper_piston_RR"
+      ],
+      "anchor": "anchor_brake_caliper_RR",
+      "pickRadiusMeters": 0.075,
+      "assembly": "wheel_RR"
+    },
+    {
+      "id": "shock_absorber_RR",
+      "label": "Ammortizzatore posteriore destro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        -1.26015,
+        0.65556,
+        0.58996
+      ],
+      "target": [
+        -1.26015,
+        0.65556,
+        0.58996
+      ],
+      "cameraPreset": "rear_right_wheel_suspension",
+      "highlightGroup": "shock_absorber_RR",
+      "meshNames": [
+        "damper_body_RR",
+        "damper_rod_RR"
+      ],
+      "anchor": "anchor_shock_absorber_RR",
+      "pickRadiusMeters": 0.105,
+      "assembly": "wheel_RR"
+    },
+    {
+      "id": "spring_RR",
+      "label": "Molla posteriore destro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        -1.2651,
+        0.71584,
+        0.57544
+      ],
+      "target": [
+        -1.2651,
+        0.71584,
+        0.57544
+      ],
+      "cameraPreset": "rear_right_wheel_suspension",
+      "highlightGroup": "spring_RR",
+      "meshNames": [
+        "spring_coil_RR",
+        "spring_seat_lower_RR",
+        "spring_seat_upper_RR"
+      ],
+      "anchor": "anchor_spring_RR",
+      "pickRadiusMeters": 0.1,
+      "assembly": "wheel_RR"
+    },
+    {
+      "id": "control_arm_RR",
+      "label": "Braccio sospensione posteriore destro",
+      "category": "suspension",
+      "selectable": true,
+      "position": [
+        -1.3,
+        0.235,
+        0.498
+      ],
+      "target": [
+        -1.3,
+        0.235,
+        0.498
+      ],
+      "cameraPreset": "rear_right_wheel_suspension",
+      "highlightGroup": "control_arm_RR",
+      "meshNames": [
+        "arm_bushing_front_RR",
+        "arm_bushing_rear_RR",
+        "arm_link_front_RR",
+        "arm_link_rear_RR"
+      ],
+      "anchor": "anchor_control_arm_RR",
+      "pickRadiusMeters": 0.095,
+      "assembly": "wheel_RR"
+    },
+    {
+      "id": "exhaust_system",
+      "label": "Impianto di scarico",
+      "category": "exhaust",
+      "selectable": true,
+      "position": [
+        -0.4,
+        0.241,
+        0.121
+      ],
+      "target": [
+        -0.4,
+        0.241,
+        0.121
+      ],
+      "cameraPreset": "underbody",
+      "highlightGroup": "exhaust_system",
+      "meshNames": [
+        "exhaust_catalyst",
+        "exhaust_muffler",
+        "exhaust_pipe",
+        "exhaust_resonator"
+      ],
+      "anchor": "anchor_exhaust_system",
+      "pickRadiusMeters": 0.12
+    },
+    {
+      "id": "fuel_tank",
+      "label": "Serbatoio carburante",
+      "category": "fuel",
+      "selectable": true,
+      "position": [
+        -0.93,
+        0.275,
+        -0.29
+      ],
+      "target": [
+        -0.93,
+        0.275,
+        -0.29
+      ],
+      "cameraPreset": "underbody",
+      "highlightGroup": "fuel_tank",
+      "meshNames": [
+        "fuel_tank"
+      ],
+      "anchor": "anchor_fuel_tank",
+      "pickRadiusMeters": 0.135
+    }
+  ]
+}

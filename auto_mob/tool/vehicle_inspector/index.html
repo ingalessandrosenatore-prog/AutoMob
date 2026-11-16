@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoMob · Veicolo 3D</title>
+  <link rel="stylesheet" href="./viewer.css">
+  <script type="importmap">
+    {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}
+  </script>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand"><b>Auto<span>Mob</span></b><h1>Veicolo 3D</h1></div>
+      <button id="reset" type="button" disabled>Vista generale</button>
+    </header>
+    <div class="instrument">
+      <div id="stage" aria-label="Modello interattivo del veicolo">
+        <p id="status" role="status">Caricamento del modello…</p>
+      </div>
+      <aside>
+        <label for="preset">Inquadratura</label>
+        <select id="preset" disabled></select>
+        <label for="part">Componente</label>
+        <select id="part" disabled></select>
+        <div class="selection" aria-live="polite">
+          <strong id="caption"></strong>
+          <code id="component-id"></code>
+        </div>
+        <p>Trascina per ruotare. Usa due dita per zoom e spostamento. Tocca un pezzo per ispezionarlo.</p>
+      </aside>
+    </div>
+  </main>
+  <script type="module">
+    import("./viewer.mjs").catch((error) => {
+      document.querySelector("#status").textContent =
+        "Impossibile caricare Three.js. Verifica la connessione e ricarica la pagina.";
+      console.error(error);
+    });
+  </script>
+</body>
+</html>
