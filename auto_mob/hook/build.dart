@@ -3,11 +3,11 @@ import 'package:hooks/hooks.dart';
 
 void main(List<String> args) async {
   await build(args, (input, output) async {
-    // The app keeps its GLB under lib/assets, not the default assets/.
+    // The workshop and vehicle GLBs share the app's Scene asset pipeline.
     buildScenes(
       buildInput: input,
       buildOutput: output,
-      discoveryRoot: 'lib/assets/mascot/',
+      discoveryRoot: 'lib/assets/',
     );
   });
 }
