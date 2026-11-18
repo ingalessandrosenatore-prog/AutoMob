@@ -3,6 +3,7 @@ import '../domain/work_log_entry.dart';
 import '../domain/work_log_draft.dart';
 import '../domain/work_log_part.dart';
 import '../domain/work_log_parts_catalog.dart';
+import '../domain/work_log_parts_data.dart';
 import '../domain/work_log_report.dart';
 import '../domain/work_log_vehicle.dart';
 
@@ -12,6 +13,7 @@ class WorkLogReportsChanged implements Exception {
 
 abstract interface class WorkLogRemoteDataSource {
   Future<List<WorkLogVehicle>> getVehicles();
+  Future<WorkLogPartsData?> getPartsData(String vehicleId);
   Future<List<WorkLogReport>> getOpenReports(String vehicleId);
   Future<List<WorkLogEntry>> getVehicleWorks(
     String vehicleId, {
@@ -24,6 +26,43 @@ abstract interface class WorkLogRemoteDataSource {
 class SupabaseWorkLogRemoteDataSource implements WorkLogRemoteDataSource {
   const SupabaseWorkLogRemoteDataSource(this._client);
   final SupabaseClient _client;
+
+  @override
+  Future<WorkLogPartsData?> getPartsData(String vehicleId) async {
+    final List<dynamic> rows;
+    try {
+      rows = await _client.rpc<List<dynamic>>(
+        'get_work_log_parts',
+        params: {'p_vehicle_id': vehicleId},
+      );
+    } on PostgrestException catch (error) {
+      if (error.code == 'PGRST202') return null;
+      rethrow;
+    }
+    final catalog = <int, WorkLogPartCatalogEntry>{};
+    final presets = <String, List<int>>{};
+    for (final row in rows.cast<Map<String, dynamic>>()) {
+      final category = WorkLogPartCategory.tryFromWire(
+        row['category'] as String?,
+      );
+      if (category == null) continue;
+      final id = (row['part_id'] as num).toInt();
+      catalog[id] = WorkLogPartCatalogEntry(
+        name: row['name'] as String,
+        category: category,
+        secondaryCategory: WorkLogPartCategory.tryFromWire(
+          row['secondary_category'] as String?,
+        ),
+      );
+      if (row['work_type'] case final String type when type != 'altro') {
+        presets.putIfAbsent(type, () => []).add(id);
+      }
+    }
+    return WorkLogPartsData(
+      catalog: Map.unmodifiable(catalog),
+      presets: presets,
+    );
+  }
 
   @override
   Future<List<WorkLogReport>> getOpenReports(String vehicleId) async {

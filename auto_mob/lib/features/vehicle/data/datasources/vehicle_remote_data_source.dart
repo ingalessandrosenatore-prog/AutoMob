@@ -79,7 +79,9 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       // Una sola chiamata: l'RPC inserisce veicolo + record + item in
       // transazione. Se qualcosa fallisce, il DB fa rollback di tutto.
       final result = await supabaseClient.rpc(
-        'crea_veicolo_con_storico',
+        draft.maintenanceSettings.isEmpty && draft.brakeInspectionDate == null
+            ? 'crea_veicolo_con_storico'
+            : 'crea_veicolo_con_manutenzione_componenti',
         params: {'p_payload': toSupabasePayload(draft)},
       );
       return result.toString();
@@ -122,18 +124,22 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
           .toList();
 
       final mechanicsByVehicleId = <String, List<Map<String, dynamic>>>{};
+      final componentsByVehicleId = <String, List<Map<String, dynamic>>>{};
       if (vehicleIds.isNotEmpty) {
-        final links = await supabaseClient
-            .from('vehicle_mechanics')
-            .select(
-              'vehicle_id, mechanic:mechanics('
-              'id, mechanic_code, business_name, address, number, email'
-              ')',
-            )
-            .inFilter('vehicle_id', vehicleIds)
-            .order('assigned_at', ascending: false);
+        final [links, components] = await Future.wait([
+          supabaseClient
+              .from('vehicle_mechanics')
+              .select(
+                'vehicle_id, mechanic:mechanics('
+                'id, mechanic_code, business_name, address, number, email'
+                ')',
+              )
+              .inFilter('vehicle_id', vehicleIds)
+              .order('assigned_at', ascending: false),
+          _componentMaintenanceRows(vehicleIds),
+        ]);
 
-        for (final rawLink in links as List) {
+        for (final rawLink in links) {
           final link = Map<String, dynamic>.from(rawLink as Map);
           final vehicleId = link['vehicle_id']?.toString();
           final mechanic = link['mechanic'];
@@ -143,6 +149,11 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
                 .add(Map<String, dynamic>.from(mechanic));
           }
         }
+        for (final row in components) {
+          componentsByVehicleId
+              .putIfAbsent(row['vehicle_id'].toString(), () => [])
+              .add(row);
+        }
       }
 
       return vehicleRows.map((row) {
@@ -150,6 +161,7 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
         return VehicleModel.fromJson({
           ...row,
           'mechanics': mechanicsByVehicleId[vehicleId] ?? const [],
+          'component_maintenance': componentsByVehicleId[vehicleId] ?? const [],
         });
       }).toList();
     } on PostgrestException catch (e) {
@@ -160,6 +172,21 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
       throw const VehicleDataSourceException(
         'Errore durante il caricamento dei veicoli',
       );
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _componentMaintenanceRows(
+    List<String> vehicleIds,
+  ) async {
+    try {
+      final rows = await supabaseClient.rpc<List<dynamic>>(
+        'vehicle_component_maintenance_status',
+        params: {'p_vehicle_ids': vehicleIds},
+      );
+      return rows.cast<Map<String, dynamic>>();
+    } on PostgrestException catch (error) {
+      if (error.code == 'PGRST202') return const [];
+      rethrow;
     }
   }
 
@@ -414,6 +441,24 @@ class VehicleRemoteDataSourceImpl implements VehicleRemoteDataSource {
     return {
       'veicolo': veicolo,
       'lavori': lavori,
+      if (draft.maintenanceSettings.isNotEmpty)
+        'maintenance_components': [
+          for (final setting in draft.maintenanceSettings)
+            for (final partId in setting.field.partIds)
+              {
+                'part_id': partId,
+                'work_type': setting.field.group.workType,
+                'interval_km': setting.intervalKm,
+                'interval_years': setting.intervalYears,
+                'initial_km': setting.lastKm,
+                'initial_date': setting.lastDate
+                    ?.toIso8601String()
+                    .split('T')
+                    .first,
+              },
+        ],
+      if (draft.brakeInspectionDate case final date?)
+        'brake_inspection_date': date.toIso8601String().split('T').first,
       'mechanic_id': draft.meccanicoId,
       'mechanic_code': draft.codiceMeccanico,
       'lookup_id': draft.lookupId,

@@ -156,27 +156,48 @@ class CardAuto extends StatelessWidget {
                               164.0,
                               232.0,
                             ),
-                            child: _VehicleImage(immaginePath: immaginePath),
-                          ),
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    colors.surfaceHighlight.withValues(
-                                      alpha: 0.0,
+                            child: SmartEdge(
+                              blur: kHeavyEffects,
+                              opacity: 0.0,
+                              edges: [
+                                EdgeBlur(
+                                  type: EdgeType.bottomEdge,
+                                  size: 88,
+                                  sigma: 14,
+                                  tintColor: Colors.transparent,
+                                  controlPoints: [
+                                    ControlPoint(
+                                      position: 0.35,
+                                      type: ControlPointType.visible,
                                     ),
-                                    colors.surfaceHighlight.withValues(
-                                      alpha: 0.0,
+                                    ControlPoint(
+                                      position: 1.0,
+                                      type: ControlPointType.transparent,
                                     ),
-                                    colors.surfaceHighlight.withValues(
-                                      alpha: 0.6,
-                                    ),
-                                    colors.surfaceHighlight,
                                   ],
-                                  stops: const [0.0, 0.3, 0.75, 1.0],
+                                ),
+                              ],
+                              // ShaderMask dissolve l'alpha della foto verso
+                              // trasparente con curva morbida, rivelando il
+                              // gradiente sottostante della card senza taglio.
+                              child: ShaderMask(
+                                blendMode: BlendMode.dstIn,
+                                shaderCallback: (bounds) =>
+                                    const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        Colors.white,
+                                        Colors.white,
+                                        Color(0xCCFFFFFF),
+                                        Color(0x66FFFFFF),
+                                        Color(0x1AFFFFFF),
+                                        Colors.transparent,
+                                      ],
+                                      stops: [0.0, 0.42, 0.60, 0.78, 0.91, 1.0],
+                                    ).createShader(bounds),
+                                child: _VehicleImage(
+                                  immaginePath: immaginePath,
                                 ),
                               ),
                             ),
@@ -985,16 +1006,26 @@ class _VehicleImage extends StatelessWidget {
     if (path.startsWith('http')) {
       return Image.network(
         path,
+        width: double.infinity,
+        height: double.infinity,
         fit: BoxFit.cover,
         cacheWidth: cacheWidth,
         errorBuilder: (_, _, _) => const _VehiclePlaceholder(),
       );
     }
     if (path.startsWith('lib/') || path.startsWith('assets/')) {
-      return Image.asset(path, fit: BoxFit.cover, cacheWidth: cacheWidth);
+      return Image.asset(
+        path,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+        cacheWidth: cacheWidth,
+      );
     }
     return Image.file(
       File(path),
+      width: double.infinity,
+      height: double.infinity,
       fit: BoxFit.cover,
       cacheWidth: cacheWidth,
       errorBuilder: (_, _, _) => const _VehiclePlaceholder(),

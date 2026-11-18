@@ -1,3 +1,4 @@
+import 'package:common_ui_widget/common_ui_widget.dart' show SmartEdge;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,7 +17,6 @@ import 'package:auto_mob_v1/features/dashboard/presentation/bloc/dashboard_bloc.
 import 'package:auto_mob_v1/features/notifications/data/datasources/firebase_bootstrap.dart';
 import 'package:auto_mob_v1/features/notifications/presentation/services/notification_message_coordinator.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/add_vehicle_bloc.dart';
-import 'package:auto_mob_v1/features/work_log/presentation/bloc/work_log_history_bloc.dart';
 import 'package:auto_mob_v1/firebase_options.dart';
 
 @pragma('vm:entry-point')
@@ -32,6 +32,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SmartEdge.precache();
 
   if (defaultTargetPlatform == TargetPlatform.android) {
     try {
@@ -74,22 +75,14 @@ class AutoMobApp extends StatelessWidget {
         BlocProvider<ThemeCubit>.value(value: di.sl<ThemeCubit>()),
         // BlocProvider<WorkLogBloc>(...),
       ],
-      // DashboardBloc/WorkLogHistoryBloc sono lazySingleton (cache dati tra
-      // i cambi di tab, vedi injection_container.dart): senza questo reset
-      // sopravvivrebbero al logout, mostrando i dati del vecchio utente a
-      // chi fa login dopo sullo stesso device.
-      // NB: AuthBloc._onLogout emette AuthLoading() PRIMA di AuthLoggedOut(),
-      // quindi lo stato immediatamente precedente a AuthLoggedOut e' sempre
-      // AuthLoading, mai AuthAuthenticated: un guard su `previous` si
-      // perderebbe la transizione vera. Si reagisce solo su `current`.
-      // Nessun rischio di reset superfluo: resetLazySingleton su un
-      // singleton mai istanziato (es. cold-boot) e' un no-op sicuro.
+      // La dashboard conserva dati in un lazySingleton: azzerarli al logout.
+      // Lo storico condiviso usa una factory ed e' chiuso dalla sua route.
+      // Il logout passa da AuthLoading, quindi conta solo lo stato corrente.
       child: BlocListener<AuthBloc, AuthState>(
         listenWhen: (_, current) =>
             current is AuthLoggedOut || current is AuthUnauthenticated,
         listener: (_, _) {
           di.sl.resetLazySingleton<DashboardBloc>();
-          di.sl.resetLazySingleton<WorkLogHistoryBloc>();
         },
         child: BlocBuilder<ThemeCubit, AmThemeMode>(
           builder: (context, themeMode) => MaterialApp.router(

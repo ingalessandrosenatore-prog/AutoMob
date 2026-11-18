@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'mechanic_summary.dart';
 import 'vehicle_mileage_estimate.dart';
 import 'fuel_cost_averages.dart';
+import 'vehicle_component_maintenance.dart';
 
 class Vehicle extends Equatable {
   final String id;
@@ -35,6 +36,8 @@ class Vehicle extends Equatable {
   final int? lastTireRotationKm;
   final DateTime? lastTireRotationDate;
   final DateTime? lastRevisionDate;
+  final List<VehicleComponentMaintenance> componentMaintenance;
+  final DateTime? brakeInspectionDate;
 
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -79,6 +82,8 @@ class Vehicle extends Equatable {
     this.lastTireRotationKm,
     this.lastTireRotationDate,
     this.lastRevisionDate,
+    this.componentMaintenance = const [],
+    this.brakeInspectionDate,
     this.updatedAt,
     this.fotoPath,
     this.mechanics = const [],
@@ -116,6 +121,8 @@ class Vehicle extends Equatable {
       lastTireRotationKm: lastTireRotationKm,
       lastTireRotationDate: lastTireRotationDate,
       lastRevisionDate: lastRevisionDate,
+      componentMaintenance: componentMaintenance,
+      brakeInspectionDate: brakeInspectionDate,
       updatedAt: updatedAt,
       fotoPath: fotoPath ?? this.fotoPath,
       mechanics: mechanics ?? this.mechanics,
@@ -186,6 +193,8 @@ class Vehicle extends Equatable {
     lastTireRotationKm,
     lastTireRotationDate,
     lastRevisionDate,
+    componentMaintenance,
+    brakeInspectionDate,
     createdAt,
     updatedAt,
     fotoPath,

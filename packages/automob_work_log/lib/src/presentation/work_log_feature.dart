@@ -250,6 +250,7 @@ class _WorkLogFeatureViewState extends State<_WorkLogFeatureView> {
         vehicle: vehicle,
         createWorkLog: CreateWorkLog(widget.dependencies.repository),
         getOpenReports: GetOpenWorkLogReports(widget.dependencies.repository),
+        getPartsData: GetWorkLogPartsData(widget.dependencies.repository),
         initialType: initialType,
       ),
     );
@@ -712,12 +713,14 @@ class _WorkLogWizardPage extends StatelessWidget {
     required this.vehicle,
     required this.createWorkLog,
     required this.getOpenReports,
+    required this.getPartsData,
     required this.initialType,
   });
 
   final WorkLogVehicle vehicle;
   final CreateWorkLog createWorkLog;
   final GetOpenWorkLogReports getOpenReports;
+  final GetWorkLogPartsData getPartsData;
   final WorkLogType initialType;
 
   @override
@@ -725,6 +728,7 @@ class _WorkLogWizardPage extends StatelessWidget {
     create: (_) => WorkLogEditorCubit(
       createWorkLog: createWorkLog,
       getOpenReports: getOpenReports,
+      getPartsData: getPartsData,
     ),
     child: Builder(
       builder: (context) {

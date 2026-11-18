@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/vehicle_maintenance_setting.dart';
+
 sealed class VehicleRegistrationEvent extends Equatable {
   @override
   List<Object?> get props => [];
@@ -68,6 +70,8 @@ class VerifyStepSubmitted extends VehicleRegistrationEvent {
 }
 
 class WorkLogStepSubmitted extends VehicleRegistrationEvent {
+  final List<VehicleMaintenanceSetting> maintenanceSettings;
+  final DateTime? brakeInspectionDate;
   final int? kmAttuali;
   final int? intervalloTagliando;
   final int? kmUltimoTagliando;
@@ -79,6 +83,8 @@ class WorkLogStepSubmitted extends VehicleRegistrationEvent {
   final int? kmUltimaInversioneGomme;
   final int? intervalloInversioneGomme;
   WorkLogStepSubmitted({
+    this.maintenanceSettings = const [],
+    this.brakeInspectionDate,
     this.kmAttuali,
     this.intervalloTagliando,
     this.kmUltimoTagliando,
@@ -92,6 +98,8 @@ class WorkLogStepSubmitted extends VehicleRegistrationEvent {
   });
   @override
   List<Object?> get props => [
+    maintenanceSettings,
+    brakeInspectionDate,
     kmAttuali,
     intervalloTagliando,
     kmUltimoTagliando,

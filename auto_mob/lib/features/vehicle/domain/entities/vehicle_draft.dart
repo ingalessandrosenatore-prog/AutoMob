@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 
+import 'vehicle_maintenance_setting.dart';
+
 class VehicleDraft extends Equatable {
   static const _keep = Object();
   // Step 1 — Dati base
@@ -28,6 +30,8 @@ class VehicleDraft extends Equatable {
   final int? intervalloCambioGomme;
   final int? kmUltimaInversioneGomme;
   final int? intervalloInversioneGomme;
+  final List<VehicleMaintenanceSetting> maintenanceSettings;
+  final DateTime? brakeInspectionDate;
 
   // Step 5 — Foto e meccanico
   final File? fotoFile; // path locale, non va sul DB
@@ -60,6 +64,8 @@ class VehicleDraft extends Equatable {
     this.intervalloCambioGomme,
     this.kmUltimaInversioneGomme,
     this.intervalloInversioneGomme,
+    this.maintenanceSettings = const [],
+    this.brakeInspectionDate,
     this.fotoFile,
     this.codiceMeccanico,
     this.meccanicoId,
@@ -88,6 +94,8 @@ class VehicleDraft extends Equatable {
     Object? intervalloCambioGomme = _keep,
     Object? kmUltimaInversioneGomme = _keep,
     Object? intervalloInversioneGomme = _keep,
+    List<VehicleMaintenanceSetting>? maintenanceSettings,
+    Object? brakeInspectionDate = _keep,
     Object? fotoFile = _keep,
     Object? codiceMeccanico = _keep,
     Object? meccanicoId = _keep,
@@ -142,6 +150,10 @@ class VehicleDraft extends Equatable {
       intervalloInversioneGomme: identical(intervalloInversioneGomme, _keep)
           ? this.intervalloInversioneGomme
           : intervalloInversioneGomme as int?,
+      maintenanceSettings: maintenanceSettings ?? this.maintenanceSettings,
+      brakeInspectionDate: identical(brakeInspectionDate, _keep)
+          ? this.brakeInspectionDate
+          : brakeInspectionDate as DateTime?,
       fotoFile: identical(fotoFile, _keep) ? this.fotoFile : fotoFile as File?,
       codiceMeccanico: identical(codiceMeccanico, _keep)
           ? this.codiceMeccanico
@@ -183,6 +195,8 @@ class VehicleDraft extends Equatable {
     intervalloCambioGomme,
     kmUltimaInversioneGomme,
     intervalloInversioneGomme,
+    maintenanceSettings,
+    brakeInspectionDate,
     fotoFile,
     codiceMeccanico,
     meccanicoId,

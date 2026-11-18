@@ -1,26 +1,34 @@
 import 'work_log_type.dart';
 
 enum WorkLogPartCategory {
+  service('tagliando'),
   engine('motore'),
   vehicle('veicolo'),
   tires('gomme'),
   chassis('telaio'),
   electronics('elettronica'),
   brakes('freni'),
-  gearbox('cambio');
+  gearbox('cambio'),
+  airConditioning('aria_condizionata'),
+  coolant('liquido_antigelo'),
+  brakeFluid('liquido_freni');
 
   const WorkLogPartCategory(this.wireValue);
 
   final String wireValue;
 
   String get label => switch (this) {
+    WorkLogPartCategory.service => 'Tagliando',
     WorkLogPartCategory.engine => 'Motore',
     WorkLogPartCategory.vehicle => 'Veicolo',
     WorkLogPartCategory.tires => 'Gomme',
-    WorkLogPartCategory.chassis => 'Telaio',
+    WorkLogPartCategory.chassis => 'Meccanica',
     WorkLogPartCategory.electronics => 'Elettronica',
-    WorkLogPartCategory.brakes => 'Freni',
+    WorkLogPartCategory.brakes => 'Impianto freni',
     WorkLogPartCategory.gearbox => 'Cambio',
+    WorkLogPartCategory.airConditioning => 'Ricarica aria condizionata',
+    WorkLogPartCategory.coolant => 'Liquido antigelo',
+    WorkLogPartCategory.brakeFluid => 'Liquido freni',
   };
 
   static WorkLogPartCategory? tryFromWire(String? value) {
@@ -42,17 +50,22 @@ WorkLogPartCategory workLogPartCategoryForType(WorkLogType? type) =>
       WorkLogType.electronics ||
       WorkLogType.battery => WorkLogPartCategory.electronics,
       WorkLogType.gearbox => WorkLogPartCategory.gearbox,
-      WorkLogType.tagliando ||
+      WorkLogType.tagliando => WorkLogPartCategory.service,
       WorkLogType.revision ||
       WorkLogType.other ||
       null => WorkLogPartCategory.vehicle,
     };
 
 class WorkLogPartCatalogEntry {
-  const WorkLogPartCatalogEntry({required this.name, required this.category});
+  const WorkLogPartCatalogEntry({
+    required this.name,
+    required this.category,
+    this.secondaryCategory,
+  });
 
   final String name;
   final WorkLogPartCategory category;
+  final WorkLogPartCategory? secondaryCategory;
 }
 
 /// Vista compatibile `id -> nome` del catalogo ricambi.
@@ -165,14 +178,18 @@ const Map<int, String> kPartsCatalog = {
 ///
 /// I nomi continuano a derivare dalla mappa compatibile sopra; la categoria è
 /// dominio puro e potrà pilotare filtri e immagini senza entrare nella UI.
-final Map<int, WorkLogPartCatalogEntry> kWorkLogPartsCatalog =
-    Map.unmodifiable({
-      for (final part in kPartsCatalog.entries)
-        part.key: WorkLogPartCatalogEntry(
-          name: part.value,
-          category: _categoryForPartId(part.key),
-        ),
-    });
+final Map<int, WorkLogPartCatalogEntry> kWorkLogPartsCatalog = Map.unmodifiable(
+  {
+    for (final part in kPartsCatalog.entries)
+      part.key: WorkLogPartCatalogEntry(
+        name: part.value,
+        category: _categoryForPartId(part.key),
+        secondaryCategory: const {15, 16, 17, 18, 19}.contains(part.key)
+            ? WorkLogPartCategory.service
+            : null,
+      ),
+  },
+);
 
 const _enginePartIds = <int>{
   1,

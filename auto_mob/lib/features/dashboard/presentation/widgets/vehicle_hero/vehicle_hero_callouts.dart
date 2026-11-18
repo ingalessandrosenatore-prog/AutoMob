@@ -1,150 +1,153 @@
-import 'package:common_ui_widget/common_ui_widget.dart' show AmThemeColors;
-import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../../core/types/enum_pop_up.dart';
 import '../../../../vehicle/domain/entities/maintenance_kpi.dart';
-import 'vehicle_hero_callout_card.dart';
-import 'vehicle_hero_scene.dart';
-import 'vehicle_hero_pulse.dart';
+import '../../../../vehicle/domain/entities/vehicle_maintenance_setting.dart';
+import 'vehicle_hero_layout.dart';
 
-class VehicleHeroCallouts extends StatelessWidget {
-  const VehicleHeroCallouts({
-    super.key,
-    required this.scene,
-    required this.animation,
-    required this.kpis,
-    required this.onKpiTap,
+class VehicleHeroCallout {
+  const VehicleHeroCallout({
+    required this.title,
+    required this.anchor,
+    required this.slot,
+    required this.icon,
+    required this.kpi,
+    this.rotation,
   });
 
-  static const duration = Duration(milliseconds: 3700);
-  static const arrival = .38;
-  static const _starts = [.44, .61, .78];
-  static const _lineDuration = .135;
-  static const _fadeDuration = .055;
+  final String title;
+  final String? anchor;
+  final VehicleHeroSlot slot;
+  final List<List<dynamic>> icon;
+  final MaintenanceKpi kpi;
+  final MaintenanceKpi? rotation;
 
-  final VehicleHeroScene scene;
-  final Animation<double> animation;
-  final List<MaintenanceKpi> kpis;
-  final ValueChanged<MaintenanceKpi> onKpiTap;
+  bool get isRear => slot == VehicleHeroSlot.belowBrakes;
+  bool get isTires =>
+      kpi.type == EnumPopUp.aggiornaCambioGomme ||
+      kpi.type == EnumPopUp.pneumaticiInversione;
 
-  @override
-  Widget build(BuildContext context) {
-    final accent = AmThemeColors.of(context).accent;
-    final byType = {for (final kpi in kpis) kpi.type: kpi};
-    final timing = byType[EnumPopUp.aggiornaDistribuzione];
-    final service = byType[EnumPopUp.aggiornaTagliando];
-    final tires = byType[EnumPopUp.aggiornaCambioGomme];
-    final rotation = byType[EnumPopUp.pneumaticiInversione];
-    if (timing == null && service == null && tires == null) {
-      return const SizedBox.shrink();
-    }
+  List<String> get meshes => switch (kpi.group) {
+    VehicleMaintenanceGroup.brakes => const [
+      'caliper_bridge_FL',
+      'caliper_bridge_FR',
+      'caliper_bridge_RL',
+      'caliper_bridge_RR',
+    ],
+    VehicleMaintenanceGroup.gearbox => [
+      for (final part in kpi.components)
+        if (part.label == VehicleMaintenanceField.gearbox.label)
+          'gearbox'
+        else if (part.label == VehicleMaintenanceField.differential.label)
+          'differential',
+    ],
+    VehicleMaintenanceGroup.differential => const ['differential'],
+    VehicleMaintenanceGroup.lpg ||
+    VehicleMaintenanceGroup.cng => const ['fuel_tank'],
+    _ => switch (kpi.type) {
+      EnumPopUp.aggiornaTagliando => const ['oil_pan', 'oil_filter_canister'],
+      EnumPopUp.aggiornaDistribuzione => const [
+        'timing_belt',
+        'timing_sprocket_1',
+        'timing_sprocket_2',
+        'timing_sprocket_3',
+      ],
+      EnumPopUp.aggiornaCambioGomme ||
+      EnumPopUp.pneumaticiInversione => const ['tire_RL', 'tire_RR'],
+      _ => const [],
+    },
+  };
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = constraints.biggest;
-        final inset = (size.width * .044).clamp(10.0, 26.0);
-        final cards = <Widget>[];
-        final wires = <VehicleHeroWire>[];
+  static List<VehicleHeroCallout> forKpis(List<MaintenanceKpi> kpis) {
+    final rotation = kpis
+        .where((kpi) => kpi.type == EnumPopUp.pneumaticiInversione)
+        .firstOrNull;
+    final hasTires = kpis.any(
+      (kpi) => kpi.type == EnumPopUp.aggiornaCambioGomme,
+    );
+    final items = [
+      for (final kpi in kpis)
+        if (kpi.group != VehicleMaintenanceGroup.engine &&
+            (kpi != rotation || !hasTires))
+          _forKpi(kpi, rotation),
+    ];
+    return items;
+  }
 
-        void add({
-          required int index,
-          required MaintenanceKpi kpi,
-          required String title,
-          required String part,
-          required List<List<dynamic>> icon,
-          required double top,
-          MaintenanceKpi? secondary,
-          bool right = false,
-        }) {
-          final card = VehicleHeroCalloutCard(
-            title: title,
-            icon: icon,
-            kpi: kpi,
-            secondary: secondary,
-            onKpiTap: onKpiTap,
-          );
-          final width = (size.width * .42).clamp(110.0, 172.0);
-          final left = right ? size.width - inset - width : inset;
-          final end = Offset(right ? left : left + width, top + 24);
-          final start = scene.camera.worldToScreen(scene.anchor(part), size);
-          if (start == null) return;
-          wires.add(VehicleHeroWire(start, end, _starts[index], _lineDuration));
-          cards.add(
-            Positioned(
-              top: top,
-              left: left,
-              width: width,
-              child: AnimatedBuilder(
-                animation: animation,
-                child: card,
-                builder: (context, child) {
-                  final fade =
-                      ((animation.value - _starts[index] - _lineDuration) /
-                              _fadeDuration)
-                          .clamp(0.0, 1.0);
-                  if (fade == 0) return const SizedBox.shrink();
-                  return Opacity(
-                    opacity: fade,
-                    child: Transform.translate(
-                      offset: Offset(0, (1 - fade) * 6),
-                      child: child,
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        }
-
-        if (timing != null) {
-          add(
-            index: 0,
-            kpi: timing,
-            title: 'Distribuzione',
-            part: 'timing_belt',
-            icon: HugeIcons.strokeRoundedTools,
-            top: size.height * .10,
-          );
-        }
-        if (service != null) {
-          add(
-            index: 1,
-            kpi: service,
-            title: 'Tagliando',
-            part: 'oil_pan',
-            icon: HugeIcons.strokeRoundedTools,
-            top: size.height * .79,
-          );
-        }
-        if (tires != null) {
-          add(
-            index: 2,
-            kpi: tires,
-            secondary: rotation,
-            title: 'Gomme',
-            part: 'tire_FL',
-            icon: HugeIcons.strokeRoundedTire,
-            top: size.height * .71,
-            right: true,
-          );
-        }
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            IgnorePointer(
-              child: CustomPaint(
-                painter: VehicleHeroPulse(
-                  animation: animation,
-                  wires: wires,
-                  accent: accent,
-                ),
-              ),
-            ),
-            ...cards,
-          ],
-        );
+  static VehicleHeroCallout _forKpi(
+    MaintenanceKpi kpi,
+    MaintenanceKpi? rotation,
+  ) {
+    final (title, anchor) = switch (kpi.group) {
+      VehicleMaintenanceGroup.brakes => ('Freni', 'brake_disc_FL'),
+      VehicleMaintenanceGroup.gearbox => (
+        VehicleMaintenanceGroup.gearbox.label,
+        'fuel_tank',
+      ),
+      VehicleMaintenanceGroup.differential => ('Differenziale', 'fuel_tank'),
+      VehicleMaintenanceGroup.lpg => ('Impianto GPL', 'fuel_tank'),
+      VehicleMaintenanceGroup.cng => ('Metano', 'fuel_tank'),
+      _ => switch (kpi.type) {
+        EnumPopUp.aggiornaTagliando => ('Tagliando', 'oil_pan'),
+        EnumPopUp.aggiornaDistribuzione => ('Distribuzione', 'timing_belt'),
+        EnumPopUp.aggiornaCambioGomme => ('Gomme', 'tire_RL'),
+        EnumPopUp.pneumaticiInversione => ('Inversione', 'tire_RL'),
+        EnumPopUp.revisione => ('Revisione', null),
+        EnumPopUp.altro => (kpi.group?.label ?? 'Manutenzione', null),
       },
+    };
+
+    final slot = switch (kpi.group) {
+      VehicleMaintenanceGroup.brakes => VehicleHeroSlot.brakes,
+      VehicleMaintenanceGroup.gearbox ||
+      VehicleMaintenanceGroup.differential ||
+      VehicleMaintenanceGroup.lpg ||
+      VehicleMaintenanceGroup.cng => VehicleHeroSlot.belowBrakes,
+      _ => switch (kpi.type) {
+        EnumPopUp.aggiornaTagliando => VehicleHeroSlot.lowerLeft,
+        EnumPopUp.aggiornaDistribuzione => VehicleHeroSlot.upperLeft,
+        _ => VehicleHeroSlot.lowerRight,
+      },
+    };
+    final tires = kpi.type == EnumPopUp.aggiornaCambioGomme;
+    return VehicleHeroCallout(
+      title: title,
+      anchor: anchor,
+      slot: slot,
+      icon: tires ? HugeIcons.strokeRoundedTire : HugeIcons.strokeRoundedTools,
+      kpi: tires && rotation != null ? _tiresWithRotation(kpi, rotation) : kpi,
+      rotation: tires ? rotation : null,
+    );
+  }
+
+  static MaintenanceKpi _tiresWithRotation(
+    MaintenanceKpi tires,
+    MaintenanceKpi rotation,
+  ) {
+    final rows = [
+      if (tires.components.isEmpty)
+        MaintenanceComponentKpi(
+          label: VehicleMaintenanceField.tires.label,
+          percentage: tires.percentage,
+          remainingKm: tires.remainingKm,
+        )
+      else
+        ...tires.components,
+      MaintenanceComponentKpi(
+        label: 'Inversione',
+        percentage: rotation.percentage,
+        remainingKm: rotation.remainingKm,
+      ),
+    ];
+    final values = rows.map((row) => row.percentage).whereType<double>();
+    return MaintenanceKpi(
+      type: tires.type,
+      group: VehicleMaintenanceGroup.tires,
+      remainingKm: tires.remainingKm < rotation.remainingKm
+          ? tires.remainingKm
+          : rotation.remainingKm,
+      percentage: values.reduce((a, b) => a + b) / values.length,
+      components: List.unmodifiable(rows),
     );
   }
 }

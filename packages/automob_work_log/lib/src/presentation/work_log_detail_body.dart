@@ -24,6 +24,7 @@ class WorkLogDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) => WorkLogDetailEntrance(
     builder: (context, entrance) => AmEdgeBlur(
+      edgeExtent: 32,
       child: SingleChildScrollView(
         key: const Key('work-log-detail-scroll'),
         padding: EdgeInsets.fromLTRB(20, topPadding, 20, 116),
@@ -458,13 +459,18 @@ String _assetForEntry(WorkLogEntry entry) {
 }
 
 String? _assetForCategory(WorkLogPartCategory? category) => switch (category) {
+  WorkLogPartCategory.service => 'assets/images/car_check.png',
   WorkLogPartCategory.engine => 'assets/images/motor_check.png',
   WorkLogPartCategory.tires => 'assets/images/gomme_check.png',
-  WorkLogPartCategory.brakes => 'assets/images/brakes_check.png',
+  WorkLogPartCategory.brakes ||
+  WorkLogPartCategory.brakeFluid => 'assets/images/brakes_check.png',
   WorkLogPartCategory.chassis => 'assets/images/chassis_check.png',
   WorkLogPartCategory.electronics => 'assets/images/electronics_check.png',
   WorkLogPartCategory.gearbox => 'assets/images/gearbox_check.png',
-  WorkLogPartCategory.vehicle || null => null,
+  WorkLogPartCategory.vehicle ||
+  WorkLogPartCategory.airConditioning ||
+  WorkLogPartCategory.coolant ||
+  null => null,
 };
 
 String _formatDate(DateTime value) =>

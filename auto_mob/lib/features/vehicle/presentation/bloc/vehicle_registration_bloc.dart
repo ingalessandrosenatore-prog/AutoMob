@@ -278,6 +278,8 @@ class VehicleRegistrationBloc
     Emitter<VehicleRegistrationState> emit,
   ) async {
     final draft = state.draft.copyWith(
+      maintenanceSettings: event.maintenanceSettings,
+      brakeInspectionDate: event.brakeInspectionDate,
       kmAttuali: event.kmAttuali,
       intervalloUltimoTagliando: event.intervalloTagliando,
       kmUltimoTagliando: event.kmUltimoTagliando,

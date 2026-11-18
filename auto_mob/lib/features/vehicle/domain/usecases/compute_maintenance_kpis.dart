@@ -3,13 +3,14 @@ import 'package:auto_mob_v1/core/types/enum_pop_up.dart';
 import '../entities/maintenance_kpi.dart';
 import '../entities/maintenance_defaults.dart';
 import '../entities/vehicle.dart';
+import 'compute_component_maintenance_kpis.dart';
 
 /// Calcola i KPI di manutenzione di UN veicolo a partire dai suoi dati:
 /// km attuali + ultimo intervento per tipo + intervalli configurati.
 /// E' logica PURA di dominio: nessuna dipendenza da DB, rete o UI -> facile da
 /// testare e riusabile. Il BLoC la chiama e mette il risultato nello stato.
 class ComputeMaintenanceKpis {
-  List<MaintenanceKpi> call(Vehicle v) {
+  List<MaintenanceKpi> call(Vehicle v, {DateTime? now}) {
     // Placeholder = nessun veicolo reale -> nessun KPI da mostrare.
     if (v.isPlaceholder) return const [];
 
@@ -49,7 +50,7 @@ class ComputeMaintenanceKpis {
       );
     }
 
-    return [
+    final legacy = [
       calcola(
         EnumPopUp.aggiornaTagliando,
         v.lastTagliandoKm,
@@ -72,5 +73,9 @@ class ComputeMaintenanceKpis {
         v.tireRotationIntervalKm,
       ),
     ];
+    if (v.componentMaintenance.isEmpty) return legacy;
+    final byPart = computeComponentMaintenanceKpis(v, now ?? DateTime.now());
+    final replaces = byPart.map((kpi) => kpi.type).toSet();
+    return [...legacy.where((kpi) => !replaces.contains(kpi.type)), ...byPart];
   }
 }

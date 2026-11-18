@@ -18,6 +18,7 @@ class WorkLogPartsPicker extends StatelessWidget {
     required this.onCategoryChanged,
     required this.onPartToggled,
     this.topPadding = 0,
+    this.catalog,
     super.key,
   });
 
@@ -28,19 +29,21 @@ class WorkLogPartsPicker extends StatelessWidget {
   final ValueChanged<WorkLogPartCategory> onCategoryChanged;
   final ValueChanged<int> onPartToggled;
   final double topPadding;
+  final Map<int, WorkLogPartCatalogEntry>? catalog;
 
   @override
   Widget build(BuildContext context) {
     final colors = AmThemeColors.of(context);
     final selectedIds = selectedParts.map((part) => part.partId).toSet();
     final normalized = query.trim().toLowerCase();
-    final parts = kWorkLogPartsCatalog.entries
+    final parts = (catalog ?? kWorkLogPartsCatalog).entries
         .where((entry) {
           if (normalized.isNotEmpty) {
             return entry.value.name.toLowerCase().contains(normalized);
           }
           return selectedCategory == null ||
-              entry.value.category == selectedCategory;
+              entry.value.category == selectedCategory ||
+              entry.value.secondaryCategory == selectedCategory;
         })
         .toList(growable: false);
 

@@ -16,6 +16,7 @@ const Map<int, String> _partSvgAssets = {
 
 List<List<dynamic>> workLogPartCategoryIcon(WorkLogPartCategory category) =>
     switch (category) {
+      WorkLogPartCategory.service => HugeIcons.strokeRoundedTools,
       WorkLogPartCategory.engine => HugeIcons.strokeRoundedEngine,
       WorkLogPartCategory.vehicle => HugeIcons.strokeRoundedCar05,
       WorkLogPartCategory.tires => HugeIcons.strokeRoundedTire,
@@ -23,6 +24,9 @@ List<List<dynamic>> workLogPartCategoryIcon(WorkLogPartCategory category) =>
       WorkLogPartCategory.electronics => HugeIcons.strokeRoundedChip,
       WorkLogPartCategory.brakes => HugeIcons.strokeRoundedDisc,
       WorkLogPartCategory.gearbox => HugeIcons.strokeRoundedTransmission,
+      WorkLogPartCategory.airConditioning => HugeIcons.strokeRoundedTools,
+      WorkLogPartCategory.coolant => HugeIcons.strokeRoundedOilBarrel,
+      WorkLogPartCategory.brakeFluid => HugeIcons.strokeRoundedDisc,
     };
 
 const Map<int, List<List<dynamic>>> _partIcons = {

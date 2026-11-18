@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import '../../domain/entities/vehicle_draft.dart';
+import '../../domain/entities/vehicle_maintenance_setting.dart';
 
 class VehicleDraftModel extends VehicleDraft {
   const VehicleDraftModel({
@@ -22,6 +23,8 @@ class VehicleDraftModel extends VehicleDraft {
     super.intervalloCambioGomme,
     super.kmUltimaInversioneGomme,
     super.intervalloInversioneGomme,
+    super.maintenanceSettings,
+    super.brakeInspectionDate,
     super.fotoFile,
     super.codiceMeccanico,
     super.meccanicoId,
@@ -53,6 +56,8 @@ class VehicleDraftModel extends VehicleDraft {
       intervalloCambioGomme: draft.intervalloCambioGomme,
       kmUltimaInversioneGomme: draft.kmUltimaInversioneGomme,
       intervalloInversioneGomme: draft.intervalloInversioneGomme,
+      maintenanceSettings: draft.maintenanceSettings,
+      brakeInspectionDate: draft.brakeInspectionDate,
       fotoFile: draft.fotoFile,
       codiceMeccanico: draft.codiceMeccanico,
       meccanicoId: draft.meccanicoId,
@@ -87,6 +92,12 @@ class VehicleDraftModel extends VehicleDraft {
       intervalloCambioGomme: json['intervallo_cambio_gomme'],
       kmUltimaInversioneGomme: json['km_ultima_inversione_gomme'],
       intervalloInversioneGomme: json['intervallo_inversione_gomme'],
+      maintenanceSettings: _maintenanceSettingsFromJson(
+        json['maintenance_settings'],
+      ),
+      brakeInspectionDate: DateTime.tryParse(
+        json['brake_inspection_date'] as String? ?? '',
+      ),
       codiceMeccanico: json['codice_meccanico'],
       meccanicoId: json['meccanico_id'],
       meccanicoNome: json['meccanico_nome'],
@@ -121,6 +132,17 @@ class VehicleDraftModel extends VehicleDraft {
       'intervallo_cambio_gomme': intervalloCambioGomme,
       'km_ultima_inversione_gomme': kmUltimaInversioneGomme,
       'intervallo_inversione_gomme': intervalloInversioneGomme,
+      'maintenance_settings': [
+        for (final setting in maintenanceSettings)
+          {
+            'field': setting.field.name,
+            'interval_km': setting.intervalKm,
+            'interval_years': setting.intervalYears,
+            'last_km': setting.lastKm,
+            'last_date': setting.lastDate?.toIso8601String(),
+          },
+      ],
+      'brake_inspection_date': brakeInspectionDate?.toIso8601String(),
       'codice_meccanico': codiceMeccanico,
       'meccanico_id': meccanicoId,
       'meccanico_nome': meccanicoNome,
@@ -131,4 +153,22 @@ class VehicleDraftModel extends VehicleDraft {
       'foto_path': fotoFile?.path,
     };
   }
+}
+
+List<VehicleMaintenanceSetting> _maintenanceSettingsFromJson(Object? raw) {
+  if (raw is! List) return const [];
+  final fields = {
+    for (final field in VehicleMaintenanceField.values) field.name: field,
+  };
+  return List.unmodifiable([
+    for (final row in raw.whereType<Map<String, dynamic>>())
+      if (fields[row['field']] case final field?)
+        VehicleMaintenanceSetting(
+          field: field,
+          intervalKm: row['interval_km'] as int?,
+          intervalYears: row['interval_years'] as int?,
+          lastKm: row['last_km'] as int?,
+          lastDate: DateTime.tryParse(row['last_date'] as String? ?? ''),
+        ),
+  ]);
 }

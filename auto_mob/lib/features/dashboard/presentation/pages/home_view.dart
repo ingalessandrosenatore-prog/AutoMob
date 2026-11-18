@@ -8,6 +8,7 @@ import 'package:auto_mob_v1/core/widgets/refresh/am_sliver_app_bar_delegate.dart
 import 'package:auto_mob_v1/core/widgets/refresh/am_wheel_refresh_indicator.dart';
 import 'package:auto_mob_v1/features/auth/domain/entities/app_user.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/maintenance_kpi.dart';
+import 'package:automob_work_log/automob_work_log.dart' show WorkLogSaveResult;
 import 'package:common_ui_widget/common_ui_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +27,7 @@ import '../bloc/notification_prompt_event.dart';
 import '../bloc/notification_prompt_state.dart';
 import '../maintenance_kpi_work_log_launch.dart';
 import '../widgets/card_auto.dart';
+import '../widgets/component_maintenance_details.dart';
 import '../widgets/dashboard_scroll_activity.dart';
 import '../widgets/home_costs_section.dart';
 import '../widgets/home_future_work_timeline.dart';
@@ -492,9 +494,19 @@ class _HomeViewBodyState extends State<_HomeViewBody>
           edges: [
             EdgeBlur(
               type: EdgeType.topEdge,
-              size: 72,
+              size: 87,
               tintColor: colors.background,
-              sigma: 10,
+              sigma: 14,
+              controlPoints: [
+                ControlPoint(position: 0.5, type: ControlPointType.visible),
+                ControlPoint(position: 1.0, type: ControlPointType.transparent),
+              ],
+            ),
+            EdgeBlur(
+              type: EdgeType.bottomEdge,
+              size: 83,
+              tintColor: colors.background,
+              sigma: 14,
               controlPoints: [
                 ControlPoint(position: 0.5, type: ControlPointType.visible),
                 ControlPoint(position: 1.0, type: ControlPointType.transparent),
@@ -855,7 +867,6 @@ class _HomeViewBodyState extends State<_HomeViewBody>
                       },
                       builder: (context, kpis) => HomeVehicleHero(
                         kpis: kpis,
-                        topObstruction: topSafeArea + appBarContentHeight,
                         onKpiTap: (kpi) => _openMaintenanceDetail(context, kpi),
                       ),
                     ),
@@ -1093,6 +1104,31 @@ class _HomeViewBodyState extends State<_HomeViewBody>
     if (s is DashboardLoaded) {
       final v = s.vehicles[s.index];
       final dashboardBloc = context.read<DashboardBloc>();
+      if (kpi.group case final group?) {
+        final register = await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          builder: (sheetContext) => ComponentMaintenanceDetails(
+            kpi: kpi,
+            onRegister: () => Navigator.pop(sheetContext, true),
+          ),
+        );
+        if (register != true || !context.mounted) return;
+        final saved = await context.pushNamed<WorkLogSaveResult>(
+          'aggiungi_lavoro',
+          extra: {
+            'vehicleId': v.id,
+            'vehicleName': '${v.brand} ${v.model}',
+            'currentKm': v.kmCurrent,
+            'initialWorkType': group.workType,
+            if (group.workType == 'altro') 'initialCustomName': group.label,
+          },
+        );
+        if (saved != null && !dashboardBloc.isClosed) {
+          dashboardBloc.add(DashboardRefreshRequested());
+        }
+        return;
+      }
       final salvato = await context.pushNamed(
         'dettaglio_lavoro',
         extra: maintenanceKpiWorkLogLaunch(v, kpi).toRouteExtra(),

@@ -1,6 +1,7 @@
 import 'package:auto_mob_v1/features/vehicle/domain/entities/vehicle.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/mechanic_summary.dart';
 import 'package:auto_mob_v1/features/vehicle/domain/entities/fuel_cost_averages.dart';
+import '../../domain/entities/vehicle_component_maintenance.dart';
 
 class VehicleModel extends Vehicle {
   const VehicleModel({
@@ -30,6 +31,8 @@ class VehicleModel extends Vehicle {
     super.lastTireRotationKm,
     super.lastTireRotationDate,
     super.lastRevisionDate,
+    super.componentMaintenance,
+    super.brakeInspectionDate,
     super.updatedAt,
     super.mechanics,
     super.maintenanceCostCents,
@@ -87,6 +90,19 @@ class VehicleModel extends Vehicle {
         ? [mechanicFromJson(json['mechanic'] as Map)]
         : const <MechanicSummary>[];
     final costsByYearJson = json['maintenance_costs_by_year'];
+    final componentRows = json['component_maintenance'];
+    final components = <VehicleComponentMaintenance>[
+      if (componentRows is List)
+        for (final row in componentRows.whereType<Map>())
+          if (intOrNull(row['part_id']) case final partId?)
+            VehicleComponentMaintenance(
+              partId: partId,
+              intervalKm: intOrNull(row['interval_km']),
+              intervalYears: intOrNull(row['interval_years']),
+              lastServiceKm: intOrNull(row['last_service_km']),
+              lastServiceDate: dateOrNull(row['last_service_date']),
+            ),
+    ];
     final costsByYear = costsByYearJson is Map
         ? costsByYearJson.map(
             (year, cents) =>
@@ -129,6 +145,12 @@ class VehicleModel extends Vehicle {
       lastTireRotationKm: intOrNull(json['last_tire_rotation_km']),
       lastTireRotationDate: dateOrNull(json['last_tire_rotation_date']),
       lastRevisionDate: dateOrNull(json['last_revision_date']),
+      componentMaintenance: List.unmodifiable(components),
+      brakeInspectionDate: dateOrNull(
+        componentRows is List && componentRows.firstOrNull is Map
+            ? (componentRows.first as Map)['brake_inspection_date']
+            : json['brake_inspection_date'],
+      ),
       createdAt: date(json['created_at']),
       updatedAt: dateOrNull(json['updated_at']),
       mechanics: mechanics,

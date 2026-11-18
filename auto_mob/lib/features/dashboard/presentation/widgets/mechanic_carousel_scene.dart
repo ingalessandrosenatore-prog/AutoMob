@@ -82,8 +82,8 @@ class MechanicCarouselScene {
   }
 
   void tick(double deltaSeconds) {
-    // SceneView recreates its ticker after autoTick resumes, but retains the
-    // previous elapsed time. Ignore that reset and avoid catching up a pause.
+    // A muted ticker keeps elapsed wall time. Clamp the first resumed frame
+    // below so the animation does not catch up the entire scrolling pause.
     if (!deltaSeconds.isFinite || deltaSeconds <= 0) return;
     if (_active case final index?) {
       actors[index].tick(deltaSeconds.clamp(0, 1 / 15));

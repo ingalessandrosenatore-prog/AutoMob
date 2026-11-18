@@ -1,6 +1,7 @@
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/vehicle_registration_bloc.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/vehicle_registration_event.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/bloc/vehicle_registration_state.dart';
+import 'package:auto_mob_v1/features/vehicle/presentation/widgets/registration/maintenance_interval_field.dart';
 import 'package:auto_mob_v1/features/vehicle/presentation/widgets/registration/work_log_step_view.dart';
 import 'package:bloc_test/bloc_test.dart';
 import 'package:common_ui_widget/common_ui_widget.dart';
@@ -45,12 +46,25 @@ void main() {
         .text;
 
     expect(fieldValue('Chilometri attuali'), '0');
-    expect(fieldValue('Km effettuato'), '0');
+    expect(fieldValue('Km effettuato'), isEmpty);
     expect(fieldValue('Effettuato a km'), '0');
     expect(fieldValue('Ultimo cambio (km)'), '0');
     expect(fieldValue('Ultima inversione (km)'), '0');
-    expect(find.text('15.000'), findsNWidgets(2));
-    expect(find.text('100.000'), findsOneWidget);
-    expect(find.text('40.000'), findsOneWidget);
+    String intervalValue(String label) => tester
+        .widget<MaintenanceIntervalField>(
+          find.byWidgetPredicate(
+            (widget) =>
+                widget is MaintenanceIntervalField && widget.label == label,
+          ),
+        )
+        .controller
+        .text;
+    expect(intervalValue('Olio motore e filtro olio'), '15000');
+    expect(intervalValue('Filtro aria'), '15000');
+    expect(intervalValue('Filtro antipolline'), '15000');
+    expect(intervalValue('Filtro carburante'), '30000');
+    expect(intervalValue('Pastiglie'), '40000');
+    expect(intervalValue('Liquido freni'), '100000');
+    expect(find.text('Serbatoio GPL'), findsNothing);
   });
 }

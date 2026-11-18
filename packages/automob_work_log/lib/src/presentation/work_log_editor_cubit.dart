@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../domain/work_log_draft.dart';
 import '../domain/work_log_launch_context.dart';
 import '../domain/work_log_parts_catalog.dart';
+import '../domain/work_log_parts_data.dart';
 import '../domain/work_log_report.dart';
 import '../domain/work_log_type.dart';
 import '../domain/work_log_use_cases.dart';
@@ -28,6 +29,9 @@ class WorkLogEditorState extends Equatable {
     this.openReports = const [],
     this.selectedReportIds = const {},
     this.loadingReports = false,
+    this.loadingParts = false,
+    this.partsError,
+    this.partsData,
     this.reportsError,
     this.intervalKm,
     this.parts = const [],
@@ -52,6 +56,9 @@ class WorkLogEditorState extends Equatable {
   final List<WorkLogReport> openReports;
   final Set<String> selectedReportIds;
   final bool loadingReports;
+  final bool loadingParts;
+  final String? partsError;
+  final WorkLogPartsData? partsData;
   final String? reportsError;
   final int? intervalKm;
   final List<WorkLogPartDraft> parts;
@@ -66,6 +73,8 @@ class WorkLogEditorState extends Equatable {
   bool get isSaving => status == WorkLogEditorStatus.saving;
   bool get canSave =>
       status == WorkLogEditorStatus.editing &&
+      !loadingParts &&
+      partsError == null &&
       !loadingReports &&
       (reportsError == null || selectedReportIds.isEmpty);
 
@@ -89,6 +98,9 @@ class WorkLogEditorState extends Equatable {
     List<WorkLogReport>? openReports,
     Set<String>? selectedReportIds,
     bool? loadingReports,
+    bool? loadingParts,
+    Object? partsError = _unset,
+    WorkLogPartsData? partsData,
     Object? reportsError = _unset,
     Object? intervalKm = _unset,
     List<WorkLogPartDraft>? parts,
@@ -109,6 +121,11 @@ class WorkLogEditorState extends Equatable {
     openReports: openReports ?? this.openReports,
     selectedReportIds: selectedReportIds ?? this.selectedReportIds,
     loadingReports: loadingReports ?? this.loadingReports,
+    loadingParts: loadingParts ?? this.loadingParts,
+    partsError: identical(partsError, _unset)
+        ? this.partsError
+        : partsError as String?,
+    partsData: partsData ?? this.partsData,
     reportsError: identical(reportsError, _unset)
         ? this.reportsError
         : reportsError as String?,
@@ -140,6 +157,9 @@ class WorkLogEditorState extends Equatable {
     openReports,
     selectedReportIds,
     loadingReports,
+    loadingParts,
+    partsError,
+    partsData,
     reportsError,
     intervalKm,
     parts,
@@ -155,12 +175,17 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
   WorkLogEditorCubit({
     required this.createWorkLog,
     required this.getOpenReports,
+    this.getPartsData,
   }) : super(WorkLogEditorState.initial());
 
   final CreateWorkLog createWorkLog;
   final GetOpenWorkLogReports getOpenReports;
+  final GetWorkLogPartsData? getPartsData;
+  final _editedSelections = <String, List<WorkLogPartDraft>>{};
+  int _partsRequest = 0;
 
   void initialize(WorkLogLaunchContext context) {
+    _editedSelections.clear();
     emit(
       WorkLogEditorState(
         vehicleId: context.vehicleId,
@@ -177,7 +202,35 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
       ),
     );
     unawaited(loadReports());
+    unawaited(loadParts());
   }
+
+  Future<void> loadParts() async {
+    final load = getPartsData;
+    if (load == null || state.isSaving) return;
+    final request = ++_partsRequest;
+    emit(state.copyWith(loadingParts: true, partsError: null));
+    final result = await load(state.vehicleId);
+    if (isClosed || request != _partsRequest) return;
+    result.fold(
+      (message) =>
+          emit(state.copyWith(loadingParts: false, partsError: message)),
+      (data) => emit(
+        state.copyWith(
+          loadingParts: false,
+          partsData: data,
+          parts: _selectionFor(state.type, data),
+        ),
+      ),
+    );
+  }
+
+  List<WorkLogPartDraft> _selectionFor(String type, WorkLogPartsData? data) =>
+      _editedSelections[type] ??
+      [
+        for (final id in data?.presets[type] ?? const <int>[])
+          WorkLogPartDraft(partId: id, quantity: 1),
+      ];
 
   Future<void> loadReports() async {
     if (state.loadingReports || state.isSaving) return;
@@ -243,6 +296,9 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
     emit(
       state.copyWith(
         type: value,
+        parts: value == state.type
+            ? state.parts
+            : _selectionFor(value, state.partsData),
         partsCategory: workLogPartCategoryForType(type),
         customName: type?.allowsCustomName == true ? state.customName : '',
         status: WorkLogEditorStatus.editing,
@@ -270,28 +326,27 @@ class WorkLogEditorCubit extends Cubit<WorkLogEditorState> {
 
   void togglePart(int partId) {
     final selected = state.parts.any((part) => part.partId == partId);
-    emit(
-      state.copyWith(
-        parts: selected
-            ? state.parts.where((part) => part.partId != partId).toList()
-            : [...state.parts, WorkLogPartDraft(partId: partId)],
-      ),
+    _updateSelection(
+      selected
+          ? state.parts.where((part) => part.partId != partId).toList()
+          : [...state.parts, WorkLogPartDraft(partId: partId)],
     );
   }
 
-  void updatePart(WorkLogPartDraft updated) => emit(
-    state.copyWith(
-      parts: state.parts
-          .map((part) => part.partId == updated.partId ? updated : part)
-          .toList(growable: false),
-    ),
+  void updatePart(WorkLogPartDraft updated) => _updateSelection(
+    state.parts
+        .map((part) => part.partId == updated.partId ? updated : part)
+        .toList(growable: false),
   );
 
-  void removePart(int partId) => emit(
-    state.copyWith(
-      parts: state.parts.where((part) => part.partId != partId).toList(),
-    ),
+  void removePart(int partId) => _updateSelection(
+    state.parts.where((part) => part.partId != partId).toList(),
   );
+
+  void _updateSelection(List<WorkLogPartDraft> parts) {
+    _editedSelections[state.type] = List.unmodifiable(parts);
+    emit(state.copyWith(parts: _editedSelections[state.type]));
+  }
 
   String? validateData() {
     if (state.serviceKm < state.minimumKm) {

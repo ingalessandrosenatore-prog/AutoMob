@@ -9,8 +9,11 @@ import '../../bloc/vehicle_registration_bloc.dart';
 import '../../bloc/vehicle_registration_event.dart';
 import '../../bloc/vehicle_registration_state.dart';
 import '../../../domain/entities/maintenance_defaults.dart';
-import '../am_interval_chips.dart';
+import '../../../domain/entities/vehicle_maintenance_setting.dart';
+import '../am_interval_chips.dart' show fmtKm;
 import '../maintenance_section_card.dart';
+import 'maintenance_interval_field.dart';
+import 'registration_maintenance_fields.dart';
 import 'step_info_banner.dart';
 
 DateTime? _parseData(String text) {
@@ -25,7 +28,7 @@ DateTime? _parseData(String text) {
 }
 
 /// Step 4 — ultimi lavori svolti: riusa gli stessi blocchi
-/// (MaintenanceSectionCard/IntervalChoiceChip) di tagliando, distribuzione,
+/// (MaintenanceSectionCard) di tagliando, distribuzione,
 /// cambio/inversione gomme e revisione gia' presenti nel wizard a pop-up.
 ///
 /// Il bottone "Continua" vive nella barra fissa della pagina root; questo
@@ -38,14 +41,9 @@ class WorkLogStepView extends StatefulWidget {
 }
 
 class WorkLogStepViewState extends State<WorkLogStepView> {
-  static const _tagliandoIntervalli = [10000, 15000, 20000, 30000];
-  static const _distribuzioneIntervalli = [60000, 100000, 120000, 150000];
-  static const _cambioIntervalli = [30000, 40000, 50000, 60000];
-  static const _inversioneIntervalli = [10000, 15000, 20000, 30000];
-
   final _kmAttualiController = TextEditingController();
   final _kmTagliandoController = TextEditingController();
-  final _intervalloTagliandoController = TextEditingController();
+  final _maintenanceFields = RegistrationMaintenanceFields();
   final _kmDistribuzioneController = TextEditingController();
   final _intervalloDistribuzioneController = TextEditingController();
   final _revisioneDateController = TextEditingController();
@@ -53,11 +51,6 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
   final _intervalloCambioController = TextEditingController();
   final _kmInversioneController = TextEditingController();
   final _intervalloInversioneController = TextEditingController();
-
-  int? _selTagliando;
-  int? _selDistribuzione;
-  int? _selCambio;
-  int? _selInversione;
 
   String _dateText(DateTime? date) => date == null
       ? ''
@@ -72,14 +65,10 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
 
   void _syncFromDraft(VehicleRegistrationState state) {
     final draft = state.draft;
+    _maintenanceFields.load(draft);
     _kmAttualiController.text =
         (draft.kmAttuali ?? MaintenanceDefaults.initialKm).toString();
-    _kmTagliandoController.text =
-        (draft.kmUltimoTagliando ?? MaintenanceDefaults.initialKm).toString();
-    _intervalloTagliandoController.text =
-        (draft.intervalloUltimoTagliando ??
-                MaintenanceDefaults.tagliandoIntervalKm)
-            .toString();
+    _kmTagliandoController.text = draft.kmUltimoTagliando?.toString() ?? '';
     _kmDistribuzioneController.text =
         (draft.kmUltimaDistribuzione ?? MaintenanceDefaults.initialKm)
             .toString();
@@ -101,24 +90,13 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
         (draft.intervalloInversioneGomme ??
                 MaintenanceDefaults.tireRotationIntervalKm)
             .toString();
-    _selTagliando =
-        draft.intervalloUltimoTagliando ??
-        MaintenanceDefaults.tagliandoIntervalKm;
-    _selDistribuzione =
-        draft.intervalloUltimaDistribuzione ??
-        MaintenanceDefaults.distribuzioneIntervalKm;
-    _selCambio =
-        draft.intervalloCambioGomme ?? MaintenanceDefaults.tireChangeIntervalKm;
-    _selInversione =
-        draft.intervalloInversioneGomme ??
-        MaintenanceDefaults.tireRotationIntervalKm;
   }
 
   @override
   void dispose() {
     _kmAttualiController.dispose();
     _kmTagliandoController.dispose();
-    _intervalloTagliandoController.dispose();
+    _maintenanceFields.dispose();
     _kmDistribuzioneController.dispose();
     _intervalloDistribuzioneController.dispose();
     _revisioneDateController.dispose();
@@ -151,7 +129,20 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
       (_kmInfo(_kmInversioneController)?.error ?? false);
 
   void submit() {
-    if (_bloccato) {
+    final registration = context.read<VehicleRegistrationBloc>();
+    final kmTagliando = int.tryParse(_kmTagliandoController.text);
+    final maintenanceSettings = _maintenanceFields.read(
+      fuel: registration.state.draft.carburante,
+      tagliandoKm: kmTagliando,
+    );
+    final kmAttuali = _kmAttuali;
+    if (_bloccato ||
+        (kmAttuali != null &&
+            maintenanceSettings.any(
+              (setting) =>
+                  setting.lastKm != null &&
+                  (setting.lastKm! < 0 || setting.lastKm! > kmAttuali),
+            ))) {
       setState(() {});
       showAmStatusDialog<void>(
         context,
@@ -171,24 +162,57 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
       );
       return;
     }
-    context.read<VehicleRegistrationBloc>().add(
+    registration.add(
       WorkLogStepSubmitted(
-        kmAttuali: _kmAttuali,
-        kmUltimoTagliando: int.tryParse(_kmTagliandoController.text),
-        intervalloTagliando: int.tryParse(_intervalloTagliandoController.text),
+        kmAttuali: kmAttuali,
+        kmUltimoTagliando: kmTagliando,
+        maintenanceSettings: [
+          ...maintenanceSettings,
+          VehicleMaintenanceSetting(
+            field: VehicleMaintenanceField.distribution,
+            intervalKm: _intervalOrDefault(
+              _intervalloDistribuzioneController,
+              MaintenanceDefaults.distribuzioneIntervalKm,
+            ),
+            lastKm: int.tryParse(_kmDistribuzioneController.text),
+          ),
+          VehicleMaintenanceSetting(
+            field: VehicleMaintenanceField.tires,
+            intervalKm: _intervalOrDefault(
+              _intervalloCambioController,
+              MaintenanceDefaults.tireChangeIntervalKm,
+            ),
+            lastKm: int.tryParse(_kmCambioGommeController.text),
+          ),
+        ],
+        brakeInspectionDate: RegistrationMaintenanceFields.parseDate(
+          _maintenanceFields.brakeInspection.text,
+        ),
+        intervalloTagliando: maintenanceSettings
+            .firstWhere(
+              (setting) => setting.field == VehicleMaintenanceField.oil,
+            )
+            .intervalKm,
         kmUltimaDistribuzione: int.tryParse(_kmDistribuzioneController.text),
-        intervalloUltimaDistribuzione: int.tryParse(
-          _intervalloDistribuzioneController.text,
+        intervalloUltimaDistribuzione: MaintenanceIntervalField.read(
+          _intervalloDistribuzioneController,
         ),
         prossimarevisione: _parseData(_revisioneDateController.text),
         kmUltimoCambioGomme: int.tryParse(_kmCambioGommeController.text),
-        intervalloCambioGomme: int.tryParse(_intervalloCambioController.text),
+        intervalloCambioGomme: MaintenanceIntervalField.read(
+          _intervalloCambioController,
+        ),
         kmUltimaInversioneGomme: int.tryParse(_kmInversioneController.text),
-        intervalloInversioneGomme: int.tryParse(
-          _intervalloInversioneController.text,
+        intervalloInversioneGomme: MaintenanceIntervalField.read(
+          _intervalloInversioneController,
         ),
       ),
     );
+  }
+
+  int _intervalOrDefault(TextEditingController controller, int defaultValue) {
+    final interval = MaintenanceIntervalField.read(controller);
+    return interval == null || interval == 0 ? defaultValue : interval;
   }
 
   @override
@@ -266,22 +290,15 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      for (int i = 0; i < _tagliandoIntervalli.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        IntervalChoiceChip(
-                          label: fmtKm(_tagliandoIntervalli[i]),
-                          selected: _selTagliando == _tagliandoIntervalli[i],
-                          onTap: () => setState(() {
-                            _selTagliando = _tagliandoIntervalli[i];
-                            _intervalloTagliandoController.text =
-                                _tagliandoIntervalli[i].toString();
-                          }),
-                        ),
-                      ],
-                    ],
-                  ),
+                  for (final field
+                      in RegistrationMaintenanceFields.tagliando) ...[
+                    RegistrationMaintenanceField(
+                      field: field,
+                      fields: _maintenanceFields,
+                    ),
+                    if (field != RegistrationMaintenanceFields.tagliando.last)
+                      const SizedBox(height: 12),
+                  ],
                 ],
               ),
               const SizedBox(height: 20),
@@ -312,26 +329,8 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      for (
-                        int i = 0;
-                        i < _distribuzioneIntervalli.length;
-                        i++
-                      ) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        IntervalChoiceChip(
-                          label: fmtKm(_distribuzioneIntervalli[i]),
-                          selected:
-                              _selDistribuzione == _distribuzioneIntervalli[i],
-                          onTap: () => setState(() {
-                            _selDistribuzione = _distribuzioneIntervalli[i];
-                            _intervalloDistribuzioneController.text =
-                                _distribuzioneIntervalli[i].toString();
-                          }),
-                        ),
-                      ],
-                    ],
+                  MaintenanceIntervalField(
+                    controller: _intervalloDistribuzioneController,
                   ),
                 ],
               ),
@@ -381,21 +380,8 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      for (int i = 0; i < _cambioIntervalli.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        IntervalChoiceChip(
-                          label: fmtKm(_cambioIntervalli[i]),
-                          selected: _selCambio == _cambioIntervalli[i],
-                          onTap: () => setState(() {
-                            _selCambio = _cambioIntervalli[i];
-                            _intervalloCambioController.text =
-                                _cambioIntervalli[i].toString();
-                          }),
-                        ),
-                      ],
-                    ],
+                  MaintenanceIntervalField(
+                    controller: _intervalloCambioController,
                   ),
                 ],
               ),
@@ -425,27 +411,18 @@ class WorkLogStepViewState extends State<WorkLogStepView> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      for (
-                        int i = 0;
-                        i < _inversioneIntervalli.length;
-                        i++
-                      ) ...[
-                        if (i > 0) const SizedBox(width: 8),
-                        IntervalChoiceChip(
-                          label: fmtKm(_inversioneIntervalli[i]),
-                          selected: _selInversione == _inversioneIntervalli[i],
-                          onTap: () => setState(() {
-                            _selInversione = _inversioneIntervalli[i];
-                            _intervalloInversioneController.text =
-                                _inversioneIntervalli[i].toString();
-                          }),
-                        ),
-                      ],
-                    ],
+                  MaintenanceIntervalField(
+                    controller: _intervalloInversioneController,
                   ),
                 ],
+              ),
+              RegistrationAdditionalMaintenance(
+                fields: _maintenanceFields,
+                fuel: context
+                    .read<VehicleRegistrationBloc>()
+                    .state
+                    .draft
+                    .carburante,
               ),
             ],
           ),

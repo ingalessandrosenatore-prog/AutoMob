@@ -58,6 +58,11 @@ void main() {
 
 class _Repository implements WorkLogRepository {
   @override
+  Future<Either<String, WorkLogPartsData?>> getPartsData(
+    String vehicleId,
+  ) async => right(null);
+
+  @override
   Future<Either<String, List<WorkLogReport>>> getOpenReports(
     String vehicleId,
   ) async => right(const []);

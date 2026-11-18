@@ -5,6 +5,42 @@ import 'package:fpdart/fpdart.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'i pezzi tolti dal preset non tornano quando si torna al tipo lavoro',
+    () async {
+      final repository = _WorkLogRepository()
+        ..partsData = const WorkLogPartsData(
+          catalog: {},
+          presets: {
+            'tagliando': [15, 16],
+            'freni': [20, 21],
+          },
+        );
+      final cubit = WorkLogEditorCubit(
+        createWorkLog: CreateWorkLog(repository),
+        getOpenReports: GetOpenWorkLogReports(repository),
+        getPartsData: GetWorkLogPartsData(repository),
+      );
+      addTearDown(cubit.close);
+      cubit.initialize(
+        const WorkLogLaunchContext(
+          vehicleId: 'vehicle-1',
+          vehicleName: 'Auto',
+          currentKm: 1000,
+          initialWorkType: 'tagliando',
+        ),
+      );
+      await cubit.stream.firstWhere((state) => !state.loadingParts);
+      expect(cubit.state.parts.map((part) => part.partId), [15, 16]);
+      cubit.togglePart(15);
+      cubit.changeType('freni');
+      expect(cubit.state.parts.map((part) => part.partId), [20, 21]);
+      cubit.changeType('tagliando');
+      await cubit.submit();
+      expect(repository.savedDraft!.parts.map((part) => part.partId), [16]);
+    },
+  );
+
   test('WorkLogEntry mantiene i dati necessari allo storico', () {
     final entry = WorkLogEntry(
       id: 'work-1',
@@ -242,11 +278,17 @@ void main() {
 
 class _WorkLogRepository implements WorkLogRepository {
   @override
+  Future<Either<String, WorkLogPartsData?>> getPartsData(
+    String vehicleId,
+  ) async => right(partsData);
+
+  @override
   Future<Either<String, List<WorkLogReport>>> getOpenReports(
     String vehicleId,
   ) async => right(const []);
 
   WorkLogDraft? savedDraft;
+  WorkLogPartsData? partsData;
   List<WorkLogVehicle> vehicles = const [];
 
   @override

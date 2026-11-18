@@ -362,6 +362,11 @@ Widget _wizardApp({
 );
 
 class _Repository implements WorkLogRepository {
+  @override
+  Future<Either<String, WorkLogPartsData?>> getPartsData(
+    String vehicleId,
+  ) async => right(null);
+
   _Repository({this.reportsByVehicle = const {}});
 
   final Map<String, List<WorkLogReport>> reportsByVehicle;

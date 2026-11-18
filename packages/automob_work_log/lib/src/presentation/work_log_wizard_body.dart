@@ -149,6 +149,22 @@ class _WorkLogWizardBodyState extends State<WorkLogWizardBody> {
                         ),
                       ],
                     ),
+                    EdgeBlur(
+                      type: EdgeType.bottomEdge,
+                      size: _BottomBar.extent(context) + 16,
+                      tintColor: colors.background,
+                      sigma: 10,
+                      controlPoints: [
+                        ControlPoint(
+                          position: 0.5,
+                          type: ControlPointType.visible,
+                        ),
+                        ControlPoint(
+                          position: 1,
+                          type: ControlPointType.transparent,
+                        ),
+                      ],
+                    ),
                   ],
                   child: AnimatedPadding(
                     duration: const Duration(milliseconds: 220),
@@ -380,20 +396,43 @@ class _PartsStep extends StatelessWidget {
   Widget build(BuildContext context) =>
       BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
         buildWhen: (previous, current) =>
+            previous.partsData != current.partsData ||
+            previous.loadingParts != current.loadingParts ||
+            previous.partsError != current.partsError ||
             previous.parts != current.parts ||
             previous.partsQuery != current.partsQuery ||
             previous.partsCategory != current.partsCategory,
-        builder: (context, state) => WorkLogPartsPicker(
-          topPadding: topPadding,
-          selectedParts: state.parts,
-          query: state.partsQuery,
-          selectedCategory: state.partsCategory,
-          onQueryChanged: context.read<WorkLogEditorCubit>().changePartsQuery,
-          onCategoryChanged: context
-              .read<WorkLogEditorCubit>()
-              .changePartsCategory,
-          onPartToggled: context.read<WorkLogEditorCubit>().togglePart,
-        ),
+        builder: (context, state) {
+          if (state.loadingParts) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state.partsError case final message?) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(message),
+                  TextButton(
+                    onPressed: context.read<WorkLogEditorCubit>().loadParts,
+                    child: const Text('Riprova'),
+                  ),
+                ],
+              ),
+            );
+          }
+          return WorkLogPartsPicker(
+            topPadding: topPadding,
+            selectedParts: state.parts,
+            query: state.partsQuery,
+            selectedCategory: state.partsCategory,
+            catalog: state.partsData?.catalog ?? kWorkLogPartsCatalog,
+            onQueryChanged: context.read<WorkLogEditorCubit>().changePartsQuery,
+            onCategoryChanged: context
+                .read<WorkLogEditorCubit>()
+                .changePartsCategory,
+            onPartToggled: context.read<WorkLogEditorCubit>().togglePart,
+          );
+        },
       );
 }
 
@@ -406,7 +445,9 @@ class _CostsStep extends StatelessWidget {
   Widget build(
     BuildContext context,
   ) => BlocBuilder<WorkLogEditorCubit, WorkLogEditorState>(
-    buildWhen: (previous, current) => previous.parts != current.parts,
+    buildWhen: (previous, current) =>
+        previous.parts != current.parts ||
+        previous.partsData != current.partsData,
     builder: (context, state) => Stack(
       children: [
         Positioned.fill(
@@ -425,7 +466,10 @@ class _CostsStep extends StatelessWidget {
               for (final item in state.parts)
                 WorkLogSparePartCard(
                   item: item,
-                  name: kPartsCatalog[item.partId] ?? 'Ricambio',
+                  name:
+                      state.partsData?.catalog[item.partId]?.name ??
+                      kPartsCatalog[item.partId] ??
+                      'Ricambio',
                   onRemove: () => context.read<WorkLogEditorCubit>().removePart(
                     item.partId,
                   ),

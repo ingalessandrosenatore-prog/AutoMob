@@ -33,7 +33,7 @@ class WorkLogHistoryEdge extends StatelessWidget {
       ),
       EdgeBlur(
         type: EdgeType.bottomEdge,
-        size: 32,
+        size: 92,
         tintColor: backgroundColor,
         sigma: 10,
         controlPoints: [
